@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Missions — The Orthodox Expedition</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+/* ── VARIABLES ─────────────────────────────────────────────── */
+:root{
+  --gold:#c9922a;--gold-light:#f0c96e;--gold-bright:#ffd700;
+  --parchment:#f4e8c1;--parchment-dark:#e8d5a0;
+  --ink:#1a0f00;--ink-light:#3d2b1f;
+  --burgundy:#6b1a1a;
+  --byzantine:#2c1654;--byzantine-light:#4a2a7a;
+  --green:#16a34a;--green-dark:#15803d;
+  --shadow:rgba(26,15,0,0.5);
+  --bg:#0e0800;
+  --nav-h:72px;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overflow-x:hidden;}
+body{
+  font-family:'Crimson Text',serif;
+  background-color:var(--bg);
+  background-image:
+    radial-gradient(ellipse at 50% 0%,rgba(107,26,26,0.4) 0%,transparent 60%),
+    radial-gradient(ellipse at 100% 100%,rgba(44,22,84,0.3) 0%,transparent 50%);
+  min-height:100vh;
+}
+body::before{
+  content:'';position:fixed;inset:0;
+  background-image:
+    linear-gradient(rgba(201,146,42,0.025) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(201,146,42,0.025) 1px,transparent 1px);
+  background-size:44px 44px;pointer-events:none;z-index:0;
+}
+
+/* ── COIN RAIN ──────────────────────────────────────────────── */
+#coin-rain{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999;overflow:hidden;}
+.coin-p{position:absolute;top:-60px;font-size:1.6rem;animation:coinFall linear forwards;filter:drop-shadow(0 0 6px var(--gold-bright));}
+@keyframes coinFall{0%{transform:translateY(0) rotate(0deg);opacity:1;}80%{opacity:1;}100%{transform:translateY(110vh) rotate(540deg) scale(0.4);opacity:0;}}
+
+/* ── LOADING / AUTH ─────────────────────────────────────────── */
+#loading{position:fixed;inset:0;z-index:400;display:flex;align-items:center;justify-content:center;background:var(--bg);}
+.loading-cross{font-family:'Cinzel',serif;font-size:2rem;color:rgba(201,146,42,0.4);animation:pulse 1.5s ease-in-out infinite;}
+@keyframes pulse{0%,100%{opacity:0.3;}50%{opacity:0.8;}}
+
+/* ── MAIN ───────────────────────────────────────────────────── */
+#app{display:none;position:relative;z-index:1;}
+.page{max-width:480px;margin:0 auto;padding:1.25rem 1rem calc(var(--nav-h) + 1.5rem);}
+
+/* ── HEADER ─────────────────────────────────────────────────── */
+.app-header{text-align:center;padding:1.25rem 1rem 1rem;border-bottom:1px solid rgba(201,146,42,0.18);margin-bottom:1.25rem;}
+.app-name{font-family:'Cinzel Decorative',serif;font-size:clamp(0.9rem,3.2vw,1.1rem);color:var(--gold-light);letter-spacing:0.06em;text-shadow:0 0 20px rgba(201,146,42,0.35);}
+.app-divider{color:rgba(201,146,42,0.35);letter-spacing:0.6rem;font-size:0.65rem;margin-top:0.3rem;}
+
+/* ── COIN STRIP ─────────────────────────────────────────────── */
+.coin-strip{
+  display:flex;align-items:center;justify-content:space-between;
+  background:linear-gradient(135deg,rgba(44,22,84,0.9) 0%,rgba(107,26,26,0.9) 100%);
+  border:1px solid rgba(201,146,42,0.3);
+  border-radius:14px;padding:0.875rem 1.25rem;
+  margin-bottom:1.25rem;
+}
+.coin-strip-left{font-family:'Cinzel',serif;font-size:0.65rem;letter-spacing:0.15em;color:rgba(201,146,42,0.55);text-transform:uppercase;}
+.coin-strip-val{font-family:'Cinzel Decorative',serif;font-size:1.8rem;color:var(--gold-bright);text-shadow:0 0 16px rgba(255,215,0,0.5);line-height:1;transition:all 0.3s;}
+.coin-strip-right{text-align:right;}
+.coin-strip-lifetime{font-family:'Cinzel',serif;font-size:0.6rem;color:rgba(201,146,42,0.4);letter-spacing:0.08em;}
+.coin-strip-lifetime-val{font-family:'Cinzel',serif;font-size:0.8rem;color:rgba(201,146,42,0.6);}
+@keyframes coinTick{from{transform:translateY(6px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+.coin-strip-val.tick{animation:coinTick 0.3s ease-out;}
+
+/* ── MISSION TABS ───────────────────────────────────────────── */
+.mission-tabs{display:flex;gap:0.4rem;margin-bottom:1rem;}
+.m-tab{
+  flex:1;padding:0.6rem 0.25rem;min-height:48px;
+  background:rgba(201,146,42,0.06);
+  border:1px solid rgba(201,146,42,0.18);
+  border-radius:10px;font-family:'Cinzel',serif;font-size:0.68rem;
+  cursor:pointer;text-align:center;transition:all 0.2s;
+  color:rgba(201,146,42,0.4);letter-spacing:0.04em;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0.15rem;
+}
+.m-tab.active,.m-tab:active{background:var(--gold);color:var(--ink);border-color:var(--gold-bright);box-shadow:0 0 12px rgba(255,215,0,0.2);}
+.m-tab-mark{font-size:0.9rem;line-height:1;}
+.m-tab-badge{
+  background:#ef4444;color:white;border-radius:10px;
+  font-size:0.5rem;padding:0.05rem 0.3rem;
+  font-family:'Cinzel',serif;display:none;
+}
+.m-tab-badge.show{display:inline-block;}
+
+/* ── TAB CONTENT ────────────────────────────────────────────── */
+.tab-panel{display:none;}
+.tab-panel.show{display:block;}
+
+/* ── PROGRESS SUMMARY ───────────────────────────────────────── */
+.progress-summary{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:0.875rem;padding:0 0.25rem;
+}
+.ps-label{font-family:'Cinzel',serif;font-size:0.65rem;letter-spacing:0.15em;color:rgba(201,146,42,0.45);text-transform:uppercase;}
+.ps-val{font-family:'Cinzel',serif;font-size:0.72rem;color:var(--gold-light);}
+.ps-bar-wrap{flex:1;margin:0 0.75rem;}
+.ps-bar{height:4px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden;}
+.ps-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--gold),var(--gold-bright));transition:width 0.8s cubic-bezier(0.4,0,0.2,1);}
+
+/* ── SECTION LABEL ──────────────────────────────────────────── */
+.section-lbl{
+  font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.2em;
+  text-transform:uppercase;color:rgba(201,146,42,0.4);
+  padding:0.5rem 0 0.4rem;
+  border-bottom:1px solid rgba(201,146,42,0.1);
+  margin-bottom:0.5rem;
+}
+
+/* ── MISSION CARD ───────────────────────────────────────────── */
+.m-card{
+  display:flex;align-items:center;gap:0.75rem;
+  border:1.5px solid rgba(201,146,42,0.2);
+  border-radius:12px;padding:0.875rem 0.875rem;
+  margin-bottom:0.6rem;
+  transition:all 0.35s ease;
+  position:relative;overflow:hidden;
+  background:rgba(244,232,193,0.03);
+}
+
+/* Available */
+.m-card.available{border-color:rgba(201,146,42,0.2);}
+.m-card.available:hover{border-color:rgba(201,146,42,0.35);background:rgba(244,232,193,0.05);}
+
+/* Done — green settled state */
+.m-card.done{
+  background:rgba(22,163,74,0.06);
+  border-color:rgba(22,163,74,0.3);
+}
+
+/* Done flash — brief bright green on completion */
+@keyframes doneFlash{
+  0%{background:rgba(22,163,74,0.25);border-color:rgba(22,163,74,0.8);box-shadow:0 0 20px rgba(22,163,74,0.3);}
+  100%{background:rgba(22,163,74,0.06);border-color:rgba(22,163,74,0.3);box-shadow:none;}
+}
+.m-card.done-flash{animation:doneFlash 0.7s ease-out forwards;}
+
+/* Pending */
+@keyframes pendingPulse{
+  0%,100%{border-color:rgba(124,58,237,0.35);box-shadow:0 0 8px rgba(124,58,237,0.1);}
+  50%{border-color:rgba(124,58,237,0.6);box-shadow:0 0 16px rgba(124,58,237,0.25);}
+}
+.m-card.pending{
+  background:rgba(44,22,84,0.12);
+  border-color:rgba(124,58,237,0.35);
+  animation:pendingPulse 2.5s ease-in-out infinite;
+}
+
+/* Special done (one-time complete) */
+.m-card.special-done{
+  background:rgba(201,146,42,0.06);
+  border-color:rgba(201,146,42,0.3);
+  opacity:0.65;
+}
+
+.m-emoji{font-size:1.4rem;flex-shrink:0;line-height:1;}
+.m-info{flex:1;min-width:0;}
+.m-name{font-family:'Cinzel',serif;font-size:0.82rem;color:rgba(244,232,193,0.85);font-weight:600;line-height:1.3;}
+.m-card.done .m-name{color:rgba(134,239,172,0.7);}
+.m-card.special-done .m-name{color:rgba(201,146,42,0.6);}
+.m-detail{font-size:0.74rem;color:rgba(244,232,193,0.35);margin-top:0.1rem;font-style:italic;line-height:1.3;}
+.m-meta{display:flex;align-items:center;gap:0.4rem;margin-top:0.2rem;}
+.m-coins{font-family:'Cinzel',serif;font-size:0.75rem;color:rgba(201,146,42,0.6);font-weight:700;}
+.m-tag{font-size:0.58rem;background:rgba(44,22,84,0.4);color:rgba(167,139,250,0.8);border:1px solid rgba(124,58,237,0.25);border-radius:4px;padding:0.1rem 0.35rem;font-family:'Cinzel',serif;}
+
+/* ── ACTION BUTTONS ─────────────────────────────────────────── */
+.m-btn{
+  padding:0.45rem 0.8rem;min-height:40px;
+  border:none;border-radius:8px;
+  font-family:'Cinzel',serif;font-size:0.68rem;
+  cursor:pointer;transition:all 0.2s;
+  white-space:nowrap;flex-shrink:0;
+  letter-spacing:0.04em;
+}
+.m-btn.mark{background:linear-gradient(135deg,var(--gold) 0%,var(--gold-bright) 100%);color:var(--ink);}
+.m-btn.mark:active{transform:scale(0.96);}
+.m-btn.done-btn{background:rgba(22,163,74,0.2);color:rgba(134,239,172,0.8);cursor:default;border:1px solid rgba(22,163,74,0.3);}
+.m-btn.pending-btn{background:rgba(44,22,84,0.4);color:rgba(167,139,250,0.8);cursor:default;border:1px solid rgba(124,58,237,0.3);}
+.m-btn.submit{background:linear-gradient(135deg,var(--byzantine) 0%,var(--byzantine-light) 100%);color:rgba(244,232,193,0.9);}
+.m-btn.submit:active{transform:scale(0.96);}
+.m-btn.complete-badge{background:rgba(201,146,42,0.15);color:rgba(201,146,42,0.6);cursor:default;border:1px solid rgba(201,146,42,0.2);}
+
+/* Done check */
+.m-check{
+  position:absolute;top:0.4rem;right:0.45rem;
+  font-size:0.75rem;color:rgba(134,239,172,0.7);
+}
+.m-pending-badge{
+  position:absolute;top:0.35rem;right:0.45rem;
+  font-family:'Cinzel',serif;font-size:0.55rem;
+  color:rgba(167,139,250,0.8);
+  background:rgba(44,22,84,0.4);
+  border:1px solid rgba(124,58,237,0.3);
+  border-radius:4px;padding:0.1rem 0.35rem;
+}
+
+/* ── EMPTY STATE ────────────────────────────────────────────── */
+.empty-state{
+  text-align:center;padding:2rem 1rem;
+  font-family:'Crimson Text',serif;font-style:italic;
+  color:rgba(201,146,42,0.3);font-size:0.9rem;
+}
+
+/* ── BOTTOM NAV ─────────────────────────────────────────────── */
+.bottom-nav{
+  position:fixed;bottom:0;left:0;right:0;height:var(--nav-h);
+  background:rgba(8,4,0,0.97);border-top:1px solid rgba(201,146,42,0.18);
+  display:flex;align-items:stretch;backdrop-filter:blur(16px);z-index:200;
+  padding-bottom:env(safe-area-inset-bottom);
+}
+.nav-item{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:0.2rem;cursor:pointer;border:none;background:none;
+  padding:0.5rem 0.25rem;position:relative;transition:all 0.2s;text-decoration:none;
+}
+.nav-item:active{background:rgba(201,146,42,0.06);}
+.nav-mark{font-size:1rem;line-height:1;color:rgba(201,146,42,0.25);transition:all 0.25s;}
+.nav-label{font-family:'Cinzel',serif;font-size:0.56rem;letter-spacing:0.1em;text-transform:uppercase;color:rgba(201,146,42,0.3);transition:all 0.25s;}
+.nav-item.active .nav-mark{color:var(--gold-bright);text-shadow:0 0 12px rgba(255,215,0,0.6);filter:drop-shadow(0 0 4px rgba(255,215,0,0.4));}
+.nav-item.active .nav-label{color:var(--gold-light);}
+.nav-item.active::before{content:'';position:absolute;top:0;left:20%;right:20%;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent);border-radius:0 0 2px 2px;}
+.nav-dot{position:absolute;top:0.4rem;right:calc(50% - 18px);width:7px;height:7px;border-radius:50%;background:#ef4444;border:1.5px solid rgba(8,4,0,0.9);display:none;}
+.nav-dot.show{display:block;}
+
+/* ── ANIMATIONS ─────────────────────────────────────────────── */
+.fade-up{opacity:0;transform:translateY(12px);animation:fadeUp 0.4s ease forwards;}
+@keyframes fadeUp{to{opacity:1;transform:translateY(0);}}
+.fade-up:nth-child(1){animation-delay:0.04s;}
+.fade-up:nth-child(2){animation-delay:0.1s;}
+.fade-up:nth-child(3){animation-delay:0.16s;}
+</style>
+</head>
+<body>
+
+<div id="coin-rain"></div>
+<div id="loading"><div class="loading-cross">☩</div></div>
+
+<div id="app">
+  <div class="page">
+
+    <!-- HEADER -->
+    <header class="app-header">
+      <div class="app-name">The Orthodox Expedition</div>
+      <div class="app-divider">✦ ☩ ✦</div>
+    </header>
+
+    <!-- COIN STRIP -->
+    <div class="coin-strip fade-up">
+      <div class="coin-strip-left">
+        <div style="margin-bottom:0.15rem">Saint Coins</div>
+        <div class="coin-strip-val" id="coin-val">0</div>
+      </div>
+      <div class="coin-strip-right">
+        <div class="coin-strip-lifetime">Lifetime Earned</div>
+        <div class="coin-strip-lifetime-val" id="lifetime-val">0</div>
+      </div>
+    </div>
+
+    <!-- TABS -->
+    <div class="mission-tabs fade-up">
+      <button class="m-tab active" id="tab-daily" onclick="switchTab('daily')">
+        <span class="m-tab-mark">✦</span>
+        <span>Daily</span>
+        <span class="m-tab-badge" id="badge-daily"></span>
+      </button>
+      <button class="m-tab" id="tab-weekly" onclick="switchTab('weekly')">
+        <span class="m-tab-mark">☩</span>
+        <span>Weekly</span>
+        <span class="m-tab-badge" id="badge-weekly"></span>
+      </button>
+      <button class="m-tab" id="tab-special" onclick="switchTab('special')">
+        <span class="m-tab-mark">⊕</span>
+        <span>Special</span>
+        <span class="m-tab-badge" id="badge-special"></span>
+      </button>
+    </div>
+
+    <!-- DAILY PANEL -->
+    <div class="tab-panel show" id="panel-daily">
+      <div class="progress-summary">
+        <span class="ps-label">Today</span>
+        <div class="ps-bar-wrap"><div class="ps-bar"><div class="ps-fill" id="ps-daily"></div></div></div>
+        <span class="ps-val" id="ps-daily-lbl">0 / 0</span>
+      </div>
+      <div id="daily-list"></div>
+    </div>
+
+    <!-- WEEKLY PANEL -->
+    <div class="tab-panel" id="panel-weekly">
+      <div class="progress-summary">
+        <span class="ps-label">This Week</span>
+        <div class="ps-bar-wrap"><div class="ps-bar"><div class="ps-fill" id="ps-weekly"></div></div></div>
+        <span class="ps-val" id="ps-weekly-lbl">0 / 0</span>
+      </div>
+      <div class="section-lbl">Self Report</div>
+      <div id="weekly-self-list"></div>
+      <div class="section-lbl" style="margin-top:0.75rem">Parent Verified</div>
+      <div id="weekly-verify-list"></div>
+    </div>
+
+    <!-- SPECIAL PANEL -->
+    <div class="tab-panel" id="panel-special">
+      <div id="special-list"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- BOTTOM NAV -->
+<nav class="bottom-nav" id="bottom-nav" style="display:none;">
+  <a class="nav-item" href="index.html">
+    <span class="nav-mark">✦</span><span class="nav-label">Home</span>
+  </a>
+  <a class="nav-item active" href="missions.html">
+    <span class="nav-mark">☩</span><span class="nav-label">Missions</span>
+  </a>
+  <a class="nav-item" href="curriculum.html">
+    <span class="nav-mark">⊕</span><span class="nav-label">Topics</span>
+  </a>
+  <a class="nav-item" href="bazaar.html">
+    <span class="nav-mark">◈</span><span class="nav-label">Bazaar</span>
+    <span class="nav-dot" id="bazaar-dot"></span>
+  </a>
+  <a class="nav-item" href="games.html">
+    <span class="nav-mark">⚔</span><span class="nav-label">Games</span>
+  </a>
+</nav>
+
+<script>
+// ── SUPABASE ──────────────────────────────────────────────────
+const SUPABASE_URL = 'https://ksfnsryfmkafwirzgjoe.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtzZm5zcnlmbWthZndpcnpnam9lIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2ODM4MTcsImV4cCI6MjA5MTI1OTgxN30.mHQty44WBnjQY8BJ8KbPk_pp-yTcOaifGxCZPUO4xpY';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ── STATE ─────────────────────────────────────────────────────
+let profile = null;
+let allMissions = [];
+let completions = [];
+let activeTab = 'daily';
+
+// ── TIME KEYS ─────────────────────────────────────────────────
+const todayKey = () => new Date().toISOString().slice(0,10);
+const weekKey  = () => {
+  const d=new Date(),j=new Date(d.getFullYear(),0,1);
+  const w=Math.ceil(((d-j)/86400000+j.getDay()+1)/7);
+  return `${d.getFullYear()}-W${String(w).padStart(2,'0')}`;
+};
+
+// ── AUTH ──────────────────────────────────────────────────────
+sb.auth.onAuthStateChange(async(event,session)=>{
+  if(session){
+    await loadAll(session.user.id);
+    document.getElementById('loading').style.display='none';
+    document.getElementById('app').style.display='block';
+    document.getElementById('bottom-nav').style.display='flex';
+  } else {
+    window.location.href='index.html';
+  }
+});
+(async()=>{
+  const {data:{session}} = await sb.auth.getSession();
+  if(!session) window.location.href='index.html';
+})();
+
+// ── LOAD ──────────────────────────────────────────────────────
+async function loadAll(userId){
+  const [profRes, missRes, compRes] = await Promise.all([
+    sb.from('profiles').select('*').eq('id',userId).single(),
+    sb.from('missions').select('*').eq('is_active',true).order('type').order('created_at'),
+    sb.from('mission_completions').select('*').eq('explorer_id',userId),
+  ]);
+  profile     = profRes.data;
+  allMissions = missRes.data || [];
+  completions = compRes.data || [];
+
+  updateCoinStrip();
+  renderAll();
+  updateTabBadges();
+}
+
+async function reload(){
+  if(!profile) return;
+  const [profRes, compRes] = await Promise.all([
+    sb.from('profiles').select('*').eq('id',profile.id).single(),
+    sb.from('mission_completions').select('*').eq('explorer_id',profile.id),
+  ]);
+  profile     = profRes.data;
+  completions = compRes.data || [];
+  updateCoinStrip();
+  renderAll();
+  updateTabBadges();
+}
+
+// ── COIN STRIP ────────────────────────────────────────────────
+function updateCoinStrip(){
+  const el = document.getElementById('coin-val');
+  el.textContent = (profile.coins||0).toLocaleString();
+  document.getElementById('lifetime-val').textContent = (profile.lifetime_coins||0).toLocaleString();
+}
+
+function animateCoinStrip(){
+  const el = document.getElementById('coin-val');
+  el.classList.remove('tick');
+  void el.offsetWidth;
+  el.classList.add('tick');
+  setTimeout(()=>el.classList.remove('tick'),400);
+}
+
+// ── TABS ──────────────────────────────────────────────────────
+function switchTab(tab){
+  activeTab = tab;
+  ['daily','weekly','special'].forEach(t=>{
+    document.getElementById('tab-'+t).classList.toggle('active',t===tab);
+    document.getElementById('panel-'+t).classList.toggle('show',t===tab);
+  });
+}
+
+// ── RENDER ALL ────────────────────────────────────────────────
+function renderAll(){
+  renderDaily();
+  renderWeekly();
+  renderSpecial();
+}
+
+// ── HELPERS ───────────────────────────────────────────────────
+function isDailyDone(missionId){
+  return completions.some(c=>
+    c.mission_id===missionId &&
+    c.day_key===todayKey() &&
+    (c.status==='completed'||c.status==='approved')
+  );
+}
+function isWeeklyDone(missionId){
+  return completions.some(c=>
+    c.mission_id===missionId &&
+    c.week_key===weekKey() &&
+    (c.status==='completed'||c.status==='approved')
+  );
+}
+function isWeeklyPending(missionId){
+  return completions.some(c=>
+    c.mission_id===missionId &&
+    c.week_key===weekKey() &&
+    c.status==='pending'
+  );
+}
+function isSpecialPending(missionId){
+  return completions.some(c=>c.mission_id===missionId && c.status==='pending');
+}
+function isSpecialDone(mission){
+  if(mission.repeatable) return false;
+  return completions.some(c=>c.mission_id===mission.id && c.status==='approved');
+}
+
+// ── DAILY ─────────────────────────────────────────────────────
+function renderDaily(){
+  const missions = allMissions.filter(m=>m.type==='daily');
+  const done = missions.filter(m=>isDailyDone(m.id)).length;
+  const total = missions.length;
+  const pct = total>0?(done/total)*100:0;
+
+  document.getElementById('ps-daily').style.width = pct+'%';
+  document.getElementById('ps-daily-lbl').textContent = `${done} / ${total}`;
+
+  const list = document.getElementById('daily-list');
+  list.innerHTML='';
+  if(!missions.length){list.innerHTML='<div class="empty-state">No daily missions found.</div>';return;}
+  missions.forEach(m=>{
+    const done = isDailyDone(m.id);
+    list.appendChild(buildCard(m, done?'done':'available', ()=>completeDailyMission(m)));
+  });
+}
+
+// ── WEEKLY ────────────────────────────────────────────────────
+function renderWeekly(){
+  const selfMissions   = allMissions.filter(m=>m.type==='weekly');
+  const verifyMissions = allMissions.filter(m=>m.type==='weekly_verified');
+  const all = [...selfMissions,...verifyMissions];
+  const done = all.filter(m=>isWeeklyDone(m.id)).length;
+  const total = all.length;
+  const pct = total>0?(done/total)*100:0;
+
+  document.getElementById('ps-weekly').style.width = pct+'%';
+  document.getElementById('ps-weekly-lbl').textContent = `${done} / ${total}`;
+
+  const selfList   = document.getElementById('weekly-self-list');
+  const verifyList = document.getElementById('weekly-verify-list');
+  selfList.innerHTML='';
+  verifyList.innerHTML='';
+
+  if(!selfMissions.length) selfList.innerHTML='<div class="empty-state">No self-report missions.</div>';
+  selfMissions.forEach(m=>{
+    const d = isWeeklyDone(m.id);
+    selfList.appendChild(buildCard(m, d?'done':'available', ()=>completeWeeklyMission(m)));
+  });
+
+  if(!verifyMissions.length) verifyList.innerHTML='<div class="empty-state">No verified missions.</div>';
+  verifyMissions.forEach(m=>{
+    const done    = isWeeklyDone(m.id);
+    const pending = isWeeklyPending(m.id);
+    const status  = done?'done':pending?'pending':'available';
+    verifyList.appendChild(buildVerifyCard(m, status, ()=>submitWeeklyVerify(m)));
+  });
+}
+
+// ── SPECIAL ───────────────────────────────────────────────────
+function renderSpecial(){
+  const types = ['special','field_visit'];
+  const missions = allMissions.filter(m=>types.includes(m.type));
+  const list = document.getElementById('special-list');
+  list.innerHTML='';
+
+  // Field visits section
+  const fieldVisits = missions.filter(m=>m.type==='field_visit');
+  if(fieldVisits.length){
+    const lbl = document.createElement('div');
+    lbl.className='section-lbl';lbl.textContent='Field Expeditions';
+    list.appendChild(lbl);
+    fieldVisits.forEach(m=>{
+      const pending = isSpecialPending(m.id);
+      const status  = pending?'pending':'available';
+      list.appendChild(buildVerifyCard(m,status,()=>submitSpecial(m)));
+    });
+  }
+
+  // Special missions
+  const special = missions.filter(m=>m.type==='special');
+  if(special.length){
+    const lbl = document.createElement('div');
+    lbl.className='section-lbl';
+    lbl.style.marginTop=fieldVisits.length?'0.75rem':'0';
+    lbl.textContent='Special Missions';
+    list.appendChild(lbl);
+    special.forEach(m=>{
+      const oneTimeDone = isSpecialDone(m);
+      const pending     = isSpecialPending(m.id);
+      const status      = oneTimeDone?'special-done':pending?'pending':'available';
+      list.appendChild(buildVerifyCard(m,status,()=>submitSpecial(m)));
+    });
+  }
+
+  if(!missions.length) list.innerHTML='<div class="empty-state">No special missions yet.</div>';
+}
+
+// ── CARD BUILDERS ─────────────────────────────────────────────
+function buildCard(m, status, onDone){
+  const card = document.createElement('div');
+  card.className = `m-card ${status}`;
+  card.id = `card-${m.id}`;
+
+  const typeTag = m.repeatable===false ? '<span class="m-tag">One-time</span>' : '';
+
+  const btnHtml = status==='done'
+    ? `<button class="m-btn done-btn">✓ Done</button><span class="m-check">✦</span>`
+    : `<button class="m-btn mark">Mark Done</button>`;
+
+  card.innerHTML = `
+    <div class="m-emoji">${m.emoji}</div>
+    <div class="m-info">
+      <div class="m-name">${m.name}</div>
+      <div class="m-detail">${m.detail}</div>
+      <div class="m-meta"><span class="m-coins">+${m.coins} coins</span>${typeTag}</div>
+    </div>
+    ${btnHtml}
+  `;
+
+  if(status!=='done'){
+    card.querySelector('.m-btn').addEventListener('click', onDone);
+  }
+  return card;
+}
+
+function buildVerifyCard(m, status, onSubmit){
+  const card = document.createElement('div');
+  card.className = `m-card ${status}`;
+  card.id = `card-${m.id}`;
+
+  const repeatTag = m.repeatable===false
+    ? '<span class="m-tag">One-time</span>'
+    : m.type==='special'?'<span class="m-tag">Repeatable</span>':'';
+
+  let btnHtml = '';
+  if(status==='special-done')
+    btnHtml=`<button class="m-btn complete-badge">✦ Complete</button><span class="m-check">✦</span>`;
+  else if(status==='done')
+    btnHtml=`<button class="m-btn done-btn">✓ Done</button><span class="m-check">✦</span>`;
+  else if(status==='pending')
+    btnHtml=`<button class="m-btn pending-btn">⏳ Awaiting</button><span class="m-pending-badge">PENDING</span>`;
+  else
+    btnHtml=`<button class="m-btn submit">${m.type==='special'||m.type==='field_visit'?"I'm Ready!":"Submit"}</button>`;
+
+  card.innerHTML = `
+    <div class="m-emoji">${m.emoji}</div>
+    <div class="m-info">
+      <div class="m-name">${m.name}</div>
+      <div class="m-detail">${m.detail}</div>
+      <div class="m-meta"><span class="m-coins">+${m.coins} coins</span>${repeatTag}</div>
+    </div>
+    ${btnHtml}
+  `;
+
+  if(status==='available'){
+    card.querySelector('.m-btn').addEventListener('click', onSubmit);
+  }
+  return card;
+}
+
+// ── COMPLETE MISSIONS ─────────────────────────────────────────
+async function completeDailyMission(m){
+  if(isDailyDone(m.id)) return;
+  const btn = document.querySelector(`#card-${m.id} .m-btn`);
+  if(btn) btn.disabled=true;
+
+  const {error:compErr} = await sb.from('mission_completions').insert({
+    explorer_id: profile.id,
+    mission_id:  m.id,
+    status:      'completed',
+    day_key:     todayKey(),
+    completed_at: new Date().toISOString(),
+    coins_awarded: m.coins,
+  });
+  if(compErr){console.error(compErr);if(btn)btn.disabled=false;return;}
+
+  await awardCoins(m.coins, m.name);
+  flashCard(`card-${m.id}`);
+  coinRain(m.coins);
+  animateCoinStrip();
+  await reload();
+}
+
+async function completeWeeklyMission(m){
+  if(isWeeklyDone(m.id)) return;
+  const btn = document.querySelector(`#card-${m.id} .m-btn`);
+  if(btn) btn.disabled=true;
+
+  const {error} = await sb.from('mission_completions').insert({
+    explorer_id:  profile.id,
+    mission_id:   m.id,
+    status:       'completed',
+    week_key:     weekKey(),
+    completed_at: new Date().toISOString(),
+    coins_awarded: m.coins,
+  });
+  if(error){console.error(error);if(btn)btn.disabled=false;return;}
+
+  // If attendance mission, increment sessions
+  if(m.name.toLowerCase().includes('attend')||m.name.toLowerCase().includes('expedition')){
+    await sb.from('profiles').update({
+      sessions_attended: (profile.sessions_attended||0)+1,
+      streak: (profile.streak||0)+1,
+      last_session_week: weekKey(),
+    }).eq('id',profile.id);
+  }
+
+  await awardCoins(m.coins, m.name);
+  flashCard(`card-${m.id}`);
+  coinRain(m.coins);
+  animateCoinStrip();
+  await reload();
+}
+
+async function submitWeeklyVerify(m){
+  if(isWeeklyDone(m.id)||isWeeklyPending(m.id)) return;
+  const {error} = await sb.from('mission_completions').insert({
+    explorer_id: profile.id,
+    mission_id:  m.id,
+    status:      'pending',
+    week_key:    weekKey(),
+    created_at:  new Date().toISOString(),
+  });
+  if(error){console.error(error);return;}
+  await reload();
+}
+
+async function submitSpecial(m){
+  if(isSpecialPending(m.id)||isSpecialDone(m)) return;
+  const {error} = await sb.from('mission_completions').insert({
+    explorer_id: profile.id,
+    mission_id:  m.id,
+    status:      'pending',
+    created_at:  new Date().toISOString(),
+  });
+  if(error){console.error(error);return;}
+  await reload();
+}
+
+// ── AWARD COINS ───────────────────────────────────────────────
+async function awardCoins(amount, reason){
+  const newCoins    = (profile.coins||0)+amount;
+  const newLifetime = (profile.lifetime_coins||0)+amount;
+  await Promise.all([
+    sb.from('profiles').update({coins:newCoins,lifetime_coins:newLifetime}).eq('id',profile.id),
+    sb.from('activity_log').insert({explorer_id:profile.id,amount,reason,created_at:new Date().toISOString()}),
+  ]);
+}
+
+// ── ANIMATIONS ────────────────────────────────────────────────
+function flashCard(cardId){
+  const card = document.getElementById(cardId);
+  if(!card) return;
+  card.classList.add('done-flash');
+}
+
+function coinRain(amount){
+  const n = Math.min(Math.floor(amount/8)+3,18);
+  const c = document.getElementById('coin-rain');
+  const symbols = ['✦','◈','☩','⊕'];
+  for(let i=0;i<n;i++){
+    setTimeout(()=>{
+      const el=document.createElement('div');
+      el.className='coin-p';
+      el.textContent=symbols[Math.floor(Math.random()*symbols.length)];
+      el.style.left=Math.random()*92+'vw';
+      el.style.animationDuration=(1.2+Math.random()*1.8)+'s';
+      el.style.color=['#ffd700','#f0c96e','#c9922a'][Math.floor(Math.random()*3)];
+      c.appendChild(el);
+      setTimeout(()=>el.remove(),3500);
+    },i*70);
+  }
+}
+
+// ── TAB BADGES ────────────────────────────────────────────────
+function updateTabBadges(){
+  const daily   = allMissions.filter(m=>m.type==='daily');
+  const selfW   = allMissions.filter(m=>m.type==='weekly');
+  const verifyW = allMissions.filter(m=>m.type==='weekly_verified');
+  const special = allMissions.filter(m=>['special','field_visit'].includes(m.type));
+
+  const dailyPending   = daily.filter(m=>!isDailyDone(m.id)).length;
+  const weeklyPending  = [...selfW,...verifyW].filter(m=>!isWeeklyDone(m.id)).length;
+  const specialPending = special.filter(m=>isSpecialPending(m.id)).length;
+
+  setBadge('daily',   dailyPending);
+  setBadge('weekly',  weeklyPending);
+  setBadge('special', specialPending);
+}
+
+function setBadge(tab, count){
+  const el = document.getElementById('badge-'+tab);
+  if(count>0){el.textContent=count;el.classList.add('show');}
+  else el.classList.remove('show');
+}
+</script>
+</body>
+</html>

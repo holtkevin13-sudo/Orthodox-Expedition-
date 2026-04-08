@@ -3,335 +3,542 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Missions — The Orthodox Expedition</title>
+<title>The Orthodox Expedition</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 /* ── VARIABLES ─────────────────────────────────────────────── */
-:root{
+:root {
   --gold:#c9922a;--gold-light:#f0c96e;--gold-bright:#ffd700;
-  --parchment:#f4e8c1;--parchment-dark:#e8d5a0;
+  --parchment:#f4e8c1;--parchment-dark:#e8d5a0;--parchment-deeper:#d4b870;
   --ink:#1a0f00;--ink-light:#3d2b1f;
-  --burgundy:#6b1a1a;
+  --burgundy:#6b1a1a;--burgundy-light:#8b2a2a;
   --byzantine:#2c1654;--byzantine-light:#4a2a7a;
-  --green:#16a34a;--green-dark:#15803d;
-  --shadow:rgba(26,15,0,0.5);
+  --green:#2a5c2a;--shadow:rgba(26,15,0,0.5);
   --bg:#0e0800;
   --nav-h:72px;
+
+  /* Rank colors */
+  --rank-1:#9ca3af;
+  --rank-2:#b45309;
+  --rank-3:#c9922a;
+  --rank-4:#d97706;
+  --rank-5:#7c3aed;
+  --rank-6:#9f1239;
+  --rank-7:#ffd700;
 }
+
+/* ── RESET ─────────────────────────────────────────────────── */
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 html,body{height:100%;overflow-x:hidden;}
 body{
   font-family:'Crimson Text',serif;
   background-color:var(--bg);
   background-image:
-    radial-gradient(ellipse at 50% 0%,rgba(107,26,26,0.4) 0%,transparent 60%),
-    radial-gradient(ellipse at 100% 100%,rgba(44,22,84,0.3) 0%,transparent 50%);
-  min-height:100vh;
+    radial-gradient(ellipse at 50% 0%,rgba(107,26,26,0.5) 0%,transparent 60%),
+    radial-gradient(ellipse at 100% 100%,rgba(44,22,84,0.35) 0%,transparent 50%),
+    radial-gradient(ellipse at 0% 70%,rgba(107,26,26,0.2) 0%,transparent 40%);
+  min-height:100vh;color:var(--ink);
 }
 body::before{
   content:'';position:fixed;inset:0;
   background-image:
     linear-gradient(rgba(201,146,42,0.025) 1px,transparent 1px),
     linear-gradient(90deg,rgba(201,146,42,0.025) 1px,transparent 1px);
-  background-size:44px 44px;pointer-events:none;z-index:0;
+  background-size:44px 44px;
+  pointer-events:none;z-index:0;
 }
 
-/* ── COIN RAIN ──────────────────────────────────────────────── */
-#coin-rain{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999;overflow:hidden;}
-.coin-p{position:absolute;top:-60px;font-size:1.6rem;animation:coinFall linear forwards;filter:drop-shadow(0 0 6px var(--gold-bright));}
-@keyframes coinFall{0%{transform:translateY(0) rotate(0deg);opacity:1;}80%{opacity:1;}100%{transform:translateY(110vh) rotate(540deg) scale(0.4);opacity:0;}}
-
-/* ── LOADING / AUTH ─────────────────────────────────────────── */
-#loading{position:fixed;inset:0;z-index:400;display:flex;align-items:center;justify-content:center;background:var(--bg);}
-.loading-cross{font-family:'Cinzel',serif;font-size:2rem;color:rgba(201,146,42,0.4);animation:pulse 1.5s ease-in-out infinite;}
-@keyframes pulse{0%,100%{opacity:0.3;}50%{opacity:0.8;}}
-
-/* ── MAIN ───────────────────────────────────────────────────── */
+/* ── MAIN APP ──────────────────────────────────────────────── */
 #app{display:none;position:relative;z-index:1;}
 .page{max-width:480px;margin:0 auto;padding:1.25rem 1rem calc(var(--nav-h) + 1.5rem);}
 
-/* ── HEADER ─────────────────────────────────────────────────── */
-.app-header{text-align:center;padding:1.25rem 1rem 1rem;border-bottom:1px solid rgba(201,146,42,0.18);margin-bottom:1.25rem;}
-.app-name{font-family:'Cinzel Decorative',serif;font-size:clamp(0.9rem,3.2vw,1.1rem);color:var(--gold-light);letter-spacing:0.06em;text-shadow:0 0 20px rgba(201,146,42,0.35);}
+/* ── APP HEADER ────────────────────────────────────────────── */
+.app-header{
+  text-align:center;padding:1.25rem 1rem 1rem;
+  border-bottom:1px solid rgba(201,146,42,0.18);
+  margin-bottom:1.25rem;position:relative;
+}
+.app-header-row{display:flex;align-items:center;justify-content:space-between;}
+.app-name{font-family:'Cinzel Decorative',serif;font-size:clamp(0.95rem,3.5vw,1.2rem);color:var(--gold-light);letter-spacing:0.06em;text-shadow:0 0 20px rgba(201,146,42,0.35);flex:1;text-align:center;}
+.header-logout{background:none;border:none;cursor:pointer;color:rgba(201,146,42,0.3);font-size:0.75rem;font-family:'Cinzel',serif;padding:0.25rem 0.5rem;transition:color 0.2s;}
+.header-logout:hover{color:rgba(201,146,42,0.7);}
 .app-divider{color:rgba(201,146,42,0.35);letter-spacing:0.6rem;font-size:0.65rem;margin-top:0.3rem;}
 
-/* ── COIN STRIP ─────────────────────────────────────────────── */
-.coin-strip{
-  display:flex;align-items:center;justify-content:space-between;
-  background:linear-gradient(135deg,rgba(44,22,84,0.9) 0%,rgba(107,26,26,0.9) 100%);
-  border:1px solid rgba(201,146,42,0.3);
-  border-radius:14px;padding:0.875rem 1.25rem;
-  margin-bottom:1.25rem;
+/* ── RANK HERO ─────────────────────────────────────────────── */
+.rank-hero{
+  position:relative;
+  border-radius:20px;padding:1.75rem 1.5rem 1.5rem;
+  margin-bottom:1.125rem;overflow:hidden;
+  box-shadow:0 12px 40px rgba(0,0,0,0.6),inset 0 1px 0 rgba(201,146,42,0.15);
+  transition:background 0.8s ease;
 }
-.coin-strip-left{font-family:'Cinzel',serif;font-size:0.65rem;letter-spacing:0.15em;color:rgba(201,146,42,0.55);text-transform:uppercase;}
-.coin-strip-val{font-family:'Cinzel Decorative',serif;font-size:1.8rem;color:var(--gold-bright);text-shadow:0 0 16px rgba(255,215,0,0.5);line-height:1;transition:all 0.3s;}
-.coin-strip-right{text-align:right;}
-.coin-strip-lifetime{font-family:'Cinzel',serif;font-size:0.6rem;color:rgba(201,146,42,0.4);letter-spacing:0.08em;}
-.coin-strip-lifetime-val{font-family:'Cinzel',serif;font-size:0.8rem;color:rgba(201,146,42,0.6);}
-@keyframes coinTick{from{transform:translateY(6px);opacity:0;}to{transform:translateY(0);opacity:1;}}
-.coin-strip-val.tick{animation:coinTick 0.3s ease-out;}
-
-/* ── MISSION TABS ───────────────────────────────────────────── */
-.mission-tabs{display:flex;gap:0.4rem;margin-bottom:1rem;}
-.m-tab{
-  flex:1;padding:0.6rem 0.25rem;min-height:48px;
-  background:rgba(201,146,42,0.06);
-  border:1px solid rgba(201,146,42,0.18);
-  border-radius:10px;font-family:'Cinzel',serif;font-size:0.68rem;
-  cursor:pointer;text-align:center;transition:all 0.2s;
-  color:rgba(201,146,42,0.4);letter-spacing:0.04em;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0.15rem;
+.rank-hero-bg{
+  position:absolute;inset:0;border-radius:20px;
+  background:linear-gradient(160deg,rgba(44,22,84,0.97) 0%,rgba(18,8,40,0.99) 50%,rgba(107,26,26,0.97) 100%);
+  transition:opacity 0.8s;
 }
-.m-tab.active,.m-tab:active{background:var(--gold);color:var(--ink);border-color:var(--gold-bright);box-shadow:0 0 12px rgba(255,215,0,0.2);}
-.m-tab-mark{font-size:0.9rem;line-height:1;}
-.m-tab-badge{
-  background:#ef4444;color:white;border-radius:10px;
-  font-size:0.5rem;padding:0.05rem 0.3rem;
-  font-family:'Cinzel',serif;display:none;
+.rank-hero-glow{
+  position:absolute;inset:0;pointer-events:none;
+  border-radius:20px;
+  transition:background 0.8s;
 }
-.m-tab-badge.show{display:inline-block;}
-
-/* ── TAB CONTENT ────────────────────────────────────────────── */
-.tab-panel{display:none;}
-.tab-panel.show{display:block;}
-
-/* ── PROGRESS SUMMARY ───────────────────────────────────────── */
-.progress-summary{
-  display:flex;align-items:center;justify-content:space-between;
-  margin-bottom:0.875rem;padding:0 0.25rem;
+.rank-hero-border{
+  position:absolute;inset:0;border-radius:20px;
+  border:1px solid rgba(201,146,42,0.35);
+  transition:border-color 0.8s;
 }
-.ps-label{font-family:'Cinzel',serif;font-size:0.65rem;letter-spacing:0.15em;color:rgba(201,146,42,0.45);text-transform:uppercase;}
-.ps-val{font-family:'Cinzel',serif;font-size:0.72rem;color:var(--gold-light);}
-.ps-bar-wrap{flex:1;margin:0 0.75rem;}
-.ps-bar{height:4px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden;}
-.ps-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--gold),var(--gold-bright));transition:width 0.8s cubic-bezier(0.4,0,0.2,1);}
-
-/* ── SECTION LABEL ──────────────────────────────────────────── */
-.section-lbl{
-  font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.2em;
-  text-transform:uppercase;color:rgba(201,146,42,0.4);
-  padding:0.5rem 0 0.4rem;
-  border-bottom:1px solid rgba(201,146,42,0.1);
-  margin-bottom:0.5rem;
+.rank-hero-deco-tl,.rank-hero-deco-br{
+  position:absolute;color:rgba(201,146,42,0.12);
+  font-size:5rem;line-height:1;pointer-events:none;
+  transition:color 0.8s;
 }
+.rank-hero-deco-tl{top:-0.8rem;left:-0.8rem;}
+.rank-hero-deco-br{bottom:-0.8rem;right:-0.8rem;}
 
-/* ── MISSION CARD ───────────────────────────────────────────── */
-.m-card{
-  display:flex;align-items:center;gap:0.75rem;
-  border:1.5px solid rgba(201,146,42,0.2);
-  border-radius:12px;padding:0.875rem 0.875rem;
-  margin-bottom:0.6rem;
-  transition:all 0.35s ease;
-  position:relative;overflow:hidden;
-  background:rgba(244,232,193,0.03);
+.rank-eyebrow{
+  font-family:'Cinzel',serif;font-size:0.6rem;
+  letter-spacing:0.3em;color:rgba(201,146,42,0.55);
+  text-transform:uppercase;text-align:center;
+  margin-bottom:0.875rem;position:relative;z-index:1;
 }
-
-/* Available */
-.m-card.available{border-color:rgba(201,146,42,0.2);}
-.m-card.available:hover{border-color:rgba(201,146,42,0.35);background:rgba(244,232,193,0.05);}
-
-/* Done — green settled state */
-.m-card.done{
-  background:rgba(22,163,74,0.06);
-  border-color:rgba(22,163,74,0.3);
+.rank-badge-row{
+  display:flex;align-items:center;gap:1.125rem;
+  margin-bottom:1.375rem;position:relative;z-index:1;
 }
-
-/* Done flash — brief bright green on completion */
-@keyframes doneFlash{
-  0%{background:rgba(22,163,74,0.25);border-color:rgba(22,163,74,0.8);box-shadow:0 0 20px rgba(22,163,74,0.3);}
-  100%{background:rgba(22,163,74,0.06);border-color:rgba(22,163,74,0.3);box-shadow:none;}
+.rank-medallion{
+  width:86px;height:86px;flex-shrink:0;border-radius:50%;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  position:relative;transition:all 0.8s ease;
 }
-.m-card.done-flash{animation:doneFlash 0.7s ease-out forwards;}
-
-/* Pending */
-@keyframes pendingPulse{
-  0%,100%{border-color:rgba(124,58,237,0.35);box-shadow:0 0 8px rgba(124,58,237,0.1);}
-  50%{border-color:rgba(124,58,237,0.6);box-shadow:0 0 16px rgba(124,58,237,0.25);}
+.rank-medallion::before{
+  content:'';position:absolute;inset:-5px;border-radius:50%;
+  border:1px solid rgba(201,146,42,0.12);
 }
-.m-card.pending{
-  background:rgba(44,22,84,0.12);
-  border-color:rgba(124,58,237,0.35);
-  animation:pendingPulse 2.5s ease-in-out infinite;
+.rank-medallion::after{
+  content:'';position:absolute;inset:0;border-radius:50%;
+  transition:box-shadow 0.8s;
 }
-
-/* Special done (one-time complete) */
-.m-card.special-done{
-  background:rgba(201,146,42,0.06);
-  border-color:rgba(201,146,42,0.3);
-  opacity:0.65;
+.rank-numeral{
+  font-family:'Cinzel Decorative',serif;
+  font-size:1.9rem;line-height:1;
+  transition:color 0.8s, text-shadow 0.8s;
 }
-
-.m-emoji{font-size:1.4rem;flex-shrink:0;line-height:1;}
-.m-info{flex:1;min-width:0;}
-.m-name{font-family:'Cinzel',serif;font-size:0.82rem;color:rgba(244,232,193,0.85);font-weight:600;line-height:1.3;}
-.m-card.done .m-name{color:rgba(134,239,172,0.7);}
-.m-card.special-done .m-name{color:rgba(201,146,42,0.6);}
-.m-detail{font-size:0.74rem;color:rgba(244,232,193,0.35);margin-top:0.1rem;font-style:italic;line-height:1.3;}
-.m-meta{display:flex;align-items:center;gap:0.4rem;margin-top:0.2rem;}
-.m-coins{font-family:'Cinzel',serif;font-size:0.75rem;color:rgba(201,146,42,0.6);font-weight:700;}
-.m-tag{font-size:0.58rem;background:rgba(44,22,84,0.4);color:rgba(167,139,250,0.8);border:1px solid rgba(124,58,237,0.25);border-radius:4px;padding:0.1rem 0.35rem;font-family:'Cinzel',serif;}
-
-/* ── ACTION BUTTONS ─────────────────────────────────────────── */
-.m-btn{
-  padding:0.45rem 0.8rem;min-height:40px;
-  border:none;border-radius:8px;
-  font-family:'Cinzel',serif;font-size:0.68rem;
-  cursor:pointer;transition:all 0.2s;
-  white-space:nowrap;flex-shrink:0;
-  letter-spacing:0.04em;
+.rank-label-sm{
+  font-family:'Cinzel',serif;font-size:0.5rem;
+  letter-spacing:0.2em;opacity:0.6;margin-top:0.15rem;
+  color:var(--parchment-dark);
 }
-.m-btn.mark{background:linear-gradient(135deg,var(--gold) 0%,var(--gold-bright) 100%);color:var(--ink);}
-.m-btn.mark:active{transform:scale(0.96);}
-.m-btn.done-btn{background:rgba(22,163,74,0.2);color:rgba(134,239,172,0.8);cursor:default;border:1px solid rgba(22,163,74,0.3);}
-.m-btn.pending-btn{background:rgba(44,22,84,0.4);color:rgba(167,139,250,0.8);cursor:default;border:1px solid rgba(124,58,237,0.3);}
-.m-btn.submit{background:linear-gradient(135deg,var(--byzantine) 0%,var(--byzantine-light) 100%);color:rgba(244,232,193,0.9);}
-.m-btn.submit:active{transform:scale(0.96);}
-.m-btn.complete-badge{background:rgba(201,146,42,0.15);color:rgba(201,146,42,0.6);cursor:default;border:1px solid rgba(201,146,42,0.2);}
-
-/* Done check */
-.m-check{
-  position:absolute;top:0.4rem;right:0.45rem;
-  font-size:0.75rem;color:rgba(134,239,172,0.7);
+.rank-info{flex:1;min-width:0;}
+.rank-title-text{
+  font-family:'Cinzel Decorative',serif;
+  font-size:clamp(0.95rem,3.2vw,1.15rem);
+  color:var(--gold-light);line-height:1.3;
+  text-shadow:0 0 15px rgba(201,146,42,0.25);
+  transition:color 0.8s;
 }
-.m-pending-badge{
-  position:absolute;top:0.35rem;right:0.45rem;
-  font-family:'Cinzel',serif;font-size:0.55rem;
-  color:rgba(167,139,250,0.8);
-  background:rgba(44,22,84,0.4);
-  border:1px solid rgba(124,58,237,0.3);
-  border-radius:4px;padding:0.1rem 0.35rem;
+.rank-subtitle{
+  font-family:'Cinzel',serif;font-size:0.6rem;
+  letter-spacing:0.15em;text-transform:uppercase;
+  color:rgba(201,146,42,0.45);margin-top:0.25rem;
+  transition:color 0.8s;
 }
-
-/* ── EMPTY STATE ────────────────────────────────────────────── */
-.empty-state{
-  text-align:center;padding:2rem 1rem;
+.rank-quote{
   font-family:'Crimson Text',serif;font-style:italic;
-  color:rgba(201,146,42,0.3);font-size:0.9rem;
+  color:rgba(244,232,193,0.35);font-size:0.78rem;
+  margin-top:0.5rem;line-height:1.45;
 }
 
-/* ── BOTTOM NAV ─────────────────────────────────────────────── */
+/* ── RANK PILLARS ──────────────────────────────────────────── */
+.rank-pillars{
+  display:grid;grid-template-columns:1fr 1px 1fr 1px 1fr;
+  gap:0;padding-top:1.125rem;
+  border-top:1px solid rgba(201,146,42,0.12);
+  position:relative;z-index:1;
+}
+.pillar-divider-v{background:rgba(201,146,42,0.12);align-self:stretch;margin:0.2rem 0;}
+.pillar{text-align:center;padding:0 0.25rem;}
+.pillar-val{
+  font-family:'Cinzel Decorative',serif;font-size:1.25rem;
+  color:var(--gold-bright);line-height:1;
+  text-shadow:0 0 12px rgba(255,215,0,0.35);
+}
+.pillar-lbl{
+  font-family:'Cinzel',serif;font-size:0.55rem;
+  letter-spacing:0.1em;color:rgba(201,146,42,0.45);
+  text-transform:uppercase;margin-top:0.2rem;
+}
+
+/* ── NEXT RANK CARD ────────────────────────────────────────── */
+.next-rank-card{
+  background:rgba(244,232,193,0.03);
+  border:1px solid rgba(201,146,42,0.2);
+  border-radius:14px;padding:1.125rem;
+  margin-bottom:1.125rem;
+}
+.next-rank-header{
+  display:flex;justify-content:space-between;align-items:center;
+  margin-bottom:0.875rem;
+}
+.next-rank-eyebrow{font-family:'Cinzel',serif;font-size:0.62rem;letter-spacing:0.18em;color:rgba(201,146,42,0.5);text-transform:uppercase;}
+.next-rank-name{font-family:'Cinzel',serif;font-size:0.78rem;color:var(--gold-light);font-weight:700;}
+.req{margin-bottom:0.75rem;}
+.req:last-child{margin-bottom:0;}
+.req-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:0.28rem;}
+.req-lbl{font-family:'Cinzel',serif;font-size:0.68rem;color:rgba(244,232,193,0.45);letter-spacing:0.06em;}
+.req-val{font-family:'Cinzel',serif;font-size:0.68rem;color:var(--gold-light);}
+.req-val.met{color:#4ade80;}
+.req-bar{height:5px;background:rgba(255,255,255,0.06);border-radius:3px;overflow:hidden;}
+.req-fill{height:100%;border-radius:3px;transition:width 1.2s cubic-bezier(0.4,0,0.2,1);width:0%;}
+.req-fill.coins{background:linear-gradient(90deg,var(--gold),var(--gold-bright));}
+.req-fill.sessions{background:linear-gradient(90deg,#6d28d9,#a78bfa);}
+.req-fill.topics{background:linear-gradient(90deg,var(--burgundy),#e11d48);}
+.req-fill.done{background:linear-gradient(90deg,#16a34a,#4ade80);}
+
+/* ── CURRENT TOPIC CARD ────────────────────────────────────── */
+.current-topic-card{
+  background:rgba(244,232,193,0.03);
+  border:1px solid rgba(201,146,42,0.2);
+  border-radius:14px;padding:1.125rem;
+  margin-bottom:1.125rem;
+  cursor:pointer;transition:border-color 0.2s,background 0.2s;
+  text-decoration:none;display:block;
+}
+.current-topic-card:active{background:rgba(201,146,42,0.06);border-color:rgba(201,146,42,0.4);}
+.ct-eyebrow{font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.2em;color:rgba(201,146,42,0.5);text-transform:uppercase;margin-bottom:0.4rem;}
+.ct-title{font-family:'Cinzel',serif;color:var(--gold-light);font-size:0.95rem;font-weight:700;margin-bottom:0.25rem;}
+.ct-session{font-family:'Crimson Text',serif;color:rgba(244,232,193,0.5);font-size:0.82rem;font-style:italic;margin-bottom:0.75rem;}
+.ct-bar-bg{height:6px;background:rgba(255,255,255,0.06);border-radius:3px;overflow:hidden;margin-bottom:0.3rem;}
+.ct-bar-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--gold),var(--gold-bright));transition:width 1s cubic-bezier(0.4,0,0.2,1);width:0%;}
+.ct-progress-lbl{font-family:'Cinzel',serif;font-size:0.62rem;color:rgba(201,146,42,0.4);text-align:right;}
+.ct-arrow{float:right;color:rgba(201,146,42,0.4);font-size:0.8rem;margin-top:-1.2rem;}
+
+/* ── STATS ROW ─────────────────────────────────────────────── */
+.stats-row{display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-bottom:1.125rem;}
+.stat-card{
+  background:rgba(244,232,193,0.03);
+  border:1px solid rgba(201,146,42,0.18);
+  border-radius:12px;padding:0.875rem;text-align:center;
+}
+.stat-val{font-family:'Cinzel Decorative',serif;font-size:1.5rem;color:var(--gold-bright);text-shadow:0 0 12px rgba(255,215,0,0.3);line-height:1;}
+.stat-lbl{font-family:'Cinzel',serif;font-size:0.58rem;letter-spacing:0.12em;color:rgba(201,146,42,0.45);text-transform:uppercase;margin-top:0.25rem;}
+
+/* ── STREAK CARD ───────────────────────────────────────────── */
+.streak-card{
+  background:rgba(244,232,193,0.03);
+  border:1px solid rgba(201,146,42,0.18);
+  border-radius:12px;padding:0.875rem 1rem;
+  margin-bottom:1.125rem;
+  display:flex;align-items:center;gap:0.875rem;
+}
+.streak-left{flex:1;}
+.streak-title{font-family:'Cinzel',serif;color:rgba(201,146,42,0.7);font-size:0.7rem;letter-spacing:0.12em;text-transform:uppercase;margin-bottom:0.4rem;}
+.streak-dots{display:flex;gap:0.3rem;}
+.streak-dot{
+  width:28px;height:28px;border-radius:50%;
+  border:1px solid rgba(201,146,42,0.25);
+  background:rgba(255,255,255,0.03);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Cinzel',serif;font-size:0.6rem;
+  color:rgba(201,146,42,0.2);transition:all 0.4s;
+}
+.streak-dot.lit{
+  background:linear-gradient(135deg,var(--gold),var(--gold-bright));
+  border-color:var(--gold-bright);color:var(--ink);
+  box-shadow:0 0 10px rgba(255,215,0,0.4);
+}
+.streak-right{text-align:right;}
+.streak-num{font-family:'Cinzel Decorative',serif;font-size:1.8rem;color:var(--gold-bright);text-shadow:0 0 15px rgba(255,215,0,0.4);line-height:1;}
+.streak-sub{font-family:'Cinzel',serif;font-size:0.55rem;letter-spacing:0.12em;color:rgba(201,146,42,0.35);text-transform:uppercase;}
+
+/* ── BADGES ROW ────────────────────────────────────────────── */
+.badges-section{margin-bottom:1.25rem;}
+.badges-eyebrow{font-family:'Cinzel',serif;font-size:0.62rem;letter-spacing:0.2em;color:rgba(201,146,42,0.45);text-transform:uppercase;margin-bottom:0.6rem;}
+.badges-scroll{display:flex;gap:0.6rem;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch;}
+.badges-scroll::-webkit-scrollbar{display:none;}
+.badge-chip{
+  flex:0 0 auto;
+  background:rgba(244,232,193,0.04);
+  border:1px solid rgba(201,146,42,0.18);
+  border-radius:10px;padding:0.6rem 0.5rem;
+  text-align:center;width:70px;
+  transition:all 0.2s;
+}
+.badge-chip.earned{
+  border-color:rgba(201,146,42,0.45);
+  background:rgba(201,146,42,0.08);
+  box-shadow:0 0 12px rgba(201,146,42,0.15);
+}
+.badge-chip.locked{opacity:0.35;}
+.badge-icon{font-size:1.4rem;display:block;margin-bottom:0.25rem;filter:grayscale(1);}
+.badge-chip.earned .badge-icon{filter:grayscale(0);}
+.badge-name{font-family:'Cinzel',serif;font-size:0.5rem;letter-spacing:0.04em;color:rgba(201,146,42,0.5);line-height:1.3;}
+.badge-chip.earned .badge-name{color:var(--gold-light);}
+
+/* ── BOTTOM NAV ────────────────────────────────────────────── */
 .bottom-nav{
-  position:fixed;bottom:0;left:0;right:0;height:var(--nav-h);
-  background:rgba(8,4,0,0.97);border-top:1px solid rgba(201,146,42,0.18);
-  display:flex;align-items:stretch;backdrop-filter:blur(16px);z-index:200;
+  position:fixed;bottom:0;left:0;right:0;
+  height:var(--nav-h);
+  background:rgba(8,4,0,0.97);
+  border-top:1px solid rgba(201,146,42,0.18);
+  display:flex;align-items:stretch;
+  backdrop-filter:blur(16px);
+  z-index:200;
   padding-bottom:env(safe-area-inset-bottom);
 }
 .nav-item{
-  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
-  gap:0.2rem;cursor:pointer;border:none;background:none;
-  padding:0.5rem 0.25rem;position:relative;transition:all 0.2s;text-decoration:none;
+  flex:1;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:0.2rem;
+  cursor:pointer;border:none;background:none;
+  padding:0.5rem 0.25rem;position:relative;
+  transition:all 0.2s;text-decoration:none;
 }
 .nav-item:active{background:rgba(201,146,42,0.06);}
-.nav-mark{font-size:1rem;line-height:1;color:rgba(201,146,42,0.25);transition:all 0.25s;}
-.nav-label{font-family:'Cinzel',serif;font-size:0.56rem;letter-spacing:0.1em;text-transform:uppercase;color:rgba(201,146,42,0.3);transition:all 0.25s;}
-.nav-item.active .nav-mark{color:var(--gold-bright);text-shadow:0 0 12px rgba(255,215,0,0.6);filter:drop-shadow(0 0 4px rgba(255,215,0,0.4));}
+.nav-mark{
+  font-size:1rem;line-height:1;
+  color:rgba(201,146,42,0.25);
+  transition:all 0.25s;
+}
+.nav-label{
+  font-family:'Cinzel',serif;font-size:0.56rem;
+  letter-spacing:0.1em;text-transform:uppercase;
+  color:rgba(201,146,42,0.3);
+  transition:all 0.25s;
+}
+.nav-item.active .nav-mark{
+  color:var(--gold-bright);
+  text-shadow:0 0 12px rgba(255,215,0,0.6);
+  filter:drop-shadow(0 0 4px rgba(255,215,0,0.4));
+}
 .nav-item.active .nav-label{color:var(--gold-light);}
-.nav-item.active::before{content:'';position:absolute;top:0;left:20%;right:20%;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent);border-radius:0 0 2px 2px;}
-.nav-dot{position:absolute;top:0.4rem;right:calc(50% - 18px);width:7px;height:7px;border-radius:50%;background:#ef4444;border:1.5px solid rgba(8,4,0,0.9);display:none;}
+.nav-item.active::before{
+  content:'';position:absolute;top:0;left:20%;right:20%;
+  height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent);
+  border-radius:0 0 2px 2px;
+}
+/* Notification dot */
+.nav-dot{
+  position:absolute;top:0.4rem;right:calc(50% - 18px);
+  width:7px;height:7px;border-radius:50%;
+  background:#ef4444;border:1.5px solid rgba(8,4,0,0.9);
+  display:none;
+}
 .nav-dot.show{display:block;}
 
-/* ── ANIMATIONS ─────────────────────────────────────────────── */
-.fade-up{opacity:0;transform:translateY(12px);animation:fadeUp 0.4s ease forwards;}
+/* ── ANIMATIONS ────────────────────────────────────────────── */
+.fade-up{opacity:0;transform:translateY(14px);animation:fadeUp 0.45s ease forwards;}
 @keyframes fadeUp{to{opacity:1;transform:translateY(0);}}
 .fade-up:nth-child(1){animation-delay:0.04s;}
 .fade-up:nth-child(2){animation-delay:0.1s;}
 .fade-up:nth-child(3){animation-delay:0.16s;}
+.fade-up:nth-child(4){animation-delay:0.22s;}
+.fade-up:nth-child(5){animation-delay:0.28s;}
+.fade-up:nth-child(6){animation-delay:0.34s;}
+.fade-up:nth-child(7){animation-delay:0.4s;}
+
+/* ── RANK UP FLASH ─────────────────────────────────────────── */
+#rankup-flash{
+  position:fixed;inset:0;z-index:900;
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(8,4,0,0.92);padding:1.5rem;
+  opacity:0;pointer-events:none;transition:opacity 0.3s;
+}
+#rankup-flash.show{opacity:1;pointer-events:all;}
+.rankup-box{
+  width:100%;max-width:360px;
+  background:linear-gradient(160deg,rgba(44,22,84,0.98) 0%,rgba(107,26,26,0.98) 100%);
+  border:2px solid var(--gold);border-radius:20px;
+  padding:2.5rem 2rem;text-align:center;
+  box-shadow:0 0 60px rgba(201,146,42,0.4);
+  animation:rankupAnim 0.5s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes rankupAnim{from{transform:scale(0.6) rotate(-3deg);}to{transform:scale(1) rotate(0);}}
+.rankup-eyebrow{font-family:'Cinzel',serif;font-size:0.65rem;letter-spacing:0.3em;color:rgba(201,146,42,0.6);text-transform:uppercase;margin-bottom:0.75rem;}
+.rankup-numeral{font-family:'Cinzel Decorative',serif;font-size:3.5rem;line-height:1;margin-bottom:0.5rem;text-shadow:0 0 30px currentColor;}
+.rankup-title{font-family:'Cinzel Decorative',serif;font-size:1.3rem;color:var(--gold-light);margin-bottom:0.5rem;}
+.rankup-quote{font-family:'Crimson Text',serif;font-style:italic;color:rgba(244,232,193,0.5);font-size:0.9rem;line-height:1.5;margin-bottom:1.5rem;}
+.rankup-btn{
+  padding:0.75rem 2rem;background:linear-gradient(135deg,var(--gold),var(--gold-bright));
+  border:none;border-radius:10px;font-family:'Cinzel',serif;font-size:0.82rem;
+  color:var(--ink);cursor:pointer;min-height:48px;letter-spacing:0.05em;
+}
+
+/* ── LOADING ────────────────────────────────────────────────── */
+#loading{
+  position:fixed;inset:0;z-index:400;
+  display:flex;align-items:center;justify-content:center;
+  background:var(--bg);transition:opacity 0.4s;
+}
+.loading-cross{
+  font-family:'Cinzel',serif;font-size:2rem;color:rgba(201,146,42,0.4);
+  animation:pulse 1.5s ease-in-out infinite;
+}
+@keyframes pulse{0%,100%{opacity:0.3;}50%{opacity:0.8;}}
 </style>
 </head>
 <body>
 
-<div id="coin-rain"></div>
+<!-- LOADING -->
 <div id="loading"><div class="loading-cross">☩</div></div>
 
+
+<!-- RANK UP FLASH -->
+<div id="rankup-flash">
+  <div class="rankup-box">
+    <div class="rankup-eyebrow">Rank Achieved</div>
+    <div class="rankup-numeral" id="ru-numeral">II</div>
+    <div class="rankup-title" id="ru-title">Field Apprentice</div>
+    <div class="rankup-quote" id="ru-quote">The curious mind finds treasure everywhere.</div>
+    <button class="rankup-btn" onclick="closeRankup()">Continue the Expedition ⛏️</button>
+  </div>
+</div>
+
+<!-- MAIN APP -->
 <div id="app">
   <div class="page">
 
     <!-- HEADER -->
     <header class="app-header">
-      <div class="app-name">The Orthodox Expedition</div>
+      <div class="app-header-row">
+        <div style="width:60px"></div>
+        <div class="app-name">The Orthodox Expedition</div>
+        <button class="header-logout" onclick="doLogout()">Sign Out</button>
+      </div>
       <div class="app-divider">✦ ☩ ✦</div>
     </header>
 
-    <!-- COIN STRIP -->
-    <div class="coin-strip fade-up">
-      <div class="coin-strip-left">
-        <div style="margin-bottom:0.15rem">Saint Coins</div>
-        <div class="coin-strip-val" id="coin-val">0</div>
+    <!-- RANK HERO -->
+    <div class="rank-hero fade-up" id="rank-hero">
+      <div class="rank-hero-bg"></div>
+      <div class="rank-hero-glow" id="rank-glow"></div>
+      <div class="rank-hero-border" id="rank-border"></div>
+      <div class="rank-hero-deco-tl">✦</div>
+      <div class="rank-hero-deco-br">✦</div>
+      <div class="rank-eyebrow">Current Rank</div>
+      <div class="rank-badge-row">
+        <div class="rank-medallion" id="rank-medallion">
+          <div class="rank-numeral" id="rank-numeral">I</div>
+          <div class="rank-label-sm">RANK</div>
+        </div>
+        <div class="rank-info">
+          <div class="rank-title-text" id="rank-title">Novice Explorer</div>
+          <div class="rank-subtitle" id="rank-subtitle">The Expedition Begins</div>
+          <div class="rank-quote" id="rank-quote">Every great expedition begins with a single step.</div>
+        </div>
       </div>
-      <div class="coin-strip-right">
-        <div class="coin-strip-lifetime">Lifetime Earned</div>
-        <div class="coin-strip-lifetime-val" id="lifetime-val">0</div>
+      <div class="rank-pillars">
+        <div class="pillar">
+          <div class="pillar-val" id="p-coins">0</div>
+          <div class="pillar-lbl">Coins Earned</div>
+        </div>
+        <div class="pillar-divider-v"></div>
+        <div class="pillar">
+          <div class="pillar-val" id="p-sessions">0</div>
+          <div class="pillar-lbl">Sessions</div>
+        </div>
+        <div class="pillar-divider-v"></div>
+        <div class="pillar">
+          <div class="pillar-val" id="p-topics">0</div>
+          <div class="pillar-lbl">Topics</div>
+        </div>
       </div>
     </div>
 
-    <!-- TABS -->
-    <div class="mission-tabs fade-up">
-      <button class="m-tab active" id="tab-daily" onclick="switchTab('daily')">
-        <span class="m-tab-mark">✦</span>
-        <span>Daily</span>
-        <span class="m-tab-badge" id="badge-daily"></span>
-      </button>
-      <button class="m-tab" id="tab-weekly" onclick="switchTab('weekly')">
-        <span class="m-tab-mark">☩</span>
-        <span>Weekly</span>
-        <span class="m-tab-badge" id="badge-weekly"></span>
-      </button>
-      <button class="m-tab" id="tab-special" onclick="switchTab('special')">
-        <span class="m-tab-mark">⊕</span>
-        <span>Special</span>
-        <span class="m-tab-badge" id="badge-special"></span>
-      </button>
-    </div>
-
-    <!-- DAILY PANEL -->
-    <div class="tab-panel show" id="panel-daily">
-      <div class="progress-summary">
-        <span class="ps-label">Today</span>
-        <div class="ps-bar-wrap"><div class="ps-bar"><div class="ps-fill" id="ps-daily"></div></div></div>
-        <span class="ps-val" id="ps-daily-lbl">0 / 0</span>
+    <!-- NEXT RANK -->
+    <div class="next-rank-card fade-up" id="next-rank-card">
+      <div class="next-rank-header">
+        <div class="next-rank-eyebrow">Next Rank</div>
+        <div class="next-rank-name" id="next-rank-name">Field Apprentice · II</div>
       </div>
-      <div id="daily-list"></div>
-    </div>
-
-    <!-- WEEKLY PANEL -->
-    <div class="tab-panel" id="panel-weekly">
-      <div class="progress-summary">
-        <span class="ps-label">This Week</span>
-        <div class="ps-bar-wrap"><div class="ps-bar"><div class="ps-fill" id="ps-weekly"></div></div></div>
-        <span class="ps-val" id="ps-weekly-lbl">0 / 0</span>
+      <div class="req" id="req-coins">
+        <div class="req-row">
+          <span class="req-lbl">Lifetime Coins</span>
+          <span class="req-val" id="req-coins-val">0 / 400</span>
+        </div>
+        <div class="req-bar"><div class="req-fill coins" id="req-coins-fill"></div></div>
       </div>
-      <div class="section-lbl">Self Report</div>
-      <div id="weekly-self-list"></div>
-      <div class="section-lbl" style="margin-top:0.75rem">Parent Verified</div>
-      <div id="weekly-verify-list"></div>
+      <div class="req" id="req-sessions">
+        <div class="req-row">
+          <span class="req-lbl">Sessions Attended</span>
+          <span class="req-val" id="req-sessions-val">0 / 3</span>
+        </div>
+        <div class="req-bar"><div class="req-fill sessions" id="req-sessions-fill"></div></div>
+      </div>
+      <div class="req" id="req-topics">
+        <div class="req-row">
+          <span class="req-lbl">Topics Mastered</span>
+          <span class="req-val" id="req-topics-val">0 / 0</span>
+        </div>
+        <div class="req-bar"><div class="req-fill topics" id="req-topics-fill"></div></div>
+      </div>
     </div>
 
-    <!-- SPECIAL PANEL -->
-    <div class="tab-panel" id="panel-special">
-      <div id="special-list"></div>
+    <!-- CURRENT TOPIC -->
+    <a class="current-topic-card fade-up" id="current-topic-card" href="curriculum.html">
+      <div class="ct-eyebrow">Currently Exploring</div>
+      <div class="ct-title" id="ct-title">Topic 0 — Foundations</div>
+      <div class="ct-session" id="ct-session">Session 0.1 · What is Orthodox Christianity?</div>
+      <div class="ct-bar-bg"><div class="ct-bar-fill" id="ct-bar"></div></div>
+      <div class="ct-progress-lbl" id="ct-progress">0 of 6 sessions complete</div>
+      <div class="ct-arrow">›</div>
+    </a>
+
+    <!-- STATS ROW -->
+    <div class="stats-row fade-up">
+      <div class="stat-card">
+        <div class="stat-val" id="stat-coins">0</div>
+        <div class="stat-lbl">Saint Coins</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val" id="stat-lifetime">0</div>
+        <div class="stat-lbl">Lifetime Earned</div>
+      </div>
     </div>
 
-  </div>
-</div>
+    <!-- STREAK -->
+    <div class="streak-card fade-up">
+      <div class="streak-left">
+        <div class="streak-title">Attendance Streak</div>
+        <div class="streak-dots" id="streak-dots"></div>
+      </div>
+      <div class="streak-right">
+        <div class="streak-num" id="streak-num">0</div>
+        <div class="streak-sub">Weeks</div>
+      </div>
+    </div>
+
+    <!-- BADGES -->
+    <div class="badges-section fade-up">
+      <div class="badges-eyebrow">Expedition Badges</div>
+      <div class="badges-scroll" id="badges-scroll"></div>
+    </div>
+
+  </div><!-- /page -->
+</div><!-- /app -->
 
 <!-- BOTTOM NAV -->
 <nav class="bottom-nav" id="bottom-nav" style="display:none;">
-  <a class="nav-item" href="home.html">
-    <span class="nav-mark">✦</span><span class="nav-label">Home</span>
+  <a class="nav-item active" href="home.html">
+    <span class="nav-mark">✦</span>
+    <span class="nav-label">Home</span>
   </a>
-  <a class="nav-item active" href="missions.html">
-    <span class="nav-mark">☩</span><span class="nav-label">Missions</span>
+  <a class="nav-item" href="missions.html">
+    <span class="nav-mark">☩</span>
+    <span class="nav-label">Missions</span>
+    <span class="nav-dot" id="missions-dot"></span>
   </a>
   <a class="nav-item" href="curriculum.html">
-    <span class="nav-mark">⊕</span><span class="nav-label">Topics</span>
+    <span class="nav-mark">⊕</span>
+    <span class="nav-label">Topics</span>
   </a>
   <a class="nav-item" href="bazaar.html">
-    <span class="nav-mark">◈</span><span class="nav-label">Bazaar</span>
+    <span class="nav-mark">◈</span>
+    <span class="nav-label">Bazaar</span>
     <span class="nav-dot" id="bazaar-dot"></span>
   </a>
   <a class="nav-item" href="games.html">
-    <span class="nav-mark">⚔</span><span class="nav-label">Games</span>
+    <span class="nav-mark">⚔</span>
+    <span class="nav-label">Games</span>
   </a>
 </nav>
 
@@ -341,427 +548,293 @@ const SUPABASE_URL = 'https://ksfnsryfmkafwirzgjoe.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtzZm5zcnlmbWthZndpcnpnam9lIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2ODM4MTcsImV4cCI6MjA5MTI1OTgxN30.mHQty44WBnjQY8BJ8KbPk_pp-yTcOaifGxCZPUO4xpY';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+// ── RANK DEFINITIONS ──────────────────────────────────────────
+const RANKS = [
+  {id:1,numeral:'I',  title:'Novice Explorer',      subtitle:'The Expedition Begins',        quote:'Every great expedition begins with a single step.',                   color:'#9ca3af',glow:'rgba(156,163,175,0.12)',minCoins:0,   minSessions:0,  minTopics:0},
+  {id:2,numeral:'II', title:'Field Apprentice',     subtitle:'Learning the Ancient Ways',    quote:'The curious mind finds treasure everywhere.',                         color:'#b45309',glow:'rgba(180,83,9,0.15)',   minCoins:400, minSessions:3,  minTopics:0},
+  {id:3,numeral:'III',title:'Junior Archaeologist', subtitle:'Uncovering the Hidden Faith',  quote:'What is buried is waiting to be found.',                              color:'#c9922a',glow:'rgba(201,146,42,0.18)', minCoins:1000,minSessions:8,  minTopics:1},
+  {id:4,numeral:'IV', title:'Expedition Member',    subtitle:'A Faithful Member of the Team',quote:'The deeper you dig, the richer the discovery.',                      color:'#d97706',glow:'rgba(217,119,6,0.18)',  minCoins:2000,minSessions:12, minTopics:2},
+  {id:5,numeral:'V',  title:'Senior Explorer',      subtitle:'Walking the Ancient Paths',    quote:'Ancient paths lead to eternal truth.',                                color:'#7c3aed',glow:'rgba(124,58,237,0.18)', minCoins:3500,minSessions:16, minTopics:4},
+  {id:6,numeral:'VI', title:'Master Archaeologist', subtitle:'Illuminating What Was Hidden', quote:'The faithful explorer illuminates what was hidden for centuries.',     color:'#9f1239',glow:'rgba(159,18,57,0.2)',   minCoins:5000,minSessions:20, minTopics:5},
+  {id:7,numeral:'VII',title:'Orthodox Sage',        subtitle:'The Expedition Complete',      quote:'To know the faith is to live the faith. Christ is Risen!',            color:'#ffd700',glow:'rgba(255,215,0,0.22)', minCoins:7000,minSessions:20, minTopics:6},
+];
+
 // ── STATE ─────────────────────────────────────────────────────
 let profile = null;
-let allMissions = [];
-let completions = [];
-let activeTab = 'daily';
+let earnedBadges = [];
+let allBadges = [];
+let currentTopicData = null;
+let prevRankId = null;
 
-// ── TIME KEYS ─────────────────────────────────────────────────
-const todayKey = () => new Date().toISOString().slice(0,10);
-const weekKey  = () => {
+// ── AUTH ──────────────────────────────────────────────────────
+async function doLogin(){
+  const email = document.getElementById('login-email').value.trim();
+  const pass  = document.getElementById('login-password').value;
+  const errEl = document.getElementById('login-error');
+  errEl.textContent = '';
+  if(!email||!pass){errEl.textContent='Please enter your email and password.';return;}
+  const {error} = await sb.auth.signInWithPassword({email,password:pass});
+  if(error){errEl.textContent='Incorrect email or password. Try again.';return;}
+}
+
+async function doLogout(){
+  await sb.auth.signOut();
+  window.location.href='index.html';
+}
+
+
+
+function showApp(){
+  document.getElementById('loading').style.display='none';
+  document.getElementById('app').style.display='block';
+  document.getElementById('bottom-nav').style.display='flex';
+}
+
+// ── LOAD DATA ─────────────────────────────────────────────────
+async function loadData(userId){
+  const [profileRes, badgesRes, earnedRes, masteryRes, sessionsRes, topicsRes] = await Promise.all([
+    sb.from('profiles').select('*').eq('id',userId).single(),
+    sb.from('badges').select('*').order('order_index'),
+    sb.from('badge_progress').select('badge_id').eq('explorer_id',userId),
+    sb.from('topic_mastery').select('*').eq('explorer_id',userId).order('topic_id'),
+    sb.from('session_progress').select('session_id').eq('explorer_id',userId),
+    sb.from('topics').select('*').order('order_index'),
+  ]);
+
+  profile       = profileRes.data;
+  allBadges     = badgesRes.data || [];
+  earnedBadges  = (earnedRes.data||[]).map(b=>b.badge_id);
+
+  const mastery     = masteryRes.data || [];
+  const completed   = (sessionsRes.data||[]).map(s=>s.session_id);
+  const topics      = topicsRes.data || [];
+
+  renderAll(mastery, completed, topics);
+  checkNotifications(mastery, completed);
+}
+
+// ── RENDER ────────────────────────────────────────────────────
+function renderAll(mastery, completed, topics){
+  const p = profile;
+  if(!p) return;
+
+  // Current rank
+  const rank = calcRank(p.lifetime_coins, p.sessions_attended, p.topics_mastered);
+  renderRankHero(rank, p);
+
+  // Check rank up
+  if(prevRankId && rank.id > prevRankId) showRankUp(rank);
+  prevRankId = rank.id;
+
+  // Next rank
+  renderNextRank(rank, p);
+
+  // Stats
+  document.getElementById('stat-coins').textContent   = p.coins.toLocaleString();
+  document.getElementById('stat-lifetime').textContent = p.lifetime_coins.toLocaleString();
+  document.getElementById('p-coins').textContent       = p.lifetime_coins.toLocaleString();
+  document.getElementById('p-sessions').textContent    = p.sessions_attended;
+  document.getElementById('p-topics').textContent      = p.topics_mastered;
+
+  // Streak
+  renderStreak(p.streak);
+
+  // Current topic
+  renderCurrentTopic(mastery, completed, topics);
+
+  // Badges
+  renderBadges();
+}
+
+function calcRank(coins, sessions, topics){
+  let current = RANKS[0];
+  for(const r of RANKS){
+    if(coins >= r.minCoins && sessions >= r.minSessions && topics >= r.minTopics) current = r;
+  }
+  return current;
+}
+
+function renderRankHero(rank, p){
+  document.getElementById('rank-numeral').textContent = rank.numeral;
+  document.getElementById('rank-title').textContent   = rank.title;
+  document.getElementById('rank-subtitle').textContent = rank.subtitle;
+  document.getElementById('rank-quote').textContent   = rank.quote;
+
+  const med = document.getElementById('rank-medallion');
+  med.style.background = `radial-gradient(circle at 40% 35%, ${rank.color}22, ${rank.color}08)`;
+  med.style.border = `2px solid ${rank.color}80`;
+  med.style.boxShadow = `0 0 0 5px ${rank.color}10, 0 0 24px ${rank.color}30`;
+  med.style.setProperty('box-shadow', `0 0 0 5px ${rank.color}10, 0 0 24px ${rank.color}30`);
+
+  document.getElementById('rank-numeral').style.color      = rank.color;
+  document.getElementById('rank-numeral').style.textShadow = `0 0 20px ${rank.color}80`;
+  document.getElementById('rank-glow').style.background    =
+    `radial-gradient(circle at 25% 50%, ${rank.glow} 0%, transparent 65%),
+     radial-gradient(circle at 75% 30%, rgba(107,26,26,0.12) 0%, transparent 55%)`;
+  document.getElementById('rank-border').style.borderColor = `${rank.color}40`;
+  document.getElementById('rank-title').style.color = rank.id === 7 ? rank.color : '';
+}
+
+function renderNextRank(currentRank, p){
+  const nextIdx = RANKS.findIndex(r=>r.id===currentRank.id)+1;
+  if(nextIdx >= RANKS.length){
+    document.getElementById('next-rank-card').innerHTML =
+      '<div style="text-align:center;font-family:Cinzel,serif;font-size:0.85rem;color:rgba(255,215,0,0.7);padding:0.5rem">✦ Orthodox Sage — The Highest Rank Achieved ✦</div>';
+    return;
+  }
+  const next = RANKS[nextIdx];
+  document.getElementById('next-rank-name').textContent = `${next.title} · ${next.numeral}`;
+
+  setReq('coins',   p.lifetime_coins,   next.minCoins,   next.minCoins === 0);
+  setReq('sessions',p.sessions_attended,next.minSessions,next.minSessions === 0);
+  setReq('topics',  p.topics_mastered,  next.minTopics,  next.minTopics === 0);
+}
+
+function setReq(key, current, required, alreadyMet){
+  const pct = required === 0 ? 100 : Math.min(100,(current/required)*100);
+  const met = current >= required;
+  const valEl  = document.getElementById(`req-${key}-val`);
+  const fillEl = document.getElementById(`req-${key}-fill`);
+  valEl.textContent = met ? `${current.toLocaleString()} ✓` : `${current.toLocaleString()} / ${required.toLocaleString()}`;
+  valEl.className = `req-val${met?' met':''}`;
+  fillEl.className = `req-fill ${met?'done':key}`;
+  requestAnimationFrame(()=>setTimeout(()=>{fillEl.style.width=pct+'%';},120));
+}
+
+function renderStreak(streak){
+  const dots = document.getElementById('streak-dots');
+  dots.innerHTML='';
+  for(let i=0;i<5;i++){
+    const d=document.createElement('div');
+    d.className='streak-dot'+(i<streak?' lit':'');
+    d.textContent=i<streak?'✦':'';
+    dots.appendChild(d);
+  }
+  document.getElementById('streak-num').textContent=streak;
+}
+
+function renderCurrentTopic(mastery, completed, topics){
+  // Find the first topic that is available or in progress
+  const available = mastery.filter(m=>m.status==='available'||m.status==='pending');
+  if(!available.length) return;
+
+  const current = available[0];
+  const topic   = topics.find(t=>t.id===current.topic_id);
+  if(!topic) return;
+
+  // Get sessions for this topic
+  sb.from('sessions').select('id,title,order_index').eq('topic_id',topic.id).order('order_index')
+    .then(({data:sessions})=>{
+      if(!sessions||!sessions.length) return;
+      const done = sessions.filter(s=>completed.includes(s.id)).length;
+      const total = sessions.length;
+      const pct = total>0?(done/total)*100:0;
+
+      // Next session to do
+      const next = sessions.find(s=>!completed.includes(s.id));
+
+      document.getElementById('ct-title').textContent   = `Topic ${topic.id} — ${topic.title}`;
+      document.getElementById('ct-session').textContent = next ? `Session ${next.id} · ${next.title}` : 'All sessions complete!';
+      document.getElementById('ct-progress').textContent = `${done} of ${total} sessions complete`;
+      requestAnimationFrame(()=>setTimeout(()=>{
+        document.getElementById('ct-bar').style.width=pct+'%';
+      },200));
+    });
+}
+
+function renderBadges(){
+  const scroll = document.getElementById('badges-scroll');
+  scroll.innerHTML='';
+  allBadges.forEach(b=>{
+    const earned = earnedBadges.includes(b.id);
+    const chip = document.createElement('div');
+    chip.className = `badge-chip${earned?' earned':' locked'}`;
+    chip.title = earned ? `${b.name}: ${b.description}` : `Locked: ${b.how_to_earn}`;
+    chip.innerHTML=`<span class="badge-icon">${b.icon}</span><div class="badge-name">${b.name}</div>`;
+    scroll.appendChild(chip);
+  });
+}
+
+// ── NOTIFICATIONS ─────────────────────────────────────────────
+async function checkNotifications(mastery, completed){
+  // Missions dot — check if any daily missions not done today
+  const today = new Date().toISOString().slice(0,10);
+  const weekKey = getWeekKey();
+  const {data:missionsDone} = await sb.from('mission_completions')
+    .select('mission_id,day_key,week_key')
+    .eq('explorer_id', profile.id)
+    .in('status',['completed','approved']);
+
+  const {data:dailyMissions} = await sb.from('missions')
+    .select('id').eq('type','daily').eq('is_active',true);
+
+  const doneTodayIds = (missionsDone||[]).filter(m=>m.day_key===today).map(m=>m.mission_id);
+  const allDailyDone = (dailyMissions||[]).every(m=>doneTodayIds.includes(m.id));
+  if(!allDailyDone) document.getElementById('missions-dot').classList.add('show');
+
+  // Bazaar dot — check if anything on wishlist is now affordable
+  const {data:wishlist} = await sb.from('wishlist')
+    .select('prize_id').eq('explorer_id',profile.id);
+  if(wishlist&&wishlist.length){
+    const {data:prizes} = await sb.from('prizes')
+      .select('id,cost').in('id',wishlist.map(w=>w.prize_id));
+    if(prizes&&prizes.some(p=>p.cost<=profile.coins)){
+      document.getElementById('bazaar-dot').classList.add('show');
+    }
+  }
+}
+
+function getWeekKey(){
   const d=new Date(),j=new Date(d.getFullYear(),0,1);
   const w=Math.ceil(((d-j)/86400000+j.getDay()+1)/7);
   return `${d.getFullYear()}-W${String(w).padStart(2,'0')}`;
-};
+}
 
-// ── AUTH ──────────────────────────────────────────────────────
+// ── RANK UP ───────────────────────────────────────────────────
+function showRankUp(rank){
+  document.getElementById('ru-numeral').textContent = rank.numeral;
+  document.getElementById('ru-numeral').style.color = rank.color;
+  document.getElementById('ru-title').textContent   = rank.title;
+  document.getElementById('ru-quote').textContent   = rank.quote;
+  document.getElementById('rankup-flash').classList.add('show');
+}
+function closeRankup(){
+  document.getElementById('rankup-flash').classList.remove('show');
+}
+
+// ── INIT ──────────────────────────────────────────────────────
 let appLoaded = false;
-sb.auth.onAuthStateChange(async(event,session)=>{
+sb.auth.onAuthStateChange(async (event, session)=>{
   if(appLoaded) return;
   if(session){
     try {
+      const {data:prof} = await sb.from('profiles').select('role').eq('id',session.user.id).single();
+      if(prof && prof.role === 'admin'){ window.location.href='admin.html'; return; }
       appLoaded = true;
-      await loadAll(session.user.id);
-      document.getElementById('loading').style.display='none';
-      document.getElementById('app').style.display='block';
-      document.getElementById('bottom-nav').style.display='flex';
+      await loadData(session.user.id);
+      showApp();
     } catch(e) {
-      console.error('Missions load error:', e);
+      console.error('Home load error:', e);
       window.location.href='index.html';
     }
   } else {
     window.location.href='index.html';
   }
 });
+
+// Initial session check
 (async()=>{
-  try {
-    const timeout = new Promise(resolve => setTimeout(() => resolve({data:{session:null}}), 3000));
-    const result = await Promise.race([sb.auth.getSession(), timeout]);
-    const session = result && result.data && result.data.session;
-    if(!session) window.location.href='index.html';
-  } catch(e) {
+  const {data:{session}} = await sb.auth.getSession();
+  if(!session){
     window.location.href='index.html';
   }
 })();
 
-// ── LOAD ──────────────────────────────────────────────────────
-async function loadAll(userId){
-  const [profRes, missRes, compRes] = await Promise.all([
-    sb.from('profiles').select('*').eq('id',userId).single(),
-    sb.from('missions').select('*').eq('is_active',true).order('type').order('created_at'),
-    sb.from('mission_completions').select('*').eq('explorer_id',userId),
-  ]);
-  profile     = profRes.data;
-  allMissions = missRes.data || [];
-  completions = compRes.data || [];
-
-  updateCoinStrip();
-  renderAll();
-  updateTabBadges();
-}
-
-async function reload(){
-  if(!profile) return;
-  const [profRes, compRes] = await Promise.all([
-    sb.from('profiles').select('*').eq('id',profile.id).single(),
-    sb.from('mission_completions').select('*').eq('explorer_id',profile.id),
-  ]);
-  profile     = profRes.data;
-  completions = compRes.data || [];
-  updateCoinStrip();
-  renderAll();
-  updateTabBadges();
-}
-
-// ── COIN STRIP ────────────────────────────────────────────────
-function updateCoinStrip(){
-  const el = document.getElementById('coin-val');
-  el.textContent = (profile.coins||0).toLocaleString();
-  document.getElementById('lifetime-val').textContent = (profile.lifetime_coins||0).toLocaleString();
-}
-
-function animateCoinStrip(){
-  const el = document.getElementById('coin-val');
-  el.classList.remove('tick');
-  void el.offsetWidth;
-  el.classList.add('tick');
-  setTimeout(()=>el.classList.remove('tick'),400);
-}
-
-// ── TABS ──────────────────────────────────────────────────────
-function switchTab(tab){
-  activeTab = tab;
-  ['daily','weekly','special'].forEach(t=>{
-    document.getElementById('tab-'+t).classList.toggle('active',t===tab);
-    document.getElementById('panel-'+t).classList.toggle('show',t===tab);
-  });
-}
-
-// ── RENDER ALL ────────────────────────────────────────────────
-function renderAll(){
-  renderDaily();
-  renderWeekly();
-  renderSpecial();
-}
-
-// ── HELPERS ───────────────────────────────────────────────────
-function isDailyDone(missionId){
-  return completions.some(c=>
-    c.mission_id===missionId &&
-    c.day_key===todayKey() &&
-    (c.status==='completed'||c.status==='approved')
-  );
-}
-function isWeeklyDone(missionId){
-  return completions.some(c=>
-    c.mission_id===missionId &&
-    c.week_key===weekKey() &&
-    (c.status==='completed'||c.status==='approved')
-  );
-}
-function isWeeklyPending(missionId){
-  return completions.some(c=>
-    c.mission_id===missionId &&
-    c.week_key===weekKey() &&
-    c.status==='pending'
-  );
-}
-function isSpecialPending(missionId){
-  return completions.some(c=>c.mission_id===missionId && c.status==='pending');
-}
-function isSpecialDone(mission){
-  if(mission.repeatable) return false;
-  return completions.some(c=>c.mission_id===mission.id && c.status==='approved');
-}
-
-// ── DAILY ─────────────────────────────────────────────────────
-function renderDaily(){
-  const missions = allMissions.filter(m=>m.type==='daily');
-  const done = missions.filter(m=>isDailyDone(m.id)).length;
-  const total = missions.length;
-  const pct = total>0?(done/total)*100:0;
-
-  document.getElementById('ps-daily').style.width = pct+'%';
-  document.getElementById('ps-daily-lbl').textContent = `${done} / ${total}`;
-
-  const list = document.getElementById('daily-list');
-  list.innerHTML='';
-  if(!missions.length){list.innerHTML='<div class="empty-state">No daily missions found.</div>';return;}
-  missions.forEach(m=>{
-    const done = isDailyDone(m.id);
-    list.appendChild(buildCard(m, done?'done':'available', ()=>completeDailyMission(m)));
-  });
-}
-
-// ── WEEKLY ────────────────────────────────────────────────────
-function renderWeekly(){
-  const selfMissions   = allMissions.filter(m=>m.type==='weekly');
-  const verifyMissions = allMissions.filter(m=>m.type==='weekly_verified');
-  const all = [...selfMissions,...verifyMissions];
-  const done = all.filter(m=>isWeeklyDone(m.id)).length;
-  const total = all.length;
-  const pct = total>0?(done/total)*100:0;
-
-  document.getElementById('ps-weekly').style.width = pct+'%';
-  document.getElementById('ps-weekly-lbl').textContent = `${done} / ${total}`;
-
-  const selfList   = document.getElementById('weekly-self-list');
-  const verifyList = document.getElementById('weekly-verify-list');
-  selfList.innerHTML='';
-  verifyList.innerHTML='';
-
-  if(!selfMissions.length) selfList.innerHTML='<div class="empty-state">No self-report missions.</div>';
-  selfMissions.forEach(m=>{
-    const d = isWeeklyDone(m.id);
-    selfList.appendChild(buildCard(m, d?'done':'available', ()=>completeWeeklyMission(m)));
-  });
-
-  if(!verifyMissions.length) verifyList.innerHTML='<div class="empty-state">No verified missions.</div>';
-  verifyMissions.forEach(m=>{
-    const done    = isWeeklyDone(m.id);
-    const pending = isWeeklyPending(m.id);
-    const status  = done?'done':pending?'pending':'available';
-    verifyList.appendChild(buildVerifyCard(m, status, ()=>submitWeeklyVerify(m)));
-  });
-}
-
-// ── SPECIAL ───────────────────────────────────────────────────
-function renderSpecial(){
-  const types = ['special','field_visit'];
-  const missions = allMissions.filter(m=>types.includes(m.type));
-  const list = document.getElementById('special-list');
-  list.innerHTML='';
-
-  // Field visits section
-  const fieldVisits = missions.filter(m=>m.type==='field_visit');
-  if(fieldVisits.length){
-    const lbl = document.createElement('div');
-    lbl.className='section-lbl';lbl.textContent='Field Expeditions';
-    list.appendChild(lbl);
-    fieldVisits.forEach(m=>{
-      const pending = isSpecialPending(m.id);
-      const status  = pending?'pending':'available';
-      list.appendChild(buildVerifyCard(m,status,()=>submitSpecial(m)));
-    });
+// Admin redirect
+async function checkAdminRedirect(){
+  if(profile&&profile.role==='admin'){
+    // Admins can use the app normally but also access admin.html
   }
-
-  // Special missions
-  const special = missions.filter(m=>m.type==='special');
-  if(special.length){
-    const lbl = document.createElement('div');
-    lbl.className='section-lbl';
-    lbl.style.marginTop=fieldVisits.length?'0.75rem':'0';
-    lbl.textContent='Special Missions';
-    list.appendChild(lbl);
-    special.forEach(m=>{
-      const oneTimeDone = isSpecialDone(m);
-      const pending     = isSpecialPending(m.id);
-      const status      = oneTimeDone?'special-done':pending?'pending':'available';
-      list.appendChild(buildVerifyCard(m,status,()=>submitSpecial(m)));
-    });
-  }
-
-  if(!missions.length) list.innerHTML='<div class="empty-state">No special missions yet.</div>';
-}
-
-// ── CARD BUILDERS ─────────────────────────────────────────────
-function buildCard(m, status, onDone){
-  const card = document.createElement('div');
-  card.className = `m-card ${status}`;
-  card.id = `card-${m.id}`;
-
-  const typeTag = m.repeatable===false ? '<span class="m-tag">One-time</span>' : '';
-
-  const btnHtml = status==='done'
-    ? `<button class="m-btn done-btn">✓ Done</button><span class="m-check">✦</span>`
-    : `<button class="m-btn mark">Mark Done</button>`;
-
-  card.innerHTML = `
-    <div class="m-emoji">${m.emoji}</div>
-    <div class="m-info">
-      <div class="m-name">${m.name}</div>
-      <div class="m-detail">${m.detail}</div>
-      <div class="m-meta"><span class="m-coins">+${m.coins} coins</span>${typeTag}</div>
-    </div>
-    ${btnHtml}
-  `;
-
-  if(status!=='done'){
-    card.querySelector('.m-btn').addEventListener('click', onDone);
-  }
-  return card;
-}
-
-function buildVerifyCard(m, status, onSubmit){
-  const card = document.createElement('div');
-  card.className = `m-card ${status}`;
-  card.id = `card-${m.id}`;
-
-  const repeatTag = m.repeatable===false
-    ? '<span class="m-tag">One-time</span>'
-    : m.type==='special'?'<span class="m-tag">Repeatable</span>':'';
-
-  let btnHtml = '';
-  if(status==='special-done')
-    btnHtml=`<button class="m-btn complete-badge">✦ Complete</button><span class="m-check">✦</span>`;
-  else if(status==='done')
-    btnHtml=`<button class="m-btn done-btn">✓ Done</button><span class="m-check">✦</span>`;
-  else if(status==='pending')
-    btnHtml=`<button class="m-btn pending-btn">⏳ Awaiting</button><span class="m-pending-badge">PENDING</span>`;
-  else
-    btnHtml=`<button class="m-btn submit">${m.type==='special'||m.type==='field_visit'?"I'm Ready!":"Submit"}</button>`;
-
-  card.innerHTML = `
-    <div class="m-emoji">${m.emoji}</div>
-    <div class="m-info">
-      <div class="m-name">${m.name}</div>
-      <div class="m-detail">${m.detail}</div>
-      <div class="m-meta"><span class="m-coins">+${m.coins} coins</span>${repeatTag}</div>
-    </div>
-    ${btnHtml}
-  `;
-
-  if(status==='available'){
-    card.querySelector('.m-btn').addEventListener('click', onSubmit);
-  }
-  return card;
-}
-
-// ── COMPLETE MISSIONS ─────────────────────────────────────────
-async function completeDailyMission(m){
-  if(isDailyDone(m.id)) return;
-  const btn = document.querySelector(`#card-${m.id} .m-btn`);
-  if(btn) btn.disabled=true;
-
-  const {error:compErr} = await sb.from('mission_completions').insert({
-    explorer_id: profile.id,
-    mission_id:  m.id,
-    status:      'completed',
-    day_key:     todayKey(),
-    completed_at: new Date().toISOString(),
-    coins_awarded: m.coins,
-  });
-  if(compErr){console.error(compErr);if(btn)btn.disabled=false;return;}
-
-  await awardCoins(m.coins, m.name);
-  flashCard(`card-${m.id}`);
-  coinRain(m.coins);
-  animateCoinStrip();
-  await reload();
-}
-
-async function completeWeeklyMission(m){
-  if(isWeeklyDone(m.id)) return;
-  const btn = document.querySelector(`#card-${m.id} .m-btn`);
-  if(btn) btn.disabled=true;
-
-  const {error} = await sb.from('mission_completions').insert({
-    explorer_id:  profile.id,
-    mission_id:   m.id,
-    status:       'completed',
-    week_key:     weekKey(),
-    completed_at: new Date().toISOString(),
-    coins_awarded: m.coins,
-  });
-  if(error){console.error(error);if(btn)btn.disabled=false;return;}
-
-  // If attendance mission, increment sessions
-  if(m.name.toLowerCase().includes('attend')||m.name.toLowerCase().includes('expedition')){
-    await sb.from('profiles').update({
-      sessions_attended: (profile.sessions_attended||0)+1,
-      streak: (profile.streak||0)+1,
-      last_session_week: weekKey(),
-    }).eq('id',profile.id);
-  }
-
-  await awardCoins(m.coins, m.name);
-  flashCard(`card-${m.id}`);
-  coinRain(m.coins);
-  animateCoinStrip();
-  await reload();
-}
-
-async function submitWeeklyVerify(m){
-  if(isWeeklyDone(m.id)||isWeeklyPending(m.id)) return;
-  const {error} = await sb.from('mission_completions').insert({
-    explorer_id: profile.id,
-    mission_id:  m.id,
-    status:      'pending',
-    week_key:    weekKey(),
-    created_at:  new Date().toISOString(),
-  });
-  if(error){console.error(error);return;}
-  await reload();
-}
-
-async function submitSpecial(m){
-  if(isSpecialPending(m.id)||isSpecialDone(m)) return;
-  const {error} = await sb.from('mission_completions').insert({
-    explorer_id: profile.id,
-    mission_id:  m.id,
-    status:      'pending',
-    created_at:  new Date().toISOString(),
-  });
-  if(error){console.error(error);return;}
-  await reload();
-}
-
-// ── AWARD COINS ───────────────────────────────────────────────
-async function awardCoins(amount, reason){
-  const newCoins    = (profile.coins||0)+amount;
-  const newLifetime = (profile.lifetime_coins||0)+amount;
-  await Promise.all([
-    sb.from('profiles').update({coins:newCoins,lifetime_coins:newLifetime}).eq('id',profile.id),
-    sb.from('activity_log').insert({explorer_id:profile.id,amount,reason,created_at:new Date().toISOString()}),
-  ]);
-}
-
-// ── ANIMATIONS ────────────────────────────────────────────────
-function flashCard(cardId){
-  const card = document.getElementById(cardId);
-  if(!card) return;
-  card.classList.add('done-flash');
-}
-
-function coinRain(amount){
-  const n = Math.min(Math.floor(amount/8)+3,18);
-  const c = document.getElementById('coin-rain');
-  const symbols = ['✦','◈','☩','⊕'];
-  for(let i=0;i<n;i++){
-    setTimeout(()=>{
-      const el=document.createElement('div');
-      el.className='coin-p';
-      el.textContent=symbols[Math.floor(Math.random()*symbols.length)];
-      el.style.left=Math.random()*92+'vw';
-      el.style.animationDuration=(1.2+Math.random()*1.8)+'s';
-      el.style.color=['#ffd700','#f0c96e','#c9922a'][Math.floor(Math.random()*3)];
-      c.appendChild(el);
-      setTimeout(()=>el.remove(),3500);
-    },i*70);
-  }
-}
-
-// ── TAB BADGES ────────────────────────────────────────────────
-function updateTabBadges(){
-  const daily   = allMissions.filter(m=>m.type==='daily');
-  const selfW   = allMissions.filter(m=>m.type==='weekly');
-  const verifyW = allMissions.filter(m=>m.type==='weekly_verified');
-  const special = allMissions.filter(m=>['special','field_visit'].includes(m.type));
-
-  const dailyPending   = daily.filter(m=>!isDailyDone(m.id)).length;
-  const weeklyPending  = [...selfW,...verifyW].filter(m=>!isWeeklyDone(m.id)).length;
-  const specialPending = special.filter(m=>isSpecialPending(m.id)).length;
-
-  setBadge('daily',   dailyPending);
-  setBadge('weekly',  weeklyPending);
-  setBadge('special', specialPending);
-}
-
-function setBadge(tab, count){
-  const el = document.getElementById('badge-'+tab);
-  if(count>0){el.textContent=count;el.classList.add('show');}
-  else el.classList.remove('show');
 }
 </script>
 </body>

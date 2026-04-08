@@ -356,19 +356,33 @@ const weekKey  = () => {
 };
 
 // ── AUTH ──────────────────────────────────────────────────────
+let appLoaded = false;
 sb.auth.onAuthStateChange(async(event,session)=>{
+  if(appLoaded) return;
   if(session){
-    await loadAll(session.user.id);
-    document.getElementById('loading').style.display='none';
-    document.getElementById('app').style.display='block';
-    document.getElementById('bottom-nav').style.display='flex';
+    try {
+      appLoaded = true;
+      await loadAll(session.user.id);
+      document.getElementById('loading').style.display='none';
+      document.getElementById('app').style.display='block';
+      document.getElementById('bottom-nav').style.display='flex';
+    } catch(e) {
+      console.error('Missions load error:', e);
+      window.location.href='index.html';
+    }
   } else {
     window.location.href='index.html';
   }
 });
 (async()=>{
-  const {data:{session}} = await sb.auth.getSession();
-  if(!session) window.location.href='index.html';
+  try {
+    const timeout = new Promise(resolve => setTimeout(() => resolve({data:{session:null}}), 3000));
+    const result = await Promise.race([sb.auth.getSession(), timeout]);
+    const session = result && result.data && result.data.session;
+    if(!session) window.location.href='index.html';
+  } catch(e) {
+    window.location.href='index.html';
+  }
 })();
 
 // ── LOAD ──────────────────────────────────────────────────────

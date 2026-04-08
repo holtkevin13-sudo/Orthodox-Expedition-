@@ -151,10 +151,19 @@ async function routeByRole(userId){
 }
 
 async function checkSession(){
-  const {data:{session}} = await sb.auth.getSession();
-  if(session){
-    await routeByRole(session.user.id);
-  } else {
+  try {
+    const timeout = new Promise(resolve =>
+      setTimeout(() => resolve({data:{session:null}}), 3000)
+    );
+    const result = await Promise.race([sb.auth.getSession(), timeout]);
+    const session = result && result.data && result.data.session;
+    if(session){
+      await routeByRole(session.user.id);
+    } else {
+      hideLoading();
+    }
+  } catch(e) {
+    console.error('Session check failed:', e);
     hideLoading();
   }
 }

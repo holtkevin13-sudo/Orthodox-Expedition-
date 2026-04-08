@@ -618,39 +618,25 @@ function toast(msg, isError=false){
 }
 
 // ── AUTH ──────────────────────────────────────────────────────
-let appLoaded = false;
-sb.auth.onAuthStateChange(async(event,session)=>{
-  if(appLoaded) return;
-  if(session){
-    try {
-      const {data:prof} = await sb.from('profiles').select('*').eq('id',session.user.id).single();
-      if(!prof||prof.role!=='admin'){
-        await sb.auth.signOut();
-        window.location.href='index.html';
-        return;
-      }
-      appLoaded = true;
-      adminProfile = prof;
-      document.getElementById('admin-name-display').textContent = prof.name;
-      await loadAll();
-      document.getElementById('loading').style.display='none';
-      document.getElementById('app').style.display='block';
-    } catch(e) {
-      console.error('Admin load error:', e);
-      window.location.href='index.html';
-    }
-  } else {
-    window.location.href='index.html';
-  }
-});
-
 (async()=>{
   try {
-    const timeout = new Promise(resolve => setTimeout(() => resolve({data:{session:null}}), 3000));
-    const result = await Promise.race([sb.auth.getSession(), timeout]);
-    const session = result && result.data && result.data.session;
-    if(!session) window.location.href='index.html';
+    const timer = new Promise(r => setTimeout(() => r(null), 4000));
+    const res   = await Promise.race([sb.auth.getSession(), timer]);
+    const session = res?.data?.session ?? null;
+    if(!session){ window.location.href='index.html'; return; }
+    const {data:prof} = await sb.from('profiles').select('*').eq('id',session.user.id).single();
+    if(!prof||prof.role!=='admin'){
+      await sb.auth.signOut();
+      window.location.href='index.html';
+      return;
+    }
+    adminProfile = prof;
+    document.getElementById('admin-name-display').textContent = prof.name;
+    await loadAll();
+    document.getElementById('loading').style.display='none';
+    document.getElementById('app').style.display='block';
   } catch(e) {
+    console.error('Admin error:', e);
     window.location.href='index.html';
   }
 })();

@@ -440,33 +440,20 @@ let expandedTopics = new Set();
 let expandedSessions = new Set();
 
 // ── AUTH ──────────────────────────────────────────────────────
-let appLoaded = false;
-sb.auth.onAuthStateChange(async(event,session)=>{
-  if(appLoaded) return;
-  if(session){
-    try {
-      const {data:prof} = await sb.from('profiles').select('role').eq('id',session.user.id).single();
-      if(prof&&prof.role==='admin'){ window.location.href='admin.html'; return; }
-      appLoaded = true;
-      await loadAll(session.user.id);
-      document.getElementById('loading').style.display='none';
-      document.getElementById('app').style.display='block';
-      document.getElementById('bottom-nav').style.display='flex';
-    } catch(e) {
-      console.error('Curriculum load error:', e);
-      window.location.href='index.html';
-    }
-  } else {
-    window.location.href='index.html';
-  }
-});
 (async()=>{
   try {
-    const timeout = new Promise(resolve => setTimeout(() => resolve({data:{session:null}}), 3000));
-    const result = await Promise.race([sb.auth.getSession(), timeout]);
-    const session = result && result.data && result.data.session;
-    if(!session) window.location.href='index.html';
+    const timer = new Promise(r => setTimeout(() => r(null), 4000));
+    const res   = await Promise.race([sb.auth.getSession(), timer]);
+    const session = res?.data?.session ?? null;
+    if(!session){ window.location.href='index.html'; return; }
+    const {data:prof} = await sb.from('profiles').select('role').eq('id',session.user.id).single();
+    if(prof&&prof.role==='admin'){ window.location.href='admin.html'; return; }
+    await loadAll(session.user.id);
+    document.getElementById('loading').style.display='none';
+    document.getElementById('app').style.display='block';
+    document.getElementById('bottom-nav').style.display='flex';
   } catch(e) {
+    console.error('Curriculum error:', e);
     window.location.href='index.html';
   }
 })();

@@ -1,0 +1,1278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Admin — The Orthodox Expedition</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{
+  --gold:#c9922a;--gold-light:#f0c96e;--gold-bright:#ffd700;
+  --parchment:#f4e8c1;--parchment-dark:#e8d5a0;--parchment-deeper:#d4b870;
+  --ink:#1a0f00;--ink-light:#3d2b1f;
+  --burgundy:#6b1a1a;--burgundy-light:#8b2a2a;
+  --byzantine:#2c1654;--byzantine-light:#4a2a7a;
+  --green:#16a34a;--green-light:#22c55e;
+  --red:#dc2626;
+  --bg:#1a1208;
+  --surface:rgba(244,232,193,0.04);
+  --surface-hover:rgba(244,232,193,0.07);
+  --border:rgba(201,146,42,0.18);
+  --border-focus:rgba(201,146,42,0.5);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{min-height:100%;background-color:var(--bg);}
+body{
+  font-family:'Crimson Text',serif;
+  background-image:
+    radial-gradient(ellipse at 0% 0%,rgba(244,232,193,0.03) 0%,transparent 50%),
+    radial-gradient(ellipse at 100% 100%,rgba(201,146,42,0.04) 0%,transparent 50%);
+  color:var(--ink);
+}
+body::before{
+  content:'';position:fixed;inset:0;
+  background-image:
+    linear-gradient(rgba(201,146,42,0.015) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(201,146,42,0.015) 1px,transparent 1px);
+  background-size:44px 44px;pointer-events:none;z-index:0;
+}
+
+/* ── LOADING ─────────────────────────────────────────────────── */
+#loading{position:fixed;inset:0;z-index:400;display:flex;align-items:center;justify-content:center;background:var(--bg);}
+.loading-mark{font-family:'Cinzel',serif;font-size:2rem;color:rgba(201,146,42,0.4);animation:pulse 1.5s ease-in-out infinite;}
+@keyframes pulse{0%,100%{opacity:0.3;}50%{opacity:0.8;}}
+
+/* ── LAYOUT ──────────────────────────────────────────────────── */
+#app{display:none;position:relative;z-index:1;min-height:100vh;}
+.admin-layout{display:flex;flex-direction:column;min-height:100vh;}
+
+/* ── TOP BAR ─────────────────────────────────────────────────── */
+.top-bar{
+  background:rgba(26,18,8,0.97);
+  border-bottom:1px solid var(--border);
+  padding:0.875rem 1.25rem;
+  display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:100;
+  backdrop-filter:blur(12px);
+}
+.top-bar-title{font-family:'Cinzel Decorative',serif;font-size:clamp(0.85rem,3vw,1rem);color:var(--gold-light);letter-spacing:0.05em;}
+.top-bar-sub{font-family:'Cinzel',serif;font-size:0.58rem;letter-spacing:0.2em;color:rgba(201,146,42,0.4);text-transform:uppercase;margin-top:0.15rem;}
+.top-bar-right{display:flex;align-items:center;gap:0.75rem;}
+.admin-name{font-family:'Cinzel',serif;font-size:0.7rem;color:rgba(201,146,42,0.5);letter-spacing:0.08em;}
+.logout-btn{background:none;border:1px solid rgba(201,146,42,0.2);border-radius:6px;padding:0.35rem 0.75rem;font-family:'Cinzel',serif;font-size:0.65rem;color:rgba(201,146,42,0.4);cursor:pointer;transition:all 0.2s;min-height:36px;}
+.logout-btn:hover{border-color:rgba(201,146,42,0.5);color:rgba(201,146,42,0.7);}
+
+/* ── ADMIN TABS ──────────────────────────────────────────────── */
+.admin-tabs{
+  background:rgba(26,18,8,0.9);
+  border-bottom:1px solid var(--border);
+  display:flex;overflow-x:auto;
+  -webkit-overflow-scrolling:touch;
+  padding:0 0.5rem;
+}
+.admin-tabs::-webkit-scrollbar{display:none;}
+.admin-tab{
+  flex:0 0 auto;padding:0.75rem 1.25rem;
+  font-family:'Cinzel',serif;font-size:0.68rem;letter-spacing:0.1em;
+  text-transform:uppercase;color:rgba(201,146,42,0.35);
+  border:none;background:none;cursor:pointer;
+  border-bottom:2px solid transparent;
+  transition:all 0.2s;white-space:nowrap;min-height:48px;
+}
+.admin-tab:hover{color:rgba(201,146,42,0.6);}
+.admin-tab.active{color:var(--gold-light);border-bottom-color:var(--gold);}
+
+/* ── PANEL ────────────────────────────────────────────────────── */
+.admin-panel{display:none;padding:1.25rem;max-width:800px;margin:0 auto;width:100%;}
+.admin-panel.show{display:block;}
+
+/* ── SECTION ─────────────────────────────────────────────────── */
+.section{margin-bottom:1.75rem;}
+.section-title{
+  font-family:'Cinzel',serif;font-size:0.7rem;letter-spacing:0.2em;
+  text-transform:uppercase;color:rgba(201,146,42,0.5);
+  margin-bottom:0.875rem;padding-bottom:0.5rem;
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.section-title-count{
+  font-family:'Cinzel',serif;font-size:0.62rem;
+  background:rgba(201,146,42,0.1);color:rgba(201,146,42,0.6);
+  border:1px solid rgba(201,146,42,0.2);border-radius:20px;
+  padding:0.1rem 0.5rem;
+}
+
+/* ── CARDS ────────────────────────────────────────────────────── */
+.card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:12px;padding:1rem;margin-bottom:0.75rem;
+}
+.card-header{display:flex;align-items:flex-start;gap:0.75rem;margin-bottom:0.75rem;}
+.card-icon{font-size:1.3rem;flex-shrink:0;line-height:1;margin-top:0.1rem;}
+.card-info{flex:1;min-width:0;}
+.card-title{font-family:'Cinzel',serif;font-size:0.82rem;color:var(--parchment-dark);font-weight:700;line-height:1.3;}
+.card-sub{font-size:0.75rem;color:rgba(244,232,193,0.4);margin-top:0.15rem;font-style:italic;}
+.card-meta{font-family:'Cinzel',serif;font-size:0.68rem;color:rgba(201,146,42,0.5);margin-top:0.2rem;}
+.card-actions{display:flex;gap:0.4rem;align-items:center;flex-shrink:0;flex-wrap:wrap;}
+
+/* ── PENDING CARD ─────────────────────────────────────────────── */
+.pending-card{
+  background:rgba(44,22,84,0.15);
+  border:1px solid rgba(124,58,237,0.3);
+  border-radius:12px;padding:1rem;margin-bottom:0.625rem;
+  display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap;
+}
+.pending-card-info{flex:1;min-width:120px;}
+.pending-card-name{font-family:'Cinzel',serif;font-size:0.8rem;color:var(--parchment-dark);}
+.pending-card-meta{font-size:0.72rem;color:rgba(167,139,250,0.7);margin-top:0.1rem;}
+.pending-actions{display:flex;gap:0.4rem;}
+
+/* ── STAT CARDS ───────────────────────────────────────────────── */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:0.75rem;margin-bottom:1.25rem;}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:0.875rem;text-align:center;}
+.stat-val{font-family:'Cinzel Decorative',serif;font-size:1.5rem;color:var(--gold-bright);text-shadow:0 0 12px rgba(255,215,0,0.3);line-height:1;}
+.stat-lbl{font-family:'Cinzel',serif;font-size:0.58rem;letter-spacing:0.12em;color:rgba(201,146,42,0.45);text-transform:uppercase;margin-top:0.25rem;}
+
+/* ── QUICK COINS ──────────────────────────────────────────────── */
+.quick-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:0.4rem;margin-bottom:0.875rem;}
+@media(min-width:480px){.quick-grid{grid-template-columns:repeat(4,1fr);}}
+.quick-btn{
+  padding:0.5rem 0.25rem;min-height:52px;
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:8px;font-family:'Cinzel',serif;font-size:0.68rem;
+  cursor:pointer;text-align:center;transition:all 0.2s;
+  color:var(--parchment-dark);display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:0.1rem;
+}
+.quick-btn:hover{background:var(--surface-hover);border-color:rgba(201,146,42,0.35);}
+.quick-btn:active{transform:scale(0.97);}
+.quick-btn-amount{font-size:0.78rem;color:var(--gold-light);font-weight:700;}
+.quick-btn-label{font-size:0.58rem;color:rgba(201,146,42,0.45);}
+
+/* ── FORMS ────────────────────────────────────────────────────── */
+.form-group{margin-bottom:0.875rem;}
+.form-label{font-family:'Cinzel',serif;font-size:0.68rem;letter-spacing:0.1em;color:rgba(201,146,42,0.5);text-transform:uppercase;display:block;margin-bottom:0.35rem;}
+.form-input,.form-select,.form-textarea{
+  width:100%;padding:0.7rem 0.875rem;
+  background:rgba(244,232,193,0.05);
+  border:1px solid var(--border);border-radius:8px;
+  font-family:'Crimson Text',serif;font-size:0.95rem;
+  color:var(--parchment-dark);outline:none;transition:all 0.2s;
+  -webkit-appearance:none;appearance:none;
+}
+.form-input::placeholder,.form-textarea::placeholder{color:rgba(244,232,193,0.2);}
+.form-input:focus,.form-select:focus,.form-textarea:focus{
+  border-color:var(--border-focus);
+  background:rgba(244,232,193,0.08);
+  box-shadow:0 0 0 3px rgba(201,146,42,0.06);
+}
+.form-select option{background:#1a1208;color:var(--parchment-dark);}
+.form-textarea{resize:vertical;min-height:80px;line-height:1.5;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:0.625rem;}
+@media(max-width:400px){.form-row{grid-template-columns:1fr;}}
+.form-hint{font-size:0.7rem;color:rgba(201,146,42,0.35);margin-top:0.25rem;font-style:italic;}
+
+/* ── BUTTONS ─────────────────────────────────────────────────── */
+.btn{
+  padding:0.625rem 1.25rem;min-height:40px;border:none;border-radius:8px;
+  font-family:'Cinzel',serif;font-size:0.72rem;cursor:pointer;
+  transition:all 0.2s;letter-spacing:0.05em;
+  display:inline-flex;align-items:center;justify-content:center;gap:0.35rem;
+}
+.btn:active{transform:scale(0.97);}
+.btn-gold{background:linear-gradient(135deg,var(--gold) 0%,var(--gold-bright) 100%);color:var(--ink);}
+.btn-gold:hover{box-shadow:0 4px 12px rgba(255,215,0,0.25);}
+.btn-green{background:linear-gradient(135deg,var(--green) 0%,var(--green-light) 100%);color:white;}
+.btn-green:hover{box-shadow:0 4px 12px rgba(22,163,74,0.3);}
+.btn-red{background:linear-gradient(135deg,var(--burgundy) 0%,var(--burgundy-light) 100%);color:rgba(244,232,193,0.9);}
+.btn-red:hover{box-shadow:0 4px 12px rgba(107,26,26,0.4);}
+.btn-ghost{background:transparent;border:1px solid var(--border);color:var(--parchment-dark);}
+.btn-ghost:hover{background:var(--surface-hover);border-color:rgba(201,146,42,0.35);}
+.btn-sm{padding:0.35rem 0.7rem;min-height:34px;font-size:0.65rem;}
+.btn-full{width:100%;}
+
+/* ── TOPIC/SESSION ACCORDION ─────────────────────────────────── */
+.topic-block{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:12px;margin-bottom:0.75rem;overflow:hidden;
+}
+.topic-header{
+  display:flex;align-items:center;gap:0.75rem;
+  padding:0.875rem 1rem;cursor:pointer;
+  transition:background 0.2s;
+  border:none;background:none;width:100%;text-align:left;
+}
+.topic-header:hover{background:var(--surface-hover);}
+.topic-num{
+  font-family:'Cinzel Decorative',serif;font-size:0.9rem;
+  color:var(--gold-light);flex-shrink:0;width:28px;text-align:center;
+}
+.topic-header-info{flex:1;min-width:0;}
+.topic-header-title{font-family:'Cinzel',serif;font-size:0.82rem;color:var(--parchment-dark);font-weight:700;}
+.topic-header-meta{font-size:0.7rem;color:rgba(201,146,42,0.4);margin-top:0.1rem;}
+.topic-chevron{color:rgba(201,146,42,0.4);font-size:0.8rem;transition:transform 0.2s;flex-shrink:0;}
+.topic-block.open .topic-chevron{transform:rotate(90deg);}
+
+.topic-body{display:none;border-top:1px solid var(--border);padding:0.75rem;}
+.topic-block.open .topic-body{display:block;}
+
+.session-row{
+  display:flex;align-items:flex-start;gap:0.625rem;
+  padding:0.625rem 0;border-bottom:1px solid rgba(201,146,42,0.08);
+}
+.session-row:last-child{border-bottom:none;}
+.session-num{font-family:'Cinzel',serif;font-size:0.65rem;color:rgba(201,146,42,0.4);flex-shrink:0;width:28px;padding-top:0.1rem;}
+.session-info{flex:1;min-width:0;}
+.session-title{font-family:'Cinzel',serif;font-size:0.75rem;color:var(--parchment-dark);font-weight:600;line-height:1.3;}
+.session-status{display:flex;align-items:center;gap:0.4rem;margin-top:0.2rem;}
+.session-has-video{font-size:0.62rem;color:var(--green-light);font-family:'Cinzel',serif;}
+.session-has-game{font-size:0.62rem;color:rgba(167,139,250,0.8);font-family:'Cinzel',serif;}
+.session-edit-btn{
+  background:none;border:1px solid rgba(201,146,42,0.18);
+  border-radius:6px;padding:0.25rem 0.5rem;
+  font-family:'Cinzel',serif;font-size:0.6rem;
+  color:rgba(201,146,42,0.45);cursor:pointer;
+  transition:all 0.2s;flex-shrink:0;
+}
+.session-edit-btn:hover{border-color:rgba(201,146,42,0.45);color:rgba(201,146,42,0.7);}
+
+/* ── SESSION EDIT DRAWER ─────────────────────────────────────── */
+.session-edit-area{
+  display:none;background:rgba(244,232,193,0.03);
+  border:1px solid rgba(201,146,42,0.15);border-radius:8px;
+  padding:0.875rem;margin-top:0.5rem;
+}
+.session-edit-area.open{display:block;}
+
+/* ── MASTERY ROW ─────────────────────────────────────────────── */
+.mastery-row{
+  background:rgba(201,146,42,0.06);
+  border:1px solid rgba(201,146,42,0.2);
+  border-radius:8px;padding:0.75rem;margin-top:0.75rem;
+}
+.mastery-row-title{font-family:'Cinzel',serif;font-size:0.7rem;letter-spacing:0.1em;color:rgba(201,146,42,0.6);text-transform:uppercase;margin-bottom:0.3rem;}
+.mastery-row-text{font-size:0.8rem;color:rgba(244,232,193,0.5);font-style:italic;line-height:1.4;margin-bottom:0.5rem;}
+.mastery-status-badge{display:inline-block;font-family:'Cinzel',serif;font-size:0.6rem;padding:0.15rem 0.5rem;border-radius:4px;letter-spacing:0.08em;}
+.mastery-status-badge.locked{background:rgba(107,26,26,0.2);color:rgba(244,232,193,0.3);border:1px solid rgba(107,26,26,0.3);}
+.mastery-status-badge.available{background:rgba(201,146,42,0.1);color:rgba(201,146,42,0.6);border:1px solid rgba(201,146,42,0.2);}
+.mastery-status-badge.pending{background:rgba(124,58,237,0.15);color:rgba(167,139,250,0.8);border:1px solid rgba(124,58,237,0.3);}
+.mastery-status-badge.complete{background:rgba(22,163,74,0.12);color:rgba(134,239,172,0.8);border:1px solid rgba(22,163,74,0.3);}
+
+/* ── ACTIVITY LOG ────────────────────────────────────────────── */
+.log-list{max-height:280px;overflow-y:auto;}
+.log-list::-webkit-scrollbar{width:3px;}
+.log-list::-webkit-scrollbar-thumb{background:rgba(201,146,42,0.3);border-radius:2px;}
+.log-item{display:flex;align-items:flex-start;gap:0.625rem;padding:0.45rem 0;border-bottom:1px solid rgba(201,146,42,0.06);font-size:0.82rem;}
+.log-item:last-child{border-bottom:none;}
+.log-amount{font-family:'Cinzel',serif;font-size:0.75rem;font-weight:700;min-width:56px;flex-shrink:0;}
+.log-amount.pos{color:var(--green-light);}
+.log-amount.neg{color:#f87171;}
+.log-reason{color:rgba(244,232,193,0.45);flex:1;line-height:1.3;}
+.log-date{color:rgba(201,146,42,0.25);font-size:0.65rem;flex-shrink:0;}
+
+/* ── TOGGLE ──────────────────────────────────────────────────── */
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:0.5rem 0;}
+.toggle-label{font-family:'Cinzel',serif;font-size:0.75rem;color:var(--parchment-dark);}
+.toggle{position:relative;width:44px;height:24px;flex-shrink:0;}
+.toggle input{opacity:0;width:0;height:0;}
+.toggle-slider{position:absolute;inset:0;background:rgba(244,232,193,0.1);border:1px solid rgba(201,146,42,0.2);border-radius:12px;cursor:pointer;transition:all 0.3s;}
+.toggle-slider::before{content:'';position:absolute;width:18px;height:18px;left:2px;top:2px;background:rgba(201,146,42,0.4);border-radius:50%;transition:transform 0.3s;}
+.toggle input:checked + .toggle-slider{background:rgba(22,163,74,0.2);border-color:rgba(22,163,74,0.5);}
+.toggle input:checked + .toggle-slider::before{transform:translateX(20px);background:var(--green-light);}
+
+/* ── EMPTY STATE ─────────────────────────────────────────────── */
+.empty{text-align:center;padding:1.5rem;font-family:'Crimson Text',serif;font-style:italic;color:rgba(201,146,42,0.3);font-size:0.9rem;}
+
+/* ── TOAST ───────────────────────────────────────────────────── */
+#toast{
+  position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%) translateY(80px);
+  background:rgba(22,163,74,0.9);color:white;
+  font-family:'Cinzel',serif;font-size:0.72rem;letter-spacing:0.08em;
+  padding:0.625rem 1.25rem;border-radius:20px;
+  box-shadow:0 4px 16px rgba(0,0,0,0.4);
+  transition:transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+  z-index:500;white-space:nowrap;
+}
+#toast.show{transform:translateX(-50%) translateY(0);}
+#toast.error{background:rgba(220,38,38,0.9);}
+
+/* ── DIVIDER ─────────────────────────────────────────────────── */
+.divider{border:none;border-top:1px solid var(--border);margin:1.25rem 0;}
+</style>
+</head>
+<body>
+
+<div id="loading"><div class="loading-mark">☩</div></div>
+<div id="toast"></div>
+
+<div id="app">
+<div class="admin-layout">
+
+  <!-- TOP BAR -->
+  <div class="top-bar">
+    <div>
+      <div class="top-bar-title">The Orthodox Expedition</div>
+      <div class="top-bar-sub">Lead Explorer Panel</div>
+    </div>
+    <div class="top-bar-right">
+      <span class="admin-name" id="admin-name-display"></span>
+      <button class="logout-btn" onclick="doLogout()">Sign Out</button>
+    </div>
+  </div>
+
+  <!-- ADMIN TABS -->
+  <div class="admin-tabs">
+    <button class="admin-tab active" id="atab-dashboard"  onclick="switchTab('dashboard')">Dashboard</button>
+    <button class="admin-tab"        id="atab-curriculum" onclick="switchTab('curriculum')">Curriculum</button>
+    <button class="admin-tab"        id="atab-missions"   onclick="switchTab('missions')">Missions</button>
+    <button class="admin-tab"        id="atab-bazaar"     onclick="switchTab('bazaar')">Bazaar</button>
+    <button class="admin-tab"        id="atab-settings"   onclick="switchTab('settings')">Settings</button>
+  </div>
+
+  <!-- ── DASHBOARD ── -->
+  <div class="admin-panel show" id="panel-dashboard">
+
+    <!-- Explorer Stats -->
+    <div class="section">
+      <div class="section-title">Explorer Status</div>
+      <div class="stats-grid" id="explorer-stats"></div>
+    </div>
+
+    <!-- Pending Approvals -->
+    <div class="section">
+      <div class="section-title">
+        Awaiting Approval
+        <span class="section-title-count" id="pending-count">0</span>
+      </div>
+      <div id="pending-list"><div class="empty">Nothing awaiting approval.</div></div>
+    </div>
+
+    <!-- Quick Coin Awards -->
+    <div class="section">
+      <div class="section-title">Quick Coin Awards</div>
+      <div class="quick-grid">
+        <button class="quick-btn" onclick="quickAward(50,'Attended session')"><span class="quick-btn-amount">+50</span><span class="quick-btn-label">Session</span></button>
+        <button class="quick-btn" onclick="quickAward(25,'Participated in discussion')"><span class="quick-btn-amount">+25</span><span class="quick-btn-label">Discussion</span></button>
+        <button class="quick-btn" onclick="quickAward(15,'Correct answer')"><span class="quick-btn-amount">+15</span><span class="quick-btn-label">Correct</span></button>
+        <button class="quick-btn" onclick="quickAward(30,'Completed reading')"><span class="quick-btn-amount">+30</span><span class="quick-btn-label">Reading</span></button>
+        <button class="quick-btn" onclick="quickAward(30,'Completed activity')"><span class="quick-btn-amount">+30</span><span class="quick-btn-label">Activity</span></button>
+        <button class="quick-btn" onclick="quickAward(20,'Won a game')"><span class="quick-btn-amount">+20</span><span class="quick-btn-label">Game Win</span></button>
+        <button class="quick-btn" onclick="quickAward(10,'Participated in game')"><span class="quick-btn-amount">+10</span><span class="quick-btn-label">Game Play</span></button>
+        <button class="quick-btn" onclick="quickAward(10,'Daily prayer')"><span class="quick-btn-amount">+10</span><span class="quick-btn-label">Prayer</span></button>
+        <button class="quick-btn" onclick="quickAward(50,'Taught back lesson')"><span class="quick-btn-amount">+50</span><span class="quick-btn-label">Teach Back</span></button>
+        <button class="quick-btn" onclick="quickAward(40,'Brought item from church')"><span class="quick-btn-amount">+40</span><span class="quick-btn-label">Church Item</span></button>
+        <button class="quick-btn" onclick="quickAward(75,'3-week streak bonus')"><span class="quick-btn-amount">+75</span><span class="quick-btn-label">3wk Streak</span></button>
+        <button class="quick-btn" onclick="quickAward(150,'5-week streak bonus')"><span class="quick-btn-amount">+150</span><span class="quick-btn-label">5wk Streak</span></button>
+      </div>
+
+      <!-- Custom amount -->
+      <div class="card">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Amount</label>
+            <input type="number" class="form-input" id="custom-amount" placeholder="e.g. 75" inputmode="numeric">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Reason</label>
+            <input type="text" class="form-input" id="custom-reason" placeholder="e.g. Special bonus">
+          </div>
+        </div>
+        <div style="display:flex;gap:0.5rem;">
+          <button class="btn btn-gold" onclick="customAward()">Add Coins</button>
+          <button class="btn btn-red" onclick="customDeduct()">Deduct Coins</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="section">
+      <div class="section-title">Recent Activity</div>
+      <div class="card" style="padding:0.5rem 0.875rem;">
+        <div class="log-list" id="activity-log"></div>
+      </div>
+    </div>
+
+  </div><!-- /dashboard -->
+
+  <!-- ── CURRICULUM ── -->
+  <div class="admin-panel" id="panel-curriculum">
+    <div class="section">
+      <div class="section-title">All Topics & Sessions</div>
+      <p style="font-size:0.8rem;color:rgba(201,146,42,0.4);font-style:italic;margin-bottom:1rem;">Tap a topic to expand. Tap Edit on any session to update its video, game link, or content.</p>
+      <div id="curriculum-list"></div>
+    </div>
+  </div>
+
+  <!-- ── MISSIONS ── -->
+  <div class="admin-panel" id="panel-missions">
+
+    <!-- Existing missions -->
+    <div class="section">
+      <div class="section-title">All Missions</div>
+      <div id="missions-list"></div>
+    </div>
+
+    <!-- Add new mission -->
+    <div class="section">
+      <div class="section-title">Add New Mission</div>
+      <div class="card">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Name</label>
+            <input type="text" class="form-input" id="new-m-name" placeholder="Mission name">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Coins</label>
+            <input type="number" class="form-input" id="new-m-coins" placeholder="50" inputmode="numeric">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Detail</label>
+          <input type="text" class="form-input" id="new-m-detail" placeholder="Short description">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Type</label>
+            <select class="form-select" id="new-m-type">
+              <option value="daily">Daily</option>
+              <option value="weekly">Weekly (Self Report)</option>
+              <option value="weekly_verified">Weekly (Parent Verify)</option>
+              <option value="special">Special</option>
+              <option value="field_visit">Field Visit</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Repeatable</label>
+            <select class="form-select" id="new-m-repeat">
+              <option value="true">Yes — repeatable</option>
+              <option value="false">No — one time only</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn btn-gold btn-full" onclick="addMission()">Add Mission</button>
+      </div>
+    </div>
+
+  </div><!-- /missions -->
+
+  <!-- ── BAZAAR ── -->
+  <div class="admin-panel" id="panel-bazaar">
+
+    <!-- Nolan's wishlist -->
+    <div class="section">
+      <div class="section-title">Nolan's Wishlist</div>
+      <div id="wishlist-list"></div>
+    </div>
+
+    <!-- All prizes -->
+    <div class="section">
+      <div class="section-title">All Prizes</div>
+      <div id="prizes-list"></div>
+    </div>
+
+    <!-- Add prize -->
+    <div class="section">
+      <div class="section-title">Add Prize</div>
+      <div class="card">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Name</label>
+            <input type="text" class="form-input" id="new-p-name" placeholder="Prize name">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Emoji</label>
+            <input type="text" class="form-input" id="new-p-emoji" placeholder="🎁" maxlength="4">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Cost (Coins)</label>
+            <input type="number" class="form-input" id="new-p-cost" placeholder="1000" inputmode="numeric">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Tier</label>
+            <select class="form-select" id="new-p-tier">
+              <option value="0">Common Finds (300–500)</option>
+              <option value="1">Rare Artifacts (1,000–1,500)</option>
+              <option value="2">Legendary Treasures (2,500–3,000)</option>
+              <option value="3">Epic Discoveries (5,000–6,000)</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn btn-gold btn-full" onclick="addPrize()">Add to Bazaar</button>
+      </div>
+    </div>
+
+    <!-- Redemption history -->
+    <div class="section">
+      <div class="section-title">Redemption History</div>
+      <div id="redemption-list"></div>
+    </div>
+
+  </div><!-- /bazaar -->
+
+  <!-- ── SETTINGS ── -->
+  <div class="admin-panel" id="panel-settings">
+
+    <!-- Explorer profile -->
+    <div class="section">
+      <div class="section-title">Explorer Profile</div>
+      <div class="card">
+        <div class="form-group">
+          <label class="form-label">Explorer Name</label>
+          <input type="text" class="form-input" id="s-name" placeholder="Nolan">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Current Coins</label>
+            <input type="number" class="form-input" id="s-coins" inputmode="numeric">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Lifetime Coins</label>
+            <input type="number" class="form-input" id="s-lifetime" inputmode="numeric">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Sessions Attended</label>
+            <input type="number" class="form-input" id="s-sessions" inputmode="numeric">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Streak (weeks)</label>
+            <input type="number" class="form-input" id="s-streak" inputmode="numeric">
+          </div>
+        </div>
+        <button class="btn btn-gold" onclick="saveProfile()">Save Profile</button>
+      </div>
+    </div>
+
+    <!-- Unlock topic -->
+    <div class="section">
+      <div class="section-title">Topic Mastery Control</div>
+      <div class="card">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Topic</label>
+            <select class="form-select" id="s-topic-select" onchange="loadTopicMasteryStatus()"></select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Status</label>
+            <select class="form-select" id="s-topic-status">
+              <option value="locked">Locked</option>
+              <option value="available">Available</option>
+              <option value="pending">Pending</option>
+              <option value="complete">Complete</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn btn-gold" onclick="saveTopicStatus()">Update Topic Status</button>
+      </div>
+    </div>
+
+    <!-- Data export -->
+    <div class="section">
+      <div class="section-title">Data Export</div>
+      <div class="card">
+        <p style="font-size:0.82rem;color:rgba(244,232,193,0.45);margin-bottom:0.875rem;line-height:1.5;">Export all of Nolan's progress data as a JSON file for backup.</p>
+        <button class="btn btn-ghost" onclick="exportData()">Export Data</button>
+      </div>
+    </div>
+
+    <!-- Danger zone -->
+    <div class="section">
+      <div class="section-title" style="color:rgba(220,38,38,0.5);">Danger Zone</div>
+      <div class="card" style="border-color:rgba(220,38,38,0.2);">
+        <p style="font-size:0.82rem;color:rgba(244,232,193,0.4);margin-bottom:0.875rem;line-height:1.5;">Reset all of Nolan's coins, sessions, and progress. This cannot be undone.</p>
+        <button class="btn btn-red" onclick="confirmReset()">Reset All Progress</button>
+      </div>
+    </div>
+
+  </div><!-- /settings -->
+
+</div><!-- /admin-layout -->
+</div><!-- /app -->
+
+<script>
+// ── SUPABASE ──────────────────────────────────────────────────
+const SUPABASE_URL = 'https://ksfnsryfmkafwirzgjoe.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtzZm5zcnlmbWthZndpcnpnam9lIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2ODM4MTcsImV4cCI6MjA5MTI1OTgxN30.mHQty44WBnjQY8BJ8KbPk_pp-yTcOaifGxCZPUO4xpY';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ── STATE ─────────────────────────────────────────────────────
+let adminProfile = null;
+let explorerProfile = null;
+let allTopics = [];
+let allSessions = [];
+let allMissions = [];
+let allPrizes = [];
+let pendingItems = [];
+let activeTab = 'dashboard';
+
+// ── TOAST ─────────────────────────────────────────────────────
+function toast(msg, isError=false){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = isError ? 'error show' : 'show';
+  setTimeout(()=>t.className = isError ? 'error' : '', 2800);
+}
+
+// ── AUTH ──────────────────────────────────────────────────────
+sb.auth.onAuthStateChange(async(event,session)=>{
+  if(session){
+    const {data:prof} = await sb.from('profiles').select('*').eq('id',session.user.id).single();
+    if(!prof||prof.role!=='admin'){
+      await sb.auth.signOut();
+      window.location.href='index.html';
+      return;
+    }
+    adminProfile = prof;
+    document.getElementById('admin-name-display').textContent = prof.name;
+    await loadAll();
+    document.getElementById('loading').style.display='none';
+    document.getElementById('app').style.display='block';
+  } else {
+    window.location.href='index.html';
+  }
+});
+
+(async()=>{
+  const {data:{session}} = await sb.auth.getSession();
+  if(!session) window.location.href='index.html';
+})();
+
+async function doLogout(){
+  await sb.auth.signOut();
+  window.location.href='index.html';
+}
+
+// ── LOAD ALL ──────────────────────────────────────────────────
+async function loadAll(){
+  const [topicsRes, sessionsRes, missionsRes, prizesRes, explorerRes] = await Promise.all([
+    sb.from('topics').select('*').order('order_index'),
+    sb.from('sessions').select('*').order('topic_id').order('order_index'),
+    sb.from('missions').select('*').order('type').order('created_at'),
+    sb.from('prizes').select('*').order('tier').order('created_at'),
+    sb.from('profiles').select('*').eq('role','explorer').single(),
+  ]);
+  allTopics   = topicsRes.data   || [];
+  allSessions = sessionsRes.data || [];
+  allMissions = missionsRes.data || [];
+  allPrizes   = prizesRes.data   || [];
+  explorerProfile = explorerRes.data;
+  await loadPending();
+  await loadActivityLog();
+  renderDashboard();
+  populateTopicSelect();
+}
+
+// ── PENDING APPROVALS ─────────────────────────────────────────
+async function loadPending(){
+  if(!explorerProfile) return;
+  const [missionComp, masteryComp] = await Promise.all([
+    sb.from('mission_completions').select('*,missions(name,coins,type)')
+      .eq('explorer_id',explorerProfile.id).eq('status','pending'),
+    sb.from('topic_mastery').select('*,topics(title,mastery_assignment,mastery_coins)')
+      .eq('explorer_id',explorerProfile.id).eq('status','pending'),
+  ]);
+  pendingItems = [...(missionComp.data||[]), ...(masteryComp.data||[])];
+  renderPending();
+}
+
+function renderPending(){
+  const el = document.getElementById('pending-list');
+  const count = document.getElementById('pending-count');
+  count.textContent = pendingItems.length;
+  if(!pendingItems.length){el.innerHTML='<div class="empty">Nothing awaiting approval.</div>';return;}
+  el.innerHTML='';
+  pendingItems.forEach(item=>{
+    const isMastery = !!item.topics;
+    const name    = isMastery ? `Mastery: ${item.topics.title}` : item.missions?.name || 'Mission';
+    const detail  = isMastery ? item.topics.mastery_assignment : item.missions?.type || '';
+    const coins   = isMastery ? item.topics.mastery_coins : item.missions?.coins || 0;
+    const card = document.createElement('div');
+    card.className='pending-card';
+    card.innerHTML=`
+      <div class="pending-card-info">
+        <div class="pending-card-name">${name}</div>
+        <div class="pending-card-meta">+${coins} coins · ${isMastery?'Mastery Assignment':detail}</div>
+      </div>
+      <div class="pending-actions">
+        <button class="btn btn-green btn-sm" onclick="approvePending('${item.id}','${isMastery?'mastery':'mission'}',${coins})">Approve ✓</button>
+        <button class="btn btn-red btn-sm" onclick="rejectPending('${item.id}','${isMastery?'mastery':'mission'}')">Reject</button>
+      </div>`;
+    el.appendChild(card);
+  });
+}
+
+async function approvePending(id, type, coins){
+  if(!explorerProfile) return;
+  if(type==='mastery'){
+    const item = pendingItems.find(p=>p.id===id);
+    await sb.from('topic_mastery').update({
+      status:'complete',approved_at:new Date().toISOString(),coins_awarded:coins
+    }).eq('id',id);
+    // Update topics_mastered count
+    await sb.from('profiles').update({
+      topics_mastered:(explorerProfile.topics_mastered||0)+1
+    }).eq('id',explorerProfile.id);
+  } else {
+    await sb.from('mission_completions').update({
+      status:'approved',approved_at:new Date().toISOString(),coins_awarded:coins
+    }).eq('id',id);
+  }
+  await awardCoins(coins, type==='mastery'?'Mastery Assignment Approved':'Mission Approved');
+  toast(`Approved! +${coins} coins awarded.`);
+  await loadAll();
+}
+
+async function rejectPending(id, type){
+  if(type==='mastery'){
+    await sb.from('topic_mastery').update({status:'available'}).eq('id',id);
+  } else {
+    await sb.from('mission_completions').update({status:'rejected'}).eq('id',id);
+  }
+  toast('Sent back — not yet approved.');
+  await loadPending();
+  renderPending();
+}
+
+// ── ACTIVITY LOG ──────────────────────────────────────────────
+async function loadActivityLog(){
+  if(!explorerProfile) return;
+  const {data} = await sb.from('activity_log')
+    .select('*').eq('explorer_id',explorerProfile.id)
+    .order('created_at',{ascending:false}).limit(20);
+  const el = document.getElementById('activity-log');
+  if(!data||!data.length){el.innerHTML='<div class="empty">No activity yet.</div>';return;}
+  el.innerHTML='';
+  data.forEach(e=>{
+    const d=new Date(e.created_at);
+    const dateStr=d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+    const li=document.createElement('div');
+    li.className='log-item';
+    li.innerHTML=`<span class="log-amount ${e.amount>=0?'pos':'neg'}">${e.amount>=0?'+':''}${e.amount}</span><span class="log-reason">${e.reason}</span><span class="log-date">${dateStr}</span>`;
+    el.appendChild(li);
+  });
+}
+
+// ── DASHBOARD ─────────────────────────────────────────────────
+function renderDashboard(){
+  if(!explorerProfile) return;
+  const p = explorerProfile;
+  const el = document.getElementById('explorer-stats');
+  const stats = [
+    {val:p.coins.toLocaleString(),lbl:'Saint Coins'},
+    {val:p.lifetime_coins.toLocaleString(),lbl:'Lifetime Earned'},
+    {val:p.sessions_attended,lbl:'Sessions'},
+    {val:p.topics_mastered,lbl:'Topics Mastered'},
+    {val:p.streak,lbl:'Week Streak'},
+  ];
+  el.innerHTML='';
+  stats.forEach(s=>{
+    const card=document.createElement('div');
+    card.className='stat-card';
+    card.innerHTML=`<div class="stat-val">${s.val}</div><div class="stat-lbl">${s.lbl}</div>`;
+    el.appendChild(card);
+  });
+}
+
+// ── COIN AWARDS ───────────────────────────────────────────────
+async function awardCoins(amount, reason){
+  if(!explorerProfile) return;
+  const newCoins    = (explorerProfile.coins||0)+amount;
+  const newLifetime = (explorerProfile.lifetime_coins||0)+amount;
+  await Promise.all([
+    sb.from('profiles').update({coins:newCoins,lifetime_coins:newLifetime}).eq('id',explorerProfile.id),
+    sb.from('activity_log').insert({explorer_id:explorerProfile.id,amount,reason,created_at:new Date().toISOString()}),
+  ]);
+  explorerProfile.coins = newCoins;
+  explorerProfile.lifetime_coins = newLifetime;
+  renderDashboard();
+}
+
+async function quickAward(amount, reason){
+  await awardCoins(amount, reason);
+  await loadActivityLog();
+  toast(`+${amount} coins awarded — ${reason}`);
+}
+
+async function customAward(){
+  const amount = parseInt(document.getElementById('custom-amount').value);
+  const reason = document.getElementById('custom-reason').value.trim() || 'Custom award';
+  if(!amount||isNaN(amount)||amount<=0){toast('Enter a valid amount.',true);return;}
+  await awardCoins(amount, reason);
+  await loadActivityLog();
+  document.getElementById('custom-amount').value='';
+  document.getElementById('custom-reason').value='';
+  toast(`+${amount} coins awarded.`);
+}
+
+async function customDeduct(){
+  const amount = parseInt(document.getElementById('custom-amount').value);
+  const reason = document.getElementById('custom-reason').value.trim() || 'Deduction';
+  if(!amount||isNaN(amount)||amount<=0){toast('Enter a valid amount.',true);return;}
+  const newCoins = Math.max(0,(explorerProfile.coins||0)-amount);
+  await sb.from('profiles').update({coins:newCoins}).eq('id',explorerProfile.id);
+  await sb.from('activity_log').insert({explorer_id:explorerProfile.id,amount:-amount,reason,created_at:new Date().toISOString()});
+  explorerProfile.coins = newCoins;
+  renderDashboard();
+  await loadActivityLog();
+  document.getElementById('custom-amount').value='';
+  document.getElementById('custom-reason').value='';
+  toast(`${amount} coins deducted.`);
+}
+
+// ── CURRICULUM ────────────────────────────────────────────────
+async function renderCurriculum(){
+  const el = document.getElementById('curriculum-list');
+  el.innerHTML='';
+
+  // Load session progress for explorer
+  let completedIds = [];
+  let masteryData = [];
+  if(explorerProfile){
+    const [spRes,tmRes] = await Promise.all([
+      sb.from('session_progress').select('session_id').eq('explorer_id',explorerProfile.id),
+      sb.from('topic_mastery').select('*').eq('explorer_id',explorerProfile.id),
+    ]);
+    completedIds = (spRes.data||[]).map(s=>s.session_id);
+    masteryData  = tmRes.data||[];
+  }
+
+  allTopics.forEach(topic=>{
+    const sessions = allSessions.filter(s=>s.topic_id===topic.id);
+    const done = sessions.filter(s=>completedIds.includes(s.id)).length;
+    const mastery = masteryData.find(m=>m.topic_id===topic.id);
+
+    const block = document.createElement('div');
+    block.className='topic-block';
+    block.id=`topic-block-${topic.id}`;
+
+    block.innerHTML=`
+      <button class="topic-header" onclick="toggleTopic(${topic.id})">
+        <span class="topic-num">${topic.id}</span>
+        <div class="topic-header-info">
+          <div class="topic-header-title">${topic.title}</div>
+          <div class="topic-header-meta">${done}/${sessions.length} sessions · ${mastery?mastery.status:'locked'}</div>
+        </div>
+        <span class="topic-chevron">›</span>
+      </button>
+      <div class="topic-body">
+        <div id="sessions-${topic.id}"></div>
+        <div class="mastery-row">
+          <div class="mastery-row-title">Mastery Assignment</div>
+          <div class="mastery-row-text">${topic.mastery_assignment}</div>
+          <span class="mastery-status-badge ${mastery?mastery.status:'locked'}">${mastery?mastery.status.toUpperCase():'LOCKED'}</span>
+          ${mastery&&mastery.status==='pending'?`<button class="btn btn-green btn-sm" style="margin-left:0.5rem" onclick="approveMasteryFromCurriculum(${topic.id})">Approve</button>`:''}
+        </div>
+      </div>`;
+
+    el.appendChild(block);
+
+    // Build session rows
+    const sessEl = block.querySelector(`#sessions-${topic.id}`);
+    sessions.forEach(s=>{
+      const completed = completedIds.includes(s.id);
+      const row = document.createElement('div');
+      row.className='session-row';
+      row.innerHTML=`
+        <span class="session-num">${s.id}</span>
+        <div class="session-info">
+          <div class="session-title">${s.title}${completed?' ✓':''}</div>
+          <div class="session-status">
+            ${s.video_url?'<span class="session-has-video">Video ✓</span>':''}
+            ${s.game_url?'<span class="session-has-game">Game ✓</span>':''}
+          </div>
+        </div>
+        <button class="session-edit-btn" onclick="toggleSessionEdit('${s.id}')">Edit</button>`;
+
+      // Edit area
+      const editArea = document.createElement('div');
+      editArea.className='session-edit-area';
+      editArea.id=`edit-${s.id}`;
+      editArea.innerHTML=`
+        <div class="form-group">
+          <label class="form-label">Video URL (YouTube)</label>
+          <input type="url" class="form-input" id="video-${s.id}" value="${s.video_url||''}" placeholder="https://youtube.com/watch?v=...">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Game URL</label>
+          <input type="url" class="form-input" id="game-${s.id}" value="${s.game_url||''}" placeholder="games/liturgy-sequence.html">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Description</label>
+          <textarea class="form-textarea" id="desc-${s.id}" rows="2">${s.description||''}</textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Key Concepts (one per line)</label>
+          <textarea class="form-textarea" id="concepts-${s.id}" rows="4">${(s.key_concepts||[]).join('\n')}</textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Journal Prompt</label>
+          <textarea class="form-textarea" id="journal-${s.id}" rows="2">${s.journal_prompt||''}</textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Coins</label>
+          <input type="number" class="form-input" id="coins-${s.id}" value="${s.coins||50}" inputmode="numeric">
+        </div>
+        <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+          <button class="btn btn-gold btn-sm" onclick="saveSession('${s.id}')">Save Session</button>
+          <button class="btn btn-ghost btn-sm" onclick="toggleSessionEdit('${s.id}')">Cancel</button>
+        </div>`;
+
+      const wrapper = document.createElement('div');
+      wrapper.appendChild(row);
+      wrapper.appendChild(editArea);
+      sessEl.appendChild(wrapper);
+    });
+  });
+}
+
+function toggleTopic(id){
+  const block = document.getElementById(`topic-block-${id}`);
+  block.classList.toggle('open');
+}
+
+function toggleSessionEdit(sessionId){
+  const area = document.getElementById(`edit-${sessionId}`);
+  area.classList.toggle('open');
+}
+
+async function saveSession(sessionId){
+  const videoUrl   = document.getElementById(`video-${sessionId}`).value.trim();
+  const gameUrl    = document.getElementById(`game-${sessionId}`).value.trim();
+  const desc       = document.getElementById(`desc-${sessionId}`).value.trim();
+  const conceptsRaw= document.getElementById(`concepts-${sessionId}`).value;
+  const concepts   = conceptsRaw.split('\n').map(c=>c.trim()).filter(c=>c.length>0);
+  const journal    = document.getElementById(`journal-${sessionId}`).value.trim();
+  const coins      = parseInt(document.getElementById(`coins-${sessionId}`).value)||50;
+
+  const {error} = await sb.from('sessions').update({
+    video_url:   videoUrl||null,
+    game_url:    gameUrl||null,
+    description: desc,
+    key_concepts:concepts,
+    journal_prompt:journal,
+    coins,
+  }).eq('id',sessionId);
+
+  if(error){toast('Error saving session.',true);return;}
+
+  // Update local cache
+  const idx = allSessions.findIndex(s=>s.id===sessionId);
+  if(idx>=0){
+    allSessions[idx]={...allSessions[idx],video_url:videoUrl||null,game_url:gameUrl||null,description:desc,key_concepts:concepts,journal_prompt:journal,coins};
+  }
+
+  toggleSessionEdit(sessionId);
+  toast('Session saved.');
+  // Refresh curriculum display
+  await renderCurriculum();
+}
+
+async function approveMasteryFromCurriculum(topicId){
+  if(!explorerProfile) return;
+  const mastery = await sb.from('topic_mastery').select('*,topics(mastery_coins)')
+    .eq('explorer_id',explorerProfile.id).eq('topic_id',topicId).single();
+  if(mastery.data){
+    await approvePending(mastery.data.id,'mastery',mastery.data.topics.mastery_coins);
+  }
+}
+
+// ── MISSIONS ─────────────────────────────────────────────────
+function renderMissions(){
+  const el = document.getElementById('missions-list');
+  el.innerHTML='';
+  if(!allMissions.length){el.innerHTML='<div class="empty">No missions found.</div>';return;}
+
+  const types = ['daily','weekly','weekly_verified','special','field_visit'];
+  const labels = {daily:'Daily',weekly:'Weekly (Self)',weekly_verified:'Weekly (Verified)',special:'Special',field_visit:'Field Visit'};
+
+  types.forEach(type=>{
+    const missions = allMissions.filter(m=>m.type===type);
+    if(!missions.length) return;
+
+    const lbl=document.createElement('div');
+    lbl.className='section-title';lbl.style.marginTop='0.875rem';
+    lbl.textContent=labels[type];
+    el.appendChild(lbl);
+
+    missions.forEach(m=>{
+      const card=document.createElement('div');
+      card.className='card';
+      card.style.padding='0.75rem';
+      card.innerHTML=`
+        <div class="card-header" style="margin-bottom:0.5rem;">
+          <div class="card-icon">${m.emoji}</div>
+          <div class="card-info">
+            <div class="card-title">${m.name}</div>
+            <div class="card-sub">${m.detail}</div>
+            <div class="card-meta">+${m.coins} coins · ${m.repeatable?'Repeatable':'One-time'}</div>
+          </div>
+          <div class="card-actions">
+            <label class="toggle">
+              <input type="checkbox" ${m.is_active?'checked':''} onchange="toggleMission('${m.id}',this.checked)">
+              <span class="toggle-slider"></span>
+            </label>
+            <button class="btn btn-red btn-sm" onclick="deleteMission('${m.id}')">Del</button>
+          </div>
+        </div>`;
+      el.appendChild(card);
+    });
+  });
+}
+
+async function addMission(){
+  const name   = document.getElementById('new-m-name').value.trim();
+  const coins  = parseInt(document.getElementById('new-m-coins').value)||50;
+  const detail = document.getElementById('new-m-detail').value.trim()||'Complete this mission';
+  const type   = document.getElementById('new-m-type').value;
+  const repeat = document.getElementById('new-m-repeat').value==='true';
+  if(!name){toast('Enter a mission name.',true);return;}
+
+  const {data,error} = await sb.from('missions').insert({
+    name,coins,detail,type,repeatable:repeat,
+    emoji:'✦',requires_verification:['weekly_verified','special','field_visit'].includes(type),
+    is_active:true,is_default:false,created_at:new Date().toISOString(),
+  }).select().single();
+
+  if(error){toast('Error adding mission.',true);return;}
+  allMissions.push(data);
+  renderMissions();
+  document.getElementById('new-m-name').value='';
+  document.getElementById('new-m-coins').value='';
+  document.getElementById('new-m-detail').value='';
+  toast('Mission added.');
+}
+
+async function toggleMission(id, active){
+  await sb.from('missions').update({is_active:active}).eq('id',id);
+  const m = allMissions.find(m=>m.id===id);
+  if(m) m.is_active=active;
+  toast(active?'Mission activated.':'Mission deactivated.');
+}
+
+async function deleteMission(id){
+  if(!confirm('Delete this mission?')) return;
+  await sb.from('missions').delete().eq('id',id);
+  allMissions = allMissions.filter(m=>m.id!==id);
+  renderMissions();
+  toast('Mission deleted.');
+}
+
+// ── BAZAAR ────────────────────────────────────────────────────
+async function renderBazaar(){
+  // Wishlist
+  const wishEl = document.getElementById('wishlist-list');
+  if(!explorerProfile){wishEl.innerHTML='<div class="empty">No explorer found.</div>';return;}
+  const {data:wishlist} = await sb.from('wishlist').select('*,prizes(name,emoji,cost)')
+    .eq('explorer_id',explorerProfile.id);
+  if(!wishlist||!wishlist.length){wishEl.innerHTML='<div class="empty">Wishlist is empty.</div>';}
+  else{
+    wishEl.innerHTML='';
+    wishlist.forEach(w=>{
+      const affordable = explorerProfile.coins>=(w.prizes?.cost||0);
+      const card=document.createElement('div');
+      card.className='card';card.style.padding='0.625rem 0.875rem';
+      card.innerHTML=`<div style="display:flex;align-items:center;gap:0.75rem;"><span style="font-size:1.3rem">${w.prizes?.emoji||'🎁'}</span><div><div class="card-title">${w.prizes?.name||'Prize'}</div><div class="card-meta">${w.prizes?.cost?.toLocaleString()||0} coins${affordable?' · ✓ Affordable!':''}</div></div></div>`;
+      wishEl.appendChild(card);
+    });
+  }
+
+  // All prizes
+  const prizesEl = document.getElementById('prizes-list');
+  prizesEl.innerHTML='';
+  const tiers=['Common Finds','Rare Artifacts','Legendary Treasures','Epic Discoveries'];
+  [0,1,2,3].forEach(tier=>{
+    const prizes = allPrizes.filter(p=>p.tier===tier);
+    if(!prizes.length) return;
+    const lbl=document.createElement('div');
+    lbl.className='section-title';lbl.style.marginTop='0.875rem';
+    lbl.textContent=tiers[tier];
+    prizesEl.appendChild(lbl);
+    prizes.forEach(p=>{
+      const card=document.createElement('div');
+      card.className='card';card.style.padding='0.625rem 0.875rem';
+      card.innerHTML=`<div style="display:flex;align-items:center;gap:0.75rem;"><span style="font-size:1.3rem">${p.emoji}</span><div style="flex:1"><div class="card-title">${p.name}</div><div class="card-meta">${p.cost.toLocaleString()} coins</div></div><label class="toggle"><input type="checkbox" ${p.is_active?'checked':''} onchange="togglePrize('${p.id}',this.checked)"><span class="toggle-slider"></span></label><button class="btn btn-red btn-sm" onclick="deletePrize('${p.id}')">Del</button></div>`;
+      prizesEl.appendChild(card);
+    });
+  });
+
+  // Redemptions
+  const redemEl = document.getElementById('redemption-list');
+  const {data:redemptions} = await sb.from('redemptions').select('*')
+    .eq('explorer_id',explorerProfile.id).order('redeemed_at',{ascending:false}).limit(10);
+  if(!redemptions||!redemptions.length){redemEl.innerHTML='<div class="empty">No redemptions yet.</div>';}
+  else{
+    redemEl.innerHTML='';
+    redemptions.forEach(r=>{
+      const d=new Date(r.redeemed_at).toLocaleDateString();
+      const card=document.createElement('div');
+      card.className='card';card.style.padding='0.5rem 0.875rem';
+      card.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;"><span class="card-title">${r.prize_name}</span><span class="card-meta">-${r.coins_spent} coins · ${d}</span></div>`;
+      redemEl.appendChild(card);
+    });
+  }
+}
+
+async function addPrize(){
+  const name  = document.getElementById('new-p-name').value.trim();
+  const emoji = document.getElementById('new-p-emoji').value.trim()||'🎁';
+  const cost  = parseInt(document.getElementById('new-p-cost').value);
+  const tier  = parseInt(document.getElementById('new-p-tier').value);
+  if(!name||isNaN(cost)){toast('Enter name and cost.',true);return;}
+
+  const {data,error} = await sb.from('prizes').insert({
+    name,emoji,cost,tier,is_default:false,is_active:true,created_at:new Date().toISOString()
+  }).select().single();
+
+  if(error){toast('Error adding prize.',true);return;}
+  allPrizes.push(data);
+  await renderBazaar();
+  document.getElementById('new-p-name').value='';
+  document.getElementById('new-p-emoji').value='';
+  document.getElementById('new-p-cost').value='';
+  toast('Prize added to the Bazaar.');
+}
+
+async function togglePrize(id,active){
+  await sb.from('prizes').update({is_active:active}).eq('id',id);
+  const p=allPrizes.find(p=>p.id===id);
+  if(p) p.is_active=active;
+  toast(active?'Prize activated.':'Prize deactivated.');
+}
+
+async function deletePrize(id){
+  if(!confirm('Delete this prize?')) return;
+  await sb.from('prizes').delete().eq('id',id);
+  allPrizes=allPrizes.filter(p=>p.id!==id);
+  await renderBazaar();
+  toast('Prize deleted.');
+}
+
+// ── SETTINGS ─────────────────────────────────────────────────
+function loadSettingsForm(){
+  if(!explorerProfile) return;
+  document.getElementById('s-name').value    = explorerProfile.name||'';
+  document.getElementById('s-coins').value   = explorerProfile.coins||0;
+  document.getElementById('s-lifetime').value= explorerProfile.lifetime_coins||0;
+  document.getElementById('s-sessions').value= explorerProfile.sessions_attended||0;
+  document.getElementById('s-streak').value  = explorerProfile.streak||0;
+}
+
+async function saveProfile(){
+  if(!explorerProfile) return;
+  const updates = {
+    name:     document.getElementById('s-name').value.trim()||'Nolan',
+    coins:    parseInt(document.getElementById('s-coins').value)||0,
+    lifetime_coins: parseInt(document.getElementById('s-lifetime').value)||0,
+    sessions_attended: parseInt(document.getElementById('s-sessions').value)||0,
+    streak:   parseInt(document.getElementById('s-streak').value)||0,
+  };
+  const {error} = await sb.from('profiles').update(updates).eq('id',explorerProfile.id);
+  if(error){toast('Error saving profile.',true);return;}
+  Object.assign(explorerProfile,updates);
+  renderDashboard();
+  toast('Profile saved.');
+}
+
+function populateTopicSelect(){
+  const sel = document.getElementById('s-topic-select');
+  sel.innerHTML='';
+  allTopics.forEach(t=>{
+    const opt=document.createElement('option');
+    opt.value=t.id;opt.textContent=`${t.id}: ${t.title}`;
+    sel.appendChild(opt);
+  });
+}
+
+async function loadTopicMasteryStatus(){
+  if(!explorerProfile) return;
+  const topicId = parseInt(document.getElementById('s-topic-select').value);
+  const {data} = await sb.from('topic_mastery').select('status')
+    .eq('explorer_id',explorerProfile.id).eq('topic_id',topicId).single();
+  if(data) document.getElementById('s-topic-status').value=data.status;
+}
+
+async function saveTopicStatus(){
+  if(!explorerProfile) return;
+  const topicId = parseInt(document.getElementById('s-topic-select').value);
+  const status  = document.getElementById('s-topic-status').value;
+  await sb.from('topic_mastery').upsert({
+    explorer_id:explorerProfile.id,topic_id:topicId,status,
+  },{onConflict:'explorer_id,topic_id'});
+
+  // Update topics_mastered count
+  const {data:completed} = await sb.from('topic_mastery')
+    .select('topic_id').eq('explorer_id',explorerProfile.id).eq('status','complete');
+  await sb.from('profiles').update({topics_mastered:(completed||[]).length}).eq('id',explorerProfile.id);
+  toast('Topic status updated.');
+}
+
+async function exportData(){
+  if(!explorerProfile) return;
+  const [sp,tm,mc,log,wish,red] = await Promise.all([
+    sb.from('session_progress').select('*').eq('explorer_id',explorerProfile.id),
+    sb.from('topic_mastery').select('*').eq('explorer_id',explorerProfile.id),
+    sb.from('mission_completions').select('*').eq('explorer_id',explorerProfile.id),
+    sb.from('activity_log').select('*').eq('explorer_id',explorerProfile.id),
+    sb.from('wishlist').select('*').eq('explorer_id',explorerProfile.id),
+    sb.from('redemptions').select('*').eq('explorer_id',explorerProfile.id),
+  ]);
+  const exportObj={
+    profile:explorerProfile,
+    session_progress:sp.data,topic_mastery:tm.data,
+    mission_completions:mc.data,activity_log:log.data,
+    wishlist:wish.data,redemptions:red.data,
+    exported_at:new Date().toISOString(),
+  };
+  const blob=new Blob([JSON.stringify(exportObj,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`orthodox-expedition-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  toast('Data exported.');
+}
+
+async function confirmReset(){
+  if(!confirm('Reset ALL of Nolan\'s progress? This cannot be undone.')) return;
+  if(!confirm('Are you absolutely sure? All coins, sessions, and mastery will be lost.')) return;
+  if(!explorerProfile) return;
+  await Promise.all([
+    sb.from('profiles').update({coins:0,lifetime_coins:0,sessions_attended:0,topics_mastered:0,streak:0}).eq('id',explorerProfile.id),
+    sb.from('session_progress').delete().eq('explorer_id',explorerProfile.id),
+    sb.from('mission_completions').delete().eq('explorer_id',explorerProfile.id),
+    sb.from('activity_log').delete().eq('explorer_id',explorerProfile.id),
+    sb.from('badge_progress').delete().eq('explorer_id',explorerProfile.id),
+    sb.from('redemptions').delete().eq('explorer_id',explorerProfile.id),
+  ]);
+  // Reset topic mastery
+  const {data:topics} = await sb.from('topics').select('id');
+  if(topics){
+    for(const t of topics){
+      await sb.from('topic_mastery').upsert({
+        explorer_id:explorerProfile.id,topic_id:t.id,status:t.id===0?'available':'locked'
+      },{onConflict:'explorer_id,topic_id'});
+    }
+  }
+  toast('All progress reset.');
+  await loadAll();
+  loadSettingsForm();
+}
+
+// ── TAB SWITCHING ─────────────────────────────────────────────
+function switchTab(tab){
+  activeTab=tab;
+  ['dashboard','curriculum','missions','bazaar','settings'].forEach(t=>{
+    document.getElementById('atab-'+t).classList.toggle('active',t===tab);
+    document.getElementById('panel-'+t).classList.toggle('show',t===tab);
+  });
+  if(tab==='curriculum') renderCurriculum();
+  if(tab==='missions')   renderMissions();
+  if(tab==='bazaar')     renderBazaar();
+  if(tab==='settings')   loadSettingsForm();
+}
+</script>
+</body>
+</html>

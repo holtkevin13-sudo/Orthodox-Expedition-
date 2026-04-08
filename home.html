@@ -803,29 +803,18 @@ function closeRankup(){
 }
 
 // ── INIT ──────────────────────────────────────────────────────
-let appLoaded = false;
-sb.auth.onAuthStateChange(async (event, session)=>{
-  if(appLoaded) return;
-  if(session){
-    try {
-      const {data:prof} = await sb.from('profiles').select('role').eq('id',session.user.id).single();
-      if(prof && prof.role === 'admin'){ window.location.href='admin.html'; return; }
-      appLoaded = true;
-      await loadData(session.user.id);
-      showApp();
-    } catch(e) {
-      console.error('Home load error:', e);
-      window.location.href='index.html';
-    }
-  } else {
-    window.location.href='index.html';
-  }
-});
-
-// Initial session check
 (async()=>{
-  const {data:{session}} = await sb.auth.getSession();
-  if(!session){
+  try {
+    const timer = new Promise(r => setTimeout(() => r(null), 4000));
+    const res   = await Promise.race([sb.auth.getSession(), timer]);
+    const session = res?.data?.session ?? null;
+    if(!session){ window.location.href='index.html'; return; }
+    const {data:prof} = await sb.from('profiles').select('role').eq('id',session.user.id).single();
+    if(prof && prof.role === 'admin'){ window.location.href='admin.html'; return; }
+    await loadData(session.user.id);
+    showApp();
+  } catch(e) {
+    console.error('Home error:', e);
     window.location.href='index.html';
   }
 })();

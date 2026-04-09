@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Icon Gallery — Orthodox Expedition</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --gold:#c9922a;--gold-light:#f0c96e;--gold-bright:#ffd700;
+  --parchment:#f4e8c1;
+  --burgundy:#6b1a1a;--byzantine:#2c1654;
+  --green:#16a34a;--green-light:#22c55e;
+  --red:#dc2626;
+  --bg:#0e0800;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{min-height:100%;overflow-x:hidden;}
+body{
+  font-family:'Crimson Text',serif;
+  background:var(--bg);
+  background-image:radial-gradient(ellipse at 50% 0%,rgba(107,26,26,0.5) 0%,transparent 55%),radial-gradient(ellipse at 100% 100%,rgba(44,22,84,0.35) 0%,transparent 50%);
+  min-height:100vh;padding:1.25rem 1rem 2rem;
+}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(201,146,42,0.02) 1px,transparent 1px),linear-gradient(90deg,rgba(201,146,42,0.02) 1px,transparent 1px);background-size:44px 44px;pointer-events:none;}
+
+.back-btn{background:none;border:1px solid rgba(201,146,42,0.2);border-radius:8px;padding:0.4rem 0.875rem;font-family:'Cinzel',serif;font-size:0.65rem;color:rgba(201,146,42,0.45);cursor:pointer;min-height:40px;margin-bottom:1.25rem;display:inline-block;}
+
+.screen{display:none;max-width:440px;margin:0 auto;text-align:center;}
+.screen.show{display:block;}
+
+/* START */
+.game-icon{font-size:3rem;margin-bottom:0.5rem;}
+.game-title{font-family:'Cinzel Decorative',serif;font-size:clamp(1.2rem,4.5vw,1.6rem);color:var(--gold-light);text-shadow:0 0 20px rgba(201,146,42,0.4);margin-bottom:0.25rem;}
+.game-sub{font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.2em;color:rgba(201,146,42,0.4);text-transform:uppercase;margin-bottom:1rem;}
+.game-desc{font-size:0.85rem;color:rgba(244,232,193,0.4);font-style:italic;line-height:1.6;margin-bottom:1.5rem;max-width:320px;margin-left:auto;margin-right:auto;}
+.start-btn{padding:1rem 2.5rem;min-height:56px;background:linear-gradient(135deg,var(--gold),var(--gold-bright));border:none;border-radius:14px;font-family:'Cinzel',serif;font-size:0.9rem;letter-spacing:0.1em;color:var(--bg);font-weight:700;cursor:pointer;box-shadow:0 4px 20px rgba(255,215,0,0.25);}
+.start-btn:active{transform:scale(0.97);}
+.high-score-lbl{font-family:'Cinzel',serif;font-size:0.68rem;color:rgba(201,146,42,0.3);margin-top:1rem;}
+
+/* GAME */
+.game-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:0.875rem;}
+.round-lbl{font-family:'Cinzel',serif;font-size:0.68rem;color:rgba(201,146,42,0.4);letter-spacing:0.1em;}
+.lives-row{display:flex;gap:0.3rem;align-items:center;}
+.life{font-size:1rem;transition:all 0.2s;}
+.life.lost{opacity:0.18;filter:grayscale(1);}
+.score-box{text-align:right;}
+.score-num{font-family:'Cinzel Decorative',serif;font-size:1.5rem;color:var(--gold-bright);text-shadow:0 0 10px rgba(255,215,0,0.3);line-height:1;}
+.score-sub{font-family:'Cinzel',serif;font-size:0.55rem;color:rgba(201,146,42,0.35);letter-spacing:0.1em;text-transform:uppercase;}
+
+/* Icon display */
+.icon-frame{
+  background:linear-gradient(160deg,rgba(44,22,84,0.95),rgba(18,8,40,0.99) 50%,rgba(107,26,26,0.95));
+  border:2px solid rgba(201,146,42,0.35);border-radius:18px;
+  padding:1.5rem 1rem;margin-bottom:1.25rem;
+  position:relative;overflow:hidden;
+  transition:all 0.3s;
+}
+.icon-frame.correct{border-color:rgba(22,163,74,0.7);animation:flashG 0.5s ease;}
+.icon-frame.wrong{border-color:rgba(220,38,38,0.6);animation:shakeF 0.4s ease;}
+@keyframes flashG{0%,100%{box-shadow:none;}50%{box-shadow:0 0 24px rgba(22,163,74,0.4);}}
+@keyframes shakeF{0%,100%{transform:translateX(0);}25%{transform:translateX(-8px);}75%{transform:translateX(8px);}}
+
+/* Simulated icon — Byzantine style using CSS and text */
+.icon-display{
+  width:160px;height:180px;margin:0 auto 1rem;
+  border:3px solid rgba(201,146,42,0.5);border-radius:6px;
+  background:linear-gradient(180deg,rgba(201,146,42,0.08) 0%,rgba(44,22,84,0.15) 100%);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  position:relative;box-shadow:inset 0 2px 8px rgba(0,0,0,0.3),0 4px 16px rgba(0,0,0,0.4);
+}
+.icon-display::before{
+  content:'';position:absolute;inset:4px;border:1px solid rgba(201,146,42,0.2);border-radius:3px;pointer-events:none;
+}
+.icon-figure{font-size:4rem;line-height:1;margin-bottom:0.3rem;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.5));}
+.icon-abbrev{
+  font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.12em;
+  color:rgba(201,146,42,0.7);text-align:center;padding:0 0.5rem;line-height:1.4;
+}
+.icon-halo{
+  position:absolute;top:0.5rem;left:50%;transform:translateX(-50%);
+  width:56px;height:56px;border-radius:50%;
+  border:2px solid rgba(201,146,42,0.3);
+  background:radial-gradient(circle,rgba(255,215,0,0.08) 0%,transparent 70%);
+}
+
+.icon-description{
+  font-size:0.82rem;color:rgba(244,232,193,0.5);
+  font-style:italic;line-height:1.5;
+  margin-bottom:0;text-align:center;
+  padding:0 0.25rem;
+}
+.icon-clue-label{
+  font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.15em;
+  color:rgba(201,146,42,0.4);text-transform:uppercase;margin-bottom:0.5rem;
+}
+
+/* Options */
+.options-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-bottom:0.625rem;}
+.opt-btn{
+  padding:0.7rem 0.5rem;min-height:54px;
+  background:rgba(44,22,84,0.25);border:1.5px solid rgba(124,58,237,0.25);
+  border-radius:11px;font-family:'Cinzel',serif;font-size:0.7rem;
+  color:rgba(167,139,250,0.85);cursor:pointer;transition:all 0.15s;
+  text-align:center;line-height:1.35;
+}
+.opt-btn:hover:not(:disabled){background:rgba(44,22,84,0.45);border-color:rgba(124,58,237,0.5);}
+.opt-btn:active:not(:disabled){transform:scale(0.96);}
+.opt-btn:disabled{cursor:not-allowed;}
+.opt-btn.correct-opt{background:rgba(22,163,74,0.15);border-color:rgba(22,163,74,0.6);color:rgba(134,239,172,0.9);}
+.opt-btn.wrong-opt{background:rgba(220,38,38,0.1);border-color:rgba(220,38,38,0.4);color:rgba(252,165,165,0.7);}
+
+.feedback-row{font-family:'Cinzel',serif;font-size:0.72rem;text-align:center;min-height:1.2rem;}
+.feedback-row.correct-fb{color:rgba(134,239,172,0.8);}
+.feedback-row.wrong-fb{color:rgba(252,165,165,0.7);}
+
+/* END */
+.end-ring{width:110px;height:110px;border-radius:50%;background:linear-gradient(135deg,rgba(44,22,84,0.9),rgba(107,26,26,0.9));border:3px solid var(--gold);display:flex;flex-direction:column;align-items:center;justify-content:center;margin:0 auto 1rem;box-shadow:0 0 30px rgba(201,146,42,0.25);}
+.end-score{font-family:'Cinzel Decorative',serif;font-size:1.8rem;color:var(--gold-bright);line-height:1;}
+.end-lbl{font-family:'Cinzel',serif;font-size:0.55rem;color:rgba(201,146,42,0.5);letter-spacing:0.1em;}
+.end-title{font-family:'Cinzel Decorative',serif;font-size:1.1rem;color:var(--gold-light);margin-bottom:0.35rem;}
+.end-msg{font-size:0.82rem;color:rgba(244,232,193,0.4);font-style:italic;margin-bottom:1.5rem;line-height:1.5;max-width:300px;margin-left:auto;margin-right:auto;}
+.new-record{font-family:'Cinzel',serif;font-size:0.78rem;color:var(--gold-bright);margin-bottom:1rem;animation:glow 1s ease-in-out infinite alternate;}
+@keyframes glow{from{text-shadow:none;}to{text-shadow:0 0 12px rgba(255,215,0,0.6);}}
+.end-btns{display:flex;gap:0.5rem;justify-content:center;}
+.play-again-btn{padding:0.75rem 1.75rem;min-height:48px;background:linear-gradient(135deg,var(--gold),var(--gold-bright));border:none;border-radius:11px;font-family:'Cinzel',serif;font-size:0.78rem;color:var(--bg);font-weight:700;cursor:pointer;}
+.back-games-btn{padding:0.75rem 1.25rem;min-height:48px;background:transparent;border:1px solid rgba(201,146,42,0.25);border-radius:11px;font-family:'Cinzel',serif;font-size:0.72rem;color:rgba(201,146,42,0.5);cursor:pointer;}
+</style>
+</head>
+<body>
+<button class="back-btn" onclick="window.location.href='../games.html'">← Games</button>
+
+<!-- START -->
+<div class="screen show" id="screen-start">
+  <div class="game-icon">🎨</div>
+  <div class="game-title">Icon Gallery</div>
+  <div class="game-sub">Expedition Game</div>
+  <div class="game-desc">Read the description of the icon. Can you name who or what is depicted? Every icon in the Church tells a story!</div>
+  <button class="start-btn" onclick="startGame()">Enter the Gallery 🎨</button>
+  <div class="high-score-lbl" id="high-score-lbl"></div>
+</div>
+
+<!-- GAME -->
+<div class="screen" id="screen-game">
+  <div class="game-top">
+    <div class="round-lbl" id="round-lbl">Round 1 of 12</div>
+    <div class="lives-row" id="lives-row"></div>
+    <div class="score-box">
+      <div class="score-num" id="score-num">0</div>
+      <div class="score-sub">correct</div>
+    </div>
+  </div>
+
+  <div class="icon-frame" id="icon-frame">
+    <div class="icon-display" id="icon-display">
+      <div class="icon-halo"></div>
+      <div class="icon-figure" id="icon-figure">✦</div>
+      <div class="icon-abbrev" id="icon-abbrev"></div>
+    </div>
+    <div class="icon-clue-label">What does this icon depict?</div>
+    <div class="icon-description" id="icon-description">Loading...</div>
+  </div>
+
+  <div class="options-grid" id="options-grid"></div>
+  <div class="feedback-row" id="feedback-row"></div>
+</div>
+
+<!-- END -->
+<div class="screen" id="screen-end" style="text-align:center;">
+  <div class="end-ring">
+    <div class="end-score" id="end-score">0</div>
+    <div class="end-lbl">/ 12</div>
+  </div>
+  <div class="new-record" id="new-record" style="display:none;">✦ New High Score! ✦</div>
+  <div class="end-title" id="end-title">Well done!</div>
+  <div class="end-msg" id="end-msg"></div>
+  <div class="end-btns">
+    <button class="play-again-btn" onclick="startGame()">Visit Again 🎨</button>
+    <button class="back-games-btn" onclick="window.location.href='../games.html'">Games</button>
+  </div>
+</div>
+
+<script>
+const TOTAL_ROUNDS = 12;
+let score=0,lives=3,round=0,answered=false,shuffled=[];
+let highScore=parseInt(localStorage.getItem('ig-high')||'0');
+
+const ALL_ICONS = [
+  {
+    name:'Christ Pantocrator',
+    figure:'✝',abbrev:'IC XC',
+    desc:'The Lord of All — Christ holds the Gospels in one hand and blesses with the other. His face shows both divine authority and human compassion.',
+    detail:'Usually found on the dome of Orthodox churches — Christ reigning as King of all creation.',
+    options:['Christ Pantocrator','The Transfiguration','Christ the Good Shepherd','The Resurrection'],
+  },
+  {
+    name:'The Theotokos Hodegetria',
+    figure:'☩',abbrev:'MP ΘΥ',
+    desc:'The Mother of God points to the Christ child with one hand — she is the one who shows the Way. Her blue maphorion covers a red robe beneath.',
+    detail:'Hodegetria means "One Who Shows the Way." Attributed to St. Luke — the first icon ever written.',
+    options:['The Theotokos Hodegetria','The Dormition of the Theotokos','The Annunciation','The Nativity of the Theotokos'],
+  },
+  {
+    name:'The Holy Trinity',
+    figure:'△',abbrev:'Holy Trinity',
+    desc:'Three angels sit around a table with a cup — a mysterious and beautiful image. Based on the three visitors who appeared to Abraham at Mamre.',
+    detail:'Painted by Andrei Rublev in the 15th century — considered one of the greatest icons ever written.',
+    options:['The Holy Trinity','The Last Supper','The Pentecost','The Annunciation'],
+  },
+  {
+    name:'The Resurrection (Anastasis)',
+    figure:'⊕',abbrev:'Anastasis',
+    desc:'Christ descends into Hades and pulls Adam and Eve up from their tombs. He has trampled the gates of death underfoot — broken locks scatter below.',
+    detail:'This is the traditional Orthodox icon of Pascha — not the empty tomb, but Christ actively saving humanity.',
+    options:['The Resurrection (Anastasis)','The Ascension','The Transfiguration','The Last Judgment'],
+  },
+  {
+    name:'The Nativity of Christ',
+    figure:'⭐',abbrev:'Nativity',
+    desc:'The Christ child lies in a cave-manger while Mary reclines nearby. Angels announce to shepherds. The Magi arrive from the East following a star.',
+    detail:'Notice Mary does not look at the Child — she is already contemplating the Cross. The cave recalls the tomb.',
+    options:['The Nativity of Christ','The Presentation of Christ','The Annunciation','The Entry into Jerusalem'],
+  },
+  {
+    name:'The Transfiguration',
+    figure:'✦',abbrev:'Transfiguration',
+    desc:'Christ stands radiant on Mount Tabor, shining with uncreated light. Moses and Elijah appear beside Him. The three Apostles fall to the ground overwhelmed.',
+    detail:'The light is not created light — it is the eternal divine light, the same the Apostles will see again at the Resurrection.',
+    options:['The Transfiguration','The Ascension','The Baptism of Christ','The Pentecost'],
+  },
+  {
+    name:'The Baptism of Christ',
+    figure:'💧',abbrev:'Theophany',
+    desc:'Christ stands in the Jordan River. John the Forerunner pours water over His head. The Holy Spirit descends as a dove. The Father speaks from heaven.',
+    detail:'Also called Theophany — the first full revelation of the Holy Trinity in the New Testament.',
+    options:['The Baptism of Christ','The Annunciation','The Entry into Jerusalem','The Nativity of Christ'],
+  },
+  {
+    name:'Pentecost',
+    figure:'🔥',abbrev:'Pentecost',
+    desc:'The twelve Apostles sit in a semicircle. Tongues of fire rest on each head. Between them at the bottom is a figure representing the world — receiving the light of faith.',
+    detail:'The empty space at the top reminds us that the Holy Spirit proceeds from the Father — not from another person.',
+    options:['Pentecost','The Last Supper','The Resurrection','The Ascension'],
+  },
+  {
+    name:'The Entry into Jerusalem',
+    figure:'🌿',abbrev:'Palm Sunday',
+    desc:'Christ rides a donkey toward Jerusalem. Children wave palm and olive branches. The crowd spreads garments on the road before Him.',
+    detail:'Also called Palm Sunday — the beginning of Holy Week. The children cry Hosanna — save us now!',
+    options:['The Entry into Jerusalem','The Nativity of Christ','The Baptism of Christ','The Last Supper'],
+  },
+  {
+    name:'The Last Judgment',
+    figure:'⚖',abbrev:'Last Judgment',
+    desc:'Christ sits enthroned in glory. The righteous stand on His right, the unrighteous on His left. A river of fire flows from the throne. Angels sound trumpets.',
+    detail:'Usually placed on the west wall of Orthodox churches — the last thing you see as you leave, to remember your accountability.',
+    options:['The Last Judgment','The Resurrection','The Second Coming','The Transfiguration'],
+  },
+  {
+    name:'The Dormition of the Theotokos',
+    figure:'☩',abbrev:'Dormition',
+    desc:'Mary lies peacefully on a bed surrounded by the Apostles. Christ stands behind her holding a small child — her soul — wrapped in white.',
+    detail:'Dormition means "falling asleep" — we do not say death but repose. Her body was assumed into heaven.',
+    options:['The Dormition of the Theotokos','The Nativity of the Theotokos','The Annunciation','The Theotokos Hodegetria'],
+  },
+  {
+    name:'The Annunciation',
+    figure:'✦',abbrev:'Annunciation',
+    desc:'The Archangel Gabriel bows before Mary with a lily. She holds a red thread — she was weaving the new Temple veil when Gabriel appeared.',
+    detail:'March 25 — nine months before Christmas. Mary says YES — and the Incarnation begins at this very moment.',
+    options:['The Annunciation','The Nativity of the Theotokos','The Entry into Temple','The Visitation'],
+  },
+];
+
+function shuffle(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function showScreen(id){['screen-start','screen-game','screen-end'].forEach(s=>document.getElementById(s).classList.toggle('show',s===id));}
+
+function startGame(){
+  score=0;lives=3;round=0;answered=false;
+  shuffled=shuffle([...ALL_ICONS]).slice(0,TOTAL_ROUNDS);
+  document.getElementById('score-num').textContent='0';
+  renderLives();
+  loadRound();
+  showScreen('screen-game');
+}
+
+function renderLives(){
+  const row=document.getElementById('lives-row');
+  row.innerHTML='';
+  for(let i=0;i<3;i++){
+    const h=document.createElement('span');
+    h.className='life'+(i>=lives?' lost':'');
+    h.textContent='♥';
+    row.appendChild(h);
+  }
+}
+
+function loadRound(){
+  if(round>=TOTAL_ROUNDS||lives<=0){endGame();return;}
+  const q=shuffled[round];
+  answered=false;
+  document.getElementById('round-lbl').textContent=`Round ${round+1} of ${TOTAL_ROUNDS}`;
+  document.getElementById('icon-figure').textContent=q.figure;
+  document.getElementById('icon-abbrev').textContent=q.abbrev;
+  document.getElementById('icon-description').textContent=q.desc;
+  document.getElementById('icon-frame').className='icon-frame';
+  document.getElementById('feedback-row').textContent='';
+  document.getElementById('feedback-row').className='feedback-row';
+  buildOptions(q);
+}
+
+function buildOptions(q){
+  const opts=shuffle([...q.options]);
+  const grid=document.getElementById('options-grid');
+  grid.innerHTML='';
+  opts.forEach(opt=>{
+    const btn=document.createElement('button');
+    btn.className='opt-btn';
+    btn.textContent=opt;
+    btn.onclick=()=>answer(opt===q.name,opt,q);
+    grid.appendChild(btn);
+  });
+}
+
+function answer(correct,chosen,q){
+  if(answered) return;
+  answered=true;
+  document.querySelectorAll('.opt-btn').forEach(b=>{
+    b.disabled=true;
+    if(b.textContent===q.name) b.classList.add('correct-opt');
+    else if(b.textContent===chosen&&!correct) b.classList.add('wrong-opt');
+  });
+
+  const frame=document.getElementById('icon-frame');
+  const fb=document.getElementById('feedback-row');
+
+  if(correct){
+    score++;
+    frame.classList.add('correct');
+    fb.textContent=`✦ Correct! ${q.detail}`;
+    fb.className='feedback-row correct-fb';
+    document.getElementById('score-num').textContent=score;
+  } else {
+    lives--;
+    frame.classList.add('wrong');
+    fb.textContent=`✗ It was ${q.name}. ${q.detail}`;
+    fb.className='feedback-row wrong-fb';
+    renderLives();
+    if(lives<=0){setTimeout(()=>endGame(),800);return;}
+  }
+  round++;
+  setTimeout(loadRound,1800);
+}
+
+function endGame(){
+  const isRecord=score>highScore;
+  if(isRecord){highScore=score;localStorage.setItem('ig-high',score);}
+  document.getElementById('end-score').textContent=score;
+  document.getElementById('new-record').style.display=isRecord?'block':'none';
+
+  let title='',msg='';
+  if(score>=11){title='Icon Scholar!';msg=`${score}/12 — Outstanding! Every icon in the Church is an open book to you.`;}
+  else if(score>=8){title='Gallery Expert!';msg=`${score}/12 — Excellent! You read the icons well.`;}
+  else if(score>=5){title='Good Explorer!';msg=`${score}/12 — You are learning the icons. Study Topic 3 and visit again!`;}
+  else{title='Keep Looking!';msg='Icons have deep meanings. Study Topic 3 on Iconography and try again.';}
+
+  document.getElementById('end-title').textContent=title;
+  document.getElementById('end-msg').textContent=msg;
+  showScreen('screen-end');
+}
+
+document.getElementById('high-score-lbl').textContent=highScore>0?`Best: ${highScore}/${TOTAL_ROUNDS}`:'';
+</script>
+</body>
+</html>

@@ -8,12 +8,6 @@
 <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
 // ── PENDING APPROVALS ─────────────────────────────────────────
-async function loadPendingRegistrations(){
-  const {data,error} = await sb.from('pending_registrations')
-    .select('*').eq('status','pending').order('submitted_at',{ascending:true});
-  if(error){console.error('Pending load error:',error);return;}
-  renderPendingList(data||[]);
-}
 
 function renderPendingList(pending){
   const list  = document.getElementById('pending-list');
@@ -63,80 +57,6 @@ function renderPendingList(pending){
   });
 }
 
-async function approveFamily(regId){
-  const fb = document.getElementById(`approval-feedback-${regId}`);
-  if(fb){ fb.textContent='Processing...'; fb.style.color='rgba(201,146,42,0.6)'; }
-
-  // Get registration data
-  const {data:reg,error:regErr} = await sb.from('pending_registrations')
-    .select('*').eq('id',regId).single();
-  if(regErr||!reg){ if(fb){fb.textContent='Error loading registration.';fb.style.color='rgba(252,165,165,0.7)';}return; }
-
-  try {
-    // 1. Create family record
-    const {data:family,error:famErr} = await sb.from('families').insert({
-      name:         reg.family_name,
-      parish:       reg.parish||null,
-      parent_email: reg.parent_email,
-      coin_rate:    reg.coin_rate,
-      status:       'approved',
-      approved_at:  new Date().toISOString(),
-      approved_by:  adminProfile.id,
-    }).select().single();
-    if(famErr) throw famErr;
-
-    // 2. Create parent auth account via Supabase Admin
-    //    We use the service role key for this via edge function
-    //    For now create profile record and show instructions
-    const parentEmail = reg.parent_email;
-    const familyId    = family.id;
-
-    // 3. Create child profiles in pending state
-    //    Parent will set passwords when they first log in
-    const children = reg.children_data||[];
-    for(const child of children){
-      const childEmail = child.username.toLowerCase()+'@orthodox-expedition.app';
-      // Insert profile — auth account created separately
-      await sb.from('profiles').insert({
-        name:      child.name,
-        username:  child.username,
-        age:       child.age,
-        family_id: familyId,
-        role:      'explorer',
-        coins:     0,
-        lifetime_coins: 0,
-        sessions_attended: 0,
-      });
-    }
-
-    // 4. Mark registration approved
-    await sb.from('pending_registrations').update({
-      status:      'approved',
-      reviewed_at: new Date().toISOString(),
-      reviewed_by: adminProfile.id,
-    }).eq('id',regId);
-
-    // 5. Log notification
-    await sb.from('notifications').insert({
-      family_id: familyId,
-      type:      'family_approved',
-      title:     `${reg.family_name} approved`,
-      message:   `Family approved. Parent: ${reg.parent_email}. Children: ${children.map(c=>c.name).join(', ')}.`,
-    });
-
-    if(fb){
-      fb.style.color='rgba(134,239,172,0.9)';
-      fb.textContent=`✦ Approved! Send welcome email to ${parentEmail} with their password: ${reg.children_data[0]?.password||'see registration'}.`;
-    }
-
-    // Reload the list
-    setTimeout(loadPendingRegistrations, 2000);
-
-  } catch(e){
-    console.error('Approval error:',e);
-    if(fb){fb.textContent='Error: '+e.message;fb.style.color='rgba(252,165,165,0.7)';}
-  }
-}
 
 async function declineFamily(regId){
   if(!confirm('Decline this registration?')) return;

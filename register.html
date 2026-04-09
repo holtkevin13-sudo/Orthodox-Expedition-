@@ -2,11 +2,18 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#c9922a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Expedition">
+
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Join — The Orthodox Expedition</title>
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="email-utils.js"></script>
 <style>
 :root{
   --gold:#c9922a;--gold-light:#f0c96e;--gold-bright:#ffd700;
@@ -427,6 +434,18 @@ async function submitRegistration(){
     return;
   }
 
+  // Send notification email to Kevin
+  try {
+    await EmailUtils.newFamilyRegistration({
+      familyName:  payload.family_name,
+      parentName:  payload.parent_first + ' ' + payload.parent_last,
+      parentEmail: payload.parent_email,
+      parish:      payload.parish,
+      childCount:  payload.children_data.length + ' child' + (payload.children_data.length!==1?'ren':''),
+      coinRate:    payload.coin_rate,
+    });
+  } catch(e){ console.error('Email error:', e); }
+
   // Show success
   document.getElementById('reg-form').style.display='none';
   document.getElementById('success-screen').classList.add('show');
@@ -435,6 +454,14 @@ async function submitRegistration(){
 // ── INIT ──────────────────────────────────────────────────────
 renderChildForms();
 updateCalc();
+</script>
+
+<script>
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('sw.js').catch(()=>{});
+  });
+}
 </script>
 </body>
 </html>

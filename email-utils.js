@@ -4,19 +4,37 @@
  * Include this in any page that needs to send emails
  */
 
-const RESEND_API_KEY = 're_Ka1K4Miz_C7umkQ3RBU72us2hpbFBerPv';
-const FROM_EMAIL     = 'hello@orthodoxcompanion.com';
-const FROM_NAME      = 'The Orthodox Expedition';
-const KEVIN_EMAIL    = 'holt.kevin13@gmail.com';
+const FROM_EMAIL  = 'hello@orthodoxcompanion.com';
+const FROM_NAME   = 'The Orthodox Expedition';
+const KEVIN_EMAIL = 'holt.kevin13@gmail.com';
 
 const EmailUtils = {
 
+  // Fetch API key from Supabase at runtime — never stored in code
+  async getApiKey(){
+    try {
+      const SUPABASE_URL = 'https://ksfnsryfmkafwirzgjoe.supabase.co';
+      const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtzZm5zcnlmbWthZndpcnpnam9lIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2ODM4MTcsImV4cCI6MjA5MTI1OTgxN30.mHQty44WBnjQY8BJ8KbPk_pp-yTcOaifGxCZPUO4xpY';
+      const res = await fetch(
+        `${SUPABASE_URL}/rest/v1/app_settings?key=eq.resend_api_key&select=value`,
+        { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }}
+      );
+      const data = await res.json();
+      return data?.[0]?.value || null;
+    } catch(e){
+      console.error('Failed to fetch API key:', e);
+      return null;
+    }
+  },
+
   async send({ to, subject, html }){
     try {
+      const apiKey = await this.getApiKey();
+      if(!apiKey){ console.error('No API key available'); return false; }
       const res = await fetch('https://api.resend.com/emails', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${RESEND_API_KEY}`,
+          'Authorization': `Bearer ${apiKey}`,
           'Content-Type':  'application/json',
         },
         body: JSON.stringify({

@@ -356,6 +356,231 @@ async function saveBulkVideos(){
     renderBulkVideoTable(); // Re-render to show updated state
   }
 }
+
+// ══════════════════════════════════════════════════════════════
+// MY FAMILY PANEL
+// ══════════════════════════════════════════════════════════════
+let mfChildren     = [];
+let mfSelectedChild = null;
+let mfAllMissions  = [];
+let mfCompletedIds = [];
+let mfActivityLog  = [];
+let mfRedemptions  = [];
+let mfFamily       = null;
+
+async function loadMyFamilyPanel(){
+  if(!adminProfile?.family_id) {
+    document.getElementById('panel-myfamily').innerHTML = '<div class="section"><p style="color:rgba(201,146,42,0.4);font-style:italic;font-size:0.85rem;">No family linked to this account. Contact the superuser.</p></div>';
+    return;
+  }
+
+  const [famRes, kidsRes, missRes, redRes] = await Promise.all([
+    sb.from('families').select('*').eq('id', adminProfile.family_id).single(),
+    sb.from('profiles').select('*').eq('family_id', adminProfile.family_id).eq('role','explorer'),
+    sb.from('missions').select('*').eq('is_active', true).order('type').order('created_at'),
+    sb.from('redemptions').select('*').eq('status','pending').order('redeemed_at',{ascending:false}),
+  ]);
+
+  mfFamily    = famRes.data;
+  mfChildren  = kidsRes.data || [];
+  mfAllMissions = missRes.data || [];
+  mfRedemptions = (redRes.data||[]).filter(r => mfChildren.some(c=>c.id===r.explorer_id));
+
+  if(!mfChildren.length){
+    document.getElementById('mf-child-selector').innerHTML = '<p style="font-size:0.8rem;color:rgba(201,146,42,0.35);font-style:italic;">No explorers found in your family.</p>';
+    return;
+  }
+
+  mfSelectedChild = mfChildren[0];
+  renderMfChildSelector();
+  await loadMfChildData();
+}
+
+function renderMfChildSelector(){
+  const el = document.getElementById('mf-child-selector');
+  if(!el) return;
+  el.innerHTML = '';
+  mfChildren.forEach(child => {
+    const btn = document.createElement('button');
+    btn.className = 'btn ' + (child.id === mfSelectedChild?.id ? 'btn-gold' : 'btn-ghost');
+    btn.textContent = child.name;
+    btn.onclick = async () => {
+      mfSelectedChild = child;
+      renderMfChildSelector();
+      await loadMfChildData();
+    };
+    el.appendChild(btn);
+  });
+}
+
+async function loadMfChildData(){
+  if(!mfSelectedChild) return;
+  const [actRes, mcRes, freshRes] = await Promise.all([
+    sb.from('activity_log').select('*').eq('explorer_id', mfSelectedChild.id).order('created_at',{ascending:false}).limit(15),
+    sb.from('mission_completions').select('mission_id').eq('explorer_id', mfSelectedChild.id),
+    sb.from('profiles').select('*').eq('id', mfSelectedChild.id).single(),
+  ]);
+  mfActivityLog  = actRes.data || [];
+  mfCompletedIds = (mcRes.data||[]).map(m=>m.mission_id);
+  if(freshRes.data) mfSelectedChild = freshRes.data;
+  renderMfStats();
+  renderMfMissions();
+  renderMfActivity();
+  renderMfRedemptions();
+}
+
+function renderMfStats(){
+  const el = document.getElementById('mf-stats');
+  if(!el || !mfSelectedChild) return;
+  const c = mfSelectedChild;
+  const rate = parseFloat(mfFamily?.coin_rate || 0.02);
+  el.innerHTML = `
+    <div style="background:rgba(244,232,193,0.03);border:1px solid rgba(201,146,42,0.15);border-radius:10px;padding:0.75rem;text-align:center;">
+      <div style="font-family:'Cinzel Decorative',serif;font-size:1.2rem;color:var(--gold-bright);">${(c.coins||0).toLocaleString()}</div>
+      <div style="font-family:'Cinzel',serif;font-size:0.6rem;color:rgba(201,146,42,0.4);text-transform:uppercase;margin-top:0.2rem;">Coins</div>
+    </div>
+    <div style="background:rgba(244,232,193,0.03);border:1px solid rgba(201,146,42,0.15);border-radius:10px;padding:0.75rem;text-align:center;">
+      <div style="font-family:'Cinzel Decorative',serif;font-size:1.2rem;color:var(--gold-bright);">$${((c.lifetime_coins||0)*rate).toFixed(2)}</div>
+      <div style="font-family:'Cinzel',serif;font-size:0.6rem;color:rgba(201,146,42,0.4);text-transform:uppercase;margin-top:0.2rem;">Value</div>
+    </div>
+    <div style="background:rgba(244,232,193,0.03);border:1px solid rgba(201,146,42,0.15);border-radius:10px;padding:0.75rem;text-align:center;">
+      <div style="font-family:'Cinzel Decorative',serif;font-size:1.2rem;color:var(--gold-bright);">${c.sessions_attended||0}</div>
+      <div style="font-family:'Cinzel',serif;font-size:0.6rem;color:rgba(201,146,42,0.4);text-transform:uppercase;margin-top:0.2rem;">Sessions</div>
+    </div>`;
+}
+
+function renderMfMissions(){
+  const select = document.getElementById('mf-mission-select');
+  if(!select) return;
+  select.innerHTML = mfAllMissions.map(m => {
+    const done = mfCompletedIds.includes(m.id);
+    return `<option value="${m.id}">${done?'✦ ':''}${m.name||m.title} (+${m.coins} coins)${done?' — done':''}</option>`;
+  }).join('');
+  if(!mfAllMissions.length) select.innerHTML = '<option>No missions loaded</option>';
+}
+
+function renderMfActivity(){
+  const el = document.getElementById('mf-activity');
+  if(!el) return;
+  if(!mfActivityLog.length){ el.innerHTML='<div style="font-size:0.78rem;color:rgba(201,146,42,0.3);font-style:italic;">No activity yet.</div>'; return; }
+  el.innerHTML = mfActivityLog.slice(0,8).map(a => {
+    const isPos = (a.amount||0) >= 0;
+    const d = new Date(a.created_at).toLocaleDateString('en-US',{month:'short',day:'numeric'});
+    return `<div style="display:flex;align-items:center;gap:0.5rem;padding:0.4rem 0;border-bottom:1px solid rgba(201,146,42,0.06);">
+      <span style="font-size:0.8rem;">${isPos?'✦':'◈'}</span>
+      <span style="flex:1;font-size:0.75rem;color:rgba(244,232,193,0.6);">${a.reason||'Activity'}</span>
+      <span style="font-size:0.65rem;color:rgba(201,146,42,0.4);">${d}</span>
+      <span style="font-family:'Cinzel',serif;font-size:0.72rem;color:${isPos?'rgba(134,239,172,0.8)':'rgba(252,165,165,0.7)'};">${isPos?'+':''}${a.amount}</span>
+    </div>`;
+  }).join('');
+}
+
+function renderMfRedemptions(){
+  const el = document.getElementById('mf-redemptions');
+  if(!el) return;
+  const myReds = mfRedemptions.filter(r => r.explorer_id === mfSelectedChild?.id);
+  if(!myReds.length){ el.innerHTML='<div style="font-size:0.78rem;color:rgba(201,146,42,0.3);font-style:italic;">No pending redemptions.</div>'; return; }
+  el.innerHTML = myReds.map(r => {
+    const d = new Date(r.redeemed_at).toLocaleDateString('en-US',{month:'short',day:'numeric'});
+    return `<div style="display:flex;align-items:center;gap:0.5rem;padding:0.5rem;background:rgba(244,232,193,0.03);border:1px solid rgba(201,146,42,0.12);border-radius:8px;margin-bottom:0.4rem;">
+      <span style="font-size:1rem;">${r.prize_emoji||'🎁'}</span>
+      <div style="flex:1;">
+        <div style="font-family:'Cinzel',serif;font-size:0.72rem;color:rgba(244,232,193,0.7);">${r.prize_name}</div>
+        <div style="font-size:0.65rem;color:rgba(201,146,42,0.35);">${r.coins_spent} coins · ${d}</div>
+      </div>
+      <button class="btn btn-green btn-sm" onclick="mfApproveRedemption('${r.id}')">✦ Done</button>
+    </div>`;
+  }).join('');
+}
+
+async function mfAwardCoins(){
+  const amount = parseInt(document.getElementById('mf-award-amount').value);
+  const reason = document.getElementById('mf-award-reason').value.trim();
+  const fb = document.getElementById('mf-coin-feedback');
+  if(!amount||amount<1){fb.textContent='Enter a valid amount.';fb.className='feedback err';return;}
+  if(!reason){fb.textContent='Enter a reason.';fb.className='feedback err';return;}
+  if(!mfSelectedChild){fb.textContent='Select a child first.';fb.className='feedback err';return;}
+
+  const newCoins    = (mfSelectedChild.coins||0) + amount;
+  const newLifetime = (mfSelectedChild.lifetime_coins||0) + amount;
+  await Promise.all([
+    sb.from('profiles').update({coins:newCoins, lifetime_coins:newLifetime}).eq('id', mfSelectedChild.id),
+    sb.from('activity_log').insert({explorer_id:mfSelectedChild.id, amount, reason, created_at:new Date().toISOString()}),
+  ]);
+  fb.textContent = `✦ ${amount} coins awarded to ${mfSelectedChild.name}!`;
+  fb.className = 'feedback ok';
+  document.getElementById('mf-award-amount').value = '';
+  document.getElementById('mf-award-reason').value = '';
+  await loadMfChildData();
+}
+
+async function mfDeductCoins(){
+  const amount = parseInt(document.getElementById('mf-award-amount').value);
+  const reason = document.getElementById('mf-award-reason').value.trim() || 'Deduction';
+  const fb = document.getElementById('mf-coin-feedback');
+  if(!amount||amount<1){fb.textContent='Enter a valid amount.';fb.className='feedback err';return;}
+  if(!mfSelectedChild) return;
+  const newCoins = Math.max(0,(mfSelectedChild.coins||0)-amount);
+  await Promise.all([
+    sb.from('profiles').update({coins:newCoins}).eq('id', mfSelectedChild.id),
+    sb.from('activity_log').insert({explorer_id:mfSelectedChild.id, amount:-amount, reason, created_at:new Date().toISOString()}),
+  ]);
+  fb.textContent = `${amount} coins deducted from ${mfSelectedChild.name}.`;
+  fb.className = 'feedback ok';
+  document.getElementById('mf-award-amount').value = '';
+  await loadMfChildData();
+}
+
+async function mfCompleteMission(){
+  const missionId = document.getElementById('mf-mission-select').value;
+  const notes     = document.getElementById('mf-mission-notes').value.trim();
+  const mission   = mfAllMissions.find(m=>m.id===missionId);
+  const fb        = document.getElementById('mf-mission-feedback');
+  if(!mission||!mfSelectedChild){fb.textContent='Select a child and mission.';fb.className='feedback err';return;}
+
+  fb.textContent = 'Saving...'; fb.className='feedback';
+
+  try {
+    const insertData = {
+      explorer_id:  mfSelectedChild.id,
+      mission_id:   missionId,
+      completed_at: new Date().toISOString(),
+      coins_awarded: mission.coins,
+      day_key:      new Date().toISOString().slice(0,10),
+      week_key:     (() => { const d=new Date(); d.setDate(d.getDate()-d.getDay()); return d.toISOString().slice(0,10); })(),
+      status:       'completed',
+    };
+    if(notes) insertData.notes = notes;
+
+    await sb.from('mission_completions').insert(insertData);
+    await Promise.all([
+      sb.from('profiles').update({
+        coins: (mfSelectedChild.coins||0)+mission.coins,
+        lifetime_coins: (mfSelectedChild.lifetime_coins||0)+mission.coins,
+      }).eq('id', mfSelectedChild.id),
+      sb.from('activity_log').insert({
+        explorer_id: mfSelectedChild.id,
+        amount: mission.coins,
+        reason: `Mission: ${mission.name||mission.title}${notes?' — '+notes:''}`,
+        created_at: new Date().toISOString(),
+      }),
+    ]);
+    fb.textContent = `✦ Mission complete! +${mission.coins} coins awarded to ${mfSelectedChild.name}`;
+    fb.className = 'feedback ok';
+    document.getElementById('mf-mission-notes').value = '';
+    await loadMfChildData();
+  } catch(e){
+    fb.textContent = 'Error: '+e.message;
+    fb.className = 'feedback err';
+    console.error(e);
+  }
+}
+
+async function mfApproveRedemption(id){
+  await sb.from('redemptions').update({status:'approved', approved_at:new Date().toISOString()}).eq('id',id);
+  mfRedemptions = mfRedemptions.filter(r=>r.id!==id);
+  renderMfRedemptions();
+}
 </script>
 <style>
 :root{
@@ -705,6 +930,7 @@ body::before{
   <!-- ADMIN TABS -->
   <div class="admin-tabs">
     <button class="admin-tab active" id="atab-dashboard"  onclick="switchTab('dashboard')">Dashboard</button>
+    <button class="admin-tab"        id="atab-myfamily"   onclick="switchTab('myfamily')">My Family</button>
     <button class="admin-tab"        id="atab-families"   onclick="switchTab('families')">Families</button>
     <button class="admin-tab"        id="atab-curriculum" onclick="switchTab('curriculum')">Curriculum</button>
     <button class="admin-tab"        id="atab-missions"   onclick="switchTab('missions')">Missions</button>
@@ -934,6 +1160,70 @@ body::before{
   </div><!-- /bazaar -->
 
   <!-- ── SETTINGS ── -->
+  <!-- ── MY FAMILY PANEL ────────────────────────────────────── -->
+  <div class="admin-panel" id="panel-myfamily">
+
+    <!-- Child selector -->
+    <div class="section">
+      <div class="section-title">My Explorers</div>
+      <div id="mf-child-selector" style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:1rem;"></div>
+    </div>
+
+    <!-- Stats -->
+    <div class="section">
+      <div class="section-title">Explorer Status</div>
+      <div id="mf-stats" style="display:grid;grid-template-columns:repeat(3,1fr);gap:0.5rem;margin-bottom:0.5rem;"></div>
+    </div>
+
+    <!-- Award Coins -->
+    <div class="section">
+      <div class="section-title">Award Coins</div>
+      <div style="display:flex;gap:0.5rem;margin-bottom:0.5rem;">
+        <div style="flex:1;">
+          <label class="form-label">Amount</label>
+          <input type="number" id="mf-award-amount" class="form-input" placeholder="Coins" min="1" max="1000">
+        </div>
+        <div style="flex:2;">
+          <label class="form-label">Reason</label>
+          <input type="text" id="mf-award-reason" class="form-input" placeholder="e.g. Memorized the Creed">
+        </div>
+      </div>
+      <div style="display:flex;gap:0.5rem;">
+        <button class="btn btn-gold" style="flex:1;" onclick="mfAwardCoins()">Award Coins ✦</button>
+        <button class="btn btn-red" onclick="mfDeductCoins()">Deduct</button>
+      </div>
+      <div class="feedback" id="mf-coin-feedback"></div>
+    </div>
+
+    <!-- Mark Mission Complete -->
+    <div class="section">
+      <div class="section-title">Mark Mission Complete</div>
+      <div style="margin-bottom:0.5rem;">
+        <label class="form-label">Mission</label>
+        <select id="mf-mission-select" class="form-input" style="width:100%;"></select>
+      </div>
+      <div style="margin-bottom:0.5rem;">
+        <label class="form-label">Notes <span style="color:rgba(201,146,42,0.3);font-size:0.55rem;">optional</span></label>
+        <input type="text" id="mf-mission-notes" class="form-input" placeholder="What did we discuss? Any highlights...">
+      </div>
+      <button class="btn btn-gold btn-full" onclick="mfCompleteMission()">Mark Complete ✦</button>
+      <div class="feedback" id="mf-mission-feedback"></div>
+    </div>
+
+    <!-- Pending Redemptions -->
+    <div class="section">
+      <div class="section-title">Pending Redemptions</div>
+      <div id="mf-redemptions"></div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="section">
+      <div class="section-title">Recent Activity</div>
+      <div id="mf-activity"></div>
+    </div>
+
+  </div>
+
   <!-- ── FAMILIES PANEL ─────────────────────────────────────── -->
   <div class="admin-panel" id="panel-families">
 
@@ -1767,12 +2057,13 @@ async function confirmReset(){
 // ── TAB SWITCHING ─────────────────────────────────────────────
 function switchTab(tab){
   activeTab=tab;
-  ['dashboard','curriculum','missions','bazaar','settings','families'].forEach(t=>{
+  ['dashboard','myfamily','curriculum','missions','bazaar','settings','families'].forEach(t=>{
     const tabEl = document.getElementById('atab-'+t);
     const panelEl = document.getElementById('panel-'+t);
     if(tabEl) tabEl.classList.toggle('active',t===tab);
     if(panelEl) panelEl.classList.toggle('show',t===tab);
   });
+  if(tab==='myfamily')   loadMyFamilyPanel();
   if(tab==='curriculum'){renderCurriculum();loadBulkVideoEditor();}
   if(tab==='missions')   renderMissions();
   if(tab==='bazaar')     renderBazaar();
@@ -2203,6 +2494,231 @@ async function saveBulkVideos(){
     renderBulkVideoTable(); // Re-render to show updated state
   }
 }
+
+// ══════════════════════════════════════════════════════════════
+// MY FAMILY PANEL
+// ══════════════════════════════════════════════════════════════
+let mfChildren     = [];
+let mfSelectedChild = null;
+let mfAllMissions  = [];
+let mfCompletedIds = [];
+let mfActivityLog  = [];
+let mfRedemptions  = [];
+let mfFamily       = null;
+
+async function loadMyFamilyPanel(){
+  if(!adminProfile?.family_id) {
+    document.getElementById('panel-myfamily').innerHTML = '<div class="section"><p style="color:rgba(201,146,42,0.4);font-style:italic;font-size:0.85rem;">No family linked to this account. Contact the superuser.</p></div>';
+    return;
+  }
+
+  const [famRes, kidsRes, missRes, redRes] = await Promise.all([
+    sb.from('families').select('*').eq('id', adminProfile.family_id).single(),
+    sb.from('profiles').select('*').eq('family_id', adminProfile.family_id).eq('role','explorer'),
+    sb.from('missions').select('*').eq('is_active', true).order('type').order('created_at'),
+    sb.from('redemptions').select('*').eq('status','pending').order('redeemed_at',{ascending:false}),
+  ]);
+
+  mfFamily    = famRes.data;
+  mfChildren  = kidsRes.data || [];
+  mfAllMissions = missRes.data || [];
+  mfRedemptions = (redRes.data||[]).filter(r => mfChildren.some(c=>c.id===r.explorer_id));
+
+  if(!mfChildren.length){
+    document.getElementById('mf-child-selector').innerHTML = '<p style="font-size:0.8rem;color:rgba(201,146,42,0.35);font-style:italic;">No explorers found in your family.</p>';
+    return;
+  }
+
+  mfSelectedChild = mfChildren[0];
+  renderMfChildSelector();
+  await loadMfChildData();
+}
+
+function renderMfChildSelector(){
+  const el = document.getElementById('mf-child-selector');
+  if(!el) return;
+  el.innerHTML = '';
+  mfChildren.forEach(child => {
+    const btn = document.createElement('button');
+    btn.className = 'btn ' + (child.id === mfSelectedChild?.id ? 'btn-gold' : 'btn-ghost');
+    btn.textContent = child.name;
+    btn.onclick = async () => {
+      mfSelectedChild = child;
+      renderMfChildSelector();
+      await loadMfChildData();
+    };
+    el.appendChild(btn);
+  });
+}
+
+async function loadMfChildData(){
+  if(!mfSelectedChild) return;
+  const [actRes, mcRes, freshRes] = await Promise.all([
+    sb.from('activity_log').select('*').eq('explorer_id', mfSelectedChild.id).order('created_at',{ascending:false}).limit(15),
+    sb.from('mission_completions').select('mission_id').eq('explorer_id', mfSelectedChild.id),
+    sb.from('profiles').select('*').eq('id', mfSelectedChild.id).single(),
+  ]);
+  mfActivityLog  = actRes.data || [];
+  mfCompletedIds = (mcRes.data||[]).map(m=>m.mission_id);
+  if(freshRes.data) mfSelectedChild = freshRes.data;
+  renderMfStats();
+  renderMfMissions();
+  renderMfActivity();
+  renderMfRedemptions();
+}
+
+function renderMfStats(){
+  const el = document.getElementById('mf-stats');
+  if(!el || !mfSelectedChild) return;
+  const c = mfSelectedChild;
+  const rate = parseFloat(mfFamily?.coin_rate || 0.02);
+  el.innerHTML = `
+    <div style="background:rgba(244,232,193,0.03);border:1px solid rgba(201,146,42,0.15);border-radius:10px;padding:0.75rem;text-align:center;">
+      <div style="font-family:'Cinzel Decorative',serif;font-size:1.2rem;color:var(--gold-bright);">${(c.coins||0).toLocaleString()}</div>
+      <div style="font-family:'Cinzel',serif;font-size:0.6rem;color:rgba(201,146,42,0.4);text-transform:uppercase;margin-top:0.2rem;">Coins</div>
+    </div>
+    <div style="background:rgba(244,232,193,0.03);border:1px solid rgba(201,146,42,0.15);border-radius:10px;padding:0.75rem;text-align:center;">
+      <div style="font-family:'Cinzel Decorative',serif;font-size:1.2rem;color:var(--gold-bright);">$${((c.lifetime_coins||0)*rate).toFixed(2)}</div>
+      <div style="font-family:'Cinzel',serif;font-size:0.6rem;color:rgba(201,146,42,0.4);text-transform:uppercase;margin-top:0.2rem;">Value</div>
+    </div>
+    <div style="background:rgba(244,232,193,0.03);border:1px solid rgba(201,146,42,0.15);border-radius:10px;padding:0.75rem;text-align:center;">
+      <div style="font-family:'Cinzel Decorative',serif;font-size:1.2rem;color:var(--gold-bright);">${c.sessions_attended||0}</div>
+      <div style="font-family:'Cinzel',serif;font-size:0.6rem;color:rgba(201,146,42,0.4);text-transform:uppercase;margin-top:0.2rem;">Sessions</div>
+    </div>`;
+}
+
+function renderMfMissions(){
+  const select = document.getElementById('mf-mission-select');
+  if(!select) return;
+  select.innerHTML = mfAllMissions.map(m => {
+    const done = mfCompletedIds.includes(m.id);
+    return `<option value="${m.id}">${done?'✦ ':''}${m.name||m.title} (+${m.coins} coins)${done?' — done':''}</option>`;
+  }).join('');
+  if(!mfAllMissions.length) select.innerHTML = '<option>No missions loaded</option>';
+}
+
+function renderMfActivity(){
+  const el = document.getElementById('mf-activity');
+  if(!el) return;
+  if(!mfActivityLog.length){ el.innerHTML='<div style="font-size:0.78rem;color:rgba(201,146,42,0.3);font-style:italic;">No activity yet.</div>'; return; }
+  el.innerHTML = mfActivityLog.slice(0,8).map(a => {
+    const isPos = (a.amount||0) >= 0;
+    const d = new Date(a.created_at).toLocaleDateString('en-US',{month:'short',day:'numeric'});
+    return `<div style="display:flex;align-items:center;gap:0.5rem;padding:0.4rem 0;border-bottom:1px solid rgba(201,146,42,0.06);">
+      <span style="font-size:0.8rem;">${isPos?'✦':'◈'}</span>
+      <span style="flex:1;font-size:0.75rem;color:rgba(244,232,193,0.6);">${a.reason||'Activity'}</span>
+      <span style="font-size:0.65rem;color:rgba(201,146,42,0.4);">${d}</span>
+      <span style="font-family:'Cinzel',serif;font-size:0.72rem;color:${isPos?'rgba(134,239,172,0.8)':'rgba(252,165,165,0.7)'};">${isPos?'+':''}${a.amount}</span>
+    </div>`;
+  }).join('');
+}
+
+function renderMfRedemptions(){
+  const el = document.getElementById('mf-redemptions');
+  if(!el) return;
+  const myReds = mfRedemptions.filter(r => r.explorer_id === mfSelectedChild?.id);
+  if(!myReds.length){ el.innerHTML='<div style="font-size:0.78rem;color:rgba(201,146,42,0.3);font-style:italic;">No pending redemptions.</div>'; return; }
+  el.innerHTML = myReds.map(r => {
+    const d = new Date(r.redeemed_at).toLocaleDateString('en-US',{month:'short',day:'numeric'});
+    return `<div style="display:flex;align-items:center;gap:0.5rem;padding:0.5rem;background:rgba(244,232,193,0.03);border:1px solid rgba(201,146,42,0.12);border-radius:8px;margin-bottom:0.4rem;">
+      <span style="font-size:1rem;">${r.prize_emoji||'🎁'}</span>
+      <div style="flex:1;">
+        <div style="font-family:'Cinzel',serif;font-size:0.72rem;color:rgba(244,232,193,0.7);">${r.prize_name}</div>
+        <div style="font-size:0.65rem;color:rgba(201,146,42,0.35);">${r.coins_spent} coins · ${d}</div>
+      </div>
+      <button class="btn btn-green btn-sm" onclick="mfApproveRedemption('${r.id}')">✦ Done</button>
+    </div>`;
+  }).join('');
+}
+
+async function mfAwardCoins(){
+  const amount = parseInt(document.getElementById('mf-award-amount').value);
+  const reason = document.getElementById('mf-award-reason').value.trim();
+  const fb = document.getElementById('mf-coin-feedback');
+  if(!amount||amount<1){fb.textContent='Enter a valid amount.';fb.className='feedback err';return;}
+  if(!reason){fb.textContent='Enter a reason.';fb.className='feedback err';return;}
+  if(!mfSelectedChild){fb.textContent='Select a child first.';fb.className='feedback err';return;}
+
+  const newCoins    = (mfSelectedChild.coins||0) + amount;
+  const newLifetime = (mfSelectedChild.lifetime_coins||0) + amount;
+  await Promise.all([
+    sb.from('profiles').update({coins:newCoins, lifetime_coins:newLifetime}).eq('id', mfSelectedChild.id),
+    sb.from('activity_log').insert({explorer_id:mfSelectedChild.id, amount, reason, created_at:new Date().toISOString()}),
+  ]);
+  fb.textContent = `✦ ${amount} coins awarded to ${mfSelectedChild.name}!`;
+  fb.className = 'feedback ok';
+  document.getElementById('mf-award-amount').value = '';
+  document.getElementById('mf-award-reason').value = '';
+  await loadMfChildData();
+}
+
+async function mfDeductCoins(){
+  const amount = parseInt(document.getElementById('mf-award-amount').value);
+  const reason = document.getElementById('mf-award-reason').value.trim() || 'Deduction';
+  const fb = document.getElementById('mf-coin-feedback');
+  if(!amount||amount<1){fb.textContent='Enter a valid amount.';fb.className='feedback err';return;}
+  if(!mfSelectedChild) return;
+  const newCoins = Math.max(0,(mfSelectedChild.coins||0)-amount);
+  await Promise.all([
+    sb.from('profiles').update({coins:newCoins}).eq('id', mfSelectedChild.id),
+    sb.from('activity_log').insert({explorer_id:mfSelectedChild.id, amount:-amount, reason, created_at:new Date().toISOString()}),
+  ]);
+  fb.textContent = `${amount} coins deducted from ${mfSelectedChild.name}.`;
+  fb.className = 'feedback ok';
+  document.getElementById('mf-award-amount').value = '';
+  await loadMfChildData();
+}
+
+async function mfCompleteMission(){
+  const missionId = document.getElementById('mf-mission-select').value;
+  const notes     = document.getElementById('mf-mission-notes').value.trim();
+  const mission   = mfAllMissions.find(m=>m.id===missionId);
+  const fb        = document.getElementById('mf-mission-feedback');
+  if(!mission||!mfSelectedChild){fb.textContent='Select a child and mission.';fb.className='feedback err';return;}
+
+  fb.textContent = 'Saving...'; fb.className='feedback';
+
+  try {
+    const insertData = {
+      explorer_id:  mfSelectedChild.id,
+      mission_id:   missionId,
+      completed_at: new Date().toISOString(),
+      coins_awarded: mission.coins,
+      day_key:      new Date().toISOString().slice(0,10),
+      week_key:     (() => { const d=new Date(); d.setDate(d.getDate()-d.getDay()); return d.toISOString().slice(0,10); })(),
+      status:       'completed',
+    };
+    if(notes) insertData.notes = notes;
+
+    await sb.from('mission_completions').insert(insertData);
+    await Promise.all([
+      sb.from('profiles').update({
+        coins: (mfSelectedChild.coins||0)+mission.coins,
+        lifetime_coins: (mfSelectedChild.lifetime_coins||0)+mission.coins,
+      }).eq('id', mfSelectedChild.id),
+      sb.from('activity_log').insert({
+        explorer_id: mfSelectedChild.id,
+        amount: mission.coins,
+        reason: `Mission: ${mission.name||mission.title}${notes?' — '+notes:''}`,
+        created_at: new Date().toISOString(),
+      }),
+    ]);
+    fb.textContent = `✦ Mission complete! +${mission.coins} coins awarded to ${mfSelectedChild.name}`;
+    fb.className = 'feedback ok';
+    document.getElementById('mf-mission-notes').value = '';
+    await loadMfChildData();
+  } catch(e){
+    fb.textContent = 'Error: '+e.message;
+    fb.className = 'feedback err';
+    console.error(e);
+  }
+}
+
+async function mfApproveRedemption(id){
+  await sb.from('redemptions').update({status:'approved', approved_at:new Date().toISOString()}).eq('id',id);
+  mfRedemptions = mfRedemptions.filter(r=>r.id!==id);
+  renderMfRedemptions();
+}
 </script>
 
 <script>
@@ -2493,6 +3009,231 @@ async function saveBulkVideos(){
     fb.className = 'feedback ok';
     renderBulkVideoTable(); // Re-render to show updated state
   }
+}
+
+// ══════════════════════════════════════════════════════════════
+// MY FAMILY PANEL
+// ══════════════════════════════════════════════════════════════
+let mfChildren     = [];
+let mfSelectedChild = null;
+let mfAllMissions  = [];
+let mfCompletedIds = [];
+let mfActivityLog  = [];
+let mfRedemptions  = [];
+let mfFamily       = null;
+
+async function loadMyFamilyPanel(){
+  if(!adminProfile?.family_id) {
+    document.getElementById('panel-myfamily').innerHTML = '<div class="section"><p style="color:rgba(201,146,42,0.4);font-style:italic;font-size:0.85rem;">No family linked to this account. Contact the superuser.</p></div>';
+    return;
+  }
+
+  const [famRes, kidsRes, missRes, redRes] = await Promise.all([
+    sb.from('families').select('*').eq('id', adminProfile.family_id).single(),
+    sb.from('profiles').select('*').eq('family_id', adminProfile.family_id).eq('role','explorer'),
+    sb.from('missions').select('*').eq('is_active', true).order('type').order('created_at'),
+    sb.from('redemptions').select('*').eq('status','pending').order('redeemed_at',{ascending:false}),
+  ]);
+
+  mfFamily    = famRes.data;
+  mfChildren  = kidsRes.data || [];
+  mfAllMissions = missRes.data || [];
+  mfRedemptions = (redRes.data||[]).filter(r => mfChildren.some(c=>c.id===r.explorer_id));
+
+  if(!mfChildren.length){
+    document.getElementById('mf-child-selector').innerHTML = '<p style="font-size:0.8rem;color:rgba(201,146,42,0.35);font-style:italic;">No explorers found in your family.</p>';
+    return;
+  }
+
+  mfSelectedChild = mfChildren[0];
+  renderMfChildSelector();
+  await loadMfChildData();
+}
+
+function renderMfChildSelector(){
+  const el = document.getElementById('mf-child-selector');
+  if(!el) return;
+  el.innerHTML = '';
+  mfChildren.forEach(child => {
+    const btn = document.createElement('button');
+    btn.className = 'btn ' + (child.id === mfSelectedChild?.id ? 'btn-gold' : 'btn-ghost');
+    btn.textContent = child.name;
+    btn.onclick = async () => {
+      mfSelectedChild = child;
+      renderMfChildSelector();
+      await loadMfChildData();
+    };
+    el.appendChild(btn);
+  });
+}
+
+async function loadMfChildData(){
+  if(!mfSelectedChild) return;
+  const [actRes, mcRes, freshRes] = await Promise.all([
+    sb.from('activity_log').select('*').eq('explorer_id', mfSelectedChild.id).order('created_at',{ascending:false}).limit(15),
+    sb.from('mission_completions').select('mission_id').eq('explorer_id', mfSelectedChild.id),
+    sb.from('profiles').select('*').eq('id', mfSelectedChild.id).single(),
+  ]);
+  mfActivityLog  = actRes.data || [];
+  mfCompletedIds = (mcRes.data||[]).map(m=>m.mission_id);
+  if(freshRes.data) mfSelectedChild = freshRes.data;
+  renderMfStats();
+  renderMfMissions();
+  renderMfActivity();
+  renderMfRedemptions();
+}
+
+function renderMfStats(){
+  const el = document.getElementById('mf-stats');
+  if(!el || !mfSelectedChild) return;
+  const c = mfSelectedChild;
+  const rate = parseFloat(mfFamily?.coin_rate || 0.02);
+  el.innerHTML = `
+    <div style="background:rgba(244,232,193,0.03);border:1px solid rgba(201,146,42,0.15);border-radius:10px;padding:0.75rem;text-align:center;">
+      <div style="font-family:'Cinzel Decorative',serif;font-size:1.2rem;color:var(--gold-bright);">${(c.coins||0).toLocaleString()}</div>
+      <div style="font-family:'Cinzel',serif;font-size:0.6rem;color:rgba(201,146,42,0.4);text-transform:uppercase;margin-top:0.2rem;">Coins</div>
+    </div>
+    <div style="background:rgba(244,232,193,0.03);border:1px solid rgba(201,146,42,0.15);border-radius:10px;padding:0.75rem;text-align:center;">
+      <div style="font-family:'Cinzel Decorative',serif;font-size:1.2rem;color:var(--gold-bright);">$${((c.lifetime_coins||0)*rate).toFixed(2)}</div>
+      <div style="font-family:'Cinzel',serif;font-size:0.6rem;color:rgba(201,146,42,0.4);text-transform:uppercase;margin-top:0.2rem;">Value</div>
+    </div>
+    <div style="background:rgba(244,232,193,0.03);border:1px solid rgba(201,146,42,0.15);border-radius:10px;padding:0.75rem;text-align:center;">
+      <div style="font-family:'Cinzel Decorative',serif;font-size:1.2rem;color:var(--gold-bright);">${c.sessions_attended||0}</div>
+      <div style="font-family:'Cinzel',serif;font-size:0.6rem;color:rgba(201,146,42,0.4);text-transform:uppercase;margin-top:0.2rem;">Sessions</div>
+    </div>`;
+}
+
+function renderMfMissions(){
+  const select = document.getElementById('mf-mission-select');
+  if(!select) return;
+  select.innerHTML = mfAllMissions.map(m => {
+    const done = mfCompletedIds.includes(m.id);
+    return `<option value="${m.id}">${done?'✦ ':''}${m.name||m.title} (+${m.coins} coins)${done?' — done':''}</option>`;
+  }).join('');
+  if(!mfAllMissions.length) select.innerHTML = '<option>No missions loaded</option>';
+}
+
+function renderMfActivity(){
+  const el = document.getElementById('mf-activity');
+  if(!el) return;
+  if(!mfActivityLog.length){ el.innerHTML='<div style="font-size:0.78rem;color:rgba(201,146,42,0.3);font-style:italic;">No activity yet.</div>'; return; }
+  el.innerHTML = mfActivityLog.slice(0,8).map(a => {
+    const isPos = (a.amount||0) >= 0;
+    const d = new Date(a.created_at).toLocaleDateString('en-US',{month:'short',day:'numeric'});
+    return `<div style="display:flex;align-items:center;gap:0.5rem;padding:0.4rem 0;border-bottom:1px solid rgba(201,146,42,0.06);">
+      <span style="font-size:0.8rem;">${isPos?'✦':'◈'}</span>
+      <span style="flex:1;font-size:0.75rem;color:rgba(244,232,193,0.6);">${a.reason||'Activity'}</span>
+      <span style="font-size:0.65rem;color:rgba(201,146,42,0.4);">${d}</span>
+      <span style="font-family:'Cinzel',serif;font-size:0.72rem;color:${isPos?'rgba(134,239,172,0.8)':'rgba(252,165,165,0.7)'};">${isPos?'+':''}${a.amount}</span>
+    </div>`;
+  }).join('');
+}
+
+function renderMfRedemptions(){
+  const el = document.getElementById('mf-redemptions');
+  if(!el) return;
+  const myReds = mfRedemptions.filter(r => r.explorer_id === mfSelectedChild?.id);
+  if(!myReds.length){ el.innerHTML='<div style="font-size:0.78rem;color:rgba(201,146,42,0.3);font-style:italic;">No pending redemptions.</div>'; return; }
+  el.innerHTML = myReds.map(r => {
+    const d = new Date(r.redeemed_at).toLocaleDateString('en-US',{month:'short',day:'numeric'});
+    return `<div style="display:flex;align-items:center;gap:0.5rem;padding:0.5rem;background:rgba(244,232,193,0.03);border:1px solid rgba(201,146,42,0.12);border-radius:8px;margin-bottom:0.4rem;">
+      <span style="font-size:1rem;">${r.prize_emoji||'🎁'}</span>
+      <div style="flex:1;">
+        <div style="font-family:'Cinzel',serif;font-size:0.72rem;color:rgba(244,232,193,0.7);">${r.prize_name}</div>
+        <div style="font-size:0.65rem;color:rgba(201,146,42,0.35);">${r.coins_spent} coins · ${d}</div>
+      </div>
+      <button class="btn btn-green btn-sm" onclick="mfApproveRedemption('${r.id}')">✦ Done</button>
+    </div>`;
+  }).join('');
+}
+
+async function mfAwardCoins(){
+  const amount = parseInt(document.getElementById('mf-award-amount').value);
+  const reason = document.getElementById('mf-award-reason').value.trim();
+  const fb = document.getElementById('mf-coin-feedback');
+  if(!amount||amount<1){fb.textContent='Enter a valid amount.';fb.className='feedback err';return;}
+  if(!reason){fb.textContent='Enter a reason.';fb.className='feedback err';return;}
+  if(!mfSelectedChild){fb.textContent='Select a child first.';fb.className='feedback err';return;}
+
+  const newCoins    = (mfSelectedChild.coins||0) + amount;
+  const newLifetime = (mfSelectedChild.lifetime_coins||0) + amount;
+  await Promise.all([
+    sb.from('profiles').update({coins:newCoins, lifetime_coins:newLifetime}).eq('id', mfSelectedChild.id),
+    sb.from('activity_log').insert({explorer_id:mfSelectedChild.id, amount, reason, created_at:new Date().toISOString()}),
+  ]);
+  fb.textContent = `✦ ${amount} coins awarded to ${mfSelectedChild.name}!`;
+  fb.className = 'feedback ok';
+  document.getElementById('mf-award-amount').value = '';
+  document.getElementById('mf-award-reason').value = '';
+  await loadMfChildData();
+}
+
+async function mfDeductCoins(){
+  const amount = parseInt(document.getElementById('mf-award-amount').value);
+  const reason = document.getElementById('mf-award-reason').value.trim() || 'Deduction';
+  const fb = document.getElementById('mf-coin-feedback');
+  if(!amount||amount<1){fb.textContent='Enter a valid amount.';fb.className='feedback err';return;}
+  if(!mfSelectedChild) return;
+  const newCoins = Math.max(0,(mfSelectedChild.coins||0)-amount);
+  await Promise.all([
+    sb.from('profiles').update({coins:newCoins}).eq('id', mfSelectedChild.id),
+    sb.from('activity_log').insert({explorer_id:mfSelectedChild.id, amount:-amount, reason, created_at:new Date().toISOString()}),
+  ]);
+  fb.textContent = `${amount} coins deducted from ${mfSelectedChild.name}.`;
+  fb.className = 'feedback ok';
+  document.getElementById('mf-award-amount').value = '';
+  await loadMfChildData();
+}
+
+async function mfCompleteMission(){
+  const missionId = document.getElementById('mf-mission-select').value;
+  const notes     = document.getElementById('mf-mission-notes').value.trim();
+  const mission   = mfAllMissions.find(m=>m.id===missionId);
+  const fb        = document.getElementById('mf-mission-feedback');
+  if(!mission||!mfSelectedChild){fb.textContent='Select a child and mission.';fb.className='feedback err';return;}
+
+  fb.textContent = 'Saving...'; fb.className='feedback';
+
+  try {
+    const insertData = {
+      explorer_id:  mfSelectedChild.id,
+      mission_id:   missionId,
+      completed_at: new Date().toISOString(),
+      coins_awarded: mission.coins,
+      day_key:      new Date().toISOString().slice(0,10),
+      week_key:     (() => { const d=new Date(); d.setDate(d.getDate()-d.getDay()); return d.toISOString().slice(0,10); })(),
+      status:       'completed',
+    };
+    if(notes) insertData.notes = notes;
+
+    await sb.from('mission_completions').insert(insertData);
+    await Promise.all([
+      sb.from('profiles').update({
+        coins: (mfSelectedChild.coins||0)+mission.coins,
+        lifetime_coins: (mfSelectedChild.lifetime_coins||0)+mission.coins,
+      }).eq('id', mfSelectedChild.id),
+      sb.from('activity_log').insert({
+        explorer_id: mfSelectedChild.id,
+        amount: mission.coins,
+        reason: `Mission: ${mission.name||mission.title}${notes?' — '+notes:''}`,
+        created_at: new Date().toISOString(),
+      }),
+    ]);
+    fb.textContent = `✦ Mission complete! +${mission.coins} coins awarded to ${mfSelectedChild.name}`;
+    fb.className = 'feedback ok';
+    document.getElementById('mf-mission-notes').value = '';
+    await loadMfChildData();
+  } catch(e){
+    fb.textContent = 'Error: '+e.message;
+    fb.className = 'feedback err';
+    console.error(e);
+  }
+}
+
+async function mfApproveRedemption(id){
+  await sb.from('redemptions').update({status:'approved', approved_at:new Date().toISOString()}).eq('id',id);
+  mfRedemptions = mfRedemptions.filter(r=>r.id!==id);
+  renderMfRedemptions();
 }
 </script>
 </body>

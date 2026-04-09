@@ -1,0 +1,2015 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>(function(){var t=localStorage.getItem('oc_theme')||(window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark');document.documentElement.setAttribute('data-theme',t);})();</script>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Holy Scriptures — The Orthodox Expedition</title>
+<link rel="icon" href="cross.png" type="image/png"/>
+<meta name="theme-color" content="#0A1628"/>
+<meta name="description" content="Read the Holy Scriptures in the Orthodox tradition — Septuagint (LXX) for the Old Testament, King James Version for the New Testament."/>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet"/>
+<style>
+/* ── Account dropdown ─────────────────────────────────── */
+.nav-account-wrap{position:relative;}
+.nav-user-btn{font-family:'Cinzel',serif;font-size:0.6rem;text-transform:uppercase;letter-spacing:0.09em;color:var(--gold-light);background:transparent;border:1px solid var(--gold-dim);border-radius:2px;padding:6px 13px;cursor:pointer;display:flex;align-items:center;gap:5px;transition:all 0.2s;white-space:nowrap;}
+.nav-user-btn:hover{background:rgba(201,168,76,0.1);}
+.nav-user-arrow{font-size:0.55rem;opacity:0.7;transition:transform 0.2s;}
+.nav-user-btn.open .nav-user-arrow{transform:rotate(180deg);}
+.nav-user-dropdown{position:absolute;top:calc(100% + 8px);right:0;min-width:200px;background:var(--dark);border:1px solid var(--border-dim);border-top:2px solid var(--gold-dim);border-radius:0 0 4px 4px;z-index:601;opacity:0;pointer-events:none;transform:translateY(-6px);transition:opacity 0.18s,transform 0.18s;padding:6px 0;box-shadow:0 16px 48px rgba(0,0,0,0.7);}
+.nav-user-dropdown.open{opacity:1;pointer-events:all;transform:translateY(0);}
+.nav-user-dropdown a{display:flex;align-items:center;gap:10px;font-family:'Cinzel',serif;font-size:0.6rem;text-transform:uppercase;letter-spacing:0.09em;color:var(--text-dim);text-decoration:none;padding:9px 18px;transition:color 0.15s,background 0.15s;}
+.nav-user-dropdown a:hover{color:var(--gold-light);background:rgba(201,168,76,0.07);}
+
+/* ══════════════════════════════════════════════════════
+   ORTHODOX EXPEDITION MODE
+   ══════════════════════════════════════════════════════ */
+
+/* ── Scroll Unfurl Overlay ─────────────────────────── */
+#scroll-unfurl {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  pointer-events: none;
+  display: none;
+  overflow: hidden;
+}
+body.expedition-mode #scroll-unfurl {
+  display: block;
+}
+
+/* Top and bottom rollers */
+.scroll-roller {
+  position: absolute;
+  left: 0; right: 0;
+  height: 52px;
+  background: linear-gradient(180deg, #C8A86B 0%, #B8945A 40%, #A07840 100%);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.scroll-roller::before {
+  content: '';
+  position: absolute;
+  inset: 6px 0;
+  background: linear-gradient(180deg, rgba(255,220,140,0.3), transparent);
+  border-radius: 2px;
+}
+.scroll-roller-top {
+  top: 0;
+  border-bottom: 2px solid rgba(80,50,10,0.4);
+  transform-origin: top center;
+  animation: rollerUnfurlTop 1.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.scroll-roller-bottom {
+  bottom: 0;
+  border-top: 2px solid rgba(80,50,10,0.4);
+  transform-origin: bottom center;
+  animation: rollerUnfurlBottom 1.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.scroll-roller-ornament {
+  font-size: 1.2rem;
+  color: rgba(80,50,10,0.5);
+  letter-spacing: 1.5rem;
+  user-select: none;
+}
+
+/* The parchment body between the rollers */
+.scroll-parchment-veil {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(175deg, #F7EDD6 0%, #EFE0BE 55%, #E8D5A8 100%);
+  transform-origin: top center;
+  animation: parchmentReveal 1.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* Cross watermark on the veil */
+.scroll-cross {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 5rem;
+  color: rgba(138, 90, 0, 0.08);
+  animation: crossFade 1.4s ease forwards;
+  user-select: none;
+}
+
+/* Expedition stamp on the veil */
+.scroll-stamp {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  animation: stampReveal 1.4s ease forwards;
+}
+.scroll-stamp-title {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: clamp(0.8rem, 2.5vw, 1.1rem);
+  color: #6A4200;
+  letter-spacing: 0.1em;
+  margin-bottom: 0.4rem;
+  opacity: 0.8;
+}
+.scroll-stamp-divider {
+  color: rgba(138,90,0,0.4);
+  font-size: 0.7rem;
+  letter-spacing: 0.8rem;
+  margin-bottom: 0.4rem;
+}
+.scroll-stamp-ref {
+  font-family: 'Cinzel', serif;
+  font-size: clamp(0.65rem, 1.8vw, 0.85rem);
+  color: #8A5A00;
+  letter-spacing: 0.06em;
+  opacity: 0.7;
+}
+
+@keyframes rollerUnfurlTop {
+  0%   { top: 50%; }
+  100% { top: 0; }
+}
+@keyframes rollerUnfurlBottom {
+  0%   { bottom: 50%; }
+  100% { bottom: 0; }
+}
+@keyframes parchmentReveal {
+  0%   { opacity: 1; clip-path: inset(50% 0 50% 0); }
+  60%  { opacity: 1; clip-path: inset(0% 0 0% 0); }
+  85%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+@keyframes crossFade {
+  0%   { opacity: 0; }
+  30%  { opacity: 1; }
+  80%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+@keyframes stampReveal {
+  0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.9); }
+  25%  { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  75%  { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(1.02); }
+}
+
+/* ── Expedition Banner (above reader content) ───────── */
+#expedition-banner {
+  display: none;
+  background: linear-gradient(90deg, rgba(10,22,40,0.97), rgba(15,32,53,0.97));
+  border-bottom: 1px solid rgba(201,146,42,0.25);
+  padding: 0.5rem 1rem;
+  flex-shrink: 0;
+}
+body.expedition-mode #expedition-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+.expedition-banner-left {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+.expedition-banner-eyebrow {
+  font-family: 'Cinzel', serif;
+  font-size: 0.55rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(201,146,42,0.5);
+}
+.expedition-banner-ref {
+  font-family: 'Cinzel', serif;
+  font-size: 0.75rem;
+  color: rgba(201,146,42,0.85);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.expedition-return-btn {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: rgba(201,146,42,0.1);
+  border: 1px solid rgba(201,146,42,0.25);
+  border-radius: 6px;
+  padding: 0.35rem 0.75rem;
+  font-family: 'Cinzel', serif;
+  font-size: 0.6rem;
+  letter-spacing: 0.08em;
+  color: rgba(201,146,42,0.7);
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.expedition-return-btn:hover {
+  background: rgba(201,146,42,0.18);
+  color: rgba(201,146,42,0.9);
+}
+
+/* ── Expedition Verse Highlight ─────────────────────── */
+.verse.expedition-target {
+  background: rgba(138,90,0,0.14) !important;
+  border-left: 3px solid rgba(201,146,42,0.5) !important;
+  padding-left: 8px !important;
+  border-radius: 2px;
+  animation: verseGlow 2s ease-in-out;
+}
+@keyframes verseGlow {
+  0%   { background: rgba(138,90,0,0.28) !important; }
+  100% { background: rgba(138,90,0,0.14) !important; }
+}
+
+/* ── Hide main nav in expedition mode ───────────────── */
+body.expedition-mode nav {
+  display: none !important;
+}
+body.expedition-mode .reader-shell {
+  height: 100vh;
+  margin-top: 0;
+}
+
+/* ── Reset & Root ─────────────────────────────────────── */
+*{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+:root{
+  --gold:#C9A84C;--gold-light:#E8CB7A;--gold-dim:#8A6A28;
+  --deep:#0A1628;--dark:#0F2035;--panel:#1B3A6B;
+  --border:#2A5A9C;--border-dim:#1A3A5C;
+  --text:#F0E6CC;--text-dim:#B8C8DC;--text-muted:#4A7AB8;
+  --bg-page:#0A1628;--bg-card:rgba(15,32,53,0.55);
+  --nav-h:68px;
+  --sidebar-w:270px;
+}
+body{font-family:'EB Garamond',Georgia,serif;background:var(--bg-page);color:var(--text);min-height:100vh;overflow-x:hidden;}
+
+/* ── Theme ────────────────────────────────────────────── */
+[data-theme="light"]{
+  --gold:#8A5A00;--gold-light:#6A4200;--gold-dim:#A07020;
+  --deep:#F5EDD8;--dark:#EDE0C4;--panel:#E8D9BC;
+  --border:#C4A882;--border-dim:#D4BC96;
+  --text:#1A0F00;--text-dim:#3A2800;--text-muted:#6B4C1A;
+  --bg-page:#F5EDD8;--bg-card:rgba(232,217,188,0.8);
+}
+
+/* ── Nav ──────────────────────────────────────────────── */
+nav{position:fixed;top:0;left:0;right:0;z-index:600;background:rgba(10,22,40,0.97);border-bottom:1px solid rgba(42,90,156,0.5);backdrop-filter:blur(12px);height:var(--nav-h);display:flex;align-items:center;padding:0 20px;gap:0;box-shadow:0 2px 30px rgba(0,0,0,0.5);}
+.nav-brand{display:flex;align-items:center;gap:10px;text-decoration:none;flex-shrink:0;margin-right:8px;}
+.nav-cross{font-size:26px;color:var(--gold);font-family:"Segoe UI Symbol","Apple Symbols",serif;font-style:normal;line-height:1;}
+.nav-title{font-family:'Cinzel',serif;font-size:0.95rem;font-weight:700;color:#E8F0F8;letter-spacing:0.07em;line-height:1;}
+.nav-subtitle{font-size:0.6rem;color:var(--text-muted);font-style:italic;margin-top:2px;}
+.nav-links{display:flex;align-items:stretch;gap:0;margin-left:4px;list-style:none;height:var(--nav-h);}
+.nav-item{position:relative;display:flex;align-items:center;}
+.nav-link{font-family:'Cinzel',serif;font-size:0.6rem;text-transform:uppercase;letter-spacing:0.09em;color:var(--text-dim);text-decoration:none;padding:0 10px;height:100%;display:flex;align-items:center;gap:4px;cursor:pointer;transition:color 0.2s;white-space:nowrap;border-bottom:2px solid transparent;}
+.nav-link:hover,.nav-link.active{color:var(--gold-light);border-bottom-color:var(--gold-dim);}
+.nav-link.has-drop::after{content:'▾';font-size:0.45rem;opacity:0.55;margin-left:1px;}
+.nav-item:hover>.nav-dropdown{opacity:1;pointer-events:all;transform:translateY(0);}
+.nav-dropdown{position:absolute;top:calc(var(--nav-h) + 1px);left:0;min-width:210px;background:linear-gradient(160deg,#0D1E38,#0A1628);border:1px solid var(--border-dim);border-top:2px solid var(--gold-dim);border-radius:0 0 4px 4px;z-index:601;opacity:0;pointer-events:none;transform:translateY(-6px);transition:opacity 0.18s ease,transform 0.18s ease;padding:6px 0;box-shadow:0 16px 48px rgba(0,0,0,0.7);}
+.nav-dropdown a{display:flex;align-items:center;gap:10px;font-family:'Cinzel',serif;font-size:0.6rem;text-transform:uppercase;letter-spacing:0.09em;color:var(--text-dim);text-decoration:none;padding:9px 18px;transition:color 0.15s,background 0.15s;white-space:nowrap;}
+.nav-dropdown a:hover{color:var(--gold-light);background:rgba(201,168,76,0.07);}
+.nav-dropdown a .dd-icon{font-size:0.8rem;width:14px;text-align:center;flex-shrink:0;font-style:normal;}
+.nav-dropdown-divider{border:none;border-top:1px solid rgba(42,90,156,0.18);margin:4px 0;}
+.nav-right{display:flex;align-items:center;gap:8px;margin-left:auto;flex-shrink:0;}
+.nav-ai-btn{font-family:'Cinzel',serif;font-size:0.6rem;text-transform:uppercase;letter-spacing:0.09em;color:var(--gold-light);border:1px solid var(--gold-dim);border-radius:2px;padding:6px 13px;background:rgba(201,168,76,0.08);text-decoration:none;transition:all 0.2s;white-space:nowrap;flex-shrink:0;}
+.nav-ai-btn:hover{background:rgba(201,168,76,0.2);}
+.nav-signin-btn{font-family:'Cinzel',serif;font-size:0.6rem;text-transform:uppercase;letter-spacing:0.09em;color:var(--text-muted);text-decoration:none;padding:6px 10px;transition:color 0.2s;white-space:nowrap;flex-shrink:0;}
+.nav-signin-btn:hover{color:var(--text-dim);}
+.nav-hamburger{display:none;background:transparent;border:none;color:var(--text-dim);cursor:pointer;padding:8px;flex-direction:column;gap:5px;margin-left:8px;flex-shrink:0;}
+.nav-hamburger span{display:block;width:22px;height:2px;background:currentColor;border-radius:1px;transition:all 0.25s;}
+.nav-hamburger.open span:nth-child(1){transform:translateY(7px) rotate(45deg);}
+.nav-hamburger.open span:nth-child(2){opacity:0;}
+.nav-hamburger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg);}
+.nav-drawer{display:none;position:fixed;top:var(--nav-h);left:0;right:0;background:#0A1830;border-bottom:1px solid var(--border-dim);z-index:599;padding:8px 0 20px;box-shadow:0 8px 30px rgba(0,0,0,0.6);transform:translateY(-8px);opacity:0;transition:transform 0.25s ease,opacity 0.25s ease;pointer-events:none;}
+.nav-drawer.open{transform:translateY(0);opacity:1;pointer-events:all;}
+.nav-drawer-section{font-family:'Cinzel',serif;font-size:0.55rem;text-transform:uppercase;letter-spacing:0.16em;color:#4A7AB8;padding:12px 24px 4px;margin-top:4px;}
+.nav-drawer a{display:block;font-family:'Cinzel',serif;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.09em;color:#B8C8DC;text-decoration:none;padding:10px 24px 10px 32px;border-bottom:1px solid rgba(42,90,156,0.08);transition:color 0.2s,padding-left 0.2s;}
+.nav-drawer a:hover{color:#E8CB7A;padding-left:38px;}
+.nav-drawer-footer{padding:14px 24px 0;display:flex;gap:8px;}
+@media(max-width:860px){.nav-links{display:none;}.nav-hamburger{display:flex;}.nav-right .nav-signin-btn{display:none;}}
+
+/* ── Page Layout ──────────────────────────────────────── */
+.reader-shell{
+  display:flex;
+  height:calc(100vh - var(--nav-h));
+  margin-top:var(--nav-h);
+  overflow:hidden;
+}
+
+/* ── Sidebar ──────────────────────────────────────────── */
+.sidebar{
+  width:var(--sidebar-w);
+  flex-shrink:0;
+  background:#0B1B33;
+  border-right:1px solid var(--border-dim);
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+  transition:width 0.28s ease, opacity 0.28s ease;
+  position:relative;
+}
+.sidebar.collapsed{width:0;opacity:0;pointer-events:none;}
+.sidebar-header{
+  padding:14px 16px 12px;
+  border-bottom:1px solid var(--border-dim);
+  flex-shrink:0;
+}
+.sidebar-title{font-family:'Cinzel',serif;font-size:0.62rem;text-transform:uppercase;letter-spacing:0.16em;color:var(--gold);margin-bottom:10px;}
+.sidebar-search{
+  width:100%;background:rgba(27,58,107,0.4);border:1px solid var(--border-dim);
+  border-radius:2px;color:var(--text);font-family:'EB Garamond',serif;font-size:0.9rem;
+  padding:7px 10px;outline:none;transition:border-color 0.2s;
+}
+.sidebar-search:focus{border-color:var(--gold-dim);}
+.sidebar-search::placeholder{color:var(--text-muted);font-style:italic;}
+.sidebar-body{flex:1;overflow-y:auto;padding:8px 0;}
+.sidebar-body::-webkit-scrollbar{width:3px;}
+.sidebar-body::-webkit-scrollbar-thumb{background:var(--border-dim);border-radius:2px;}
+
+/* Book section headers */
+.book-section{margin-bottom:4px;}
+.book-section-label{
+  font-family:'Cinzel',serif;font-size:0.55rem;text-transform:uppercase;
+  letter-spacing:0.18em;color:var(--gold-dim);
+  padding:10px 16px 4px;cursor:pointer;
+  display:flex;align-items:center;justify-content:space-between;
+  transition:color 0.2s;user-select:none;
+}
+.book-section-label:hover{color:var(--gold);}
+.book-section-arrow{font-size:0.5rem;transition:transform 0.2s;}
+.book-section-label.collapsed .book-section-arrow{transform:rotate(-90deg);}
+.book-list{padding:0 0 4px;}
+.book-list.hidden{display:none;}
+.book-item{
+  font-family:'EB Garamond',serif;font-size:0.88rem;
+  color:var(--text-dim);padding:7px 16px 7px 20px;
+  cursor:pointer;transition:all 0.15s;
+  border-left:2px solid transparent;
+  display:block;text-decoration:none;
+}
+.book-item:hover{color:var(--gold-light);background:rgba(201,168,76,0.05);border-left-color:var(--gold-dim);}
+.book-item.active{color:var(--gold-light);background:rgba(201,168,76,0.08);border-left-color:var(--gold);}
+
+/* ── Main Reader Area — Parchment Scroll ──────────────── */
+.reader-main{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+  background:linear-gradient(175deg,#F7EDD6 0%,#EFE0BE 55%,#E8D5A8 100%);
+}
+/* Toolbar stays dark above the parchment */
+.reader-toolbar{
+  background:rgba(10,22,40,0.94)!important;
+  border-bottom:1px solid rgba(138,90,0,0.3)!important;
+}
+/* LXX note on parchment */
+.lxx-note{
+  background:rgba(138,90,0,0.07)!important;
+  border-bottom:1px solid rgba(138,90,0,0.18)!important;
+}
+.lxx-note-text{color:#5A3800!important;}
+.lxx-note-text strong{color:#8A5A00!important;}
+.lxx-note-close{color:#8A6A30!important;}
+/* Reader content scrollbar on parchment */
+.reader-content::-webkit-scrollbar-thumb{background:rgba(138,90,0,0.25);border-radius:2px;}
+/* Chapter heading */
+.chapter-heading{
+  color:#5A3000!important;
+  border-bottom-color:rgba(138,90,0,0.2)!important;
+}
+/* Verse text */
+.verse{color:#2A1800;}
+.verse:hover{background:rgba(138,90,0,0.06)!important;}
+.verse.selected{background:rgba(138,90,0,0.1)!important;}
+/* Verse number */
+.verse-num{color:#A07030!important;}
+/* Highlight overlays adjusted for parchment */
+.verse.hl-gold{background:rgba(180,120,0,0.22)!important;}
+.verse.hl-blue{background:rgba(42,90,156,0.18)!important;}
+.verse.hl-green{background:rgba(40,120,80,0.16)!important;}
+.verse.hl-red{background:rgba(160,50,50,0.18)!important;}
+/* Empty/loading state on parchment */
+.reader-state{color:#8A6A30!important;}
+.reader-state-cross{color:#C4A064!important;}
+.reader-state-title{color:#5A3800!important;}
+.reader-state-sub{color:#8A6A30!important;}
+
+/* Reader toolbar */
+.reader-toolbar{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 20px;
+  border-bottom:1px solid var(--border-dim);
+  background:rgba(11,27,51,0.6);
+  flex-shrink:0;
+  flex-wrap:wrap;
+}
+.sidebar-toggle{
+  background:transparent;border:1px solid var(--border-dim);
+  border-radius:2px;color:var(--text-muted);
+  padding:6px 10px;cursor:pointer;font-size:0.85rem;
+  transition:all 0.2s;flex-shrink:0;
+}
+.sidebar-toggle:hover{border-color:var(--gold-dim);color:var(--gold-light);}
+.reader-location{
+  font-family:'Cinzel',serif;font-size:0.72rem;
+  color:var(--gold-light);letter-spacing:0.06em;
+  flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.translation-badge{
+  font-family:'Cinzel',serif;font-size:0.58rem;text-transform:uppercase;
+  letter-spacing:0.12em;color:var(--gold);
+  border:1px solid var(--gold-dim);border-radius:2px;
+  padding:3px 8px;background:rgba(201,168,76,0.08);
+  flex-shrink:0;
+}
+.reader-search-wrap{display:flex;align-items:center;gap:6px;flex-shrink:0;}
+.reader-search{
+  background:rgba(27,58,107,0.4);border:1px solid var(--border-dim);
+  border-radius:2px;color:var(--text);font-family:'EB Garamond',serif;
+  font-size:0.9rem;padding:5px 10px;outline:none;width:160px;
+  transition:border-color 0.2s,width 0.2s;
+}
+.reader-search:focus{border-color:var(--gold-dim);width:200px;}
+.reader-search::placeholder{color:var(--text-muted);font-style:italic;}
+.reader-search-btn{
+  background:transparent;border:1px solid var(--border-dim);border-radius:2px;
+  color:var(--text-muted);padding:5px 9px;cursor:pointer;
+  font-size:0.85rem;transition:all 0.2s;
+}
+.reader-search-btn:hover{border-color:var(--gold-dim);color:var(--gold);}
+
+/* Tool buttons */
+.tool-btn{
+  background:transparent;border:1px solid var(--border-dim);border-radius:2px;
+  color:var(--text-muted);padding:5px 10px;cursor:pointer;
+  font-family:'Cinzel',serif;font-size:0.58rem;text-transform:uppercase;
+  letter-spacing:0.09em;transition:all 0.2s;white-space:nowrap;
+  display:flex;align-items:center;gap:5px;
+}
+.tool-btn:hover{border-color:var(--gold-dim);color:var(--gold-light);}
+.tool-btn.active{border-color:var(--gold);color:var(--gold);background:rgba(201,168,76,0.1);}
+
+/* Chapter nav */
+.chapter-nav{
+  display:flex;align-items:center;gap:0;
+  border:1px solid var(--border-dim);border-radius:2px;overflow:hidden;
+  flex-shrink:0;
+}
+.ch-btn{
+  background:transparent;border:none;color:var(--text-muted);
+  padding:5px 11px;cursor:pointer;font-size:0.9rem;
+  transition:all 0.2s;border-right:1px solid var(--border-dim);
+}
+.ch-btn:last-child{border-right:none;border-left:1px solid var(--border-dim);}
+.ch-btn:hover{background:rgba(201,168,76,0.08);color:var(--gold-light);}
+.ch-btn:disabled{opacity:0.3;cursor:not-allowed;}
+.ch-label{
+  font-family:'Cinzel',serif;font-size:0.6rem;color:var(--text-dim);
+  padding:5px 12px;white-space:nowrap;letter-spacing:0.06em;
+}
+
+/* LXX note banner */
+.lxx-note{
+  background:rgba(201,168,76,0.06);border-bottom:1px solid rgba(201,168,76,0.15);
+  padding:10px 20px;flex-shrink:0;
+  display:flex;align-items:flex-start;gap:12px;
+}
+.lxx-note.hidden{display:none;}
+.lxx-note-icon{color:var(--gold-dim);font-size:0.9rem;flex-shrink:0;margin-top:2px;}
+.lxx-note-text{font-size:0.82rem;color:var(--text-muted);font-style:italic;line-height:1.65;flex:1;}
+.lxx-note-text strong{color:var(--gold-dim);font-style:normal;}
+.lxx-note-close{background:transparent;border:none;color:var(--text-muted);cursor:pointer;font-size:0.9rem;padding:0;flex-shrink:0;transition:color 0.2s;}
+.lxx-note-close:hover{color:var(--gold);}
+
+/* Chapter select dropdown */
+.ch-select-wrap{position:relative;flex-shrink:0;}
+.ch-select{
+  background:rgba(27,58,107,0.4);border:1px solid var(--border-dim);border-radius:2px;
+  color:var(--text-dim);font-family:'Cinzel',serif;font-size:0.6rem;
+  padding:5px 8px;outline:none;cursor:pointer;
+  appearance:none;-webkit-appearance:none;
+  padding-right:22px;
+}
+.ch-select:focus{border-color:var(--gold-dim);}
+.ch-select-arrow{position:absolute;right:6px;top:50%;transform:translateY(-50%);color:var(--text-muted);font-size:0.5rem;pointer-events:none;}
+
+/* Reader content */
+.reader-content{
+  flex:1;overflow-y:auto;
+  padding:32px 48px 80px;
+  max-width:780px;
+  margin:0 auto;
+  width:100%;
+}
+.reader-content::-webkit-scrollbar{width:4px;}
+.reader-content::-webkit-scrollbar-thumb{background:var(--border-dim);border-radius:2px;}
+
+/* Loading / empty states */
+.reader-state{
+  display:flex;flex-direction:column;align-items:center;
+  justify-content:center;height:100%;
+  color:var(--text-muted);text-align:center;padding:40px;
+}
+.reader-state-cross{font-size:2.5rem;color:var(--gold-dim);margin-bottom:16px;}
+.reader-state-title{font-family:'Cinzel',serif;font-size:1rem;color:var(--text-dim);margin-bottom:8px;letter-spacing:0.06em;}
+.reader-state-sub{font-size:0.9rem;font-style:italic;color:var(--text-muted);line-height:1.7;}
+
+/* Chapter heading */
+.chapter-heading{
+  font-family:'Cinzel',serif;font-size:1.1rem;font-weight:600;
+  color:var(--gold-light);letter-spacing:0.1em;
+  margin-bottom:28px;padding-bottom:16px;
+  border-bottom:1px solid rgba(201,168,76,0.15);
+}
+
+/* Verse styles */
+.verse{
+  display:block;margin-bottom:2px;
+  padding:5px 8px 5px 32px;
+  border-radius:3px;position:relative;
+  line-height:1.95;font-size:1.08rem;
+  cursor:pointer;transition:background 0.15s;
+}
+.verse:hover{background:rgba(201,168,76,0.04);}
+.verse.selected{background:rgba(201,168,76,0.07);}
+.verse-num{
+  position:absolute;left:8px;top:7px;
+  font-family:'Cinzel',serif;font-size:0.58rem;
+  color:var(--gold-dim);letter-spacing:0.06em;
+  user-select:none;
+}
+
+/* Highlight colors */
+.verse.hl-gold{background:rgba(201,168,76,0.18)!important;}
+.verse.hl-blue{background:rgba(42,90,156,0.25)!important;}
+.verse.hl-green{background:rgba(40,120,80,0.2)!important;}
+.verse.hl-red{background:rgba(160,50,50,0.2)!important;}
+
+/* Note indicator */
+.verse-note-dot{
+  display:inline-block;width:6px;height:6px;border-radius:50%;
+  background:var(--gold);margin-left:6px;vertical-align:middle;
+  flex-shrink:0;
+}
+
+/* ── Verse Action Toolbar (appears on click) ─────────── */
+.verse-actions{
+  position:absolute;right:8px;top:4px;
+  display:none;align-items:center;gap:3px;
+  background:var(--dark);border:1px solid var(--border-dim);
+  border-radius:3px;padding:3px 5px;
+  box-shadow:0 4px 20px rgba(0,0,0,0.5);
+  z-index:10;
+}
+.verse.selected .verse-actions{display:flex;}
+.va-btn{
+  background:transparent;border:none;cursor:pointer;
+  font-size:0.75rem;padding:3px 6px;border-radius:2px;
+  color:var(--text-muted);transition:all 0.15s;
+  font-family:'Cinzel',serif;font-size:0.55rem;text-transform:uppercase;
+  letter-spacing:0.06em;white-space:nowrap;
+}
+.va-btn:hover{color:var(--gold-light);background:rgba(201,168,76,0.1);}
+.va-sep{width:1px;height:12px;background:var(--border-dim);}
+
+/* Highlight color picker */
+.hl-picker{display:flex;gap:4px;align-items:center;}
+.hl-dot{
+  width:12px;height:12px;border-radius:50%;cursor:pointer;
+  border:1px solid transparent;transition:transform 0.15s,border-color 0.15s;
+}
+.hl-dot:hover{transform:scale(1.25);}
+.hl-dot.gold{background:rgba(201,168,76,0.7);}
+.hl-dot.blue{background:rgba(42,90,156,0.7);}
+.hl-dot.green{background:rgba(40,120,80,0.6);}
+.hl-dot.red{background:rgba(160,50,50,0.6);}
+
+/* ── Right Panels ─────────────────────────────────────── */
+.panel-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:700;
+  opacity:0;pointer-events:none;transition:opacity 0.25s;
+}
+.panel-overlay.open{opacity:1;pointer-events:all;}
+
+.side-panel{
+  position:fixed;top:0;right:0;bottom:0;width:380px;max-width:92vw;
+  background:linear-gradient(160deg,#0D1E38,#0A1628);
+  border-left:1px solid var(--border-dim);border-left-color:var(--gold-dim);
+  z-index:701;display:flex;flex-direction:column;
+  transform:translateX(100%);transition:transform 0.3s ease;
+  box-shadow:-8px 0 40px rgba(0,0,0,0.5);
+}
+.side-panel.open{transform:translateX(0);}
+.panel-header{
+  padding:16px 20px;border-bottom:1px solid var(--border-dim);
+  display:flex;align-items:center;justify-content:space-between;
+  flex-shrink:0;background:rgba(0,0,0,0.2);
+}
+.panel-title{font-family:'Cinzel',serif;font-size:0.78rem;text-transform:uppercase;letter-spacing:0.12em;color:var(--gold-light);}
+.panel-close{background:transparent;border:none;color:var(--text-dim);font-size:1.2rem;cursor:pointer;padding:0;transition:color 0.2s;}
+.panel-close:hover{color:var(--gold);}
+.panel-body{flex:1;overflow-y:auto;padding:16px 20px;}
+.panel-body::-webkit-scrollbar{width:3px;}
+.panel-body::-webkit-scrollbar-thumb{background:var(--border-dim);}
+
+/* Notes panel */
+.note-item{
+  background:rgba(27,58,107,0.3);border:1px solid var(--border-dim);
+  border-radius:3px;padding:12px 14px;margin-bottom:10px;
+}
+.note-item-ref{font-family:'Cinzel',serif;font-size:0.6rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--gold-dim);margin-bottom:6px;}
+.note-item-text{font-size:0.92rem;color:var(--text-dim);line-height:1.75;font-style:italic;}
+.note-item-actions{display:flex;gap:8px;margin-top:8px;}
+.note-action-btn{font-family:'Cinzel',serif;font-size:0.55rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted);background:transparent;border:none;cursor:pointer;padding:2px 0;transition:color 0.2s;}
+.note-action-btn:hover{color:var(--gold);}
+.note-editor{margin-top:4px;}
+.note-textarea{
+  width:100%;background:rgba(27,58,107,0.3);border:1px solid var(--border-dim);
+  border-radius:2px;color:var(--text);font-family:'EB Garamond',serif;font-size:0.95rem;
+  padding:10px 12px;outline:none;resize:vertical;min-height:90px;
+  transition:border-color 0.2s;line-height:1.7;
+}
+.note-textarea:focus{border-color:var(--gold-dim);}
+.panel-btn{
+  font-family:'Cinzel',serif;font-size:0.6rem;text-transform:uppercase;
+  letter-spacing:0.1em;padding:8px 16px;border-radius:2px;cursor:pointer;
+  transition:all 0.2s;border:1px solid var(--gold-dim);
+  color:var(--deep);background:var(--gold);
+}
+.panel-btn:hover{background:var(--gold-light);}
+.panel-btn.secondary{background:transparent;color:var(--text-muted);border-color:var(--border-dim);}
+.panel-btn.secondary:hover{color:var(--text-dim);border-color:var(--border);}
+.panel-empty{text-align:center;padding:32px 16px;color:var(--text-muted);font-style:italic;font-size:0.9rem;line-height:1.7;}
+
+/* Bookmarks panel */
+.bookmark-item{
+  background:rgba(27,58,107,0.3);border:1px solid var(--border-dim);
+  border-radius:3px;padding:12px 14px;margin-bottom:8px;
+  cursor:pointer;transition:border-color 0.15s,background 0.15s;
+  display:flex;align-items:center;gap:10px;
+}
+.bookmark-item:hover{border-color:var(--gold-dim);background:rgba(27,58,107,0.5);}
+.bookmark-icon{color:var(--gold-dim);font-size:1rem;flex-shrink:0;}
+.bookmark-ref{font-family:'Cinzel',serif;font-size:0.72rem;color:var(--text);letter-spacing:0.04em;}
+.bookmark-label{font-size:0.78rem;color:var(--text-muted);font-style:italic;margin-top:2px;}
+.bookmark-delete{margin-left:auto;background:transparent;border:none;color:var(--text-muted);cursor:pointer;font-size:0.8rem;padding:2px;transition:color 0.2s;flex-shrink:0;}
+.bookmark-delete:hover{color:#c0392b;}
+
+/* Journal panel */
+.journal-entry{
+  background:rgba(27,58,107,0.3);border:1px solid var(--border-dim);
+  border-radius:3px;padding:12px 14px;margin-bottom:10px;
+}
+.journal-entry-date{font-family:'Cinzel',serif;font-size:0.58rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--gold-dim);margin-bottom:6px;}
+.journal-entry-cat{display:inline-block;font-family:'Cinzel',serif;font-size:0.54rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted);background:rgba(42,90,156,0.2);border:1px solid var(--border-dim);border-radius:2px;padding:1px 6px;margin-bottom:6px;}
+.journal-entry-text{font-size:0.9rem;color:var(--text-dim);line-height:1.8;font-style:italic;}
+.journal-new-btn{
+  width:100%;font-family:'Cinzel',serif;font-size:0.62rem;text-transform:uppercase;
+  letter-spacing:0.1em;padding:10px;border-radius:2px;cursor:pointer;
+  transition:all 0.2s;border:1px solid var(--gold-dim);
+  color:var(--gold);background:rgba(201,168,76,0.08);
+  margin-bottom:16px;
+}
+.journal-new-btn:hover{background:rgba(201,168,76,0.15);}
+
+/* ── Note Modal (full editor) ─────────────────────────── */
+#note-modal{display:none;position:fixed;inset:0;z-index:800;background:rgba(0,0,0,0.85);align-items:center;justify-content:center;padding:20px;}
+#note-modal.open{display:flex;}
+.note-modal-box{background:linear-gradient(160deg,#0D1E38,#0A1628);border:1px solid var(--border);border-top:3px solid var(--gold);border-radius:4px;width:100%;max-width:520px;animation:fadeUp 0.25s ease;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+.note-modal-header{padding:16px 20px;border-bottom:1px solid rgba(201,168,76,0.12);display:flex;align-items:center;justify-content:space-between;}
+.note-modal-ref{font-family:'Cinzel',serif;font-size:0.75rem;color:var(--gold-light);letter-spacing:0.06em;}
+.note-modal-body{padding:20px;}
+.note-modal-footer{padding:12px 20px;border-top:1px solid rgba(42,90,156,0.2);display:flex;gap:8px;justify-content:flex-end;}
+
+/* ── Auth gate ────────────────────────────────────────── */
+.auth-gate{
+  background:rgba(27,58,107,0.25);border:1px solid var(--border-dim);
+  border-top:2px solid var(--gold-dim);border-radius:3px;
+  padding:20px 20px;margin-bottom:16px;text-align:center;
+}
+.auth-gate-text{font-size:0.88rem;color:var(--text-muted);font-style:italic;line-height:1.7;margin-bottom:12px;}
+.auth-gate-btn{display:inline-block;font-family:'Cinzel',serif;font-size:0.6rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--deep);background:var(--gold);border:none;border-radius:2px;padding:8px 18px;cursor:pointer;text-decoration:none;transition:background 0.2s;}
+.auth-gate-btn:hover{background:var(--gold-light);}
+
+/* ── Back to Top ─────────────────────────────────────── */
+#backToTop{position:fixed;bottom:1.5rem;right:1.5rem;z-index:900;width:38px;height:38px;border-radius:50%;background:var(--dark);border:1px solid var(--gold-dim);color:var(--gold-light);font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.25s,transform 0.25s;box-shadow:0 2px 12px rgba(0,0,0,0.5);}
+#backToTop.visible{opacity:1;pointer-events:all;}
+#backToTop:hover{background:rgba(201,168,76,0.12);transform:translateY(-2px);}
+
+
+body{background:var(--bg-page);color:var(--text);}
+*,*::before,*::after{transition:background-color 0.3s ease,border-color 0.3s ease,color 0.3s ease;}
+.fade-in,.nav-dropdown,[class*="modal"],[class*="panel"]{transition:none!important;}
+
+/* ── Responsive ───────────────────────────────────────── */
+@media(max-width:860px){
+  .reader-toolbar{padding:8px 12px;gap:6px;}
+  .reader-content{padding:20px 16px 60px;}
+  .sidebar{position:fixed;top:var(--nav-h);left:0;bottom:0;z-index:590;transform:translateX(-100%);transition:transform 0.28s ease;width:var(--sidebar-w);}
+  .sidebar.mobile-open{transform:translateX(0);}
+  .sidebar.collapsed{width:var(--sidebar-w);opacity:1;pointer-events:all;}
+  .reader-search{width:120px;}
+  .reader-search:focus{width:140px;}
+  .tool-btn span{display:none;}
+}
+@media(max-width:480px){
+  .chapter-nav .ch-label{display:none;}
+  .reader-location{font-size:0.65rem;}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV — THE ORTHODOX EXPEDITION ──────────────────── -->
+<nav id="mainNav" style="
+  position:fixed;top:0;left:0;right:0;z-index:600;
+  height:var(--nav-h);
+  background:rgba(14,8,0,0.97);
+  border-bottom:1px solid rgba(201,146,42,0.2);
+  backdrop-filter:blur(16px);
+  display:flex;align-items:center;
+  padding:0 1rem;
+  box-shadow:0 2px 30px rgba(0,0,0,0.6);
+">
+  <!-- Left: Home -->
+  <a href="home.html" style="
+    display:flex;align-items:center;gap:0.5rem;
+    text-decoration:none;flex-shrink:0;
+    padding:0.35rem 0.75rem;
+    border:1px solid rgba(201,146,42,0.18);
+    border-radius:6px;
+    background:rgba(201,146,42,0.05);
+    transition:background 0.2s;
+  " onmouseenter="this.style.background='rgba(201,146,42,0.12)'"
+     onmouseleave="this.style.background='rgba(201,146,42,0.05)'">
+    <span style="font-size:0.85rem;color:rgba(201,146,42,0.5);">✦</span>
+    <span style="font-family:'Cinzel',serif;font-size:0.56rem;letter-spacing:0.1em;text-transform:uppercase;color:rgba(201,146,42,0.5);">Home</span>
+  </a>
+
+  <!-- Center: Branding -->
+  <div style="flex:1;text-align:center;padding:0 0.5rem;">
+    <div style="font-family:'Cinzel Decorative',serif;font-size:clamp(0.6rem,2.5vw,0.85rem);color:rgba(240,201,110,0.9);letter-spacing:0.06em;text-shadow:0 0 16px rgba(201,146,42,0.3);line-height:1.2;">
+      The Orthodox Expedition
+    </div>
+    <div style="font-family:'Cinzel',serif;font-size:0.48rem;letter-spacing:0.2em;color:rgba(201,146,42,0.35);text-transform:uppercase;margin-top:0.15rem;">
+      ☦ Holy Scriptures
+    </div>
+  </div>
+
+  <!-- Right: Topics -->
+  <a href="curriculum.html" style="
+    display:flex;align-items:center;gap:0.5rem;
+    text-decoration:none;flex-shrink:0;
+    padding:0.35rem 0.75rem;
+    border:1px solid rgba(201,146,42,0.18);
+    border-radius:6px;
+    background:rgba(201,146,42,0.05);
+    transition:background 0.2s;
+  " onmouseenter="this.style.background='rgba(201,146,42,0.12)'"
+     onmouseleave="this.style.background='rgba(201,146,42,0.05)'">
+    <span style="font-family:'Cinzel',serif;font-size:0.56rem;letter-spacing:0.1em;text-transform:uppercase;color:rgba(201,146,42,0.5);">Topics</span>
+    <span style="font-size:0.85rem;color:rgba(201,146,42,0.5);">⊕</span>
+  </a>
+</nav>
+
+
+
+<!-- ── SCROLL UNFURL OVERLAY (Expedition Mode) ───────────── -->
+<div id="scroll-unfurl">
+  <div class="scroll-parchment-veil"></div>
+  <div class="scroll-roller scroll-roller-top">
+    <span class="scroll-roller-ornament">✦ ☩ ✦</span>
+  </div>
+  <div class="scroll-roller scroll-roller-bottom">
+    <span class="scroll-roller-ornament">✦ ☩ ✦</span>
+  </div>
+  <div class="scroll-cross">☩</div>
+  <div class="scroll-stamp">
+    <div class="scroll-stamp-title">The Orthodox Expedition</div>
+    <div class="scroll-stamp-divider">✦ · ✦</div>
+    <div class="scroll-stamp-ref" id="scrollStampRef">Holy Scriptures</div>
+  </div>
+</div>
+
+<!-- READER SHELL -->
+<div class="reader-shell">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-title">Holy Scripture</div>
+      <input type="text" class="sidebar-search" id="bookSearch" placeholder="Search books…" autocomplete="off"/>
+    </div>
+    <div class="sidebar-body" id="sidebarBody">
+      <div class="reader-state" style="height:auto;padding:20px;">
+        <div class="reader-state-sub">Loading books…</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN READER -->
+  <div class="reader-main">
+
+    <!-- TOOLBAR -->
+    <div class="reader-toolbar">
+      <button class="sidebar-toggle" id="sidebarToggle" title="Toggle sidebar">&#9776;</button>
+      <div class="reader-location" id="readerLocation">Select a book to begin reading</div>
+      <span class="translation-badge" id="translationBadge" style="display:none;"></span>
+
+      <!-- Chapter nav -->
+      <div class="chapter-nav" id="chapterNav" style="display:none;">
+        <button class="ch-btn" id="prevChBtn" title="Previous chapter" disabled>&#8592;</button>
+        <div class="ch-select-wrap">
+          <select class="ch-select" id="chapterSelect"></select>
+          <span class="ch-select-arrow">&#9662;</span>
+        </div>
+        <button class="ch-btn" id="nextChBtn" title="Next chapter">&#8594;</button>
+      </div>
+
+      <!-- Verse search -->
+      <div class="reader-search-wrap">
+        <input type="text" class="reader-search" id="verseSearch" placeholder="e.g. John 3:16" autocomplete="off"/>
+        <button class="reader-search-btn" id="verseSearchBtn" title="Go to passage">&#9166;</button>
+      </div>
+
+      <!-- Tool buttons -->
+      <button class="tool-btn" id="bookmarksBtn" title="Bookmarks">&#9646; <span>Bookmarks</span></button>
+      <button class="tool-btn" id="notesBtn" title="Notes">&#9998; <span>Notes</span></button>
+      <button class="tool-btn" id="journalBtn" title="Journal">&#9997; <span>Journal</span></button>
+    </div>
+
+    <!-- EXPEDITION BANNER (shown when opened from Expedition session) -->
+    <div id="expedition-banner">
+      <div class="expedition-banner-left">
+        <div class="expedition-banner-eyebrow">☦ The Orthodox Expedition</div>
+        <div class="expedition-banner-ref" id="expeditionBannerRef">This Week's Reading</div>
+      </div>
+      <a class="expedition-return-btn" id="expeditionReturnBtn" href="curriculum.html">
+        ‹ Return to Expedition
+      </a>
+    </div>
+
+    <!-- LXX NOTE -->
+    <div class="lxx-note" id="lxxNote">
+      <span class="lxx-note-icon">&#9432;</span>
+      <span class="lxx-note-text">
+        <strong>Why the Septuagint?</strong> The Orthodox Expedition reads the Old Testament in the
+        <strong>Septuagint (LXX)</strong> — the Greek translation used in Orthodox liturgy since the apostolic era,
+        quoted by the Church Fathers, and cited by the New Testament authors themselves.
+        The New Testament is read in the <strong>King James Version</strong>.
+      </span>
+      <button class="lxx-note-close" id="lxxNoteClose" title="Dismiss">&#x2715;</button>
+    </div>
+
+    <!-- CHAPTER CONTENT -->
+    <div class="reader-content" id="readerContent">
+      <div class="reader-state">
+        <div class="reader-state-cross">&#9766;</div>
+        <div class="reader-state-title">Holy Scripture</div>
+        <div class="reader-state-sub">
+          Select a book from the sidebar to begin reading.<br/>
+          The Old Testament is read in the Septuagint.<br/>
+          The New Testament in the King James Version.
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /reader-main -->
+</div><!-- /reader-shell -->
+
+<!-- PANEL OVERLAY -->
+<div class="panel-overlay" id="panelOverlay" onclick="closeAllPanels()"></div>
+
+<!-- NOTES PANEL -->
+<div class="side-panel" id="notesPanel">
+  <div class="panel-header">
+    <span class="panel-title">&#9998; Notes</span>
+    <button class="panel-close" onclick="closePanel('notesPanel')">&#x2715;</button>
+  </div>
+  <div class="panel-body" id="notesPanelBody">
+    <div id="notesAuthGate"></div>
+    <div id="notesNewForm" style="display:none;">
+      <div style="font-family:'Cinzel',serif;font-size:0.6rem;text-transform:uppercase;letter-spacing:0.12em;color:var(--gold-dim);margin-bottom:8px;" id="noteFormRef"></div>
+      <textarea class="note-textarea" id="noteTextarea" placeholder="Write your note…"></textarea>
+      <div style="display:flex;gap:8px;margin-top:10px;">
+        <button class="panel-btn" onclick="saveNote()">Save Note</button>
+        <button class="panel-btn secondary" onclick="cancelNote()">Cancel</button>
+      </div>
+    </div>
+    <div id="notesList"></div>
+  </div>
+</div>
+
+<!-- BOOKMARKS PANEL -->
+<div class="side-panel" id="bookmarksPanel">
+  <div class="panel-header">
+    <span class="panel-title">&#9646; Bookmarks</span>
+    <button class="panel-close" onclick="closePanel('bookmarksPanel')">&#x2715;</button>
+  </div>
+  <div class="panel-body" id="bookmarksPanelBody">
+    <div id="bookmarksAuthGate"></div>
+    <div id="bookmarksList"></div>
+  </div>
+</div>
+
+<!-- JOURNAL PANEL -->
+<div class="side-panel" id="journalPanel">
+  <div class="panel-header">
+    <span class="panel-title">&#9997; Journal</span>
+    <button class="panel-close" onclick="closePanel('journalPanel')">&#x2715;</button>
+  </div>
+  <div class="panel-body" id="journalPanelBody">
+    <button class="journal-new-btn" onclick="openNewJournalEntry()">+ New Journal Entry</button>
+    <div id="journalNewForm" style="display:none;margin-bottom:16px;">
+      <textarea class="note-textarea" id="journalTextarea" placeholder="Write your reflection…" style="min-height:120px;"></textarea>
+      <div style="display:flex;gap:8px;margin-top:10px;">
+        <button class="panel-btn" onclick="saveJournalEntry()">Save Entry</button>
+        <button class="panel-btn secondary" onclick="closeJournalForm()">Cancel</button>
+      </div>
+    </div>
+    <div id="journalList"></div>
+  </div>
+</div>
+
+<!-- NOTE MODAL -->
+<div id="note-modal">
+  <div class="note-modal-box">
+    <div class="note-modal-header">
+      <span class="note-modal-ref" id="noteModalRef"></span>
+      <button class="panel-close" onclick="closeNoteModal()">&#x2715;</button>
+    </div>
+    <div class="note-modal-body">
+      <textarea class="note-textarea" id="noteModalTextarea" placeholder="Write your note…" style="min-height:120px;width:100%;"></textarea>
+    </div>
+    <div class="note-modal-footer">
+      <button class="panel-btn secondary" onclick="closeNoteModal()">Cancel</button>
+      <button class="panel-btn" onclick="saveNoteFromModal()">Save Note</button>
+    </div>
+  </div>
+</div>
+
+<button id="backToTop" aria-label="Back to top" onclick="window.scrollTo({top:0,behavior:'smooth'})">&#8679;</button>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// ORTHODOX COMPANION — BIBLE READER
+// API.Bible integration: LXX2012 (OT) + KJV (NT)
+// Features: highlights, notes, bookmarks, journal panel
+// ═══════════════════════════════════════════════════════════════
+
+const BIBLE_CONFIG = {
+  apiBase: 'https://rest.api.bible/v1',
+  apiKey:  'bg79Z1V88eW-e0mQr87q6',
+  nt:      '63097d2a0a2f7db3-01',
+};
+const LXX_PATH = 'data/lxx/';
+
+// OT book IDs (Septuagint order)
+const OT_BOOKS = [
+  'GEN','EXO','LEV','NUM','DEU','JOS','JDG','RUT',
+  '1SA','2SA','1KI','2KI','1CH','2CH','EZR','NEH','EST',
+  'JOB','PSA','PRO','ECC','SNG','ISA','JER','LAM','EZK',
+  'DAN','HOS','JOL','AMO','OBA','JON','MIC','NAM','HAB',
+  'ZEP','HAG','ZEC','MAL'
+];
+// Deuterocanonical books — full Orthodox canon from LXX2012
+const DEUT_BOOKS = [
+  'TOB','JDT','WIS','SIR','BAR','LJE',
+  '1MA','2MA','3MA','4MA',
+  '1ES','MAN','SUS','BEL','S3Y'
+];
+const NT_BOOKS = [
+  'MAT','MRK','LUK','JHN','ACT','ROM','1CO','2CO','GAL',
+  'EPH','PHP','COL','1TH','2TH','1TI','2TI','TIT','PHM',
+  'HEB','JAS','1PE','2PE','1JO','2JO','3JO','JUD','REV'
+];
+// Display names for local LXX books (API.Bible no longer provides these for OT)
+const LXX_NAMES = {
+  GEN:'Genesis',EXO:'Exodus',LEV:'Leviticus',NUM:'Numbers',DEU:'Deuteronomy',
+  JOS:'Joshua',JDG:'Judges',RUT:'Ruth',
+  '1SA':'1 Samuel','2SA':'2 Samuel','1KI':'1 Kings','2KI':'2 Kings',
+  '1CH':'1 Chronicles','2CH':'2 Chronicles',EZR:'Ezra',NEH:'Nehemiah',EST:'Esther',
+  JOB:'Job',PSA:'Psalms',PRO:'Proverbs',ECC:'Ecclesiastes',SNG:'Song of Songs',
+  ISA:'Isaiah',JER:'Jeremiah',LAM:'Lamentations',EZK:'Ezekiel',DAN:'Daniel',
+  HOS:'Hosea',JOL:'Joel',AMO:'Amos',OBA:'Obadiah',JON:'Jonah',MIC:'Micah',
+  NAM:'Nahum',HAB:'Habakkuk',ZEP:'Zephaniah',HAG:'Haggai',ZEC:'Zechariah',MAL:'Malachi',
+  TOB:'Tobit',JDT:'Judith',WIS:'Wisdom of Solomon',SIR:'Sirach',
+  BAR:'Baruch',LJE:'Epistle of Jeremy',
+  '1MA':'1 Maccabees','2MA':'2 Maccabees','3MA':'3 Maccabees','4MA':'4 Maccabees',
+  '1ES':'1 Esdras',MAN:'Prayer of Manasseh',SUS:'Susanna',BEL:'Bel and the Dragon',
+  S3Y:'Song of the Three Young Men'
+};
+
+// ── State ─────────────────────────────────────────────────────
+let allBooks = { ot: [], nt: [], deut: [] };
+let currentBook = null;
+let currentChapters = [];
+let currentChapterIdx = 0;
+let currentBibleId = null;
+let lxxBookData = null;   // holds loaded local LXX JSON for current OT book
+let selectedVerseId = null;
+let pendingNoteVerseId = null;
+let highlights = {}; // { verseId: color }
+let notes = {};      // { verseId: { id, text } }
+let bookmarks = [];  // [{ id, bookId, chapter, reference, label }]
+let supabaseUser = null;
+let sb = null;
+
+// ── Supabase Init ─────────────────────────────────────────────
+function initSupabase() {
+  if (typeof supabase === 'undefined') return;
+  const SUPA_URL = 'https://hhatdkrcqnhixemjavgb.supabase.co';
+  const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhoYXRka3JjcW5oaXhlbWphdmdiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ5MTA0NDksImV4cCI6MjA5MDQ4NjQ0OX0.9KSdbZ2RiPbAepj0XvwvUfrdu9yOMq5VcHKgunNEwQ4';
+  try {
+    sb = supabase.createClient(SUPA_URL, SUPA_KEY, {
+      auth: { persistSession: true, storage: localStorage }
+    });
+    sb.auth.getSession().then(({ data }) => {
+      if (data?.session?.user) {
+        supabaseUser = data.session.user;
+        loadUserStudyData();
+      }
+    });
+    sb.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' && session?.user) {
+        supabaseUser = session.user;
+        loadUserStudyData();
+      } else if (event === 'SIGNED_OUT') {
+        supabaseUser = null;
+        highlights = {}; notes = {}; bookmarks = [];
+      }
+    });
+  } catch(e) { console.warn('Supabase init failed:', e); }
+}
+
+async function loadUserStudyData() {
+  if (!sb || !supabaseUser) return;
+  try {
+    const [hlRes, noteRes, bmRes] = await Promise.all([
+      sb.from('bible_highlights').select('*').eq('user_id', supabaseUser.id),
+      sb.from('bible_notes').select('*').eq('user_id', supabaseUser.id),
+      sb.from('bible_bookmarks').select('*').eq('user_id', supabaseUser.id),
+    ]);
+    if (hlRes.data) {
+      highlights = {};
+      hlRes.data.forEach(h => { highlights[h.verse_id] = h.color; });
+    }
+    if (noteRes.data) {
+      notes = {};
+      noteRes.data.forEach(n => { notes[n.verse_id] = { id: n.id, text: n.note_text }; });
+    }
+    if (bmRes.data) bookmarks = bmRes.data;
+    // Re-render if a chapter is loaded
+    if (currentBook && currentChapters[currentChapterIdx]) {
+      applyHighlightsToDOM();
+    }
+  } catch(e) { console.warn('Study data load failed:', e); }
+}
+
+// ── API Helpers ───────────────────────────────────────────────
+async function apiFetch(path) {
+  const res = await fetch(BIBLE_CONFIG.apiBase + path, {
+    headers: { 'api-key': BIBLE_CONFIG.apiKey }
+  });
+  if (!res.ok) throw new Error(`API error ${res.status}`);
+  const json = await res.json();
+  return json.data;
+}
+
+function getBibleId(bookId) {
+  if (NT_BOOKS.includes(bookId)) return BIBLE_CONFIG.nt;
+  return null; // OT uses local LXX files
+}
+
+function getTranslationLabel(bookId) {
+  return NT_BOOKS.includes(bookId) ? 'NKJV' : 'LXX 2012';
+}
+
+// ── Book List ─────────────────────────────────────────────────
+async function loadBooks() {
+  try {
+    // OT and Deuterocanonicals come from local LXX2012 files — no API call needed
+    allBooks.ot   = OT_BOOKS.map(id => ({ id, name: LXX_NAMES[id] || id }));
+    allBooks.deut = DEUT_BOOKS.map(id => ({ id, name: LXX_NAMES[id] || id }));
+
+    // NT from API.Bible (NKJV)
+    const ntBooks = await apiFetch(`/bibles/${BIBLE_CONFIG.nt}/books`);
+    const ntMap = {};
+    ntBooks.forEach(b => { ntMap[b.id] = b; });
+    allBooks.nt = NT_BOOKS.map(id => ntMap[id]).filter(Boolean);
+
+    renderBookList(allBooks);
+  } catch(e) {
+    document.getElementById('sidebarBody').innerHTML =
+      '<div class="reader-state" style="height:auto;padding:20px;"><div class="reader-state-sub">Could not load books.<br/>Check your connection.</div></div>';
+  }
+}
+
+function renderBookList(books, filter) {
+  const body = document.getElementById('sidebarBody');
+  const q = (filter || '').toLowerCase();
+  let html = '';
+
+  function renderSection(label, items, sectionId) {
+    const filtered = q ? items.filter(b => b.name.toLowerCase().includes(q)) : items;
+    if (!filtered.length) return '';
+    let s = `<div class="book-section">`;
+    s += `<div class="book-section-label" onclick="toggleSection('${sectionId}')">
+      ${label} <span class="book-section-arrow" id="arr-${sectionId}">&#9662;</span>
+    </div>`;
+    s += `<div class="book-list" id="sec-${sectionId}">`;
+    filtered.forEach(b => {
+      const active = currentBook && currentBook.id === b.id ? ' active' : '';
+      s += `<div class="book-item${active}" onclick="selectBook('${b.id}','${b.name.replace(/'/g,"\\'")}',this)">${b.name}</div>`;
+    });
+    s += '</div></div>';
+    return s;
+  }
+
+  html += renderSection('Old Testament', books.ot, 'ot');
+  if (books.deut.length) html += renderSection('Deuterocanonical', books.deut, 'deut');
+  html += renderSection('New Testament', books.nt, 'nt');
+
+  body.innerHTML = html || '<div class="panel-empty">No books found.</div>';
+}
+
+function toggleSection(id) {
+  const list = document.getElementById('sec-' + id);
+  const arr  = document.getElementById('arr-' + id);
+  if (!list) return;
+  const label = list.previousElementSibling;
+  list.classList.toggle('hidden');
+  if (arr) arr.style.transform = list.classList.contains('hidden') ? 'rotate(-90deg)' : '';
+}
+
+// ── Book Selection ─────────────────────────────────────────────
+async function selectBook(bookId, bookName, el) {
+  document.querySelectorAll('.book-item').forEach(i => i.classList.remove('active'));
+  if (el) el.classList.add('active');
+
+  currentBook = { id: bookId, name: bookName };
+  currentBibleId = getBibleId(bookId);
+
+  showReaderLoading();
+  document.getElementById('translationBadge').textContent = getTranslationLabel(bookId);
+  document.getElementById('translationBadge').style.display = '';
+  document.getElementById('chapterNav').style.display = '';
+
+  try {
+    if (NT_BOOKS.includes(bookId)) {
+      // NT — fetch chapters from API.Bible as before
+      lxxBookData = null;
+      currentChapters = await apiFetch(`/bibles/${currentBibleId}/books/${bookId}/chapters`);
+      currentChapters = currentChapters.filter(c => !c.id.endsWith('.intro'));
+    } else {
+      // OT — load local LXX2012 JSON
+      const res = await fetch(`${LXX_PATH}${bookId}.json`);
+      if (!res.ok) throw new Error(`Local LXX file not found: ${bookId}.json`);
+      lxxBookData = await res.json();
+      // Build chapter list in same shape API.Bible uses
+      currentChapters = Object.keys(lxxBookData.chapters)
+        .map(n => parseInt(n))
+        .sort((a, b) => a - b)
+        .map(n => ({ id: `${bookId}.${n}`, number: String(n) }));
+    }
+    buildChapterSelect();
+    currentChapterIdx = 0;
+    await loadChapter(0);
+    if (window.innerWidth <= 860) closeMobileSidebar();
+  } catch(e) {
+    showReaderError('Could not load ' + bookName);
+    console.error(e);
+  }
+}
+
+function buildChapterSelect() {
+  const sel = document.getElementById('chapterSelect');
+  sel.innerHTML = currentChapters.map((c, i) =>
+    `<option value="${i}">Ch. ${c.number}</option>`
+  ).join('');
+  sel.onchange = e => loadChapter(parseInt(e.target.value));
+}
+
+async function loadChapter(idx) {
+  currentChapterIdx = idx;
+  document.getElementById('chapterSelect').value = idx;
+  document.getElementById('prevChBtn').disabled = idx === 0;
+  document.getElementById('nextChBtn').disabled = idx === currentChapters.length - 1;
+
+  const ch = currentChapters[idx];
+  const ref = `${currentBook.name} ${ch.number}`;
+  document.getElementById('readerLocation').textContent = ref;
+  document.title = `${ref} — Holy Scriptures — The Orthodox Expedition`;
+
+  showReaderLoading();
+  try {
+    if (lxxBookData) {
+      // OT — render from local JSON
+      renderLocalChapter(currentBook.id, ch.number, ref);
+      updateUrl(currentBook.id, ch.number);
+    } else {
+      // NT — fetch from API.Bible
+      const data = await apiFetch(
+        `/bibles/${currentBibleId}/chapters/${ch.id}` +
+        `?content-type=html&include-notes=false&include-titles=false` +
+        `&include-chapter-numbers=false&include-verse-numbers=true&include-verse-spans=true`
+      );
+      renderChapter(data, ref);
+      updateUrl(currentBook.id, ch.number);
+    }
+  } catch(e) {
+    showReaderError('Could not load ' + ref);
+  }
+}
+
+// ── Local LXX Renderer ────────────────────────────────────────
+// Strip USFM inline markers from verse text (footnotes, cross-refs, word attrs etc.)
+function stripUSFM(text) {
+  // Remove full inline character spans: \tag ... \tag* (e.g. \f + \fr ... \f*)
+  text = text.replace(/\\[a-z]+\d*\s[\s\S]*?\\[a-z]+\d*\*/g, '');
+  // Remove any remaining opening or closing USFM tags: \word or \word*
+  text = text.replace(/\\[a-z]+\d*\*?/g, '');
+  // Collapse multiple spaces
+  text = text.replace(/\s{2,}/g, ' ');
+  return text.trim();
+}
+
+function renderLocalChapter(bookId, chapterNum, ref) {
+  const content = document.getElementById('readerContent');
+  const verses = lxxBookData && lxxBookData.chapters[chapterNum];
+  if (!verses) {
+    content.innerHTML = `<div class="chapter-heading">${ref}</div><div class="reader-state-sub">No content available.</div>`;
+    return;
+  }
+
+  let html = `<div class="chapter-heading">${ref}</div>`;
+
+  function verseHTML(vNum, vId, text) {
+    if (!text.trim()) return '';
+    const hl      = highlights[vId] ? ` hl-${highlights[vId]}` : '';
+    const hasnote = notes[vId] ? '<span class="verse-note-dot" title="Has note"></span>' : '';
+    return `<span class="verse${hl}" data-vid="${vId}" data-vnum="${vNum}" onclick="selectVerse(this)">
+      <span class="verse-num">${vNum}</span>${text}${hasnote}
+      <span class="verse-actions">
+        <span class="hl-picker">
+          <span class="hl-dot gold" onclick="highlightVerse(event,'gold')" title="Gold"></span>
+          <span class="hl-dot blue" onclick="highlightVerse(event,'blue')" title="Blue"></span>
+          <span class="hl-dot green" onclick="highlightVerse(event,'green')" title="Green"></span>
+          <span class="hl-dot red" onclick="highlightVerse(event,'red')" title="Red"></span>
+        </span>
+        <span class="va-sep"></span>
+        <button class="va-btn" onclick="removeHighlight(event)">&#9746;</button>
+        <span class="va-sep"></span>
+        <button class="va-btn" onclick="openNoteForVerse(event)">&#9998; Note</button>
+        <span class="va-sep"></span>
+        <button class="va-btn" onclick="bookmarkChapter(event)">Save</button>
+      </span>
+    </span>`;
+  }
+
+  // Sort verses numerically, build verse IDs in BOOK.CHAPTER.VERSE format
+  const verseNums = Object.keys(verses).map(n => parseInt(n)).sort((a, b) => a - b);
+  verseNums.forEach(vNum => {
+    const vId   = `${bookId}.${chapterNum}.${vNum}`;
+    const text  = stripUSFM(verses[String(vNum)] || '');
+    html += verseHTML(String(vNum), vId, text);
+  });
+
+  content.innerHTML = html;
+  content.scrollTop = 0;
+  applyHighlightsToDOM();
+}
+
+function renderChapter(data, ref) {
+  const content = document.getElementById('readerContent');
+  const chNum   = currentChapters[currentChapterIdx].number;
+  const parser  = new DOMParser();
+  const doc     = parser.parseFromString(data.content || '', 'text/html');
+
+  let html = `<div class="chapter-heading">${ref}</div>`;
+
+  function verseHTML(vNum, vId, text) {
+    if (!text.trim()) return '';
+    const hl      = highlights[vId] ? ` hl-${highlights[vId]}` : '';
+    const hasnote = notes[vId] ? '<span class="verse-note-dot" title="Has note"></span>' : '';
+    return `<span class="verse${hl}" data-vid="${vId}" data-vnum="${vNum}" onclick="selectVerse(this)">
+      <span class="verse-num">${vNum}</span>${text}${hasnote}
+      <span class="verse-actions">
+        <span class="hl-picker">
+          <span class="hl-dot gold" onclick="highlightVerse(event,'gold')" title="Gold"></span>
+          <span class="hl-dot blue" onclick="highlightVerse(event,'blue')" title="Blue"></span>
+          <span class="hl-dot green" onclick="highlightVerse(event,'green')" title="Green"></span>
+          <span class="hl-dot red" onclick="highlightVerse(event,'red')" title="Red"></span>
+        </span>
+        <span class="va-sep"></span>
+        <button class="va-btn" onclick="removeHighlight(event)">&#9746;</button>
+        <span class="va-sep"></span>
+        <button class="va-btn" onclick="openNoteForVerse(event)">&#9998; Note</button>
+        <span class="va-sep"></span>
+        <button class="va-btn" onclick="bookmarkChapter(event)">Save</button>
+      </span>
+    </span>`;
+  }
+
+  // API.Bible structure: each verse has two sibling .verse-span elements
+  // sharing the same data-verse-id — first contains the number span (.v),
+  // second contains the actual verse text.
+  // Strategy: group all .verse-span elements by data-verse-id, then
+  // extract number from the one containing .v, text from the other.
+
+  const verseSpans = doc.querySelectorAll('.verse-span[data-verse-id]');
+  if (verseSpans.length) {
+    // Build a map: verseId -> { num, text }
+    const verseMap = new Map();
+    verseSpans.forEach(span => {
+      const vid = span.getAttribute('data-verse-id'); // e.g. "GEN.2.1"
+      if (!verseMap.has(vid)) verseMap.set(vid, { num: '', text: '' });
+      const entry = verseMap.get(vid);
+      const numEl = span.querySelector('.v,[data-number]');
+      if (numEl) {
+        entry.num = numEl.getAttribute('data-number') || numEl.textContent.trim();
+      } else {
+        // This span has the text
+        const t = span.textContent.trim();
+        if (t) entry.text += t + ' ';
+      }
+    });
+
+    verseMap.forEach((entry, vid) => {
+      if (!entry.text.trim()) return;
+      // Convert "GEN.2.1" → vNum = "1", vId = "GEN.2.1"
+      const vNum = entry.num || vid.split('.').pop();
+      html += verseHTML(vNum, vid, entry.text.trim());
+    });
+
+    content.innerHTML = html;
+    content.scrollTop = 0;
+    return;
+  }
+
+  // Fallback: render raw text content
+  const rawText = doc.body ? doc.body.innerHTML : (data.content || '');
+  html += `<div style="line-height:2;font-size:1.05rem;color:var(--text-dim);">${rawText || '<em>No content available.</em>'}</div>`;
+  content.innerHTML = html;
+  content.scrollTop = 0;
+}
+
+// ── Verse Interaction ──────────────────────────────────────────
+function selectVerse(el) {
+  if (selectedVerseId === el.dataset.vid) {
+    el.classList.remove('selected');
+    selectedVerseId = null;
+    return;
+  }
+  document.querySelectorAll('.verse.selected').forEach(v => v.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedVerseId = el.dataset.vid;
+}
+
+async function highlightVerse(e, color) {
+  e.stopPropagation();
+  const verse = e.target.closest('.verse');
+  if (!verse) return;
+  const vId = verse.dataset.vid;
+
+  // Remove old highlight classes
+  verse.classList.remove('hl-gold','hl-blue','hl-green','hl-red');
+  verse.classList.add(`hl-${color}`);
+  highlights[vId] = color;
+
+  if (!supabaseUser || !sb) return;
+  try {
+    // Upsert: delete existing then insert
+    await sb.from('bible_highlights').delete().match({ user_id: supabaseUser.id, verse_id: vId });
+    await sb.from('bible_highlights').insert([{
+      user_id: supabaseUser.id,
+      book_id: currentBook.id,
+      chapter: currentChapters[currentChapterIdx].number,
+      verse_id: vId,
+      color: color,
+    }]);
+  } catch(e2) { console.warn('Highlight save failed:', e2); }
+}
+
+async function removeHighlight(e) {
+  e.stopPropagation();
+  const verse = e.target.closest('.verse');
+  if (!verse) return;
+  const vId = verse.dataset.vid;
+  verse.classList.remove('hl-gold','hl-blue','hl-green','hl-red');
+  delete highlights[vId];
+
+  if (!supabaseUser || !sb) return;
+  try {
+    await sb.from('bible_highlights').delete().match({ user_id: supabaseUser.id, verse_id: vId });
+  } catch(e2) { console.warn('Highlight delete failed:', e2); }
+}
+
+function applyHighlightsToDOM() {
+  document.querySelectorAll('.verse[data-vid]').forEach(v => {
+    const vId = v.dataset.vid;
+    v.classList.remove('hl-gold','hl-blue','hl-green','hl-red');
+    if (highlights[vId]) v.classList.add(`hl-${highlights[vId]}`);
+    // Note dot
+    const dot = v.querySelector('.verse-note-dot');
+    if (notes[vId] && !dot) {
+      const actionsSpan = v.querySelector('.verse-actions');
+      if (actionsSpan) {
+        const nd = document.createElement('span');
+        nd.className = 'verse-note-dot';
+        nd.title = 'Has note';
+        v.insertBefore(nd, actionsSpan);
+      }
+    }
+  });
+}
+
+// ── Notes ─────────────────────────────────────────────────────
+function openNoteForVerse(e) {
+  e.stopPropagation();
+  const verse = e.target.closest('.verse');
+  if (!verse) return;
+  const vId = verse.dataset.vid;
+  const vNum = verse.dataset.vnum;
+  const ref = `${currentBook.name} ${currentChapters[currentChapterIdx].number}:${vNum}`;
+
+  pendingNoteVerseId = vId;
+  document.getElementById('noteModalRef').textContent = ref;
+  document.getElementById('noteModalTextarea').value = notes[vId] ? notes[vId].text : '';
+  document.getElementById('note-modal').classList.add('open');
+}
+
+async function saveNoteFromModal() {
+  const text = document.getElementById('noteModalTextarea').value.trim();
+  if (!text || !pendingNoteVerseId) { closeNoteModal(); return; }
+
+  notes[pendingNoteVerseId] = { text };
+
+  // Add note dot to verse
+  const verse = document.querySelector(`.verse[data-vid="${pendingNoteVerseId}"]`);
+  if (verse && !verse.querySelector('.verse-note-dot')) {
+    const actions = verse.querySelector('.verse-actions');
+    const nd = document.createElement('span');
+    nd.className = 'verse-note-dot';
+    nd.title = 'Has note';
+    if (actions) verse.insertBefore(nd, actions);
+  }
+
+  if (supabaseUser && sb) {
+    try {
+      const vId = pendingNoteVerseId;
+      const existing = notes[vId] && notes[vId].id;
+      if (existing) {
+        await sb.from('bible_notes').update({ note_text: text, updated_at: new Date().toISOString() })
+          .eq('id', existing);
+      } else {
+        const { data } = await sb.from('bible_notes').insert([{
+          user_id: supabaseUser.id,
+          book_id: currentBook.id,
+          chapter: currentChapters[currentChapterIdx].number,
+          verse_id: vId,
+          note_text: text,
+        }]).select().single();
+        if (data) notes[vId].id = data.id;
+      }
+    } catch(e2) { console.warn('Note save failed:', e2); }
+  }
+  closeNoteModal();
+  refreshNotesPanel();
+}
+
+function closeNoteModal() {
+  document.getElementById('note-modal').classList.remove('open');
+  pendingNoteVerseId = null;
+}
+
+// ── Bookmarks ─────────────────────────────────────────────────
+async function bookmarkChapter(e) {
+  e.stopPropagation();
+  if (!currentBook || !currentChapters[currentChapterIdx]) return;
+
+  const ch = currentChapters[currentChapterIdx];
+  const ref = `${currentBook.name} ${ch.number}`;
+
+  const bm = {
+    book_id: currentBook.id,
+    chapter: ch.number,
+    reference: ref,
+    label: '',
+  };
+
+  if (supabaseUser && sb) {
+    try {
+      const { data } = await sb.from('bible_bookmarks').insert([{
+        user_id: supabaseUser.id,
+        ...bm,
+      }]).select().single();
+      if (data) { bm.id = data.id; }
+    } catch(e2) { console.warn('Bookmark save failed:', e2); }
+  } else {
+    // localStorage fallback
+    const stored = JSON.parse(localStorage.getItem('oc_bible_bookmarks') || '[]');
+    bm.id = Date.now().toString();
+    stored.push(bm);
+    localStorage.setItem('oc_bible_bookmarks', JSON.stringify(stored));
+  }
+
+  bookmarks.unshift(bm);
+  refreshBookmarksPanel();
+
+  // Visual feedback
+  const verse = e.target.closest('.verse');
+  if (verse) {
+    const btn = verse.querySelector('.va-btn:last-of-type');
+    if (btn) { btn.textContent = '✓ Saved'; setTimeout(() => { btn.textContent = '⊟ Save'; }, 1500); }
+  }
+}
+
+async function deleteBookmark(id) {
+  bookmarks = bookmarks.filter(b => b.id !== id);
+  if (supabaseUser && sb) {
+    try { await sb.from('bible_bookmarks').delete().eq('id', id); } catch(e) {}
+  } else {
+    const stored = JSON.parse(localStorage.getItem('oc_bible_bookmarks') || '[]')
+      .filter(b => b.id !== id);
+    localStorage.setItem('oc_bible_bookmarks', JSON.stringify(stored));
+  }
+  refreshBookmarksPanel();
+}
+
+// ── Panels ────────────────────────────────────────────────────
+function openPanel(id) {
+  closeAllPanels(false);
+  document.getElementById(id).classList.add('open');
+  document.getElementById('panelOverlay').classList.add('open');
+}
+function closePanel(id) {
+  document.getElementById(id).classList.remove('open');
+  const anyOpen = ['notesPanel','bookmarksPanel','journalPanel'].some(p =>
+    document.getElementById(p).classList.contains('open')
+  );
+  if (!anyOpen) document.getElementById('panelOverlay').classList.remove('open');
+}
+function closeAllPanels(closeOverlay = true) {
+  ['notesPanel','bookmarksPanel','journalPanel'].forEach(p =>
+    document.getElementById(p).classList.remove('open')
+  );
+  if (closeOverlay) document.getElementById('panelOverlay').classList.remove('open');
+}
+
+function openNotesPanel() {
+  refreshNotesPanel();
+  openPanel('notesPanel');
+}
+
+function refreshNotesPanel() {
+  const body = document.getElementById('notesList');
+  const gate = document.getElementById('notesAuthGate');
+
+  if (!supabaseUser) {
+    gate.innerHTML = authGateHTML('Sign in to save notes and study annotations.');
+    body.innerHTML = '';
+    return;
+  }
+  gate.innerHTML = '';
+
+  const chapterNotes = Object.entries(notes).filter(([vid]) =>
+    currentBook && vid.startsWith(currentBook.id + '.')
+  );
+
+  if (!chapterNotes.length) {
+    body.innerHTML = '<div class="panel-empty">No notes yet.<br/>Click a verse and tap ✎ Note to begin.</div>';
+    return;
+  }
+
+  body.innerHTML = chapterNotes.map(([vid, note]) => {
+    const parts = vid.split('.');
+    const vRef = parts.length >= 3 ? `${currentBook.name} ${parts[1]}:${parts[2]}` : vid;
+    return `<div class="note-item">
+      <div class="note-item-ref">${vRef}</div>
+      <div class="note-item-text">${escapeHtml(note.text)}</div>
+      <div class="note-item-actions">
+        <button class="note-action-btn" onclick="editNote('${vid}')">Edit</button>
+        <button class="note-action-btn" onclick="deleteNote('${vid}')">Delete</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function deleteNote(vId) {
+  if (!confirm('Delete this note?')) return;
+  if (notes[vId] && notes[vId].id && sb) {
+    try { await sb.from('bible_notes').delete().eq('id', notes[vId].id); } catch(e) {}
+  }
+  delete notes[vId];
+  // Remove dot from verse
+  const verse = document.querySelector(`.verse[data-vid="${vId}"]`);
+  if (verse) { const dot = verse.querySelector('.verse-note-dot'); if (dot) dot.remove(); }
+  refreshNotesPanel();
+}
+
+function editNote(vId) {
+  pendingNoteVerseId = vId;
+  const parts = vId.split('.');
+  const ref = parts.length >= 3 ? `${currentBook.name} ${parts[1]}:${parts[2]}` : vId;
+  document.getElementById('noteModalRef').textContent = ref;
+  document.getElementById('noteModalTextarea').value = notes[vId] ? notes[vId].text : '';
+  document.getElementById('note-modal').classList.add('open');
+}
+
+function openBookmarksPanel() {
+  refreshBookmarksPanel();
+  openPanel('bookmarksPanel');
+}
+
+function refreshBookmarksPanel() {
+  const body = document.getElementById('bookmarksList');
+  const gate = document.getElementById('bookmarksAuthGate');
+
+  // Load localStorage bookmarks if not signed in
+  if (!supabaseUser) {
+    const stored = JSON.parse(localStorage.getItem('oc_bible_bookmarks') || '[]');
+    bookmarks = stored;
+  }
+
+  gate.innerHTML = supabaseUser ? '' : `<div style="margin-bottom:12px;font-size:0.8rem;color:var(--text-muted);font-style:italic;line-height:1.7;">Sign in to sync bookmarks across devices.</div>`;
+
+  if (!bookmarks.length) {
+    body.innerHTML = '<div class="panel-empty">No bookmarks yet.<br/>Click a verse and tap ⊟ Save to bookmark a chapter.</div>';
+    return;
+  }
+
+  body.innerHTML = bookmarks.map(bm =>
+    `<div class="bookmark-item" onclick="goToBookmark('${bm.book_id}','${bm.chapter}')">
+      <span class="bookmark-icon">&#9646;</span>
+      <div>
+        <div class="bookmark-ref">${escapeHtml(bm.reference)}</div>
+        ${bm.label ? `<div class="bookmark-label">${escapeHtml(bm.label)}</div>` : ''}
+      </div>
+      <button class="bookmark-delete" onclick="event.stopPropagation();deleteBookmark('${bm.id}')" title="Remove">&#x2715;</button>
+    </div>`
+  ).join('');
+}
+
+async function goToBookmark(bookId, chapterNum) {
+  closeAllPanels();
+  // Find and select book in sidebar
+  const bookItem = document.querySelector(`.book-item[onclick*="'${bookId}'"]`);
+  if (bookItem) {
+    await selectBook(bookId, bookItem.textContent.trim(), bookItem);
+    // Wait for chapters to load then navigate
+    setTimeout(() => {
+      const idx = currentChapters.findIndex(c => c.number === chapterNum);
+      if (idx >= 0) loadChapter(idx);
+    }, 800);
+  }
+}
+
+function openJournalPanel() {
+  refreshJournalPanel();
+  openPanel('journalPanel');
+}
+
+function refreshJournalPanel() {
+  const entries = JSON.parse(localStorage.getItem('oc_journal') || '[]');
+  const list = document.getElementById('journalList');
+  if (!entries.length) {
+    list.innerHTML = '<div class="panel-empty">No journal entries yet.</div>';
+    return;
+  }
+  list.innerHTML = [...entries].reverse().slice(0, 20).map(e =>
+    `<div class="journal-entry">
+      <div class="journal-entry-date">${formatDate(e.date)}</div>
+      ${e.category ? `<span class="journal-entry-cat">${escapeHtml(e.category)}</span>` : ''}
+      <div class="journal-entry-text">${escapeHtml(e.text)}</div>
+    </div>`
+  ).join('');
+}
+
+function openNewJournalEntry() {
+  document.getElementById('journalNewForm').style.display = '';
+  document.getElementById('journalTextarea').focus();
+}
+function closeJournalForm() {
+  document.getElementById('journalNewForm').style.display = 'none';
+  document.getElementById('journalTextarea').value = '';
+}
+function saveJournalEntry() {
+  const text = document.getElementById('journalTextarea').value.trim();
+  if (!text) return;
+  const entries = JSON.parse(localStorage.getItem('oc_journal') || '[]');
+  const ref = currentBook && currentChapters[currentChapterIdx]
+    ? `${currentBook.name} ${currentChapters[currentChapterIdx].number}` : '';
+  entries.push({
+    id: Date.now().toString(),
+    date: new Date().toISOString(),
+    text: ref ? `[${ref}] ${text}` : text,
+    category: 'Scripture',
+  });
+  localStorage.setItem('oc_journal', JSON.stringify(entries));
+  closeJournalForm();
+  refreshJournalPanel();
+}
+
+// ── Search ────────────────────────────────────────────────────
+function handleVerseSearch() {
+  const q = document.getElementById('verseSearch').value.trim();
+  if (!q) return;
+
+  // Normalise: accept "Gen 1 1", "Gen 1:1", or "Gen 1.1"
+  const normalised = q.replace(/[.:](?=\d)/g, ' ').replace(/\s+/g, ' ').trim();
+  const match = normalised.match(/^(.+?)\s+(\d+)(?:\s+(\d+))?$/);
+  if (!match) { alert('Enter a reference like "John 3:16", "John 3 16", or "Genesis 1"'); return; }
+
+  const bookName = match[1].toLowerCase();
+  const chNum = match[2];
+  const verseNum = match[3];
+
+  // Find book by name
+  const allBooksFlat = [...allBooks.ot, ...allBooks.deut, ...allBooks.nt];
+  const found = allBooksFlat.find(b =>
+    b.name.toLowerCase().startsWith(bookName) ||
+    b.abbreviation?.toLowerCase() === bookName
+  );
+  if (!found) { alert('Book not found: ' + match[1]); return; }
+
+  const bookItem = document.querySelector(`.book-item[onclick*="'${found.id}'"]`);
+  selectBook(found.id, found.name, bookItem).then(() => {
+    setTimeout(() => {
+      const idx = currentChapters.findIndex(c => c.number === chNum);
+      if (idx >= 0) {
+        loadChapter(idx).then(() => {
+          if (verseNum) {
+            setTimeout(() => {
+              const vEl = document.querySelector(`.verse[data-vnum="${verseNum}"]`);
+              if (vEl) { vEl.scrollIntoView({ behavior:'smooth', block:'center' }); selectVerse(vEl); }
+            }, 300);
+          }
+        });
+      }
+    }, 500);
+  });
+}
+
+// ── Sidebar Toggle ────────────────────────────────────────────
+function toggleSidebar() {
+  const sb = document.getElementById('sidebar');
+  if (window.innerWidth <= 860) {
+    sb.classList.toggle('mobile-open');
+  } else {
+    sb.classList.toggle('collapsed');
+  }
+}
+function closeMobileSidebar() {
+  document.getElementById('sidebar').classList.remove('mobile-open');
+}
+
+// ── Chapter Navigation ─────────────────────────────────────────
+function prevChapter() {
+  if (currentChapterIdx > 0) loadChapter(currentChapterIdx - 1);
+}
+function nextChapter() {
+  if (currentChapterIdx < currentChapters.length - 1) loadChapter(currentChapterIdx + 1);
+}
+
+// ── URL Params ────────────────────────────────────────────────
+function updateUrl(bookId, chNum) {
+  const url = new URL(window.location);
+  url.searchParams.set('book', bookId);
+  url.searchParams.set('chapter', chNum);
+  history.replaceState({}, '', url);
+}
+
+function loadFromUrl() {
+  const params  = new URLSearchParams(window.location.search);
+  const bookId  = params.get('book');
+  const chNum   = params.get('chapter');
+  const verseNum= params.get('verse');
+  const source  = params.get('source');
+  const session = params.get('session');
+
+  // ── Expedition Mode ──────────────────────────────────
+  if (source === 'expedition') {
+    document.body.classList.add('expedition-mode');
+
+    // Build banner reference from URL or reading reference
+    const ref = bookId && chNum ? `${getBookName(bookId)} ${chNum}${verseNum ? ':'+verseNum : ''}` : 'Holy Scriptures';
+    const stampEl  = document.getElementById('scrollStampRef');
+    const bannerEl = document.getElementById('expeditionBannerRef');
+    if (stampEl)  stampEl.textContent  = ref;
+    if (bannerEl) bannerEl.textContent = ref;
+
+    // Auto-collapse sidebar for immersive reading
+    const sidebar = document.getElementById('sidebar');
+    if (sidebar) sidebar.classList.add('collapsed');
+
+    // Play scroll animation — remove overlay after animation completes
+    setTimeout(() => {
+      const overlay = document.getElementById('scroll-unfurl');
+      if (overlay) {
+        overlay.style.transition = 'opacity 0.3s ease';
+        overlay.style.opacity = '0';
+        setTimeout(() => { overlay.style.display = 'none'; }, 300);
+      }
+    }, 1600);
+  }
+
+  if (!bookId) return;
+
+  // ── Navigate to Book / Chapter / Verse ───────────────
+  const waitForBooks = setInterval(() => {
+    const allFlat = [...allBooks.ot, ...allBooks.deut, ...allBooks.nt];
+    if (!allFlat.length) return;
+    clearInterval(waitForBooks);
+    const found = allFlat.find(b => b.id === bookId);
+    if (!found) return;
+    const bookItem = document.querySelector(`.book-item[onclick*="'${bookId}'"]`);
+    selectBook(bookId, found.name, bookItem).then(() => {
+      if (chNum) {
+        setTimeout(() => {
+          const idx = currentChapters.findIndex(c => c.number === chNum);
+          if (idx >= 0) {
+            loadChapter(idx).then ? loadChapter(idx).then(() => {
+              // Scroll to and highlight target verse after chapter loads
+              if (verseNum) {
+                setTimeout(() => scrollToVerse(verseNum), 600);
+              }
+            }) : (() => {
+              // loadChapter may not return a promise — use timeout fallback
+              if (verseNum) setTimeout(() => scrollToVerse(verseNum), 1000);
+            })();
+          }
+        }, 400);
+      }
+    });
+  }, 200);
+}
+
+// ── Scroll to and highlight a specific verse ──────────
+function scrollToVerse(verseNum) {
+  // Verses are rendered with data-verse or id attributes
+  // Try multiple selector strategies
+  const selectors = [
+    `[data-verse="${verseNum}"]`,
+    `.verse-num[data-n="${verseNum}"]`,
+    `#v${verseNum}`,
+    `.verse:nth-child(${verseNum})`
+  ];
+
+  let target = null;
+  for (const sel of selectors) {
+    target = document.querySelector(sel);
+    if (target) break;
+  }
+
+  // If we found a verse number element, get its parent verse
+  if (target && target.classList.contains('verse-num')) {
+    target = target.closest('.verse') || target;
+  }
+
+  if (target) {
+    // Add expedition highlight class
+    target.classList.add('expedition-target');
+    // Scroll into view
+    target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  } else {
+    // Fallback — search by text content of verse numbers
+    const verseNums = document.querySelectorAll('.verse-num');
+    verseNums.forEach(el => {
+      const n = el.textContent.replace(/\D/g, '').trim();
+      if (n === String(verseNum)) {
+        const verse = el.closest('.verse') || el;
+        verse.classList.add('expedition-target');
+        verse.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    });
+  }
+}
+
+// ── Helper: get display name for a book ID ────────────
+function getBookName(bookId) {
+  const names = {
+    GEN:'Genesis',EXO:'Exodus',LEV:'Leviticus',NUM:'Numbers',DEU:'Deuteronomy',
+    JOS:'Joshua',JDG:'Judges',RUT:'Ruth','1SA':'1 Samuel','2SA':'2 Samuel',
+    '1KI':'1 Kings','2KI':'2 Kings','1CH':'1 Chronicles','2CH':'2 Chronicles',
+    EZR:'Ezra',NEH:'Nehemiah',EST:'Esther',JOB:'Job',PSA:'Psalms',PRO:'Proverbs',
+    ECC:'Ecclesiastes',SNG:'Song of Songs',ISA:'Isaiah',JER:'Jeremiah',
+    LAM:'Lamentations',EZK:'Ezekiel',DAN:'Daniel',HOS:'Hosea',JOL:'Joel',
+    AMO:'Amos',OBA:'Obadiah',JON:'Jonah',MIC:'Micah',NAM:'Nahum',HAB:'Habakkuk',
+    ZEP:'Zephaniah',HAG:'Haggai',ZEC:'Zechariah',MAL:'Malachi',
+    TOB:'Tobit',JDT:'Judith',WIS:'Wisdom',SIR:'Sirach',BAR:'Baruch',
+    '1MA':'1 Maccabees','2MA':'2 Maccabees','3MA':'3 Maccabees','4MA':'4 Maccabees',
+    '1ES':'1 Esdras',MAN:'Prayer of Manasseh',
+    MAT:'Matthew',MRK:'Mark',LUK:'Luke',JHN:'John',ACT:'Acts',
+    ROM:'Romans','1CO':'1 Corinthians','2CO':'2 Corinthians',GAL:'Galatians',
+    EPH:'Ephesians',PHP:'Philippians',COL:'Colossians','1TH':'1 Thessalonians',
+    '2TH':'2 Thessalonians','1TI':'1 Timothy','2TI':'2 Timothy',TIT:'Titus',
+    PHM:'Philemon',HEB:'Hebrews',JAS:'James','1PE':'1 Peter','2PE':'2 Peter',
+    '1JO':'1 John','2JO':'2 John','3JO':'3 John',JUD:'Jude',REV:'Revelation'
+  };
+  return names[bookId] || bookId;
+}
+
+// ── Utility ───────────────────────────────────────────────────
+function showReaderLoading() {
+  document.getElementById('readerContent').innerHTML =
+    '<div class="reader-state"><div class="reader-state-sub" style="font-style:normal;letter-spacing:0.06em;">Loading…</div></div>';
+}
+function showReaderError(msg) {
+  document.getElementById('readerContent').innerHTML =
+    `<div class="reader-state"><div class="reader-state-cross">&#9766;</div><div class="reader-state-sub">${msg}</div></div>`;
+}
+function authGateHTML(msg) {
+  return `<div class="auth-gate"><div class="auth-gate-text">${msg}</div><a href="account.html" class="auth-gate-btn">Sign In</a></div>`;
+}
+function escapeHtml(s) {
+  return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function formatDate(iso) {
+  try { return new Date(iso).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}); }
+  catch(e) { return iso; }
+}
+
+// ── Nav ────────────────────────────────────────────────────────
+var drawerOpen = false;
+function toggleDrawer(){drawerOpen=!drawerOpen;document.getElementById('navDrawer').classList.toggle('open',drawerOpen);document.getElementById('hamburger').classList.toggle('open',drawerOpen);}
+// Drawer removed — Expedition uses bottom nav
+
+// ── Theme ─────────────────────────────────────────────────────
+function toggleTheme(){
+  var t = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+  document.documentElement.setAttribute('data-theme', t);
+  localStorage.setItem('oc_theme', t);
+}
+
+// ── Book search filter ────────────────────────────────────────
+document.getElementById('bookSearch').addEventListener('input', function() {
+  renderBookList(allBooks, this.value);
+});
+
+// ── Toolbar buttons ───────────────────────────────────────────
+document.getElementById('sidebarToggle').addEventListener('click', toggleSidebar);
+document.getElementById('prevChBtn').addEventListener('click', prevChapter);
+document.getElementById('nextChBtn').addEventListener('click', nextChapter);
+document.getElementById('notesBtn').addEventListener('click', openNotesPanel);
+document.getElementById('bookmarksBtn').addEventListener('click', openBookmarksPanel);
+document.getElementById('journalBtn').addEventListener('click', openJournalPanel);
+document.getElementById('verseSearchBtn').addEventListener('click', handleVerseSearch);
+document.getElementById('verseSearch').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') handleVerseSearch();
+});
+
+// ── LXX note dismiss ─────────────────────────────────────────
+document.getElementById('lxxNoteClose').addEventListener('click', function() {
+  document.getElementById('lxxNote').classList.add('hidden');
+  localStorage.setItem('oc_lxx_note_dismissed', '1');
+});
+if (localStorage.getItem('oc_lxx_note_dismissed')) {
+  document.getElementById('lxxNote').classList.add('hidden');
+}
+
+// ── Keyboard shortcuts ────────────────────────────────────────
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') { closeNoteModal(); closeAllPanels(); }
+  if (e.key === 'ArrowRight' && e.altKey) nextChapter();
+  if (e.key === 'ArrowLeft'  && e.altKey) prevChapter();
+});
+
+// Close note modal on outside click
+document.getElementById('note-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeNoteModal();
+});
+
+// ── Back to top ───────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', function() {
+  var btn = document.getElementById('backToTop');
+  var content = document.getElementById('readerContent');
+  if (btn && content) {
+    content.addEventListener('scroll', function() {
+      btn.classList.toggle('visible', content.scrollTop > 400);
+    }, { passive: true });
+    btn.onclick = function() { content.scrollTop = 0; };
+  }
+});
+
+// ── Init ──────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', function() {
+  initSupabase();
+  loadBooks().then(() => {
+    loadFromUrl();
+  });
+});
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="auth-nav.js"></script>
+<!-- Cloudflare Web Analytics --><script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "c60c8b59423c45a8a4773eec3a8d5b6e"}'></script><!-- End Cloudflare Web Analytics -->
+<script src="/analytics-tracker.js"></script>
+</body>
+</html>

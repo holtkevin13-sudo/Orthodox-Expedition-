@@ -803,13 +803,15 @@ async function loadAll(){
     sb.from('sessions').select('*').order('topic_id').order('order_index'),
     sb.from('missions').select('*').order('type').order('created_at'),
     sb.from('prizes').select('*').order('tier').order('created_at'),
-    sb.from('profiles').select('*').eq('role','explorer').eq('family_id', prof.family_id).limit(1).single(),
+    adminProfile.family_id
+      ? sb.from('profiles').select('*').eq('role','explorer').eq('family_id', adminProfile.family_id).limit(1).single()
+      : Promise.resolve({ data: null }),
   ]);
   allTopics   = topicsRes.data   || [];
   allSessions = sessionsRes.data || [];
   allMissions = missionsRes.data || [];
   allPrizes   = prizesRes.data   || [];
-  explorerProfile = explorerRes.data;
+  explorerProfile = explorerRes.data || null;
   await loadPending();
   await loadActivityLog();
   renderDashboard();

@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Liturgy Sequence — Orthodox Expedition</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="game-utils.js"></script>
+<style>
+:root{
+  --gold:#c9922a;--gold-light:#f0c96e;--gold-bright:#ffd700;
+  --parchment:#f4e8c1;
+  --burgundy:#6b1a1a;--byzantine:#2c1654;--byzantine-light:#4a2a7a;
+  --green:#16a34a;--green-light:#22c55e;
+  --bg:#0e0800;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{min-height:100%;overflow-x:hidden;}
+body{
+  font-family:'Crimson Text',serif;
+  background:var(--bg);
+  background-image:
+    radial-gradient(ellipse at 50% 0%,rgba(107,26,26,0.5) 0%,transparent 55%),
+    radial-gradient(ellipse at 100% 100%,rgba(44,22,84,0.35) 0%,transparent 50%);
+  min-height:100vh;padding:1.25rem 1rem 2rem;
+}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(201,146,42,0.02) 1px,transparent 1px),linear-gradient(90deg,rgba(201,146,42,0.02) 1px,transparent 1px);background-size:44px 44px;pointer-events:none;}
+#coin-rain{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999;overflow:hidden;}
+@keyframes coinFall{0%{transform:translateY(0) rotate(0deg);opacity:1;}85%{opacity:1;}100%{transform:translateY(110vh) rotate(540deg) scale(0.4);opacity:0;}}
+
+.back-btn{background:none;border:1px solid rgba(201,146,42,0.2);border-radius:8px;padding:0.4rem 0.875rem;font-family:'Cinzel',serif;font-size:0.65rem;color:rgba(201,146,42,0.45);cursor:pointer;transition:all 0.2s;min-height:40px;margin-bottom:1.25rem;display:inline-block;}
+
+.screen{display:none;max-width:440px;margin:0 auto;text-align:center;}
+.screen.show{display:block;}
+
+/* START */
+.game-icon{font-size:3rem;margin-bottom:0.5rem;}
+.game-title{font-family:'Cinzel Decorative',serif;font-size:clamp(1.1rem,4vw,1.4rem);color:var(--gold-light);text-shadow:0 0 20px rgba(201,146,42,0.4);margin-bottom:0.25rem;}
+.game-sub{font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.2em;color:rgba(201,146,42,0.4);text-transform:uppercase;margin-bottom:1rem;}
+.game-desc{font-size:0.85rem;color:rgba(244,232,193,0.4);font-style:italic;line-height:1.6;margin-bottom:1.5rem;}
+.coin-info{display:inline-flex;align-items:center;gap:0.5rem;background:rgba(201,146,42,0.08);border:1px solid rgba(201,146,42,0.2);border-radius:20px;padding:0.4rem 1rem;font-family:'Cinzel',serif;font-size:0.7rem;color:rgba(201,146,42,0.6);margin-bottom:1.5rem;}
+.start-btn{padding:0.9rem 2.5rem;min-height:52px;background:linear-gradient(135deg,var(--gold),var(--gold-bright));border:none;border-radius:13px;font-family:'Cinzel',serif;font-size:0.85rem;letter-spacing:0.1em;color:var(--bg);font-weight:700;cursor:pointer;}
+
+/* GAME */
+.game-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;}
+.moves-display{font-family:'Cinzel',serif;font-size:0.7rem;color:rgba(201,146,42,0.4);}
+.moves-val{color:var(--gold-light);font-weight:700;}
+.check-btn{padding:0.5rem 1.25rem;min-height:40px;background:linear-gradient(135deg,var(--byzantine),var(--byzantine-light));border:none;border-radius:8px;font-family:'Cinzel',serif;font-size:0.72rem;color:rgba(244,232,193,0.9);cursor:pointer;}
+
+.instruction{font-family:'Cinzel',serif;font-size:0.65rem;letter-spacing:0.12em;color:rgba(201,146,42,0.4);text-transform:uppercase;text-align:center;margin-bottom:0.875rem;}
+
+/* Drag list */
+.drag-list{display:flex;flex-direction:column;gap:0.4rem;margin-bottom:1rem;}
+.drag-item{
+  display:flex;align-items:center;gap:0.625rem;
+  background:rgba(244,232,193,0.04);
+  border:1.5px solid rgba(201,146,42,0.2);
+  border-radius:10px;padding:0.75rem 0.875rem;
+  cursor:grab;user-select:none;
+  transition:all 0.2s;
+}
+.drag-item:active{cursor:grabbing;}
+.drag-item.dragging{opacity:0.5;border-style:dashed;}
+.drag-item.drag-over{border-color:rgba(201,146,42,0.6);background:rgba(201,146,42,0.08);}
+.drag-item.correct{background:rgba(22,163,74,0.08);border-color:rgba(22,163,74,0.4);}
+.drag-item.wrong{background:rgba(220,38,38,0.08);border-color:rgba(220,38,38,0.35);}
+.drag-handle{color:rgba(201,146,42,0.3);font-size:1rem;flex-shrink:0;}
+.drag-num{font-family:'Cinzel',serif;font-size:0.65rem;color:rgba(201,146,42,0.35);flex-shrink:0;width:20px;}
+.drag-text{font-family:'Cinzel',serif;font-size:0.78rem;color:rgba(244,232,193,0.7);flex:1;line-height:1.3;text-align:left;}
+.drag-status{font-size:0.9rem;flex-shrink:0;opacity:0;}
+.drag-item.correct .drag-status,.drag-item.wrong .drag-status{opacity:1;}
+
+/* END */
+.result-ring{width:110px;height:110px;border-radius:50%;background:linear-gradient(135deg,rgba(44,22,84,0.9),rgba(107,26,26,0.9));border:3px solid var(--gold);display:flex;flex-direction:column;align-items:center;justify-content:center;margin:0 auto 1rem;box-shadow:0 0 30px rgba(201,146,42,0.25);}
+.result-pct{font-family:'Cinzel Decorative',serif;font-size:1.8rem;color:var(--gold-bright);line-height:1;}
+.result-lbl{font-family:'Cinzel',serif;font-size:0.55rem;color:rgba(201,146,42,0.5);letter-spacing:0.12em;}
+.result-title{font-family:'Cinzel Decorative',serif;font-size:1.1rem;color:var(--gold-light);margin-bottom:0.35rem;}
+.result-msg{font-size:0.82rem;color:rgba(244,232,193,0.4);font-style:italic;margin-bottom:0.5rem;line-height:1.5;}
+.coin-award{font-family:'Cinzel',serif;font-size:0.85rem;color:var(--gold-bright);margin-bottom:1.25rem;text-shadow:0 0 10px rgba(255,215,0,0.3);}
+.end-btns{display:flex;gap:0.5rem;justify-content:center;}
+.play-again-btn{padding:0.75rem 1.75rem;min-height:48px;background:linear-gradient(135deg,var(--gold),var(--gold-bright));border:none;border-radius:11px;font-family:'Cinzel',serif;font-size:0.78rem;color:var(--bg);font-weight:700;cursor:pointer;}
+.back-games-btn{padding:0.75rem 1.25rem;min-height:48px;background:transparent;border:1px solid rgba(201,146,42,0.25);border-radius:11px;font-family:'Cinzel',serif;font-size:0.72rem;color:rgba(201,146,42,0.5);cursor:pointer;}
+</style>
+</head>
+<body>
+<div id="coin-rain"></div>
+<button class="back-btn" onclick="window.location.href='../games.html'">← Games</button>
+
+<!-- START -->
+<div class="screen show" id="screen-start">
+  <div class="game-icon">🕯️</div>
+  <div class="game-title">Liturgy Sequence</div>
+  <div class="game-sub">Session Game · Topic 5</div>
+  <div class="game-desc">The Divine Liturgy has a beautiful order. Can you put all the parts in the right sequence from beginning to end?</div>
+  <div class="coin-info">⚔ 10 coins for playing · 20 for winning</div>
+  <button class="start-btn" onclick="startGame()">Begin the Liturgy ›</button>
+</div>
+
+<!-- GAME -->
+<div class="screen" id="screen-game" style="max-width:440px;margin:0 auto;">
+  <div class="game-header">
+    <div class="moves-display">Moves: <span class="moves-val" id="moves-val">0</span></div>
+    <button class="check-btn" onclick="checkOrder()">Check Order ✦</button>
+  </div>
+  <div class="instruction">Drag the cards into the correct order ↕</div>
+  <div class="drag-list" id="drag-list"></div>
+  <p style="font-size:0.72rem;color:rgba(201,146,42,0.3);font-style:italic;text-align:center;">Tip: Hold and drag each card to rearrange</p>
+</div>
+
+<!-- END -->
+<div class="screen" id="screen-end" style="text-align:center;max-width:380px;margin:0 auto;">
+  <div class="result-ring">
+    <div class="result-pct" id="result-pct">0%</div>
+    <div class="result-lbl">correct</div>
+  </div>
+  <div class="result-title" id="result-title">Good try!</div>
+  <div class="result-msg" id="result-msg"></div>
+  <div class="coin-award" id="coin-award"></div>
+  <div class="end-btns">
+    <button class="play-again-btn" onclick="startGame()">Try Again</button>
+    <button class="back-games-btn" onclick="window.location.href='../games.html'">Games</button>
+  </div>
+</div>
+
+<script>
+const GAME_ID = 'liturgy-sequence';
+
+// The correct order
+const CORRECT_ORDER = [
+  {id:'prothesis',     text:'Prothesis — Preparation of the bread and wine'},
+  {id:'kingdom',      text:'Blessed is the Kingdom — Opening proclamation'},
+  {id:'litany',       text:'The Great Litany — Lord have mercy'},
+  {id:'entrance',     text:'The Small Entrance — Procession with the Gospel'},
+  {id:'epistle',      text:'The Epistle — Apostolic reading'},
+  {id:'gospel',       text:'The Gospel — Sacramental proclamation'},
+  {id:'great-ent',    text:'The Great Entrance — Offertory procession'},
+  {id:'creed',        text:'The Creed — Symbol of Faith'},
+  {id:'anaphora',     text:'The Anaphora — Eucharistic Canon'},
+  {id:'epiklesis',    text:'The Epiklesis — Calling down the Holy Spirit'},
+  {id:'our-father',   text:'The Our Father — Children of God pray'},
+  {id:'communion',    text:'Holy Communion — Holy Things for the Holy'},
+  {id:'thanksgiving', text:'Thanksgiving — Let our mouths be filled'},
+  {id:'dismissal',    text:'The Dismissal — Go forth in peace'},
+];
+
+let currentOrder = [];
+let moves = 0;
+let dragSrc = null;
+
+function shuffle(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function showScreen(id){['screen-start','screen-game','screen-end'].forEach(s=>document.getElementById(s).classList.toggle('show',s===id));}
+
+function startGame(){
+  moves=0;
+  currentOrder = shuffle([...CORRECT_ORDER]);
+  document.getElementById('moves-val').textContent='0';
+  renderList();
+  showScreen('screen-game');
+}
+
+function renderList(){
+  const list = document.getElementById('drag-list');
+  list.innerHTML='';
+  currentOrder.forEach((item,idx)=>{
+    const div=document.createElement('div');
+    div.className='drag-item';
+    div.draggable=true;
+    div.dataset.id=item.id;
+    div.dataset.idx=idx;
+    div.innerHTML=`
+      <span class="drag-handle">☰</span>
+      <span class="drag-num">${idx+1}</span>
+      <span class="drag-text">${item.text}</span>
+      <span class="drag-status"></span>`;
+
+    // Touch drag
+    div.addEventListener('touchstart',onTouchStart,{passive:true});
+    div.addEventListener('touchmove',onTouchMove,{passive:false});
+    div.addEventListener('touchend',onTouchEnd);
+
+    // Mouse drag
+    div.addEventListener('dragstart',onDragStart);
+    div.addEventListener('dragover',onDragOver);
+    div.addEventListener('drop',onDrop);
+    div.addEventListener('dragend',onDragEnd);
+
+    list.appendChild(div);
+  });
+}
+
+// ── MOUSE DRAG ────────────────────────────────────────────────
+function onDragStart(e){
+  dragSrc=this;
+  this.classList.add('dragging');
+  e.dataTransfer.effectAllowed='move';
+}
+function onDragOver(e){
+  e.preventDefault();
+  e.dataTransfer.dropEffect='move';
+  this.classList.add('drag-over');
+}
+function onDrop(e){
+  e.stopPropagation();
+  if(dragSrc!==this){
+    const srcIdx=parseInt(dragSrc.dataset.idx);
+    const tgtIdx=parseInt(this.dataset.idx);
+    const tmp=currentOrder[srcIdx];
+    currentOrder[srcIdx]=currentOrder[tgtIdx];
+    currentOrder[tgtIdx]=tmp;
+    moves++;
+    document.getElementById('moves-val').textContent=moves;
+    renderList();
+  }
+}
+function onDragEnd(){
+  document.querySelectorAll('.drag-item').forEach(d=>{d.classList.remove('dragging','drag-over');});
+}
+
+// ── TOUCH DRAG ────────────────────────────────────────────────
+let touchItem=null, touchStartY=0, touchClone=null;
+function onTouchStart(e){
+  touchItem=this;
+  touchStartY=e.touches[0].clientY;
+  touchItem.classList.add('dragging');
+}
+function onTouchMove(e){
+  e.preventDefault();
+  const touch=e.touches[0];
+  if(!touchClone){
+    touchClone=touchItem.cloneNode(true);
+    touchClone.style.cssText=`position:fixed;opacity:0.8;pointer-events:none;z-index:1000;width:${touchItem.offsetWidth}px;left:${touchItem.getBoundingClientRect().left}px;`;
+    document.body.appendChild(touchClone);
+  }
+  touchClone.style.top=(touch.clientY-30)+'px';
+  // Find element under touch
+  touchClone.style.display='none';
+  const el=document.elementFromPoint(touch.clientX,touch.clientY);
+  touchClone.style.display='';
+  const target=el?.closest('.drag-item');
+  document.querySelectorAll('.drag-item').forEach(d=>d.classList.remove('drag-over'));
+  if(target&&target!==touchItem) target.classList.add('drag-over');
+}
+function onTouchEnd(e){
+  if(touchClone){touchClone.remove();touchClone=null;}
+  touchItem?.classList.remove('dragging');
+  const target=document.querySelector('.drag-item.drag-over');
+  if(target&&target!==touchItem){
+    const srcIdx=parseInt(touchItem.dataset.idx);
+    const tgtIdx=parseInt(target.dataset.idx);
+    const tmp=currentOrder[srcIdx];
+    currentOrder[srcIdx]=currentOrder[tgtIdx];
+    currentOrder[tgtIdx]=tmp;
+    moves++;
+    document.getElementById('moves-val').textContent=moves;
+    renderList();
+  }
+  document.querySelectorAll('.drag-item').forEach(d=>d.classList.remove('drag-over'));
+  touchItem=null;
+}
+
+// ── CHECK ORDER ───────────────────────────────────────────────
+async function checkOrder(){
+  const items=document.querySelectorAll('.drag-item');
+  let correct=0;
+  items.forEach((item,idx)=>{
+    const isCorrect=item.dataset.id===CORRECT_ORDER[idx].id;
+    item.classList.remove('correct','wrong');
+    item.classList.add(isCorrect?'correct':'wrong');
+    const status=item.querySelector('.drag-status');
+    status.textContent=isCorrect?'✦':'✗';
+    if(isCorrect) correct++;
+  });
+
+  const pct=Math.round((correct/CORRECT_ORDER.length)*100);
+  const won=pct>=80;
+
+  setTimeout(async()=>{
+    showScreen('screen-end');
+    document.getElementById('result-pct').textContent=pct+'%';
+
+    let title='',msg='';
+    if(pct===100){title='Perfect!';msg='The Divine Liturgy flows through you. The angels chant with you!';}
+    else if(pct>=80){title='Excellent!';msg=`${correct} of ${CORRECT_ORDER.length} correct. You know the Liturgy well!`;}
+    else if(pct>=50){title='Good Try!';msg=`${correct} of ${CORRECT_ORDER.length} correct. Keep attending Liturgy and it will come!`;}
+    else{title='Keep Practicing!';msg=`${correct} of ${CORRECT_ORDER.length} correct. Study the Liturgy sessions and try again.`;}
+
+    document.getElementById('result-title').textContent=title;
+    document.getElementById('result-msg').textContent=msg;
+
+    // Award coins
+    const result = await GameUtils.awardCoins(GAME_ID, won, 'Liturgy Sequence');
+    if(result.alreadyPlayed){
+      document.getElementById('coin-award').textContent='Already played today — come back tomorrow for more coins!';
+    } else if(result.awarded>0){
+      document.getElementById('coin-award').textContent=`+${result.awarded} coins earned!${won?' (Win bonus included!)':''}`;
+      GameUtils.coinRain('coin-rain', result.awarded);
+    }
+  }, 1200);
+}
+
+// ── INIT ──────────────────────────────────────────────────────
+(async()=>{
+  const prof = await GameUtils.init();
+  if(!prof) return;
+})();
+</script>
+</body>
+</html>

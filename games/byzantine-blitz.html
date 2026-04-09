@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Byzantine Blitz — Orthodox Expedition</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{
+  --gold:#c9922a;--gold-light:#f0c96e;--gold-bright:#ffd700;
+  --parchment:#f4e8c1;
+  --burgundy:#6b1a1a;--byzantine:#2c1654;
+  --green:#16a34a;--green-light:#22c55e;
+  --red:#dc2626;--red-light:#ef4444;
+  --bg:#0e0800;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overflow:hidden;}
+body{
+  font-family:'Crimson Text',serif;
+  background:var(--bg);
+  background-image:
+    radial-gradient(ellipse at 50% 0%,rgba(107,26,26,0.5) 0%,transparent 55%),
+    radial-gradient(ellipse at 100% 100%,rgba(44,22,84,0.35) 0%,transparent 50%);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  min-height:100vh;padding:1.25rem;
+}
+body::before{
+  content:'';position:fixed;inset:0;
+  background-image:
+    linear-gradient(rgba(201,146,42,0.02) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(201,146,42,0.02) 1px,transparent 1px);
+  background-size:44px 44px;pointer-events:none;
+}
+#coin-rain{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999;overflow:hidden;}
+@keyframes coinFall{0%{transform:translateY(0) rotate(0deg);opacity:1;}85%{opacity:1;}100%{transform:translateY(110vh) rotate(540deg) scale(0.4);opacity:0;}}
+
+/* ── BACK BUTTON ─────────────────────────────────────────────── */
+.back-btn{
+  position:fixed;top:1rem;left:1rem;
+  background:none;border:1px solid rgba(201,146,42,0.2);border-radius:8px;
+  padding:0.4rem 0.875rem;font-family:'Cinzel',serif;font-size:0.65rem;
+  color:rgba(201,146,42,0.45);cursor:pointer;transition:all 0.2s;
+  min-height:40px;z-index:10;
+}
+.back-btn:hover{border-color:rgba(201,146,42,0.45);color:rgba(201,146,42,0.7);}
+
+/* ── SCREENS ─────────────────────────────────────────────────── */
+.screen{display:none;width:100%;max-width:420px;text-align:center;}
+.screen.show{display:flex;flex-direction:column;align-items:center;}
+
+/* ── START SCREEN ────────────────────────────────────────────── */
+.game-icon{font-size:3.5rem;margin-bottom:0.75rem;}
+.game-title{font-family:'Cinzel Decorative',serif;font-size:clamp(1.3rem,5vw,1.75rem);color:var(--gold-light);text-shadow:0 0 20px rgba(201,146,42,0.4);margin-bottom:0.35rem;}
+.game-sub{font-family:'Cinzel',serif;font-size:0.65rem;letter-spacing:0.2em;color:rgba(201,146,42,0.45);text-transform:uppercase;margin-bottom:1.25rem;}
+.game-desc{font-size:0.88rem;color:rgba(244,232,193,0.45);font-style:italic;line-height:1.6;margin-bottom:1.75rem;max-width:320px;}
+.start-btn{
+  padding:1rem 2.5rem;min-height:56px;
+  background:linear-gradient(135deg,var(--gold) 0%,var(--gold-bright) 100%);
+  border:none;border-radius:14px;
+  font-family:'Cinzel',serif;font-size:0.9rem;letter-spacing:0.1em;
+  color:var(--bg);font-weight:700;cursor:pointer;transition:all 0.2s;
+  box-shadow:0 4px 20px rgba(255,215,0,0.25);
+}
+.start-btn:active{transform:scale(0.97);}
+.high-score{font-family:'Cinzel',serif;font-size:0.7rem;color:rgba(201,146,42,0.35);margin-top:1rem;letter-spacing:0.1em;}
+
+/* ── GAME SCREEN ─────────────────────────────────────────────── */
+.timer-row{display:flex;align-items:center;justify-content:space-between;width:100%;margin-bottom:1rem;}
+.timer-num{font-family:'Cinzel Decorative',serif;font-size:2rem;color:var(--gold-bright);text-shadow:0 0 12px rgba(255,215,0,0.4);transition:color 0.3s;}
+.timer-num.urgent{color:#ef4444;text-shadow:0 0 12px rgba(239,68,68,0.5);}
+.score-display{font-family:'Cinzel',serif;font-size:0.78rem;color:rgba(201,146,42,0.6);text-align:right;}
+.score-val{font-family:'Cinzel Decorative',serif;font-size:1.4rem;color:var(--gold-bright);display:block;line-height:1;}
+.timer-bar-wrap{width:100%;height:6px;background:rgba(255,255,255,0.06);border-radius:3px;overflow:hidden;margin-bottom:1.5rem;}
+.timer-bar{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--gold),var(--gold-bright));transition:width 1s linear,background 0.3s;}
+.timer-bar.urgent{background:linear-gradient(90deg,var(--red),var(--red-light));}
+
+.question-card{
+  width:100%;
+  background:linear-gradient(160deg,rgba(44,22,84,0.95) 0%,rgba(18,8,40,0.98) 50%,rgba(107,26,26,0.95) 100%);
+  border:1px solid rgba(201,146,42,0.3);border-radius:18px;
+  padding:1.75rem 1.25rem 1.5rem;
+  margin-bottom:1.25rem;min-height:160px;
+  display:flex;align-items:center;justify-content:center;
+  transition:all 0.25s;position:relative;overflow:hidden;
+}
+.question-card.correct{
+  border-color:rgba(22,163,74,0.7);
+  background:linear-gradient(160deg,rgba(22,163,74,0.15),rgba(44,22,84,0.95));
+  animation:flashCorrect 0.4s ease-out;
+}
+.question-card.wrong{
+  border-color:rgba(220,38,38,0.7);
+  background:linear-gradient(160deg,rgba(220,38,38,0.15),rgba(107,26,26,0.95));
+  animation:flashWrong 0.4s ease-out;
+}
+@keyframes flashCorrect{0%{box-shadow:0 0 0 0 rgba(22,163,74,0);}50%{box-shadow:0 0 24px 4px rgba(22,163,74,0.4);}100%{box-shadow:none;}}
+@keyframes flashWrong{0%{transform:translateX(0);}20%{transform:translateX(-8px);}40%{transform:translateX(8px);}60%{transform:translateX(-5px);}80%{transform:translateX(5px);}100%{transform:translateX(0);}}
+
+.question-num{position:absolute;top:0.75rem;left:0.875rem;font-family:'Cinzel',serif;font-size:0.6rem;color:rgba(201,146,42,0.3);letter-spacing:0.1em;}
+.question-text{font-family:'Cinzel',serif;font-size:clamp(0.9rem,3vw,1.1rem);color:var(--parchment);line-height:1.5;text-align:center;}
+.feedback-icon{position:absolute;top:0.75rem;right:0.875rem;font-size:1.3rem;opacity:0;transition:opacity 0.2s;}
+.feedback-icon.show{opacity:1;}
+
+.answer-btns{display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;width:100%;}
+.answer-btn{
+  padding:1.1rem 0.5rem;min-height:64px;border:none;border-radius:14px;
+  font-family:'Cinzel Decorative',serif;font-size:1rem;
+  cursor:pointer;transition:all 0.15s;letter-spacing:0.05em;
+}
+.answer-btn:active{transform:scale(0.96);}
+.btn-true{background:linear-gradient(135deg,rgba(22,163,74,0.25),rgba(22,163,74,0.15));border:2px solid rgba(22,163,74,0.4);color:rgba(134,239,172,0.9);}
+.btn-false{background:linear-gradient(135deg,rgba(220,38,38,0.2),rgba(220,38,38,0.12));border:2px solid rgba(220,38,38,0.35);color:rgba(252,165,165,0.9);}
+.btn-true:hover{background:linear-gradient(135deg,rgba(22,163,74,0.4),rgba(22,163,74,0.25));border-color:rgba(22,163,74,0.7);}
+.btn-false:hover{background:linear-gradient(135deg,rgba(220,38,38,0.35),rgba(220,38,38,0.2));border-color:rgba(220,38,38,0.6);}
+.answer-btn:disabled{opacity:0.5;cursor:not-allowed;transform:none;}
+
+.streak-display{font-family:'Cinzel',serif;font-size:0.7rem;color:rgba(201,146,42,0.4);margin-top:0.75rem;min-height:1.2rem;}
+.streak-display.hot{color:var(--gold-light);}
+
+/* ── END SCREEN ──────────────────────────────────────────────── */
+.end-score-ring{
+  width:120px;height:120px;border-radius:50%;
+  background:linear-gradient(135deg,rgba(44,22,84,0.9),rgba(107,26,26,0.9));
+  border:3px solid var(--gold);display:flex;flex-direction:column;
+  align-items:center;justify-content:center;margin:0 auto 1rem;
+  box-shadow:0 0 30px rgba(201,146,42,0.25);
+}
+.end-score-num{font-family:'Cinzel Decorative',serif;font-size:2.2rem;color:var(--gold-bright);line-height:1;}
+.end-score-lbl{font-family:'Cinzel',serif;font-size:0.55rem;letter-spacing:0.15em;color:rgba(201,146,42,0.5);text-transform:uppercase;}
+.end-title{font-family:'Cinzel Decorative',serif;font-size:1.2rem;color:var(--gold-light);margin-bottom:0.35rem;}
+.end-msg{font-size:0.85rem;color:rgba(244,232,193,0.45);font-style:italic;margin-bottom:0.5rem;line-height:1.5;}
+.end-new-record{font-family:'Cinzel',serif;font-size:0.72rem;color:var(--gold-bright);margin-bottom:1.25rem;animation:glow 1s ease-in-out infinite alternate;}
+@keyframes glow{from{text-shadow:none;}to{text-shadow:0 0 12px rgba(255,215,0,0.6);}}
+.end-btns{display:flex;gap:0.625rem;width:100%;}
+.play-again-btn{
+  flex:1;padding:0.875rem;min-height:52px;
+  background:linear-gradient(135deg,var(--gold),var(--gold-bright));
+  border:none;border-radius:12px;font-family:'Cinzel',serif;
+  font-size:0.82rem;color:var(--bg);font-weight:700;cursor:pointer;
+}
+.back-home-btn{
+  padding:0.875rem 1.25rem;min-height:52px;
+  background:transparent;border:1px solid rgba(201,146,42,0.25);
+  border-radius:12px;font-family:'Cinzel',serif;font-size:0.75rem;
+  color:rgba(201,146,42,0.5);cursor:pointer;
+}
+</style>
+</head>
+<body>
+<div id="coin-rain"></div>
+<button class="back-btn" onclick="window.location.href='../games.html'">← Games</button>
+
+<!-- START SCREEN -->
+<div class="screen show" id="screen-start">
+  <div class="game-icon">⚡</div>
+  <div class="game-title">Byzantine Blitz</div>
+  <div class="game-sub">Expedition Game</div>
+  <div class="game-desc">60 seconds. True or False. Answer as many Orthodox questions as you can before time runs out!</div>
+  <button class="start-btn" onclick="startGame()">Start the Blitz ⚡</button>
+  <div class="high-score" id="high-score-display"></div>
+</div>
+
+<!-- GAME SCREEN -->
+<div class="screen" id="screen-game" style="width:100%;max-width:420px;">
+  <div class="timer-row" style="width:100%;">
+    <div class="timer-num" id="timer-num">60</div>
+    <div class="score-display">
+      <span class="score-val" id="score-val">0</span>
+      <span style="font-size:0.6rem;color:rgba(201,146,42,0.35);">correct</span>
+    </div>
+  </div>
+  <div class="timer-bar-wrap"><div class="timer-bar" id="timer-bar"></div></div>
+  <div class="question-card" id="question-card">
+    <div class="question-num" id="q-num">Q1</div>
+    <div class="question-text" id="q-text">Loading...</div>
+    <div class="feedback-icon" id="feedback-icon"></div>
+  </div>
+  <div class="answer-btns">
+    <button class="answer-btn btn-true" id="btn-true" onclick="answer(true)">TRUE</button>
+    <button class="answer-btn btn-false" id="btn-false" onclick="answer(false)">FALSE</button>
+  </div>
+  <div class="streak-display" id="streak-display"></div>
+</div>
+
+<!-- END SCREEN -->
+<div class="screen" id="screen-end">
+  <div class="end-score-ring">
+    <div class="end-score-num" id="end-score">0</div>
+    <div class="end-score-lbl">correct</div>
+  </div>
+  <div class="end-title" id="end-title">Well done!</div>
+  <div class="end-msg" id="end-msg">Keep studying the faith!</div>
+  <div class="end-new-record" id="end-record" style="display:none;">✦ New High Score! ✦</div>
+  <div class="end-btns">
+    <button class="play-again-btn" onclick="startGame()">Play Again ⚡</button>
+    <button class="back-home-btn" onclick="window.location.href='../games.html'">Games</button>
+  </div>
+</div>
+
+<script>
+// ── QUESTIONS ─────────────────────────────────────────────────
+const QUESTIONS = [
+  // Foundations
+  {q:"The Nicene Creed was written at the Council of Nicea in 325 AD.",a:true},
+  {q:"Orthodox Christians pray to God the Father, through the Son, in the Holy Spirit.",a:true},
+  {q:"The Trinity means God has three separate and different natures.",a:false},
+  {q:"The Incarnation means God the Son took on human flesh.",a:true},
+  {q:"The Nicene Creed says Jesus is 'of one essence with the Father.'",a:true},
+  {q:"Man was created in the image and likeness of God.",a:true},
+  {q:"The Fall of Adam and Eve was just about eating fruit — nothing deeper.",a:false},
+  {q:"Sin means 'missing the mark' in Greek.",a:true},
+  // Scripture & History
+  {q:"The Bible was written in Latin originally.",a:false},
+  {q:"Jesus read from the Septuagint in the synagogue.",a:true},
+  {q:"The canon of Scripture was decided at the Council of Nicea.",a:false},
+  {q:"Saint Luke is credited with writing the first icon of the Theotokos.",a:true},
+  {q:"The Apostle Paul was beheaded for his faith.",a:true},
+  {q:"Saint Ignatius of Antioch was fed to lions in Rome.",a:true},
+  {q:"The Great Schism happened in 1054 AD.",a:true},
+  {q:"The Filioque was added to the Creed by the Eastern Church.",a:false},
+  {q:"Constantine the Great issued the Edict of Milan in 313 AD.",a:true},
+  {q:"Martin Luther started the Reformation in Germany.",a:true},
+  // Sacraments
+  {q:"Baptism involves three immersions in water.",a:true},
+  {q:"Chrismation is called a personal Pentecost.",a:true},
+  {q:"The Eucharist is purely symbolic in Orthodox Christianity.",a:false},
+  {q:"Confession is considered the Second Baptism.",a:true},
+  {q:"Holy Unction is celebrated every Holy Wednesday at Orthodox churches.",a:true},
+  {q:"Orthodoxy officially recognizes exactly seven sacraments — no more.",a:false},
+  {q:"Marriage in the Orthodox Church includes a crowning ceremony.",a:true},
+  {q:"Holy Orders can be given to women in the Orthodox Church.",a:false},
+  // Theotokos Saints Icons
+  {q:"Theotokos means 'Mother of God' in Greek.",a:true},
+  {q:"Mary is called the 'New Eve' in Orthodox theology.",a:true},
+  {q:"We pray TO the saints the same way we pray to God.",a:false},
+  {q:"Icons are called open books to remind us of God.",a:true},
+  {q:"Iconoclasm means the veneration of icons.",a:false},
+  {q:"The Sunday of Orthodoxy celebrates the restoration of icons in 843 AD.",a:true},
+  {q:"The three Archangels are Michael, Gabriel, and Raphael.",a:true},
+  {q:"Every Orthodox Christian has a guardian angel.",a:true},
+  // Church Building
+  {q:"The narthex is the innermost part of the church near the altar.",a:false},
+  {q:"The iconostasis is the boundary between heaven and earth.",a:true},
+  {q:"Incense represents prayers rising to God.",a:true},
+  {q:"We receive Holy Communion on a spoon in the Orthodox Church.",a:true},
+  // Worship & Prayer
+  {q:"The Divine Liturgy begins with the words 'Blessed is the Kingdom.'",a:true},
+  {q:"The Small Entrance is a procession with the Book of the Gospels.",a:true},
+  {q:"The Great Entrance symbolizes Palm Sunday.",a:true},
+  {q:"The Jesus Prayer is: 'Lord Jesus Christ Son of God have mercy on me a sinner.'",a:true},
+  {q:"The 6th Hour service commemorates the Crucifixion of Christ.",a:true},
+  {q:"Vespers begins in the morning.",a:false},
+  {q:"The Epiklesis is the calling down of the Holy Spirit on the gifts.",a:true},
+  // Church Year & Fasting
+  {q:"Pascha is the most important feast in the Orthodox Church.",a:true},
+  {q:"The Orthodox church year begins on January 1st.",a:false},
+  {q:"Orthodox Christians fast most Wednesdays and Fridays.",a:true},
+  {q:"The Nativity Fast begins on November 15th.",a:true},
+  {q:"The Dormition Fast is in August.",a:true},
+  {q:"Pentecost is celebrated 40 days after Pascha.",a:false},
+  {q:"The Exaltation of the Cross is always a fasting day.",a:true},
+  {q:"Palm Sunday is the first day of Holy Week.",a:true},
+  // Living the Faith
+  {q:"The fruit of the Spirit includes love, joy, peace, and patience.",a:true},
+  {q:"Theosis means becoming by grace what God is by nature.",a:true},
+  {q:"Almsgiving means giving money to the Church only.",a:false},
+  {q:"Byzantine chant is polyphonic — it uses many harmonizing voices.",a:false},
+  {q:"Repentance in Greek is 'metanoia' meaning a change of mind.",a:true},
+  {q:"The Paschal Troparion says 'Christ is Risen from the dead.'",a:true},
+  {q:"Martyrs are called witnesses to the faith.",a:true},
+  // Eschatology
+  {q:"Orthodox Christians pray for those who have died.",a:true},
+  {q:"Koliva is boiled wheat offered at memorial services.",a:true},
+  {q:"The Orthodox Church teaches that the body will be resurrected.",a:true},
+  {q:"The particular judgment happens at the end of time for everyone together.",a:false},
+];
+
+// ── GAME STATE ────────────────────────────────────────────────
+let timeLeft = 60;
+let score    = 0;
+let streak   = 0;
+let bestStreak = 0;
+let qIndex   = 0;
+let answered = false;
+let timerInterval = null;
+let shuffled = [];
+let highScore = parseInt(localStorage.getItem('blitz-high') || '0');
+
+function shuffle(arr){
+  const a=[...arr];
+  for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}
+  return a;
+}
+
+function showScreen(id){
+  ['screen-start','screen-game','screen-end'].forEach(s=>{
+    document.getElementById(s).classList.toggle('show',s===id);
+  });
+}
+
+function startGame(){
+  timeLeft=60; score=0; streak=0; bestStreak=0; qIndex=0; answered=false;
+  shuffled = shuffle(QUESTIONS);
+  clearInterval(timerInterval);
+  showScreen('screen-game');
+  updateTimerUI();
+  loadQuestion();
+  timerInterval = setInterval(tick, 1000);
+  document.getElementById('high-score-display').textContent =
+    highScore > 0 ? `Best: ${highScore} correct` : '';
+}
+
+function tick(){
+  timeLeft--;
+  updateTimerUI();
+  if(timeLeft<=0){ clearInterval(timerInterval); endGame(); }
+}
+
+function updateTimerUI(){
+  const pct = (timeLeft/60)*100;
+  const urgent = timeLeft<=10;
+  document.getElementById('timer-num').textContent = timeLeft;
+  document.getElementById('timer-num').className = 'timer-num'+(urgent?' urgent':'');
+  document.getElementById('timer-bar').style.width = pct+'%';
+  document.getElementById('timer-bar').className = 'timer-bar'+(urgent?' urgent':'');
+}
+
+function loadQuestion(){
+  if(qIndex>=shuffled.length) qIndex=0;
+  const q = shuffled[qIndex];
+  answered=false;
+  document.getElementById('q-num').textContent = `Q${qIndex+1}`;
+  document.getElementById('q-text').textContent = q.q;
+  document.getElementById('question-card').className='question-card';
+  document.getElementById('feedback-icon').className='feedback-icon';
+  document.getElementById('feedback-icon').textContent='';
+  document.getElementById('btn-true').disabled=false;
+  document.getElementById('btn-false').disabled=false;
+  updateStreak();
+}
+
+function answer(userAnswer){
+  if(answered||timeLeft<=0) return;
+  answered=true;
+  const q = shuffled[qIndex];
+  const correct = userAnswer===q.a;
+  const card  = document.getElementById('question-card');
+  const icon  = document.getElementById('feedback-icon');
+  const btnT  = document.getElementById('btn-true');
+  const btnF  = document.getElementById('btn-false');
+
+  btnT.disabled=true; btnF.disabled=true;
+
+  if(correct){
+    score++;
+    streak++;
+    if(streak>bestStreak) bestStreak=streak;
+    card.classList.add('correct');
+    icon.textContent='✦'; icon.classList.add('show');
+    icon.style.color='rgba(134,239,172,0.9)';
+  } else {
+    streak=0;
+    card.classList.add('wrong');
+    icon.textContent='✗'; icon.classList.add('show');
+    icon.style.color='rgba(252,165,165,0.8)';
+  }
+
+  document.getElementById('score-val').textContent=score;
+  updateStreak();
+
+  setTimeout(()=>{
+    qIndex++;
+    loadQuestion();
+  }, 450);
+}
+
+function updateStreak(){
+  const el = document.getElementById('streak-display');
+  if(streak>=3){
+    el.textContent=`🔥 ${streak} in a row!`;
+    el.className='streak-display hot';
+  } else {
+    el.textContent='';
+    el.className='streak-display';
+  }
+}
+
+function endGame(){
+  document.getElementById('btn-true').disabled=true;
+  document.getElementById('btn-false').disabled=true;
+  showScreen('screen-end');
+
+  const isRecord = score > highScore;
+  if(isRecord){ highScore=score; localStorage.setItem('blitz-high',score); }
+
+  document.getElementById('end-score').textContent=score;
+  document.getElementById('end-record').style.display=isRecord?'block':'none';
+
+  let title='', msg='';
+  if(score>=20){      title='Byzantine Master!';   msg=`${score} correct — incredible! The saints are proud.`;}
+  else if(score>=14){ title='Expedition Expert!';   msg=`${score} correct — excellent knowledge of the faith!`;}
+  else if(score>=8){  title='Well Done, Explorer!'; msg=`${score} correct — keep studying and you\'ll master this.`;}
+  else if(score>=4){  title='Good Start!';           msg=`${score} correct — the expedition continues. Keep going!`;}
+  else{               title='Keep Exploring!';       msg='Every expedition starts somewhere. Study hard and try again!';}
+
+  document.getElementById('end-title').textContent=title;
+  document.getElementById('end-msg').textContent=msg;
+
+  // Byzantine Blitz is Type 1 — no coin awards
+}
+
+// Init high score display
+document.getElementById('high-score-display').textContent =
+  highScore > 0 ? `Best: ${highScore} correct` : '';
+</script>
+</body>
+</html>

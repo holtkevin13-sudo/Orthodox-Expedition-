@@ -5,7 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Missions — The Orthodox Expedition</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
+function showAdminBar(){
+  const bar = document.getElementById('admin-bar');
+  if(bar) bar.classList.add('show');
+}
+</script>
 <style>
 /* ── VARIABLES ─────────────────────────────────────────────── */
 :root{
@@ -237,11 +242,33 @@ body::before{
 .fade-up:nth-child(1){animation-delay:0.04s;}
 .fade-up:nth-child(2){animation-delay:0.1s;}
 .fade-up:nth-child(3){animation-delay:0.16s;}
+
+/* ── ADMIN BAR ─────────────────────────────────────────────── */
+.admin-bar{
+  position:fixed;top:0;left:0;right:0;z-index:999;
+  background:linear-gradient(90deg,rgba(44,22,84,0.97),rgba(107,26,26,0.97));
+  border-bottom:1px solid rgba(201,146,42,0.3);
+  display:none;align-items:center;justify-content:space-between;
+  padding:0.4rem 1rem;gap:0.75rem;
+}
+.admin-bar.show{display:flex;}
+.admin-bar-label{font-family:'Cinzel',serif;font-size:0.62rem;letter-spacing:0.15em;color:rgba(201,146,42,0.6);text-transform:uppercase;}
+.admin-bar-btn{background:none;border:1px solid rgba(201,146,42,0.3);border-radius:6px;padding:0.25rem 0.75rem;font-family:'Cinzel',serif;font-size:0.6rem;color:rgba(201,146,42,0.6);cursor:pointer;min-height:32px;transition:all 0.2s;}
+.admin-bar.show ~ .page{padding-top:calc(2.5rem + 1.25rem);}
 </style>
 </head>
 <body>
 
 <div id="coin-rain"></div>
+<!-- ADMIN BAR -->
+<div class="admin-bar" id="admin-bar">
+  <span class="admin-bar-label">⚙ Admin View</span>
+  <div style="display:flex;gap:0.4rem;">
+    <button class="admin-bar-btn" onclick="window.location.href='admin.html'">← Admin Panel</button>
+    <button class="admin-bar-btn" onclick="window.location.href='index.html?signout=1'">Sign Out</button>
+  </div>
+</div>
+
 <div id="loading"><div class="loading-cross">☩</div></div>
 
 <div id="app">
@@ -362,6 +389,10 @@ const weekKey  = () => {
     const res   = await Promise.race([sb.auth.getSession(), timer]);
     const session = res?.data?.session ?? null;
     if(!session){ window.location.href='index.html'; return; }
+    const {data:profCheck} = await sb.from('profiles').select('role').eq('id',session.user.id).single();
+    const isAdminView = new URLSearchParams(window.location.search).get('admin')==='1';
+    if(profCheck && profCheck.role === 'admin' && !isAdminView){ window.location.href='admin.html'; return; }
+    if(profCheck && profCheck.role === 'admin' && isAdminView){ showAdminBar(); }
     await loadAll(session.user.id);
     document.getElementById('loading').style.display='none';
     document.getElementById('app').style.display='block';
@@ -749,6 +780,11 @@ function setBadge(tab, count){
   const el = document.getElementById('badge-'+tab);
   if(count>0){el.textContent=count;el.classList.add('show');}
   else el.classList.remove('show');
+}
+
+function showAdminBar(){
+  const bar = document.getElementById('admin-bar');
+  if(bar) bar.classList.add('show');
 }
 </script>
 </body>

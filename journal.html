@@ -265,7 +265,7 @@ body{
         <div class="journal-title">Field Manual</div>
         <div class="journal-sub">Orthodox Expedition · <span id="explorer-name">Explorer</span></div>
       </div>
-      <button class="close-btn" onclick="window.close()">✕ Close</button>
+      <button class="close-btn" onclick="if(document.referrer && window.history.length>1){window.history.back();}else{window.location.href='home.html';}">✕ Close</button>
     </div>
   </div>
 

@@ -556,6 +556,8 @@ async function toggleWish(e, prizeId){
 
 // ── REDEEM MODAL ──────────────────────────────────────────────
 function openModal(prizeId){
+  const isAdminView = new URLSearchParams(window.location.search).get('admin')==='1';
+  if(isAdminView){ alert('Admin view — redemption disabled.'); return; }
   selectedPrize = allPrizes.find(p=>p.id===prizeId);
   if(!selectedPrize||profile.coins<selectedPrize.cost) return;
   document.getElementById('modal-emoji').textContent  = selectedPrize.emoji;

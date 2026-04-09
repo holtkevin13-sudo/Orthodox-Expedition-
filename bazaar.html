@@ -2,11 +2,18 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#c9922a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Expedition">
+
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Bazaar — The Orthodox Expedition</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="email-utils.js"></script>
 <style>
 :root{
   --gold:#c9922a;--gold-light:#f0c96e;--gold-bright:#ffd700;
@@ -605,6 +612,23 @@ async function confirmRedeem(){
   profile.coins = newCoins;
   const redeemedPrize = {...selectedPrize};
 
+  // Send notification email to parent
+  try {
+    // Get parent email from family
+    const {data:fam} = await sb.from('families').select('parent_email,coin_rate').eq('id',profile.family_id).single();
+    if(fam?.parent_email){
+      await EmailUtils.prizeRedeemed({
+        parentEmail:    fam.parent_email,
+        childName:      profile.name,
+        prizeName:      redeemedPrize.name,
+        prizeEmoji:     redeemedPrize.emoji,
+        coinsSpent:     redeemedPrize.cost,
+        coinRate:       fam.coin_rate||0.02,
+        remainingCoins: newCoins,
+      });
+    }
+  } catch(e){ console.error('Email error:', e); }
+
   closeModal();
   updateCoinStrip();
   renderTiers();
@@ -722,6 +746,14 @@ function scrollToTier(tierId, tabEl){
     });
   }
 })();
+</script>
+
+<script>
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('sw.js').catch(()=>{});
+  });
+}
 </script>
 </body>
 </html>

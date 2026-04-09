@@ -7,7 +7,7 @@
 <title>Admin — The Orthodox Expedition</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="email-utils.js">/script>
+<script src="email-utils.js"></script>
 <style>
 :root{
   --gold:#c9922a;--gold-light:#f0c96e;--gold-bright:#ffd700;
@@ -1042,13 +1042,17 @@ async function renderCurriculum(){
       editArea.className='session-edit-area';
       editArea.id=`edit-${s.id}`;
       editArea.innerHTML=`
-        <div style="font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.18em;text-transform:uppercase;color:rgba(201,146,42,0.5);margin-bottom:0.75rem;padding-bottom:0.4rem;border-bottom:1px solid rgba(201,146,42,0.12);">
-          ⊕ Core Content
+        <div class="form-group">
+          <label class="form-label">Video URL (YouTube)</label>
+          <input type="url" class="form-input" id="video-${s.id}" value="${s.video_url||''}" placeholder="https://youtube.com/watch?v=...">
         </div>
-
+        <div class="form-group">
+          <label class="form-label">Game URL</label>
+          <input type="url" class="form-input" id="game-${s.id}" value="${s.game_url||''}" placeholder="games/liturgy-sequence.html">
+        </div>
         <div class="form-group">
           <label class="form-label">Description</label>
-          <textarea class="form-textarea" id="desc-${s.id}" rows="3">${s.description||''}</textarea>
+          <textarea class="form-textarea" id="desc-${s.id}" rows="2">${s.description||''}</textarea>
         </div>
         <div class="form-group">
           <label class="form-label">Key Concepts (one per line)</label>
@@ -1059,82 +1063,11 @@ async function renderCurriculum(){
           <textarea class="form-textarea" id="journal-${s.id}" rows="2">${s.journal_prompt||''}</textarea>
         </div>
         <div class="form-group">
-          <label class="form-label">Personal Activity (Explorer Challenge)</label>
-          <textarea class="form-textarea" id="personal-activity-${s.id}" rows="2">${s.personal_activity||''}</textarea>
+          <label class="form-label">Coins</label>
+          <input type="number" class="form-input" id="coins-${s.id}" value="${s.coins||50}" inputmode="numeric">
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;" class="form-group">
-          <div>
-            <label class="form-label">Personal Activity Coins</label>
-            <input type="number" class="form-input" id="personal-activity-coins-${s.id}" value="${s.personal_activity_coins||15}" inputmode="numeric">
-          </div>
-          <div>
-            <label class="form-label">Session Coins</label>
-            <input type="number" class="form-input" id="coins-${s.id}" value="${s.coins||50}" inputmode="numeric">
-          </div>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Family Activity</label>
-          <textarea class="form-textarea" id="family-activity-${s.id}" rows="2">${s.family_activity||''}</textarea>
-        </div>
-
-        <div style="font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.18em;text-transform:uppercase;color:rgba(201,146,42,0.5);margin:1rem 0 0.75rem;padding-bottom:0.4rem;border-bottom:1px solid rgba(201,146,42,0.12);">
-          ☦ Holy Scriptures
-        </div>
-
-        <div class="form-group">
-          <label class="form-label">Reading Reference (e.g. Genesis 1:1–31 — The Creation)</label>
-          <input type="text" class="form-input" id="reading-reference-${s.id}" value="${s.reading_reference||''}" placeholder="Book Chapter:Verse — Title">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Reading URL (deep-link to bible-reader)</label>
-          <input type="text" class="form-input" id="reading-url-${s.id}" value="${s.reading_url||''}" placeholder="bible-reader.html?book=GEN&chapter=1&verse=1&source=expedition&session=${s.id}">
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;" class="form-group">
-          <div>
-            <label class="form-label">Reading Coins</label>
-            <input type="number" class="form-input" id="reading-coins-${s.id}" value="${s.reading_coins||20}" inputmode="numeric">
-          </div>
-          <div>
-            <label class="form-label">Video URL (YouTube)</label>
-            <input type="url" class="form-input" id="video-${s.id}" value="${s.video_url||''}" placeholder="https://youtube.com/watch?v=...">
-          </div>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Game URL</label>
-          <input type="url" class="form-input" id="game-${s.id}" value="${s.game_url||''}" placeholder="games/liturgy-sequence.html">
-        </div>
-
-        <div style="font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.18em;text-transform:uppercase;color:rgba(167,139,250,0.6);margin:1rem 0 0.75rem;padding-bottom:0.4rem;border-bottom:1px solid rgba(124,58,237,0.15);">
-          ☩ Parent Guide — Not visible to Explorers
-        </div>
-
-        <div class="form-group">
-          <label class="form-label">Parent Note</label>
-          <textarea class="form-textarea" id="parent-note-${s.id}" rows="4" style="font-size:0.82rem;">${s.parent_note||''}</textarea>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Reading Note (why this passage)</label>
-          <textarea class="form-textarea" id="reading-note-${s.id}" rows="2">${s.reading_note||''}</textarea>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Liturgical Connection</label>
-          <textarea class="form-textarea" id="liturgical-connection-${s.id}" rows="2">${s.liturgical_connection||''}</textarea>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Discussion Question — Sunday</label>
-          <textarea class="form-textarea" id="discussion-q1-${s.id}" rows="2">${s.discussion_q1||''}</textarea>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Discussion Question — Wednesday</label>
-          <textarea class="form-textarea" id="discussion-q2-${s.id}" rows="2">${s.discussion_q2||''}</textarea>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Discussion Question — Friday</label>
-          <textarea class="form-textarea" id="discussion-q3-${s.id}" rows="2">${s.discussion_q3||''}</textarea>
-        </div>
-
-        <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-top:0.5rem;">
-          <button class="btn btn-gold btn-sm" onclick="saveSession('${s.id}')">Save All Fields</button>
+        <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+          <button class="btn btn-gold btn-sm" onclick="saveSession('${s.id}')">Save Session</button>
           <button class="btn btn-ghost btn-sm" onclick="toggleSessionEdit('${s.id}')">Cancel</button>
         </div>`;
 
@@ -1157,76 +1090,34 @@ function toggleSessionEdit(sessionId){
 }
 
 async function saveSession(sessionId){
-  // ── Helper: get field value safely ──
-  const val  = id => { const el=document.getElementById(id); return el?el.value.trim():''; };
-  const ival = id => { const el=document.getElementById(id); return el?parseInt(el.value)||0:0; };
-
-  // ── Core content ──
-  const videoUrl          = val(`video-${sessionId}`) || null;
-  const gameUrl           = val(`game-${sessionId}`) || null;
-  const desc              = val(`desc-${sessionId}`);
-  const conceptsRaw       = val(`concepts-${sessionId}`);
-  const concepts          = conceptsRaw.split('\n').map(c=>c.trim()).filter(c=>c.length>0);
-  const journal           = val(`journal-${sessionId}`);
-  const coins             = ival(`coins-${sessionId}`) || 50;
-  const personalActivity  = val(`personal-activity-${sessionId}`) || null;
-  const personalCoins     = ival(`personal-activity-coins-${sessionId}`) || 15;
-  const familyActivity    = val(`family-activity-${sessionId}`) || null;
-
-  // ── Holy Scriptures ──
-  const readingReference  = val(`reading-reference-${sessionId}`) || null;
-  const readingUrl        = val(`reading-url-${sessionId}`) || null;
-  const readingCoins      = ival(`reading-coins-${sessionId}`) || 20;
-  const readingNote       = val(`reading-note-${sessionId}`) || null;
-
-  // ── Parent Guide ──
-  const parentNote        = val(`parent-note-${sessionId}`) || null;
-  const liturgicalConn    = val(`liturgical-connection-${sessionId}`) || null;
-  const discussionQ1      = val(`discussion-q1-${sessionId}`) || null;
-  const discussionQ2      = val(`discussion-q2-${sessionId}`) || null;
-  const discussionQ3      = val(`discussion-q3-${sessionId}`) || null;
+  const videoUrl   = document.getElementById(`video-${sessionId}`).value.trim();
+  const gameUrl    = document.getElementById(`game-${sessionId}`).value.trim();
+  const desc       = document.getElementById(`desc-${sessionId}`).value.trim();
+  const conceptsRaw= document.getElementById(`concepts-${sessionId}`).value;
+  const concepts   = conceptsRaw.split('\n').map(c=>c.trim()).filter(c=>c.length>0);
+  const journal    = document.getElementById(`journal-${sessionId}`).value.trim();
+  const coins      = parseInt(document.getElementById(`coins-${sessionId}`).value)||50;
 
   const {error} = await sb.from('sessions').update({
-    video_url:              videoUrl,
-    game_url:               gameUrl,
-    description:            desc,
-    key_concepts:           concepts,
-    journal_prompt:         journal,
+    video_url:   videoUrl||null,
+    game_url:    gameUrl||null,
+    description: desc,
+    key_concepts:concepts,
+    journal_prompt:journal,
     coins,
-    personal_activity:      personalActivity,
-    personal_activity_coins:personalCoins,
-    family_activity:        familyActivity,
-    reading_reference:      readingReference,
-    reading_url:            readingUrl,
-    reading_coins:          readingCoins,
-    reading_note:           readingNote,
-    parent_note:            parentNote,
-    liturgical_connection:  liturgicalConn,
-    discussion_q1:          discussionQ1,
-    discussion_q2:          discussionQ2,
-    discussion_q3:          discussionQ3,
   }).eq('id',sessionId);
 
-  if(error){toast('Error saving session: '+error.message,true);return;}
+  if(error){toast('Error saving session.',true);return;}
 
   // Update local cache
   const idx = allSessions.findIndex(s=>s.id===sessionId);
   if(idx>=0){
-    allSessions[idx]={
-      ...allSessions[idx],
-      video_url:videoUrl, game_url:gameUrl, description:desc,
-      key_concepts:concepts, journal_prompt:journal, coins,
-      personal_activity:personalActivity, personal_activity_coins:personalCoins,
-      family_activity:familyActivity,
-      reading_reference:readingReference, reading_url:readingUrl,
-      reading_coins:readingCoins, reading_note:readingNote,
-      parent_note:parentNote, liturgical_connection:liturgicalConn,
-      discussion_q1:discussionQ1, discussion_q2:discussionQ2, discussion_q3:discussionQ3,
-    };
+    allSessions[idx]={...allSessions[idx],video_url:videoUrl||null,game_url:gameUrl||null,description:desc,key_concepts:concepts,journal_prompt:journal,coins};
   }
 
   toggleSessionEdit(sessionId);
-  toast('Session saved — all fields updated.');
+  toast('Session saved.');
+  // Refresh curriculum display
   await renderCurriculum();
 }
 

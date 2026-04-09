@@ -449,8 +449,8 @@ body::before{
   transition:all 0.25s;
 }
 .nav-label{
-  font-family:'Cinzel',serif;font-size:0.56rem;
-  letter-spacing:0.1em;text-transform:uppercase;
+  font-family:'Cinzel',serif;font-size:0.52rem;
+  letter-spacing:0.08em;text-transform:uppercase;
   color:rgba(201,146,42,0.3);
   transition:all 0.25s;
 }
@@ -588,6 +588,68 @@ body::before{
 .announcement-label{
   font-family:'Cinzel',serif;font-size:0.58rem;letter-spacing:0.18em;
   color:rgba(201,146,42,0.55);text-transform:uppercase;margin-bottom:0.3rem;
+}
+
+/* ── HOME DESTINATION CARDS ────────────────────────────────── */
+.destination-row{
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:0.75rem;margin-bottom:1.125rem;
+}
+.dest-card{
+  border-radius:14px;padding:1rem 0.875rem;
+  text-decoration:none;display:flex;
+  flex-direction:column;gap:0.5rem;
+  transition:all 0.25s;position:relative;overflow:hidden;
+}
+.dest-card:active{transform:scale(0.97);}
+.dest-card-bazaar{
+  background:linear-gradient(145deg,rgba(107,26,26,0.35) 0%,rgba(60,12,12,0.5) 100%);
+  border:1px solid rgba(201,146,42,0.2);
+}
+.dest-card-bazaar.has-affordable{
+  border-color:rgba(255,215,0,0.4);
+  box-shadow:0 0 16px rgba(255,215,0,0.06);
+}
+.dest-card-games{
+  background:linear-gradient(145deg,rgba(44,22,84,0.45) 0%,rgba(20,8,50,0.55) 100%);
+  border:1px solid rgba(124,58,237,0.2);
+}
+.dest-card::before{
+  content:'';position:absolute;inset:0;
+  opacity:0;transition:opacity 0.3s;
+  background:linear-gradient(135deg,rgba(255,255,255,0.04),transparent);
+}
+.dest-card:active::before{opacity:1;}
+.dest-card-icon{font-size:1.4rem;line-height:1;}
+.dest-card-title{
+  font-family:'Cinzel',serif;font-size:0.75rem;
+  font-weight:700;letter-spacing:0.04em;line-height:1.2;
+}
+.dest-card-bazaar .dest-card-title{color:rgba(240,201,110,0.85);}
+.dest-card-games .dest-card-title{color:rgba(200,180,255,0.85);}
+.dest-card-sub{
+  font-family:'Crimson Text',serif;font-size:0.75rem;
+  font-style:italic;line-height:1.3;
+}
+.dest-card-bazaar .dest-card-sub{color:rgba(201,146,42,0.4);}
+.dest-card-games .dest-card-sub{color:rgba(167,139,250,0.4);}
+.dest-card-coin-badge{
+  font-family:'Cinzel',serif;font-size:0.58rem;
+  color:rgba(201,146,42,0.55);margin-top:auto;
+}
+.dest-card-arrow{
+  position:absolute;bottom:0.75rem;right:0.875rem;
+  font-size:0.85rem;opacity:0.25;
+}
+.dest-card-bazaar .dest-card-arrow{color:var(--gold);}
+.dest-card-games .dest-card-arrow{color:rgba(167,139,250,1);}
+/* Affordable glow pulse on bazaar card */
+@keyframes affordableGlow{
+  0%,100%{box-shadow:0 0 0 0 rgba(255,215,0,0);}
+  50%{box-shadow:0 0 16px 2px rgba(255,215,0,0.12);}
+}
+.dest-card-bazaar.has-affordable{
+  animation:affordableGlow 2.5s ease-in-out infinite;
 }
 </style>
 </head>
@@ -771,6 +833,26 @@ body::before{
       </div>
     </div>
 
+
+    <!-- DESTINATION CARDS — Bazaar & Games -->
+    <div class="destination-row fade-up">
+      <a class="dest-card dest-card-bazaar" href="bazaar.html" id="home-bazaar-card">
+        <span class="dest-card-icon">◈</span>
+        <div class="dest-card-title">The Grand Bazaar</div>
+        <div class="dest-card-sub">Redeem your Saint Coins for real prizes</div>
+        <div class="dest-card-coin-badge" id="bazaar-coin-display">✦ Your coins await</div>
+        <span class="dest-card-arrow">›</span>
+        <span class="nav-dot" id="bazaar-dot" style="top:0.6rem;right:0.6rem;"></span>
+      </a>
+      <a class="dest-card dest-card-games" href="games.html">
+        <span class="dest-card-icon">⚔</span>
+        <div class="dest-card-title">Training Grounds</div>
+        <div class="dest-card-sub">Test your knowledge with Expedition games</div>
+        <div class="dest-card-coin-badge">⚔ 14 games to master</div>
+        <span class="dest-card-arrow">›</span>
+      </a>
+    </div>
+
     <!-- BADGES -->
     <div class="badges-section fade-up">
       <div class="badges-eyebrow">Expedition Badges</div>
@@ -904,6 +986,8 @@ function renderAll(mastery, completed, topics){
 
   // Stats
   document.getElementById('stat-coins').textContent   = p.coins.toLocaleString();
+  const bazaarCoinEl = document.getElementById('bazaar-coin-display');
+  if(bazaarCoinEl) bazaarCoinEl.textContent = '✦ ' + p.coins.toLocaleString() + ' coins';
   document.getElementById('stat-lifetime').textContent = p.lifetime_coins.toLocaleString();
   document.getElementById('p-coins').textContent       = p.lifetime_coins.toLocaleString();
   document.getElementById('p-sessions').textContent    = p.sessions_attended;
@@ -1052,7 +1136,11 @@ async function checkNotifications(mastery, completed){
     const {data:prizes} = await sb.from('prizes')
       .select('id,cost').in('id',wishlist.map(w=>w.prize_id));
     if(prizes&&prizes.some(p=>p.cost<=profile.coins)){
-      document.getElementById('bazaar-dot').classList.add('show');
+      const bazaarDotEl = document.getElementById('bazaar-dot');
+      if(bazaarDotEl) bazaarDotEl.classList.add('show');
+      // Also highlight home bazaar card if affordable items exist
+      const bazaarCard = document.getElementById('home-bazaar-card');
+      if(bazaarCard) bazaarCard.classList.add('has-affordable');
     }
   }
 }

@@ -111,7 +111,7 @@ body::before{
 <div class="login-card">
   <div class="top-cross">✦ ☩ ✦</div>
   <h1 class="login-title">The Orthodox<br>Expedition</h1>
-  <div class="login-subtitle">Greek Orthodox Family Study</div>
+  <div class="login-subtitle">Orthodox Family Study</div>
 
   <div class="verse-block">
     <div class="verse-text">"Seek and you will find, knock and the door will be opened to you."</div>
@@ -151,13 +151,42 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 async function routeByRole(userId){
-  const {data:profile,error} = await sb.from('profiles').select('role').eq('id',userId).single();
-  if(error||!profile){
+  // Fetch profile with timeout — prevents infinite spinner if DB is slow
+  let profile = null;
+  let fetchError = null;
+
+  try {
+    const timeout = new Promise((_,reject) =>
+      setTimeout(() => reject(new Error('Profile fetch timeout')), 6000)
+    );
+    const result = await Promise.race([
+      sb.from('profiles').select('role').eq('id',userId).single(),
+      timeout
+    ]);
+    profile    = result.data;
+    fetchError = result.error;
+  } catch(e) {
+    fetchError = e;
+  }
+
+  if(fetchError || !profile){
+    // Retry once before giving up — handles transient network issues
+    try {
+      const retry = await sb.from('profiles').select('role').eq('id',userId).single();
+      profile    = retry.data;
+      fetchError = retry.error;
+    } catch(e2){
+      fetchError = e2;
+    }
+  }
+
+  if(fetchError || !profile){
     await sb.auth.signOut();
-    showError('Account not found. Please contact an administrator.');
+    showError('Could not load your account. Please check your connection and try again.');
     resetBtn();
     return;
   }
+
   // Route by role
   if(profile.role==='superuser') { window.location.href='admin.html'; return; }
   if(profile.role==='admin')     { window.location.href='admin.html'; return; }
@@ -236,14 +265,28 @@ async function doLogin(){
   const {data,error} = await sb.auth.signInWithPassword({email,password});
 
   if(error){
-    showError('Incorrect email or password. Try again.');
+    // Give a clear error message based on what went wrong
+    if(error.message && error.message.toLowerCase().includes('invalid')){
+      showError('Incorrect email or password. Please try again.');
+    } else if(error.message && error.message.toLowerCase().includes('email')){
+      showError('Please check your email address and try again.');
+    } else {
+      showError('Login failed: ' + (error.message || 'Please try again.'));
+    }
     document.getElementById('password').value='';
     document.getElementById('password').focus();
     resetBtn();
     return;
   }
 
-  await routeByRole(data.user.id);
+  // Route to correct page — wrapped in try/catch so button never stays stuck
+  try {
+    await routeByRole(data.user.id);
+  } catch(e){
+    console.error('Routing error:', e);
+    showError('Login succeeded but routing failed. Please refresh and try again.');
+    resetBtn();
+  }
 }
 
 checkSession();

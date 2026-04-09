@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Council Timeline — Orthodox Expedition</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="game-utils.js"></script>
+<style>
+:root{
+  --gold:#c9922a;--gold-light:#f0c96e;--gold-bright:#ffd700;
+  --parchment:#f4e8c1;
+  --burgundy:#6b1a1a;--byzantine:#2c1654;--byzantine-light:#4a2a7a;
+  --green:#16a34a;--green-light:#22c55e;
+  --red:#dc2626;
+  --bg:#0e0800;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{min-height:100%;overflow-x:hidden;}
+body{
+  font-family:'Crimson Text',serif;
+  background:var(--bg);
+  background-image:radial-gradient(ellipse at 50% 0%,rgba(107,26,26,0.5) 0%,transparent 55%),radial-gradient(ellipse at 100% 100%,rgba(44,22,84,0.35) 0%,transparent 50%);
+  min-height:100vh;padding:1.25rem 1rem 2rem;
+}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(201,146,42,0.02) 1px,transparent 1px),linear-gradient(90deg,rgba(201,146,42,0.02) 1px,transparent 1px);background-size:44px 44px;pointer-events:none;}
+#coin-rain{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999;overflow:hidden;}
+@keyframes coinFall{0%{transform:translateY(0) rotate(0deg);opacity:1;}85%{opacity:1;}100%{transform:translateY(110vh) rotate(540deg) scale(0.4);opacity:0;}}
+
+.back-btn{background:none;border:1px solid rgba(201,146,42,0.2);border-radius:8px;padding:0.4rem 0.875rem;font-family:'Cinzel',serif;font-size:0.65rem;color:rgba(201,146,42,0.45);cursor:pointer;min-height:40px;margin-bottom:1.25rem;display:inline-block;}
+
+.screen{display:none;max-width:440px;margin:0 auto;text-align:center;}
+.screen.show{display:block;}
+
+/* START */
+.game-icon{font-size:3rem;margin-bottom:0.5rem;}
+.game-title{font-family:'Cinzel Decorative',serif;font-size:clamp(1.1rem,4vw,1.4rem);color:var(--gold-light);text-shadow:0 0 20px rgba(201,146,42,0.4);margin-bottom:0.25rem;}
+.game-sub{font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.2em;color:rgba(201,146,42,0.4);text-transform:uppercase;margin-bottom:1rem;}
+.game-desc{font-size:0.85rem;color:rgba(244,232,193,0.4);font-style:italic;line-height:1.6;margin-bottom:1rem;}
+.coin-info{display:inline-flex;align-items:center;gap:0.5rem;background:rgba(201,146,42,0.08);border:1px solid rgba(201,146,42,0.2);border-radius:20px;padding:0.4rem 1rem;font-family:'Cinzel',serif;font-size:0.7rem;color:rgba(201,146,42,0.6);margin-bottom:1.5rem;}
+.start-btn{padding:0.9rem 2.5rem;min-height:52px;background:linear-gradient(135deg,var(--gold),var(--gold-bright));border:none;border-radius:13px;font-family:'Cinzel',serif;font-size:0.85rem;letter-spacing:0.1em;color:var(--bg);font-weight:700;cursor:pointer;}
+
+/* GAME */
+.game-instructions{font-family:'Cinzel',serif;font-size:0.62rem;letter-spacing:0.12em;color:rgba(201,146,42,0.4);text-transform:uppercase;text-align:center;margin-bottom:1rem;}
+
+/* Council cards to place */
+.council-pool{
+  display:flex;flex-wrap:wrap;gap:0.4rem;
+  justify-content:center;margin-bottom:1.25rem;
+}
+.council-chip{
+  background:rgba(44,22,84,0.4);border:1.5px solid rgba(124,58,237,0.35);
+  border-radius:8px;padding:0.4rem 0.75rem;
+  font-family:'Cinzel',serif;font-size:0.72rem;color:rgba(167,139,250,0.85);
+  cursor:pointer;transition:all 0.2s;user-select:none;
+}
+.council-chip:hover{background:rgba(44,22,84,0.6);border-color:rgba(124,58,237,0.6);}
+.council-chip.selected{background:rgba(201,146,42,0.15);border-color:var(--gold);color:var(--gold-light);}
+.council-chip.placed{opacity:0.3;pointer-events:none;}
+
+/* Timeline */
+.timeline{position:relative;margin-bottom:1rem;}
+.timeline-line{
+  position:absolute;left:50%;top:0;bottom:0;width:2px;
+  background:linear-gradient(180deg,transparent,rgba(201,146,42,0.3) 5%,rgba(201,146,42,0.3) 95%,transparent);
+  transform:translateX(-50%);
+}
+.timeline-slots{display:flex;flex-direction:column;gap:0.4rem;}
+.timeline-slot{
+  display:flex;align-items:center;gap:0.5rem;
+  min-height:52px;position:relative;
+}
+.slot-year{
+  font-family:'Cinzel Decorative',serif;font-size:0.78rem;
+  color:var(--gold-bright);width:52px;text-align:right;flex-shrink:0;
+}
+.slot-dot{
+  width:10px;height:10px;border-radius:50%;flex-shrink:0;z-index:1;
+  background:rgba(201,146,42,0.3);border:2px solid rgba(201,146,42,0.4);
+  transition:all 0.3s;
+}
+.slot-dot.filled{background:var(--gold);border-color:var(--gold-bright);box-shadow:0 0 8px rgba(255,215,0,0.4);}
+.slot-dot.correct-dot{background:var(--green-light);border-color:rgba(22,163,74,0.8);}
+.slot-dot.wrong-dot{background:var(--red);border-color:rgba(220,38,38,0.8);}
+.slot-box{
+  flex:1;min-height:44px;
+  border:1.5px dashed rgba(201,146,42,0.2);border-radius:8px;
+  display:flex;align-items:center;padding:0.4rem 0.625rem;
+  cursor:pointer;transition:all 0.2s;background:rgba(255,255,255,0.02);
+}
+.slot-box:hover{border-color:rgba(201,146,42,0.45);background:rgba(201,146,42,0.04);}
+.slot-box.has-card{border-style:solid;border-color:rgba(124,58,237,0.4);background:rgba(44,22,84,0.15);}
+.slot-box.correct-box{border-color:rgba(22,163,74,0.5);background:rgba(22,163,74,0.06);}
+.slot-box.wrong-box{border-color:rgba(220,38,38,0.4);background:rgba(220,38,38,0.05);}
+.slot-text{font-family:'Cinzel',serif;font-size:0.68rem;color:rgba(167,139,250,0.8);line-height:1.3;flex:1;}
+.slot-empty-text{font-family:'Cinzel',serif;font-size:0.62rem;color:rgba(201,146,42,0.2);font-style:italic;}
+.slot-result{font-size:0.9rem;margin-left:0.25rem;flex-shrink:0;}
+
+.check-btn{width:100%;padding:0.75rem;min-height:48px;background:linear-gradient(135deg,var(--byzantine),var(--byzantine-light));border:none;border-radius:10px;font-family:'Cinzel',serif;font-size:0.78rem;color:rgba(244,232,193,0.9);cursor:pointer;margin-top:0.25rem;}
+
+/* END */
+.result-ring{width:110px;height:110px;border-radius:50%;background:linear-gradient(135deg,rgba(44,22,84,0.9),rgba(107,26,26,0.9));border:3px solid var(--gold);display:flex;flex-direction:column;align-items:center;justify-content:center;margin:0 auto 1rem;box-shadow:0 0 30px rgba(201,146,42,0.25);}
+.result-pct{font-family:'Cinzel Decorative',serif;font-size:1.8rem;color:var(--gold-bright);line-height:1;}
+.result-lbl{font-family:'Cinzel',serif;font-size:0.55rem;color:rgba(201,146,42,0.5);letter-spacing:0.1em;}
+.result-title{font-family:'Cinzel Decorative',serif;font-size:1.1rem;color:var(--gold-light);margin-bottom:0.35rem;}
+.result-msg{font-size:0.82rem;color:rgba(244,232,193,0.4);font-style:italic;margin-bottom:0.5rem;line-height:1.5;}
+.coin-award{font-family:'Cinzel',serif;font-size:0.85rem;color:var(--gold-bright);margin-bottom:1.25rem;text-shadow:0 0 10px rgba(255,215,0,0.3);}
+.end-btns{display:flex;gap:0.5rem;justify-content:center;}
+.play-again-btn{padding:0.75rem 1.75rem;min-height:48px;background:linear-gradient(135deg,var(--gold),var(--gold-bright));border:none;border-radius:11px;font-family:'Cinzel',serif;font-size:0.78rem;color:var(--bg);font-weight:700;cursor:pointer;}
+.back-games-btn{padding:0.75rem 1.25rem;min-height:48px;background:transparent;border:1px solid rgba(201,146,42,0.25);border-radius:11px;font-family:'Cinzel',serif;font-size:0.72rem;color:rgba(201,146,42,0.5);cursor:pointer;}
+</style>
+</head>
+<body>
+<div id="coin-rain"></div>
+<button class="back-btn" onclick="window.location.href='../games.html'">← Games</button>
+
+<!-- START -->
+<div class="screen show" id="screen-start">
+  <div class="game-icon">🏛️</div>
+  <div class="game-title">Council Timeline</div>
+  <div class="game-sub">Session Game · Topic 1</div>
+  <div class="game-desc">The 7 Ecumenical Councils each happened at a specific year in history. Can you place them all on the timeline in the right order?</div>
+  <div class="coin-info">⚔ 10 coins for playing · 20 for winning</div>
+  <button class="start-btn" onclick="startGame()">Enter the Councils ›</button>
+</div>
+
+<!-- GAME -->
+<div class="screen" id="screen-game">
+  <div class="game-instructions">Tap a council, then tap where it belongs on the timeline</div>
+
+  <!-- Council chips to place -->
+  <div class="council-pool" id="council-pool"></div>
+
+  <!-- Timeline -->
+  <div class="timeline">
+    <div class="timeline-line"></div>
+    <div class="timeline-slots" id="timeline-slots"></div>
+  </div>
+
+  <button class="check-btn" onclick="checkAnswers()">Check the Timeline ✦</button>
+</div>
+
+<!-- END -->
+<div class="screen" id="screen-end" style="text-align:center;">
+  <div class="result-ring">
+    <div class="result-pct" id="result-pct">0%</div>
+    <div class="result-lbl">correct</div>
+  </div>
+  <div class="result-title" id="result-title">Good try!</div>
+  <div class="result-msg" id="result-msg"></div>
+  <div class="coin-award" id="coin-award"></div>
+  <div class="end-btns">
+    <button class="play-again-btn" onclick="startGame()">Try Again</button>
+    <button class="back-games-btn" onclick="window.location.href='../games.html'">Games</button>
+  </div>
+</div>
+
+<script>
+const GAME_ID = 'council-timeline';
+
+// The 7 Ecumenical Councils in correct order
+const COUNCILS = [
+  {id:'nicea1',    year:325,  short:'Nicea I',          full:'Council of Nicea (325)',           heresy:'Arianism — defined "of one essence with the Father"'},
+  {id:'const1',   year:381,  short:'Constantinople I',  full:'1st Council of Constantinople (381)', heresy:'Arianism again — established the full Creed'},
+  {id:'ephesus',  year:431,  short:'Ephesus',           full:'Council of Ephesus (431)',          heresy:'Nestorianism — Mary declared Theotokos'},
+  {id:'chalcedon',year:451,  short:'Chalcedon',         full:'Council of Chalcedon (451)',        heresy:'Monophysitism — Christ fully human AND divine'},
+  {id:'const2',   year:553,  short:'Constantinople II', full:'2nd Council of Constantinople (553)',heresy:'Further condemned Nestorianism & Monophysitism'},
+  {id:'const3',   year:680,  short:'Constantinople III',full:'3rd Council of Constantinople (680)',heresy:'Monothelitism — Christ has two wills'},
+  {id:'nicea2',   year:787,  short:'Nicea II',          full:'2nd Council of Nicea (787)',        heresy:'Iconoclasm — defended veneration of icons'},
+];
+
+// Timeline slots (shown in order, year as anchor)
+const SLOTS = COUNCILS.map(c=>({...c, placed:null}));
+
+let selectedChip = null;
+let placements = {}; // slotId -> councilId
+
+function showScreen(id){['screen-start','screen-game','screen-end'].forEach(s=>document.getElementById(s).classList.toggle('show',s===id));}
+
+function startGame(){
+  selectedChip=null;
+  placements={};
+  renderPool();
+  renderTimeline();
+  showScreen('screen-game');
+}
+
+function renderPool(){
+  const pool=document.getElementById('council-pool');
+  pool.innerHTML='';
+  // Shuffle chips
+  const shuffled=[...COUNCILS].sort(()=>Math.random()-0.5);
+  shuffled.forEach(c=>{
+    const chip=document.createElement('div');
+    chip.className='council-chip';
+    chip.id=`chip-${c.id}`;
+    chip.textContent=c.short;
+    chip.dataset.id=c.id;
+    chip.onclick=()=>selectChip(c.id);
+    pool.appendChild(chip);
+  });
+}
+
+function renderTimeline(){
+  const container=document.getElementById('timeline-slots');
+  container.innerHTML='';
+  SLOTS.forEach(slot=>{
+    const row=document.createElement('div');
+    row.className='timeline-slot';
+
+    const placed=placements[slot.id];
+    const placedCouncil=placed?COUNCILS.find(c=>c.id===placed):null;
+
+    row.innerHTML=`
+      <div class="slot-year">${slot.year}</div>
+      <div class="slot-dot${placed?' filled':''}"></div>
+      <div class="slot-box${placed?' has-card':''}" id="slot-${slot.id}" onclick="placeInSlot('${slot.id}')">
+        ${placed
+          ? `<span class="slot-text">${placedCouncil.short}</span>`
+          : `<span class="slot-empty-text">Tap to place here</span>`
+        }
+        <span class="slot-result" id="result-${slot.id}"></span>
+      </div>`;
+    container.appendChild(row);
+  });
+}
+
+function selectChip(id){
+  // If already placed somewhere, pick it back up
+  const currentSlot=Object.keys(placements).find(s=>placements[s]===id);
+  if(currentSlot){
+    delete placements[currentSlot];
+  }
+
+  // Deselect previous
+  document.querySelectorAll('.council-chip').forEach(c=>c.classList.remove('selected'));
+
+  if(selectedChip===id){
+    selectedChip=null;
+  } else {
+    selectedChip=id;
+    const chip=document.getElementById(`chip-${id}`);
+    if(chip) chip.classList.add('selected');
+  }
+  renderTimeline();
+}
+
+function placeInSlot(slotId){
+  if(!selectedChip) return;
+
+  // If slot already has something, swap it back to pool
+  if(placements[slotId]){
+    // Remove the old one and deselect it
+    const old=placements[slotId];
+    delete placements[slotId];
+    const oldChip=document.getElementById(`chip-${old}`);
+    if(oldChip){oldChip.classList.remove('placed','selected');}
+  }
+
+  placements[slotId]=selectedChip;
+  const chip=document.getElementById(`chip-${selectedChip}`);
+  if(chip){chip.classList.add('placed');chip.classList.remove('selected');}
+  selectedChip=null;
+  renderTimeline();
+}
+
+async function checkAnswers(){
+  const allPlaced=SLOTS.every(s=>placements[s.id]);
+  if(!allPlaced){
+    alert('Place all 7 councils on the timeline first!');
+    return;
+  }
+
+  let correct=0;
+  SLOTS.forEach(slot=>{
+    const placed=placements[slot.id];
+    const isCorrect=placed===slot.id;
+    if(isCorrect) correct++;
+
+    const box=document.getElementById(`slot-${slot.id}`);
+    const dot=box?.parentElement?.querySelector('.slot-dot');
+    const result=document.getElementById(`result-${slot.id}`);
+
+    if(box){box.classList.remove('has-card');box.classList.add(isCorrect?'correct-box':'wrong-box');}
+    if(dot){dot.classList.remove('filled');dot.classList.add(isCorrect?'correct-dot':'wrong-dot');}
+    if(result) result.textContent=isCorrect?'✦':'✗';
+  });
+
+  const pct=Math.round((correct/SLOTS.length)*100);
+  const won=pct>=80;
+
+  setTimeout(async()=>{
+    showScreen('screen-end');
+    document.getElementById('result-pct').textContent=pct+'%';
+
+    let title='',msg='';
+    if(pct===100){title='Council Champion!';msg='All 7 Councils placed perfectly. The Fathers of the Church are proud!';}
+    else if(pct>=80){title='Excellent!';msg=`${correct} of 7 correct. You know your Church history!`;}
+    else if(pct>=50){title='Good Try!';msg=`${correct} of 7 correct. Review the Council dates in Topic 1 and try again.`;}
+    else{title='Keep Studying!';msg='The Councils are tricky! Study Session 1.4 and come back ready.';}
+
+    document.getElementById('result-title').textContent=title;
+    document.getElementById('result-msg').textContent=msg;
+
+    const result=await GameUtils.awardCoins(GAME_ID,won,'Council Timeline');
+    if(result.alreadyPlayed){
+      document.getElementById('coin-award').textContent='Already played today — come back tomorrow!';
+    } else if(result.awarded>0){
+      document.getElementById('coin-award').textContent=`+${result.awarded} coins earned!${won?' (Win bonus!)':''}`;
+      GameUtils.coinRain('coin-rain',result.awarded);
+    }
+  },1000);
+}
+
+// Init
+(async()=>{
+  const prof=await GameUtils.init();
+  if(!prof) return;
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Feast or Fast? — Orthodox Expedition</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --gold:#c9922a;--gold-light:#f0c96e;--gold-bright:#ffd700;
+  --parchment:#f4e8c1;
+  --burgundy:#6b1a1a;--byzantine:#2c1654;
+  --green:#16a34a;--green-light:#22c55e;
+  --red:#dc2626;--red-light:#ef4444;
+  --bg:#0e0800;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overflow:hidden;}
+body{
+  font-family:'Crimson Text',serif;
+  background:var(--bg);
+  background-image:
+    radial-gradient(ellipse at 50% 0%,rgba(107,26,26,0.5) 0%,transparent 55%),
+    radial-gradient(ellipse at 100% 100%,rgba(44,22,84,0.35) 0%,transparent 50%);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  min-height:100vh;padding:1.25rem;
+}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(201,146,42,0.02) 1px,transparent 1px),linear-gradient(90deg,rgba(201,146,42,0.02) 1px,transparent 1px);background-size:44px 44px;pointer-events:none;}
+
+.back-btn{position:fixed;top:1rem;left:1rem;background:none;border:1px solid rgba(201,146,42,0.2);border-radius:8px;padding:0.4rem 0.875rem;font-family:'Cinzel',serif;font-size:0.65rem;color:rgba(201,146,42,0.45);cursor:pointer;min-height:40px;z-index:10;}
+
+.screen{display:none;width:100%;max-width:400px;text-align:center;}
+.screen.show{display:flex;flex-direction:column;align-items:center;}
+
+/* START */
+.game-icon{font-size:3.5rem;margin-bottom:0.75rem;}
+.game-title{font-family:'Cinzel Decorative',serif;font-size:clamp(1.2rem,4.5vw,1.6rem);color:var(--gold-light);text-shadow:0 0 20px rgba(201,146,42,0.4);margin-bottom:0.25rem;}
+.game-sub{font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.2em;color:rgba(201,146,42,0.4);text-transform:uppercase;margin-bottom:1rem;}
+.game-desc{font-size:0.85rem;color:rgba(244,232,193,0.4);font-style:italic;line-height:1.6;margin-bottom:1.5rem;max-width:300px;}
+.start-btn{padding:1rem 2.5rem;min-height:56px;background:linear-gradient(135deg,var(--gold),var(--gold-bright));border:none;border-radius:14px;font-family:'Cinzel',serif;font-size:0.9rem;letter-spacing:0.1em;color:var(--bg);font-weight:700;cursor:pointer;box-shadow:0 4px 20px rgba(255,215,0,0.25);}
+.start-btn:active{transform:scale(0.97);}
+.high-score-lbl{font-family:'Cinzel',serif;font-size:0.68rem;color:rgba(201,146,42,0.3);margin-top:1rem;}
+
+/* GAME */
+.game-top{width:100%;display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem;}
+.lives-row{display:flex;gap:0.3rem;}
+.life-heart{font-size:1.1rem;transition:all 0.2s;}
+.life-heart.lost{opacity:0.2;filter:grayscale(1);}
+.score-box{text-align:right;}
+.score-num{font-family:'Cinzel Decorative',serif;font-size:1.6rem;color:var(--gold-bright);line-height:1;text-shadow:0 0 10px rgba(255,215,0,0.3);}
+.score-lbl{font-family:'Cinzel',serif;font-size:0.55rem;color:rgba(201,146,42,0.35);letter-spacing:0.1em;text-transform:uppercase;}
+
+/* Progress bar */
+.progress-bar-wrap{width:100%;height:5px;background:rgba(255,255,255,0.05);border-radius:3px;overflow:hidden;margin-bottom:1.25rem;}
+.progress-bar{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--gold),var(--gold-bright));transition:width 0.4s ease;}
+
+/* Question card */
+.question-card{
+  width:100%;min-height:180px;
+  background:linear-gradient(160deg,rgba(44,22,84,0.96),rgba(18,8,40,0.99) 50%,rgba(107,26,26,0.96));
+  border:1.5px solid rgba(201,146,42,0.3);border-radius:20px;
+  padding:1.5rem 1.25rem;margin-bottom:1.25rem;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0.625rem;
+  transition:all 0.2s;position:relative;overflow:hidden;
+}
+.question-card.correct{border-color:rgba(22,163,74,0.7);animation:flashGreen 0.4s ease;}
+.question-card.wrong{border-color:rgba(220,38,38,0.6);animation:shakeWrong 0.4s ease;}
+@keyframes flashGreen{0%,100%{box-shadow:none;}50%{box-shadow:0 0 24px rgba(22,163,74,0.4);}}
+@keyframes shakeWrong{0%,100%{transform:translateX(0);}25%{transform:translateX(-8px);}75%{transform:translateX(8px);}}
+
+.card-category{font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.18em;color:rgba(201,146,42,0.4);text-transform:uppercase;}
+.card-title{font-family:'Cinzel',serif;font-size:clamp(0.95rem,3.5vw,1.15rem);color:var(--parchment);line-height:1.4;text-align:center;font-weight:700;}
+.card-hint{font-size:0.75rem;color:rgba(244,232,193,0.35);font-style:italic;line-height:1.4;text-align:center;}
+.correct-answer{
+  position:absolute;bottom:0;left:0;right:0;
+  padding:0.5rem;text-align:center;
+  font-family:'Cinzel',serif;font-size:0.68rem;
+  opacity:0;transition:opacity 0.2s;
+}
+.correct-answer.show{opacity:1;}
+.correct-answer.feast-ans{background:rgba(22,163,74,0.15);color:rgba(134,239,172,0.8);}
+.correct-answer.fast-ans{background:rgba(107,26,26,0.2);color:rgba(252,165,165,0.8);}
+
+/* Answer buttons */
+.answer-btns{display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;width:100%;}
+.ans-btn{
+  padding:1.1rem 0.5rem;min-height:72px;border:none;border-radius:16px;
+  cursor:pointer;transition:all 0.15s;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0.25rem;
+}
+.ans-btn:active{transform:scale(0.95);}
+.ans-btn:disabled{opacity:0.4;cursor:not-allowed;transform:none;}
+.btn-feast{
+  background:linear-gradient(145deg,rgba(201,146,42,0.2),rgba(201,146,42,0.1));
+  border:2px solid rgba(201,146,42,0.4);
+}
+.btn-feast:hover:not(:disabled){background:linear-gradient(145deg,rgba(201,146,42,0.35),rgba(201,146,42,0.2));border-color:rgba(201,146,42,0.7);}
+.btn-fast{
+  background:linear-gradient(145deg,rgba(107,26,26,0.3),rgba(107,26,26,0.15));
+  border:2px solid rgba(107,26,26,0.5);
+}
+.btn-fast:hover:not(:disabled){background:linear-gradient(145deg,rgba(107,26,26,0.45),rgba(107,26,26,0.25));border-color:rgba(220,38,38,0.5);}
+.btn-icon{font-size:1.6rem;line-height:1;}
+.btn-label{font-family:'Cinzel Decorative',serif;font-size:0.85rem;color:var(--gold-light);}
+.btn-fast .btn-label{color:rgba(252,165,165,0.8);}
+.btn-sublabel{font-family:'Cinzel',serif;font-size:0.55rem;letter-spacing:0.1em;color:rgba(201,146,42,0.4);text-transform:uppercase;}
+
+/* Streak indicator */
+.streak-row{font-family:'Cinzel',serif;font-size:0.7rem;color:rgba(201,146,42,0.4);margin-top:0.625rem;min-height:1.2rem;}
+.streak-row.hot{color:var(--gold-light);}
+
+/* END */
+.end-ring{width:110px;height:110px;border-radius:50%;background:linear-gradient(135deg,rgba(44,22,84,0.9),rgba(107,26,26,0.9));border:3px solid var(--gold);display:flex;flex-direction:column;align-items:center;justify-content:center;margin:0 auto 1rem;box-shadow:0 0 30px rgba(201,146,42,0.25);}
+.end-num{font-family:'Cinzel Decorative',serif;font-size:2rem;color:var(--gold-bright);line-height:1;}
+.end-sub{font-family:'Cinzel',serif;font-size:0.55rem;color:rgba(201,146,42,0.5);letter-spacing:0.1em;}
+.end-title{font-family:'Cinzel Decorative',serif;font-size:1.1rem;color:var(--gold-light);margin-bottom:0.35rem;}
+.end-msg{font-size:0.82rem;color:rgba(244,232,193,0.4);font-style:italic;margin-bottom:1.5rem;line-height:1.5;max-width:300px;}
+.end-btns{display:flex;gap:0.5rem;}
+.play-again-btn{padding:0.75rem 1.75rem;min-height:48px;background:linear-gradient(135deg,var(--gold),var(--gold-bright));border:none;border-radius:11px;font-family:'Cinzel',serif;font-size:0.78rem;color:var(--bg);font-weight:700;cursor:pointer;}
+.back-games-btn{padding:0.75rem 1.25rem;min-height:48px;background:transparent;border:1px solid rgba(201,146,42,0.25);border-radius:11px;font-family:'Cinzel',serif;font-size:0.72rem;color:rgba(201,146,42,0.5);cursor:pointer;}
+</style>
+</head>
+<body>
+<button class="back-btn" onclick="window.location.href='../games.html'">← Games</button>
+
+<!-- START -->
+<div class="screen show" id="screen-start">
+  <div class="game-icon">📅</div>
+  <div class="game-title">Feast or Fast?</div>
+  <div class="game-sub">Expedition Game</div>
+  <div class="game-desc">A day appears. You decide — is it a feast day or a fasting day? Tap fast before you run out of lives!</div>
+  <button class="start-btn" onclick="startGame()">Start Tapping ›</button>
+  <div class="high-score-lbl" id="high-score-lbl"></div>
+</div>
+
+<!-- GAME -->
+<div class="screen" id="screen-game">
+  <div class="game-top" style="width:100%;">
+    <div class="lives-row" id="lives-row"></div>
+    <div class="score-box">
+      <div class="score-num" id="score-num">0</div>
+      <div class="score-lbl">score</div>
+    </div>
+  </div>
+  <div class="progress-bar-wrap"><div class="progress-bar" id="progress-bar" style="width:0%"></div></div>
+  <div class="question-card" id="question-card">
+    <div class="card-category" id="card-category">Feast Day</div>
+    <div class="card-title" id="card-title">Loading...</div>
+    <div class="card-hint" id="card-hint"></div>
+    <div class="correct-answer" id="correct-answer"></div>
+  </div>
+  <div class="answer-btns">
+    <button class="ans-btn btn-feast" id="btn-feast" onclick="answer('feast')">
+      <span class="btn-icon">🎉</span>
+      <span class="btn-label">Feast!</span>
+      <span class="btn-sublabel">Celebration</span>
+    </button>
+    <button class="ans-btn btn-fast" id="btn-fast" onclick="answer('fast')">
+      <span class="btn-icon">🌿</span>
+      <span class="btn-label">Fast.</span>
+      <span class="btn-sublabel">Abstinence</span>
+    </button>
+  </div>
+  <div class="streak-row" id="streak-row"></div>
+</div>
+
+<!-- END -->
+<div class="screen" id="screen-end">
+  <div class="end-ring">
+    <div class="end-num" id="end-num">0</div>
+    <div class="end-sub">score</div>
+  </div>
+  <div class="end-title" id="end-title">Well done!</div>
+  <div class="end-msg" id="end-msg"></div>
+  <div class="end-btns">
+    <button class="play-again-btn" onclick="startGame()">Play Again</button>
+    <button class="back-games-btn" onclick="window.location.href='../games.html'">Games</button>
+  </div>
+</div>
+
+<script>
+// ── QUESTIONS ─────────────────────────────────────────────────
+// type: 'feast' or 'fast'
+const DAYS = [
+  // Clear feasts
+  {title:'Pascha — Easter Sunday',              hint:'The Feast of Feasts! Christ is Risen!',                        type:'feast'},
+  {title:'Christmas — December 25',             hint:'The Nativity of our Lord Jesus Christ',                        type:'feast'},
+  {title:'Theophany — January 6',               hint:'The Baptism of Christ in the Jordan River',                    type:'feast'},
+  {title:'Palm Sunday',                         hint:'Christ enters Jerusalem in triumph',                           type:'feast'},
+  {title:'Pentecost — 50 days after Pascha',    hint:'The Holy Spirit descends on the Apostles',                     type:'feast'},
+  {title:'Transfiguration — August 6',          hint:'Christ revealed in glory on Mount Tabor',                      type:'feast'},
+  {title:'Dormition of the Theotokos — Aug 15', hint:'The falling asleep of the Virgin Mary',                        type:'feast'},
+  {title:'Birth of the Theotokos — Sept 8',     hint:'The birthday of the Virgin Mary',                              type:'feast'},
+  {title:'Annunciation — March 25',             hint:'The angel Gabriel visits Mary',                                type:'feast'},
+  {title:'Entry into Temple — November 21',     hint:'Mary presented in the Temple as a child',                      type:'feast'},
+  {title:'Ascension of our Lord',               hint:'40 days after Pascha — Christ ascends to heaven',             type:'feast'},
+  {title:'Sunday of Orthodoxy',                 hint:'First Sunday of Lent — victory of icons',                      type:'feast'},
+  {title:'Feast of St. John the Theologian',    hint:'Patron feast of St. John the Divine parish',                   type:'feast'},
+  {title:'Name Day of your patron saint',       hint:'More important than a birthday in Orthodox tradition',          type:'feast'},
+  // Clear fasts
+  {title:'Great Lent — weekdays',               hint:'40 days of preparation for Pascha',                            type:'fast'},
+  {title:'Holy Wednesday',                      hint:'Judas betrayed Christ; Holy Unction is served',                type:'fast'},
+  {title:'Holy Friday — Good Friday',           hint:'The crucifixion and death of our Lord',                        type:'fast'},
+  {title:'Regular Wednesday',                   hint:'We fast because Judas betrayed Christ on Wednesday',           type:'fast'},
+  {title:'Regular Friday',                      hint:'We fast in remembrance of the Crucifixion',                    type:'fast'},
+  {title:'Dormition Fast — August 1-14',        hint:'Final major fast of the year before Dormition feast',          type:'fast'},
+  {title:'Nativity Fast — November 15-Dec 24',  hint:'40 days of preparation for Christmas',                         type:'fast'},
+  {title:'Apostles Fast — after Pentecost',     hint:'Fasting season honoring the holy Apostles',                    type:'fast'},
+  {title:'Eve of Theophany — January 5',        hint:'Strict fast the day before Christ\'s Baptism feast',           type:'fast'},
+  {title:'Beheading of John the Baptist',       hint:'August 29 — always a strict fast day',                         type:'fast'},
+  // Tricky ones
+  {title:'Exaltation of the Cross — Sept 14',   hint:'A great feast day — but also always a strict fast!',           type:'fast'},
+  {title:'Lazarus Saturday',                    hint:'Saturday before Palm Sunday — fish is allowed',                type:'feast'},
+  {title:'Bright Week — week after Pascha',     hint:'No fasting at all — even on Wednesday and Friday',             type:'feast'},
+  {title:'Holy Thursday',                       hint:'The Last Supper — wine and oil are permitted',                 type:'feast'},
+  {title:'Cheese Fare Week',                    hint:'Last week before Lent — no meat but dairy is allowed',         type:'feast'},
+  {title:'Forgiveness Sunday evening',          hint:'Great Vespers begins Great Lent — strict fast starts midnight',type:'fast'},
+];
+
+let score=0, lives=3, qIndex=0, streak=0, answered=false;
+let shuffled=[];
+let highScore = parseInt(localStorage.getItem('fof-high')||'0');
+const MAX_Q = 20;
+
+function shuffle(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function showScreen(id){['screen-start','screen-game','screen-end'].forEach(s=>document.getElementById(s).classList.toggle('show',s===id));}
+
+function startGame(){
+  score=0;lives=3;qIndex=0;streak=0;answered=false;
+  shuffled=shuffle(DAYS).slice(0,MAX_Q);
+  renderLives();
+  updateProgress();
+  document.getElementById('score-num').textContent='0';
+  document.getElementById('streak-row').textContent='';
+  document.getElementById('streak-row').className='streak-row';
+  loadQuestion();
+  showScreen('screen-game');
+}
+
+function renderLives(){
+  const row=document.getElementById('lives-row');
+  row.innerHTML='';
+  for(let i=0;i<3;i++){
+    const h=document.createElement('span');
+    h.className='life-heart'+(i>=lives?' lost':'');
+    h.textContent='♥';
+    row.appendChild(h);
+  }
+}
+
+function updateProgress(){
+  const pct=(qIndex/MAX_Q)*100;
+  document.getElementById('progress-bar').style.width=pct+'%';
+}
+
+function loadQuestion(){
+  if(qIndex>=shuffled.length){endGame();return;}
+  const q=shuffled[qIndex];
+  answered=false;
+  document.getElementById('card-category').textContent=`Day ${qIndex+1} of ${MAX_Q}`;
+  document.getElementById('card-title').textContent=q.title;
+  document.getElementById('card-hint').textContent=q.hint;
+  document.getElementById('question-card').className='question-card';
+  document.getElementById('correct-answer').className='correct-answer';
+  document.getElementById('correct-answer').textContent='';
+  document.getElementById('btn-feast').disabled=false;
+  document.getElementById('btn-fast').disabled=false;
+  updateProgress();
+}
+
+function answer(userAns){
+  if(answered||lives<=0) return;
+  answered=true;
+  const q=shuffled[qIndex];
+  const correct=userAns===q.type;
+  const card=document.getElementById('question-card');
+  const ans=document.getElementById('correct-answer');
+
+  document.getElementById('btn-feast').disabled=true;
+  document.getElementById('btn-fast').disabled=true;
+
+  if(correct){
+    score++;
+    streak++;
+    card.classList.add('correct');
+    ans.textContent=`✦ Correct! It is a ${q.type} day.`;
+    ans.className=`correct-answer show ${q.type}-ans`;
+  } else {
+    streak=0;
+    lives--;
+    card.classList.add('wrong');
+    ans.textContent=`✗ It is actually a ${q.type} day.`;
+    ans.className=`correct-answer show ${q.type}-ans`;
+    renderLives();
+  }
+
+  document.getElementById('score-num').textContent=score;
+
+  const srow=document.getElementById('streak-row');
+  if(streak>=3){srow.textContent=`🔥 ${streak} in a row!`;srow.className='streak-row hot';}
+  else{srow.textContent='';srow.className='streak-row';}
+
+  if(lives<=0){
+    setTimeout(()=>endGame(),700);
+    return;
+  }
+
+  qIndex++;
+  setTimeout(()=>loadQuestion(),800);
+}
+
+function endGame(){
+  const isRecord=score>highScore;
+  if(isRecord){highScore=score;localStorage.setItem('fof-high',score);}
+  document.getElementById('end-num').textContent=score;
+
+  let title='',msg='';
+  if(score>=18){title='Calendar Master!';msg=`${score}/${MAX_Q} — You know the Orthodox calendar perfectly!`;}
+  else if(score>=14){title='Feast Expert!';msg=`${score}/${MAX_Q} — Excellent! You live the rhythm of the Church year.`;}
+  else if(score>=8){title='Good Explorer!';msg=`${score}/${MAX_Q} — You know the main feasts. Keep learning the fasting days!`;}
+  else{title='Keep Studying!';msg='The Orthodox calendar takes time to learn. Study Topic 6 and try again!';}
+
+  document.getElementById('end-title').textContent=isRecord?'New Record! 🌟':title;
+  document.getElementById('end-msg').textContent=msg;
+  showScreen('screen-end');
+}
+
+// Init
+document.getElementById('high-score-lbl').textContent=
+  highScore>0?`Best: ${highScore} / ${MAX_Q}`:'';
+</script>
+</body>
+</html>

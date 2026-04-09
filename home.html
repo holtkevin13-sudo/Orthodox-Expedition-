@@ -2,6 +2,12 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#c9922a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Expedition">
+
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>The Orthodox Expedition</title>
@@ -10,6 +16,98 @@
 function showAdminBar(){
   const bar = document.getElementById('admin-bar');
   if(bar) bar.classList.add('show');
+}
+
+// ── TODAY CARD ────────────────────────────────────────────────
+function renderTodayCard(mastery, completed, topics, allSessions, missions, missionComps, today){
+  const container = document.getElementById('today-items');
+  if(!container) return;
+  container.innerHTML = '';
+
+  const items = [];
+
+  // 1. Daily prayer missions
+  const dailyMissions = missions.filter(m=>m.type==='daily');
+  dailyMissions.forEach(m=>{
+    const done = missionComps.some(c=>c.mission_id===m.id && c.day_key===today);
+    items.push({text: m.name, coins: m.coins, done, link:'missions.html'});
+  });
+
+  // 2. Current session
+  const activeMastery = mastery.find(m=>m.status==='available'||m.status==='pending');
+  if(activeMastery){
+    const topicSessions = allSessions
+      .filter(s=>s.topic_id===activeMastery.topic_id)
+      .sort((a,b)=>a.order_index-b.order_index);
+    const nextSession = topicSessions.find(s=>!completed.includes(s.id));
+    if(nextSession){
+      const topic = topics.find(t=>t.id===activeMastery.topic_id);
+      items.push({
+        text: `${nextSession.id} — ${nextSession.title}`,
+        coins: nextSession.coins,
+        done: completed.includes(nextSession.id),
+        link: 'curriculum.html',
+        isSession: true,
+      });
+    }
+  }
+
+  if(!items.length){
+    container.innerHTML='<div style="font-size:0.8rem;color:rgba(201,146,42,0.35);font-style:italic;padding:0.25rem 0;">All done for today! ✦</div>';
+    return;
+  }
+
+  items.forEach(item=>{
+    const div = document.createElement('a');
+    div.href = item.link || '#';
+    div.style.textDecoration = 'none';
+    div.className = 'today-item' + (item.done?' done':'');
+    div.innerHTML = `
+      <div class="today-check ${item.done?'done':'pending'}">${item.done?'✦':''}</div>
+      <span class="today-text">${item.text}</span>
+      <span class="today-coins">${item.done?'':'+'+ item.coins}</span>`;
+    container.appendChild(div);
+  });
+}
+
+// ── PRAYER STREAK ─────────────────────────────────────────────
+function renderPrayerStreak(missions, missionComps){
+  const prayerMissions = missions.filter(m=>
+    m.type==='daily' && (m.name.toLowerCase().includes('prayer') || m.name.toLowerCase().includes('pray'))
+  );
+  if(!prayerMissions.length) return;
+
+  // Count consecutive days with morning or evening prayer completed
+  let streak = 0;
+  const now = new Date();
+  for(let i=0; i<30; i++){
+    const d = new Date(now);
+    d.setDate(d.getDate()-i);
+    const key = d.toISOString().slice(0,10);
+    const hasAny = prayerMissions.some(m=>
+      missionComps.some(c=>c.mission_id===m.id && c.day_key===key)
+    );
+    if(hasAny) streak++;
+    else if(i>0) break; // Break on first gap after today
+  }
+
+  const numEl = document.getElementById('prayer-num');
+  const dotsEl = document.getElementById('prayer-dots');
+  if(numEl) numEl.textContent = streak;
+  if(dotsEl){
+    dotsEl.innerHTML = '';
+    for(let i=0;i<5;i++){
+      const d = document.createElement('div');
+      d.className = 'streak-dot'+(i<Math.min(streak,5)?' lit':'');
+      d.textContent = i<Math.min(streak,5)?'☩':'';
+      dotsEl.appendChild(d);
+    }
+  }
+}
+
+// ── DISMISS RANKUP ────────────────────────────────────────────
+function dismissRankUp(){
+  closeRankup();
 }
 </script>
 <style>
@@ -393,6 +491,39 @@ body::before{
 .admin-bar-label{font-family:'Cinzel',serif;font-size:0.62rem;letter-spacing:0.15em;color:rgba(201,146,42,0.6);text-transform:uppercase;}
 .admin-bar-btn{background:none;border:1px solid rgba(201,146,42,0.3);border-radius:6px;padding:0.25rem 0.75rem;font-family:'Cinzel',serif;font-size:0.6rem;color:rgba(201,146,42,0.6);cursor:pointer;min-height:32px;transition:all 0.2s;}
 .admin-bar.show ~ .page{padding-top:calc(2.5rem + 1.25rem);}
+
+/* ── TODAY CARD ──────────────────────────────────────────────── */
+.today-card{
+  background:linear-gradient(135deg,rgba(44,22,84,0.5),rgba(107,26,26,0.4));
+  border:1px solid rgba(201,146,42,0.3);border-radius:14px;
+  padding:1rem 1.125rem;margin-bottom:0.875rem;
+}
+.today-eyebrow{font-family:'Cinzel',serif;font-size:0.62rem;letter-spacing:0.2em;
+  color:rgba(201,146,42,0.6);text-transform:uppercase;margin-bottom:0.625rem;}
+.today-item{
+  display:flex;align-items:center;gap:0.625rem;
+  padding:0.5rem 0;border-bottom:1px solid rgba(201,146,42,0.08);
+}
+.today-item:last-child{border-bottom:none;}
+.today-check{width:20px;height:20px;border-radius:50%;
+  border:1.5px solid rgba(201,146,42,0.3);flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:0.65rem;}
+.today-check.done{background:rgba(22,163,74,0.2);border-color:rgba(22,163,74,0.5);color:rgba(134,239,172,0.9);}
+.today-check.pending{color:transparent;}
+.today-text{font-family:'Cinzel',serif;font-size:0.72rem;color:rgba(244,232,193,0.7);flex:1;line-height:1.3;}
+.today-item.done .today-text{color:rgba(244,232,193,0.35);text-decoration:line-through;}
+.today-coins{font-family:'Cinzel',serif;font-size:0.62rem;color:rgba(201,146,42,0.45);flex-shrink:0;}
+
+/* ── DUAL STREAK ─────────────────────────────────────────────── */
+.dual-streak-row{display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-bottom:0.875rem;}
+.streak-card-half{
+  background:rgba(244,232,193,0.03);border:1px solid rgba(201,146,42,0.15);
+  border-radius:12px;padding:0.75rem;display:flex;align-items:center;gap:0.5rem;
+}
+.streak-icon{font-size:1.2rem;flex-shrink:0;}
+.streak-center{flex:1;min-width:0;}
+.streak-title{font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.1em;
+  color:rgba(201,146,42,0.45);text-transform:uppercase;margin-bottom:0.3rem;}
 </style>
 </head>
 <body>
@@ -523,15 +654,35 @@ body::before{
       </div>
     </div>
 
-    <!-- STREAK -->
-    <div class="streak-card fade-up">
-      <div class="streak-left">
-        <div class="streak-title">Attendance Streak</div>
-        <div class="streak-dots" id="streak-dots"></div>
+    <!-- TODAY CARD -->
+    <div class="today-card fade-up" id="today-card">
+      <div class="today-eyebrow">✦ Today's Expedition</div>
+      <div class="today-items" id="today-items"></div>
+    </div>
+
+    <!-- DUAL STREAK -->
+    <div class="dual-streak-row fade-up">
+      <div class="streak-card-half">
+        <div class="streak-icon">🔥</div>
+        <div class="streak-center">
+          <div class="streak-title">Weekly Streak</div>
+          <div class="streak-dots" id="streak-dots"></div>
+        </div>
+        <div class="streak-right">
+          <div class="streak-num" id="streak-num">0</div>
+          <div class="streak-sub">Weeks</div>
+        </div>
       </div>
-      <div class="streak-right">
-        <div class="streak-num" id="streak-num">0</div>
-        <div class="streak-sub">Weeks</div>
+      <div class="streak-card-half">
+        <div class="streak-icon">☩</div>
+        <div class="streak-center">
+          <div class="streak-title">Prayer Streak</div>
+          <div class="streak-dots" id="prayer-dots"></div>
+        </div>
+        <div class="streak-right">
+          <div class="streak-num" id="prayer-num">0</div>
+          <div class="streak-sub">Days</div>
+        </div>
       </div>
     </div>
 
@@ -620,25 +771,34 @@ function showApp(){
 
 // ── LOAD DATA ─────────────────────────────────────────────────
 async function loadData(userId){
-  const [profileRes, badgesRes, earnedRes, masteryRes, sessionsRes, topicsRes] = await Promise.all([
+  const today = new Date().toISOString().slice(0,10);
+  const [profileRes, badgesRes, earnedRes, masteryRes, sessionsRes, topicsRes, missionsRes, missionCompRes, allSessionsRes] = await Promise.all([
     sb.from('profiles').select('*').eq('id',userId).single(),
     sb.from('badges').select('*').order('order_index'),
     sb.from('badge_progress').select('badge_id').eq('explorer_id',userId),
     sb.from('topic_mastery').select('*').eq('explorer_id',userId).order('topic_id'),
     sb.from('session_progress').select('session_id').eq('explorer_id',userId),
     sb.from('topics').select('*').order('order_index'),
+    sb.from('missions').select('*').eq('is_active',true).in('type',['daily','weekly']).order('type'),
+    sb.from('mission_completions').select('mission_id,day_key,week_key').eq('explorer_id',userId),
+    sb.from('sessions').select('id,title,topic_id,coins,order_index').order('topic_id').order('order_index'),
   ]);
 
   profile       = profileRes.data;
   allBadges     = badgesRes.data || [];
   earnedBadges  = (earnedRes.data||[]).map(b=>b.badge_id);
 
-  const mastery     = masteryRes.data || [];
-  const completed   = (sessionsRes.data||[]).map(s=>s.session_id);
-  const topics      = topicsRes.data || [];
+  const mastery       = masteryRes.data || [];
+  const completed     = (sessionsRes.data||[]).map(s=>s.session_id);
+  const topics        = topicsRes.data || [];
+  const missions      = missionsRes.data || [];
+  const missionComps  = missionCompRes.data || [];
+  const allSessions   = allSessionsRes.data || [];
 
   renderAll(mastery, completed, topics);
   checkNotifications(mastery, completed);
+  renderTodayCard(mastery, completed, topics, allSessions, missions, missionComps, today);
+  renderPrayerStreak(missions, missionComps);
 }
 
 // ── RENDER ────────────────────────────────────────────────────
@@ -881,6 +1041,106 @@ function showAdminBar(){
     });
   }
 })();
+
+// ── TODAY CARD ────────────────────────────────────────────────
+function renderTodayCard(mastery, completed, topics, allSessions, missions, missionComps, today){
+  const container = document.getElementById('today-items');
+  if(!container) return;
+  container.innerHTML = '';
+
+  const items = [];
+
+  // 1. Daily prayer missions
+  const dailyMissions = missions.filter(m=>m.type==='daily');
+  dailyMissions.forEach(m=>{
+    const done = missionComps.some(c=>c.mission_id===m.id && c.day_key===today);
+    items.push({text: m.name, coins: m.coins, done, link:'missions.html'});
+  });
+
+  // 2. Current session
+  const activeMastery = mastery.find(m=>m.status==='available'||m.status==='pending');
+  if(activeMastery){
+    const topicSessions = allSessions
+      .filter(s=>s.topic_id===activeMastery.topic_id)
+      .sort((a,b)=>a.order_index-b.order_index);
+    const nextSession = topicSessions.find(s=>!completed.includes(s.id));
+    if(nextSession){
+      const topic = topics.find(t=>t.id===activeMastery.topic_id);
+      items.push({
+        text: `${nextSession.id} — ${nextSession.title}`,
+        coins: nextSession.coins,
+        done: completed.includes(nextSession.id),
+        link: 'curriculum.html',
+        isSession: true,
+      });
+    }
+  }
+
+  if(!items.length){
+    container.innerHTML='<div style="font-size:0.8rem;color:rgba(201,146,42,0.35);font-style:italic;padding:0.25rem 0;">All done for today! ✦</div>';
+    return;
+  }
+
+  items.forEach(item=>{
+    const div = document.createElement('a');
+    div.href = item.link || '#';
+    div.style.textDecoration = 'none';
+    div.className = 'today-item' + (item.done?' done':'');
+    div.innerHTML = `
+      <div class="today-check ${item.done?'done':'pending'}">${item.done?'✦':''}</div>
+      <span class="today-text">${item.text}</span>
+      <span class="today-coins">${item.done?'':'+'+ item.coins}</span>`;
+    container.appendChild(div);
+  });
+}
+
+// ── PRAYER STREAK ─────────────────────────────────────────────
+function renderPrayerStreak(missions, missionComps){
+  const prayerMissions = missions.filter(m=>
+    m.type==='daily' && (m.name.toLowerCase().includes('prayer') || m.name.toLowerCase().includes('pray'))
+  );
+  if(!prayerMissions.length) return;
+
+  // Count consecutive days with morning or evening prayer completed
+  let streak = 0;
+  const now = new Date();
+  for(let i=0; i<30; i++){
+    const d = new Date(now);
+    d.setDate(d.getDate()-i);
+    const key = d.toISOString().slice(0,10);
+    const hasAny = prayerMissions.some(m=>
+      missionComps.some(c=>c.mission_id===m.id && c.day_key===key)
+    );
+    if(hasAny) streak++;
+    else if(i>0) break; // Break on first gap after today
+  }
+
+  const numEl = document.getElementById('prayer-num');
+  const dotsEl = document.getElementById('prayer-dots');
+  if(numEl) numEl.textContent = streak;
+  if(dotsEl){
+    dotsEl.innerHTML = '';
+    for(let i=0;i<5;i++){
+      const d = document.createElement('div');
+      d.className = 'streak-dot'+(i<Math.min(streak,5)?' lit':'');
+      d.textContent = i<Math.min(streak,5)?'☩':'';
+      dotsEl.appendChild(d);
+    }
+  }
+}
+
+// ── DISMISS RANKUP ────────────────────────────────────────────
+function dismissRankUp(){
+  closeRankup();
+}
+</script>
+
+<script>
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('sw.js').catch(()=>{});
+  });
+}
 </script>
 </body>
 </html>

@@ -134,5 +134,36 @@ const GameUtils = (() => {
     }
   }
 
-  return { init, awardCoins, hasPlayedToday, getProfile, coinRain };
+  // ── COIN REMINDER ─────────────────────────────────────────────
+  async function getCoinStatus(gameId) {
+    if (!sb || !profile) return { earned: false };
+    const already = await hasPlayedToday(gameId);
+    return { earned: already };
+  }
+
+  function showCoinReminder(gameId, containerId) {
+    const el = document.getElementById(containerId);
+    if (!el) return;
+    hasPlayedToday(gameId).then(already => {
+      if (already) {
+        el.innerHTML = `
+          <div style="display:flex;align-items:center;justify-content:center;gap:0.4rem;
+          background:rgba(201,146,42,0.08);border:1px solid rgba(201,146,42,0.2);
+          border-radius:8px;padding:0.4rem 0.75rem;
+          font-family:'Cinzel',serif;font-size:0.62rem;color:rgba(201,146,42,0.5);">
+            ✦ Coins already earned today — come back tomorrow!
+          </div>`;
+      } else {
+        el.innerHTML = `
+          <div style="display:flex;align-items:center;justify-content:center;gap:0.4rem;
+          background:rgba(22,163,74,0.08);border:1px solid rgba(22,163,74,0.2);
+          border-radius:8px;padding:0.4rem 0.75rem;
+          font-family:'Cinzel',serif;font-size:0.62rem;color:rgba(134,239,172,0.7);">
+            ⚔ Earn 10 coins for playing · 20 for winning
+          </div>`;
+      }
+    });
+  }
+
+  return { init, awardCoins, hasPlayedToday, getProfile, coinRain, showCoinReminder, getCoinStatus };
 })();

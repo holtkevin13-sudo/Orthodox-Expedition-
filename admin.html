@@ -6,7 +6,148 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Admin — The Orthodox Expedition</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
+// ── PENDING APPROVALS ─────────────────────────────────────────
+async function loadPendingRegistrations(){
+  const {data,error} = await sb.from('pending_registrations')
+    .select('*').eq('status','pending').order('submitted_at',{ascending:true});
+  if(error){console.error('Pending load error:',error);return;}
+  renderPendingList(data||[]);
+}
+
+function renderPendingList(pending){
+  const list  = document.getElementById('pending-list');
+  const badge = document.getElementById('pending-count-badge');
+  if(!list) return;
+
+  if(!pending.length){
+    list.innerHTML='<div style="font-size:0.8rem;color:rgba(201,146,42,0.3);font-style:italic;">No pending registrations.</div>';
+    badge.style.display='none';
+    return;
+  }
+
+  badge.style.display='inline';
+  badge.textContent=pending.length;
+  list.innerHTML='';
+
+  pending.forEach(reg=>{
+    const children = reg.children_data||[];
+    const d = new Date(reg.submitted_at).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+    const card = document.createElement('div');
+    card.style.cssText='background:rgba(244,232,193,0.03);border:1px solid rgba(201,146,42,0.18);border-radius:12px;padding:1rem;margin-bottom:0.75rem;';
+    card.innerHTML=`
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:0.75rem;margin-bottom:0.625rem;">
+        <div>
+          <div style="font-family:'Cinzel',serif;font-size:0.82rem;color:rgba(244,232,193,0.8);margin-bottom:0.15rem;">${reg.family_name}</div>
+          <div style="font-size:0.75rem;color:rgba(201,146,42,0.45);">${reg.parent_first} ${reg.parent_last} · ${reg.parent_email}</div>
+          ${reg.parish?`<div style="font-size:0.72rem;color:rgba(201,146,42,0.35);">Parish: ${reg.parish}</div>`:''}
+          <div style="font-size:0.72rem;color:rgba(201,146,42,0.35);">Submitted: ${d} · Coin rate: $${parseFloat(reg.coin_rate).toFixed(2)}</div>
+        </div>
+      </div>
+      <div style="margin-bottom:0.75rem;">
+        <div style="font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.15em;color:rgba(201,146,42,0.4);text-transform:uppercase;margin-bottom:0.35rem;">${children.length} Child${children.length!==1?'ren':''}</div>
+        ${children.map(c=>`
+          <div style="display:flex;gap:0.5rem;align-items:center;font-size:0.75rem;color:rgba(244,232,193,0.5);margin-bottom:0.2rem;">
+            <span>✦</span>
+            <span>${c.name}</span>
+            <span style="color:rgba(201,146,42,0.35);">@${c.username}</span>
+            <span style="color:rgba(201,146,42,0.35);">Age ${c.age}</span>
+          </div>`).join('')}
+      </div>
+      <div style="display:flex;gap:0.5rem;">
+        <button onclick="approveFamily('${reg.id}')" style="flex:1;padding:0.6rem;min-height:40px;background:rgba(22,163,74,0.15);border:1px solid rgba(22,163,74,0.35);border-radius:8px;font-family:'Cinzel',serif;font-size:0.7rem;color:rgba(134,239,172,0.9);cursor:pointer;">✦ Approve Family</button>
+        <button onclick="declineFamily('${reg.id}')" style="padding:0.6rem 1rem;min-height:40px;background:rgba(220,38,38,0.1);border:1px solid rgba(220,38,38,0.25);border-radius:8px;font-family:'Cinzel',serif;font-size:0.7rem;color:rgba(252,165,165,0.7);cursor:pointer;">Decline</button>
+      </div>
+      <div id="approval-feedback-${reg.id}" style="font-family:'Cinzel',serif;font-size:0.7rem;text-align:center;margin-top:0.5rem;min-height:1rem;"></div>`;
+    list.appendChild(card);
+  });
+}
+
+async function approveFamily(regId){
+  const fb = document.getElementById(`approval-feedback-${regId}`);
+  if(fb){ fb.textContent='Processing...'; fb.style.color='rgba(201,146,42,0.6)'; }
+
+  // Get registration data
+  const {data:reg,error:regErr} = await sb.from('pending_registrations')
+    .select('*').eq('id',regId).single();
+  if(regErr||!reg){ if(fb){fb.textContent='Error loading registration.';fb.style.color='rgba(252,165,165,0.7)';}return; }
+
+  try {
+    // 1. Create family record
+    const {data:family,error:famErr} = await sb.from('families').insert({
+      name:         reg.family_name,
+      parish:       reg.parish||null,
+      parent_email: reg.parent_email,
+      coin_rate:    reg.coin_rate,
+      status:       'approved',
+      approved_at:  new Date().toISOString(),
+      approved_by:  adminProfile.id,
+    }).select().single();
+    if(famErr) throw famErr;
+
+    // 2. Create parent auth account via Supabase Admin
+    //    We use the service role key for this via edge function
+    //    For now create profile record and show instructions
+    const parentEmail = reg.parent_email;
+    const familyId    = family.id;
+
+    // 3. Create child profiles in pending state
+    //    Parent will set passwords when they first log in
+    const children = reg.children_data||[];
+    for(const child of children){
+      const childEmail = child.username.toLowerCase()+'@orthodox-expedition.app';
+      // Insert profile — auth account created separately
+      await sb.from('profiles').insert({
+        name:      child.name,
+        username:  child.username,
+        age:       child.age,
+        family_id: familyId,
+        role:      'explorer',
+        coins:     0,
+        lifetime_coins: 0,
+        sessions_attended: 0,
+      });
+    }
+
+    // 4. Mark registration approved
+    await sb.from('pending_registrations').update({
+      status:      'approved',
+      reviewed_at: new Date().toISOString(),
+      reviewed_by: adminProfile.id,
+    }).eq('id',regId);
+
+    // 5. Log notification
+    await sb.from('notifications').insert({
+      family_id: familyId,
+      type:      'family_approved',
+      title:     `${reg.family_name} approved`,
+      message:   `Family approved. Parent: ${reg.parent_email}. Children: ${children.map(c=>c.name).join(', ')}.`,
+    });
+
+    if(fb){
+      fb.style.color='rgba(134,239,172,0.9)';
+      fb.textContent=`✦ Approved! Send welcome email to ${parentEmail} with their password: ${reg.children_data[0]?.password||'see registration'}.`;
+    }
+
+    // Reload the list
+    setTimeout(loadPendingRegistrations, 2000);
+
+  } catch(e){
+    console.error('Approval error:',e);
+    if(fb){fb.textContent='Error: '+e.message;fb.style.color='rgba(252,165,165,0.7)';}
+  }
+}
+
+async function declineFamily(regId){
+  if(!confirm('Decline this registration?')) return;
+  await sb.from('pending_registrations').update({
+    status:      'declined',
+    reviewed_at: new Date().toISOString(),
+    reviewed_by: adminProfile.id,
+  }).eq('id',regId);
+  loadPendingRegistrations();
+}
+</script>
 <style>
 :root{
   --gold:#c9922a;--gold-light:#f0c96e;--gold-bright:#ffd700;
@@ -335,6 +476,12 @@ body::before{
   <!-- ── DASHBOARD ── -->
   <div class="admin-panel show" id="panel-dashboard">
 
+    <!-- Pending Approvals -->
+    <div class="section" id="pending-section">
+      <div class="section-title">Pending Family Approvals <span id="pending-count-badge" style="background:#ef4444;color:white;border-radius:10px;padding:0 0.4rem;font-size:0.65rem;margin-left:0.4rem;display:none;"></span></div>
+      <div id="pending-list"></div>
+    </div>
+
     <!-- Explorer View Links -->
     <div class="section">
       <div class="section-title">Explorer View</div>
@@ -660,6 +807,7 @@ function toast(msg, isError=false){
     await loadAll();
     document.getElementById('loading').style.display='none';
     document.getElementById('app').style.display='block';
+    loadPendingRegistrations();
   } catch(e) {
     console.error('Admin error:', e);
     window.location.href='index.html';
@@ -1301,6 +1449,147 @@ function switchTab(tab){
   if(tab==='missions')   renderMissions();
   if(tab==='bazaar')     renderBazaar();
   if(tab==='settings')   loadSettingsForm();
+}
+
+// ── PENDING APPROVALS ─────────────────────────────────────────
+async function loadPendingRegistrations(){
+  const {data,error} = await sb.from('pending_registrations')
+    .select('*').eq('status','pending').order('submitted_at',{ascending:true});
+  if(error){console.error('Pending load error:',error);return;}
+  renderPendingList(data||[]);
+}
+
+function renderPendingList(pending){
+  const list  = document.getElementById('pending-list');
+  const badge = document.getElementById('pending-count-badge');
+  if(!list) return;
+
+  if(!pending.length){
+    list.innerHTML='<div style="font-size:0.8rem;color:rgba(201,146,42,0.3);font-style:italic;">No pending registrations.</div>';
+    badge.style.display='none';
+    return;
+  }
+
+  badge.style.display='inline';
+  badge.textContent=pending.length;
+  list.innerHTML='';
+
+  pending.forEach(reg=>{
+    const children = reg.children_data||[];
+    const d = new Date(reg.submitted_at).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+    const card = document.createElement('div');
+    card.style.cssText='background:rgba(244,232,193,0.03);border:1px solid rgba(201,146,42,0.18);border-radius:12px;padding:1rem;margin-bottom:0.75rem;';
+    card.innerHTML=`
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:0.75rem;margin-bottom:0.625rem;">
+        <div>
+          <div style="font-family:'Cinzel',serif;font-size:0.82rem;color:rgba(244,232,193,0.8);margin-bottom:0.15rem;">${reg.family_name}</div>
+          <div style="font-size:0.75rem;color:rgba(201,146,42,0.45);">${reg.parent_first} ${reg.parent_last} · ${reg.parent_email}</div>
+          ${reg.parish?`<div style="font-size:0.72rem;color:rgba(201,146,42,0.35);">Parish: ${reg.parish}</div>`:''}
+          <div style="font-size:0.72rem;color:rgba(201,146,42,0.35);">Submitted: ${d} · Coin rate: $${parseFloat(reg.coin_rate).toFixed(2)}</div>
+        </div>
+      </div>
+      <div style="margin-bottom:0.75rem;">
+        <div style="font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.15em;color:rgba(201,146,42,0.4);text-transform:uppercase;margin-bottom:0.35rem;">${children.length} Child${children.length!==1?'ren':''}</div>
+        ${children.map(c=>`
+          <div style="display:flex;gap:0.5rem;align-items:center;font-size:0.75rem;color:rgba(244,232,193,0.5);margin-bottom:0.2rem;">
+            <span>✦</span>
+            <span>${c.name}</span>
+            <span style="color:rgba(201,146,42,0.35);">@${c.username}</span>
+            <span style="color:rgba(201,146,42,0.35);">Age ${c.age}</span>
+          </div>`).join('')}
+      </div>
+      <div style="display:flex;gap:0.5rem;">
+        <button onclick="approveFamily('${reg.id}')" style="flex:1;padding:0.6rem;min-height:40px;background:rgba(22,163,74,0.15);border:1px solid rgba(22,163,74,0.35);border-radius:8px;font-family:'Cinzel',serif;font-size:0.7rem;color:rgba(134,239,172,0.9);cursor:pointer;">✦ Approve Family</button>
+        <button onclick="declineFamily('${reg.id}')" style="padding:0.6rem 1rem;min-height:40px;background:rgba(220,38,38,0.1);border:1px solid rgba(220,38,38,0.25);border-radius:8px;font-family:'Cinzel',serif;font-size:0.7rem;color:rgba(252,165,165,0.7);cursor:pointer;">Decline</button>
+      </div>
+      <div id="approval-feedback-${reg.id}" style="font-family:'Cinzel',serif;font-size:0.7rem;text-align:center;margin-top:0.5rem;min-height:1rem;"></div>`;
+    list.appendChild(card);
+  });
+}
+
+async function approveFamily(regId){
+  const fb = document.getElementById(`approval-feedback-${regId}`);
+  if(fb){ fb.textContent='Processing...'; fb.style.color='rgba(201,146,42,0.6)'; }
+
+  // Get registration data
+  const {data:reg,error:regErr} = await sb.from('pending_registrations')
+    .select('*').eq('id',regId).single();
+  if(regErr||!reg){ if(fb){fb.textContent='Error loading registration.';fb.style.color='rgba(252,165,165,0.7)';}return; }
+
+  try {
+    // 1. Create family record
+    const {data:family,error:famErr} = await sb.from('families').insert({
+      name:         reg.family_name,
+      parish:       reg.parish||null,
+      parent_email: reg.parent_email,
+      coin_rate:    reg.coin_rate,
+      status:       'approved',
+      approved_at:  new Date().toISOString(),
+      approved_by:  adminProfile.id,
+    }).select().single();
+    if(famErr) throw famErr;
+
+    // 2. Create parent auth account via Supabase Admin
+    //    We use the service role key for this via edge function
+    //    For now create profile record and show instructions
+    const parentEmail = reg.parent_email;
+    const familyId    = family.id;
+
+    // 3. Create child profiles in pending state
+    //    Parent will set passwords when they first log in
+    const children = reg.children_data||[];
+    for(const child of children){
+      const childEmail = child.username.toLowerCase()+'@orthodox-expedition.app';
+      // Insert profile — auth account created separately
+      await sb.from('profiles').insert({
+        name:      child.name,
+        username:  child.username,
+        age:       child.age,
+        family_id: familyId,
+        role:      'explorer',
+        coins:     0,
+        lifetime_coins: 0,
+        sessions_attended: 0,
+      });
+    }
+
+    // 4. Mark registration approved
+    await sb.from('pending_registrations').update({
+      status:      'approved',
+      reviewed_at: new Date().toISOString(),
+      reviewed_by: adminProfile.id,
+    }).eq('id',regId);
+
+    // 5. Log notification
+    await sb.from('notifications').insert({
+      family_id: familyId,
+      type:      'family_approved',
+      title:     `${reg.family_name} approved`,
+      message:   `Family approved. Parent: ${reg.parent_email}. Children: ${children.map(c=>c.name).join(', ')}.`,
+    });
+
+    if(fb){
+      fb.style.color='rgba(134,239,172,0.9)';
+      fb.textContent=`✦ Approved! Send welcome email to ${parentEmail} with their password: ${reg.children_data[0]?.password||'see registration'}.`;
+    }
+
+    // Reload the list
+    setTimeout(loadPendingRegistrations, 2000);
+
+  } catch(e){
+    console.error('Approval error:',e);
+    if(fb){fb.textContent='Error: '+e.message;fb.style.color='rgba(252,165,165,0.7)';}
+  }
+}
+
+async function declineFamily(regId){
+  if(!confirm('Decline this registration?')) return;
+  await sb.from('pending_registrations').update({
+    status:      'declined',
+    reviewed_at: new Date().toISOString(),
+    reviewed_by: adminProfile.id,
+  }).eq('id',regId);
+  loadPendingRegistrations();
 }
 </script>
 </body>

@@ -5,7 +5,7 @@
  */
 
 const FROM_EMAIL  = 'hello@orthodoxcompanion.com';
-const FROM_NAME   = 'The Orthodox Expedition';
+const FROM_NAME   = 'The Orthodox Expedition Team';
 const KEVIN_EMAIL = 'holt.kevin13@gmail.com';
 
 const EmailUtils = {
@@ -120,10 +120,21 @@ const EmailUtils = {
           <div style="padding:1.5rem;">
             <p style="font-size:1rem;color:#3d1f08;margin-bottom:0.75rem;">Dear ${parentName},</p>
             <p style="font-size:0.95rem;color:rgba(61,31,8,0.75);line-height:1.7;margin-bottom:1rem;">
-              The ${familyName} has been approved and your expedition accounts are ready. Your children can now log in and begin their Orthodox journey.
+              On behalf of the Orthodox Expedition team, welcome to the family. We are delighted to have the ${familyName} join us on this journey through the Orthodox Christian faith.
+            </p>
+            <p style="font-size:0.95rem;color:rgba(61,31,8,0.75);line-height:1.7;margin-bottom:1rem;">
+              Your family account has been reviewed and approved. You will receive your login credentials in a separate message shortly. Once logged in, you will have access to your parent dashboard where you can track your children's progress, manage their Saint Coins, approve prize redemptions, and mark missions complete.
             </p>
             <p style="font-size:0.95rem;color:rgba(61,31,8,0.75);line-height:1.7;margin-bottom:1.25rem;">
-              You will receive a separate message with your login credentials. As a parent you can manage coins, approve prizes, mark missions complete, and track your children's progress from your family dashboard.
+              The expedition spans 10 topics and 61 sessions covering the foundations of the Orthodox faith — from the Holy Trinity and the Sacraments to the Divine Liturgy, the Church Year, and the lives of the saints. We pray this journey deepens your family's love for Christ and His Church.
+            </p>
+            <p style="font-size:0.95rem;color:rgba(61,31,8,0.75);line-height:1.7;margin-bottom:1.25rem;">
+              If you have any questions at any time please do not hesitate to reach out to us at hello@orthodoxcompanion.com. We are here to support your family every step of the way.
+            </p>
+            <p style="font-size:0.95rem;color:rgba(61,31,8,0.75);line-height:1.6;margin-bottom:1.25rem;">
+              In Christ,<br>
+              <strong>The Orthodox Expedition Team</strong><br>
+              <span style="font-size:0.82rem;color:rgba(61,31,8,0.5);">hello@orthodoxcompanion.com</span>
             </p>
             <a href="${appUrl || 'https://holtkevin13-sudo.github.io/Orthodox-Expedition-/'}"
                style="display:block;text-align:center;padding:0.875rem;background:linear-gradient(135deg,#c9922a,#ffd700);border-radius:8px;color:#1a0f00;font-weight:bold;text-decoration:none;font-size:0.9rem;letter-spacing:0.05em;">

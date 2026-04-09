@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Join — The Orthodox Expedition</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{
+  --gold:#c9922a;--gold-light:#f0c96e;--gold-bright:#ffd700;
+  --parchment:#f4e8c1;--ink:#1a0f00;
+  --burgundy:#6b1a1a;--byzantine:#2c1654;
+  --green:#16a34a;--red:#dc2626;
+  --bg:#0e0800;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{min-height:100%;}
+body{
+  font-family:'Crimson Text',serif;
+  background:var(--bg);
+  background-image:
+    radial-gradient(ellipse at 50% 0%,rgba(107,26,26,0.45) 0%,transparent 55%),
+    radial-gradient(ellipse at 100% 100%,rgba(44,22,84,0.3) 0%,transparent 50%);
+  min-height:100vh;padding:1.5rem 1rem 3rem;
+}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(201,146,42,0.022) 1px,transparent 1px),linear-gradient(90deg,rgba(201,146,42,0.022) 1px,transparent 1px);background-size:44px 44px;pointer-events:none;}
+
+.page{max-width:480px;margin:0 auto;position:relative;z-index:1;}
+
+/* ── HEADER ── */
+.page-header{text-align:center;margin-bottom:2rem;}
+.page-cross{font-family:'Cinzel',serif;color:rgba(201,146,42,0.35);letter-spacing:0.8rem;font-size:0.7rem;margin-bottom:0.75rem;}
+.page-title{font-family:'Cinzel Decorative',serif;font-size:clamp(1.2rem,5vw,1.6rem);color:var(--gold-light);text-shadow:0 0 24px rgba(201,146,42,0.4);margin-bottom:0.25rem;}
+.page-sub{font-family:'Cinzel',serif;font-size:0.62rem;letter-spacing:0.25em;color:rgba(201,146,42,0.4);text-transform:uppercase;}
+.back-link{font-family:'Cinzel',serif;font-size:0.65rem;color:rgba(201,146,42,0.4);text-decoration:none;display:inline-block;margin-bottom:1.5rem;}
+.back-link:hover{color:rgba(201,146,42,0.7);}
+
+/* ── CARDS ── */
+.card{
+  background:linear-gradient(160deg,rgba(44,22,84,0.5) 0%,rgba(18,8,40,0.7) 50%,rgba(107,26,26,0.5) 100%);
+  border:1px solid rgba(201,146,42,0.2);border-radius:16px;
+  padding:1.25rem;margin-bottom:1rem;
+}
+.card-title{
+  font-family:'Cinzel',serif;font-size:0.7rem;letter-spacing:0.18em;
+  color:rgba(201,146,42,0.55);text-transform:uppercase;margin-bottom:1rem;
+  padding-bottom:0.5rem;border-bottom:1px solid rgba(201,146,42,0.1);
+}
+
+/* ── FIELDS ── */
+.field{margin-bottom:0.875rem;}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:0.625rem;}
+.field-label{font-family:'Cinzel',serif;font-size:0.65rem;letter-spacing:0.1em;color:rgba(201,146,42,0.5);text-transform:uppercase;display:block;margin-bottom:0.35rem;}
+.field-input{
+  width:100%;padding:0.7rem 0.875rem;
+  background:rgba(244,232,193,0.06);
+  border:1px solid rgba(201,146,42,0.2);border-radius:9px;
+  font-family:'Crimson Text',serif;font-size:0.95rem;color:var(--parchment);
+  outline:none;transition:all 0.2s;-webkit-appearance:none;
+}
+.field-input::placeholder{color:rgba(244,232,193,0.2);}
+.field-input:focus{border-color:rgba(201,146,42,0.5);background:rgba(244,232,193,0.09);box-shadow:0 0 0 3px rgba(201,146,42,0.08);}
+.field-input.error{border-color:rgba(220,38,38,0.5);}
+.field-hint{font-size:0.72rem;color:rgba(244,232,193,0.3);font-style:italic;margin-top:0.25rem;}
+.field-optional{font-family:'Cinzel',serif;font-size:0.55rem;color:rgba(201,146,42,0.3);margin-left:0.375rem;}
+
+/* ── COIN CALCULATOR ── */
+.calculator{
+  background:rgba(201,146,42,0.05);border:1px solid rgba(201,146,42,0.15);
+  border-radius:12px;padding:1rem;margin-bottom:0.875rem;
+}
+.calc-title{font-family:'Cinzel',serif;font-size:0.65rem;letter-spacing:0.15em;color:rgba(201,146,42,0.5);text-transform:uppercase;margin-bottom:0.75rem;}
+.calc-rate-row{display:flex;align-items:center;gap:0.625rem;margin-bottom:0.875rem;}
+.calc-prefix{font-family:'Cinzel',serif;font-size:1rem;color:rgba(201,146,42,0.6);}
+.calc-input{
+  width:80px;padding:0.5rem 0.625rem;
+  background:rgba(244,232,193,0.08);border:1px solid rgba(201,146,42,0.3);
+  border-radius:8px;font-family:'Cinzel Decorative',serif;font-size:1rem;
+  color:var(--gold-bright);text-align:center;outline:none;
+}
+.calc-label{font-family:'Cinzel',serif;font-size:0.7rem;color:rgba(201,146,42,0.4);}
+.calc-stats{display:flex;flex-direction:column;gap:0.35rem;margin-bottom:0.875rem;}
+.calc-stat{display:flex;align-items:center;justify-content:space-between;}
+.calc-stat-label{font-size:0.78rem;color:rgba(244,232,193,0.45);}
+.calc-stat-val{font-family:'Cinzel',serif;font-size:0.78rem;color:var(--gold-light);}
+.calc-tiers{display:grid;grid-template-columns:1fr 1fr;gap:0.4rem;}
+.calc-tier{
+  background:rgba(244,232,193,0.03);border:1px solid rgba(201,146,42,0.12);
+  border-radius:8px;padding:0.5rem 0.625rem;
+}
+.calc-tier-badge{font-size:0.9rem;}
+.calc-tier-name{font-family:'Cinzel',serif;font-size:0.58rem;color:rgba(201,146,42,0.4);display:block;}
+.calc-tier-range{font-family:'Cinzel',serif;font-size:0.68rem;color:var(--gold-light);}
+.calc-divider{height:1px;background:rgba(201,146,42,0.1);margin:0.75rem 0;}
+.calc-note{font-size:0.72rem;color:rgba(244,232,193,0.3);font-style:italic;line-height:1.5;margin-bottom:0.75rem;}
+.calc-how{font-family:'Cinzel',serif;font-size:0.62rem;letter-spacing:0.12em;color:rgba(201,146,42,0.4);text-transform:uppercase;margin-bottom:0.5rem;}
+.calc-how-text{font-size:0.78rem;color:rgba(244,232,193,0.4);line-height:1.6;}
+
+/* ── CHILDREN COUNT ── */
+.children-count-row{display:flex;align-items:center;gap:0.625rem;margin-bottom:1rem;}
+.count-btn{
+  width:36px;height:36px;border-radius:50%;
+  background:rgba(201,146,42,0.1);border:1px solid rgba(201,146,42,0.25);
+  font-family:'Cinzel',serif;font-size:1rem;color:rgba(201,146,42,0.6);
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:all 0.2s;
+}
+.count-btn:hover{background:rgba(201,146,42,0.2);}
+.count-display{
+  font-family:'Cinzel Decorative',serif;font-size:1.4rem;
+  color:var(--gold-bright);min-width:32px;text-align:center;
+}
+.count-label{font-family:'Cinzel',serif;font-size:0.7rem;color:rgba(201,146,42,0.4);}
+
+/* ── CHILD CARD ── */
+.child-card{
+  background:rgba(44,22,84,0.2);border:1px solid rgba(124,58,237,0.2);
+  border-radius:12px;padding:1rem;margin-bottom:0.625rem;
+}
+.child-card-title{font-family:'Cinzel',serif;font-size:0.65rem;letter-spacing:0.15em;color:rgba(167,139,250,0.5);text-transform:uppercase;margin-bottom:0.75rem;}
+
+/* ── SUBMIT ── */
+.submit-btn{
+  width:100%;padding:1rem;min-height:56px;
+  background:linear-gradient(135deg,var(--gold) 0%,var(--gold-bright) 100%);
+  border:none;border-radius:13px;
+  font-family:'Cinzel',serif;font-size:0.88rem;letter-spacing:0.1em;
+  color:var(--ink);font-weight:700;cursor:pointer;transition:all 0.2s;
+  box-shadow:0 4px 16px rgba(201,146,42,0.25);margin-top:0.5rem;
+}
+.submit-btn:hover{box-shadow:0 6px 24px rgba(201,146,42,0.4);}
+.submit-btn:active{transform:scale(0.98);}
+.submit-btn:disabled{opacity:0.5;cursor:not-allowed;transform:none;}
+
+.form-error{
+  font-family:'Crimson Text',serif;font-style:italic;font-size:0.82rem;
+  color:#f87171;text-align:center;margin-top:0.75rem;min-height:1.2rem;
+}
+
+/* ── SUCCESS ── */
+.success-screen{
+  display:none;text-align:center;padding:2rem 1rem;
+}
+.success-screen.show{display:block;}
+.success-cross{font-size:3rem;margin-bottom:1rem;color:var(--gold-light);}
+.success-title{font-family:'Cinzel Decorative',serif;font-size:1.3rem;color:var(--gold-light);margin-bottom:0.5rem;}
+.success-msg{font-size:0.9rem;color:rgba(244,232,193,0.5);line-height:1.6;font-style:italic;max-width:340px;margin:0 auto 1.5rem;}
+.success-note{
+  background:rgba(201,146,42,0.06);border:1px solid rgba(201,146,42,0.18);
+  border-radius:10px;padding:1rem;
+  font-size:0.82rem;color:rgba(244,232,193,0.45);line-height:1.6;
+  text-align:left;
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="page-header">
+    <div class="page-cross">✦ ☩ ✦</div>
+    <div class="page-title">Join the Expedition</div>
+    <div class="page-sub">Family Registration</div>
+  </div>
+
+  <a class="back-link" href="index.html">← Back to Sign In</a>
+
+  <!-- REGISTRATION FORM -->
+  <div id="reg-form">
+
+    <!-- PARENT INFO -->
+    <div class="card">
+      <div class="card-title">Parent Information</div>
+      <div class="field field-row">
+        <div>
+          <label class="field-label">First Name</label>
+          <input type="text" id="parent-first" class="field-input" placeholder="First name">
+        </div>
+        <div>
+          <label class="field-label">Last Name</label>
+          <input type="text" id="parent-last" class="field-input" placeholder="Last name">
+        </div>
+      </div>
+      <div class="field">
+        <label class="field-label">Email</label>
+        <input type="email" id="parent-email" class="field-input" placeholder="your@email.com">
+      </div>
+      <div class="field">
+        <label class="field-label">Password</label>
+        <input type="password" id="parent-password" class="field-input" placeholder="Create a password">
+      </div>
+      <div class="field">
+        <label class="field-label">Family Name</label>
+        <input type="text" id="family-name" class="field-input" placeholder="e.g. The Smith Family">
+      </div>
+      <div class="field">
+        <label class="field-label">Parish <span class="field-optional">optional</span></label>
+        <input type="text" id="parish" class="field-input" placeholder="Your Orthodox parish">
+      </div>
+    </div>
+
+    <!-- COIN CALCULATOR -->
+    <div class="card">
+      <div class="card-title">Set Your Coin Value</div>
+      <div class="calculator">
+        <div class="calc-title">How much is each Saint Coin worth?</div>
+        <div class="calc-rate-row">
+          <span class="calc-prefix">$</span>
+          <input type="number" id="coin-rate" class="calc-input" value="0.02" min="0.01" max="0.25" step="0.01" oninput="updateCalc()">
+          <span class="calc-label">per coin</span>
+        </div>
+
+        <div class="calc-stats" id="calc-stats">
+          <div class="calc-stat">
+            <span class="calc-stat-label">Per week</span>
+            <span class="calc-stat-val" id="calc-week">~230 coins = $4.60</span>
+          </div>
+          <div class="calc-stat">
+            <span class="calc-stat-label">Per month</span>
+            <span class="calc-stat-val" id="calc-month">~920 coins = $18.40</span>
+          </div>
+          <div class="calc-stat">
+            <span class="calc-stat-label">Full program</span>
+            <span class="calc-stat-val" id="calc-full">~15,000 coins = $300.00</span>
+          </div>
+        </div>
+
+        <div class="calc-tiers">
+          <div class="calc-tier">
+            <span class="calc-tier-badge">🥉</span>
+            <span class="calc-tier-name">Common</span>
+            <span class="calc-tier-range" id="tier-common">$6 – $10</span>
+          </div>
+          <div class="calc-tier">
+            <span class="calc-tier-badge">🥈</span>
+            <span class="calc-tier-name">Rare</span>
+            <span class="calc-tier-range" id="tier-rare">$20 – $30</span>
+          </div>
+          <div class="calc-tier">
+            <span class="calc-tier-badge">🥇</span>
+            <span class="calc-tier-name">Legendary</span>
+            <span class="calc-tier-range" id="tier-legendary">$50 – $70</span>
+          </div>
+          <div class="calc-tier">
+            <span class="calc-tier-badge">💎</span>
+            <span class="calc-tier-name">Epic</span>
+            <span class="calc-tier-range" id="tier-epic">$100 – $150</span>
+          </div>
+        </div>
+
+        <div class="calc-divider"></div>
+
+        <div class="calc-note">
+          Estimated earnings do not include bonus coins awarded manually by parents, special mission completions, or any additional coins added outside the standard earning structure.
+        </div>
+
+        <div class="calc-how">Adding prizes to each category</div>
+        <div class="calc-how-text">
+          Once your family account is approved you will set up your prize shop from your parent dashboard. For each category enter the prize name, an emoji, and the coin cost — the dollar value calculates automatically. Common prizes should fall in your chosen Common range, and so on. You can add as many prizes as you like and toggle them on or off at any time.
+        </div>
+      </div>
+    </div>
+
+    <!-- CHILDREN -->
+    <div class="card">
+      <div class="card-title">Your Children</div>
+      <div class="children-count-row">
+        <button class="count-btn" onclick="adjustCount(-1)">−</button>
+        <div class="count-display" id="count-display">1</div>
+        <button class="count-btn" onclick="adjustCount(1)">+</button>
+        <span class="count-label">child / children</span>
+      </div>
+      <div id="children-forms"></div>
+    </div>
+
+    <button class="submit-btn" id="submit-btn" onclick="submitRegistration()">
+      Submit Registration ✦
+    </button>
+    <div class="form-error" id="form-error"></div>
+
+  </div>
+
+  <!-- SUCCESS -->
+  <div class="success-screen" id="success-screen">
+    <div class="success-cross">☩</div>
+    <div class="success-title">Registration Submitted!</div>
+    <div class="success-msg">Your family has been added to the expedition roster. You will receive an email at the address you provided once your account is approved.</div>
+    <div class="success-note">
+      <strong style="font-family:'Cinzel',serif;font-size:0.75rem;color:rgba(201,146,42,0.6);">What happens next:</strong><br><br>
+      The expedition administrator will review your registration, typically within 24-48 hours. Once approved you will receive a welcome email with instructions to sign in and begin the expedition with your family.
+    </div>
+  </div>
+
+</div>
+
+<script>
+const SUPABASE_URL = 'https://ksfnsryfmkafwirzgjoe.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtzZm5zcnlmbWthZndpcnpnam9lIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2ODM4MTcsImV4cCI6MjA5MTI1OTgxN30.mHQty44WBnjQY8BJ8KbPk_pp-yTcOaifGxCZPUO4xpY';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ── COIN CALC ─────────────────────────────────────────────────
+function fmt(n){ return '$'+n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,','); }
+
+function updateCalc(){
+  const rate = parseFloat(document.getElementById('coin-rate').value) || 0.02;
+  document.getElementById('calc-week').textContent    = `~230 coins = ${fmt(230*rate)}`;
+  document.getElementById('calc-month').textContent   = `~920 coins = ${fmt(920*rate)}`;
+  document.getElementById('calc-full').textContent    = `~15,000 coins = ${fmt(15000*rate)}`;
+  document.getElementById('tier-common').textContent    = `${fmt(300*rate)} – ${fmt(500*rate)}`;
+  document.getElementById('tier-rare').textContent      = `${fmt(1000*rate)} – ${fmt(1500*rate)}`;
+  document.getElementById('tier-legendary').textContent = `${fmt(2500*rate)} – ${fmt(3500*rate)}`;
+  document.getElementById('tier-epic').textContent      = `${fmt(5000*rate)} – ${fmt(7500*rate)}`;
+}
+
+// ── CHILDREN COUNT ────────────────────────────────────────────
+let childCount = 1;
+
+function adjustCount(delta){
+  childCount = Math.max(1, Math.min(6, childCount + delta));
+  document.getElementById('count-display').textContent = childCount;
+  renderChildForms();
+}
+
+function renderChildForms(){
+  const container = document.getElementById('children-forms');
+  container.innerHTML = '';
+  for(let i=0;i<childCount;i++){
+    const card = document.createElement('div');
+    card.className = 'child-card';
+    card.innerHTML = `
+      <div class="child-card-title">Child ${i+1}</div>
+      <div class="field">
+        <label class="field-label">First Name</label>
+        <input type="text" id="child-name-${i}" class="field-input" placeholder="First name">
+      </div>
+      <div class="field">
+        <label class="field-label">Username</label>
+        <input type="text" id="child-username-${i}" class="field-input" placeholder="They will use this to log in">
+        <div class="field-hint">Letters and numbers only. No spaces.</div>
+      </div>
+      <div class="field field-row">
+        <div>
+          <label class="field-label">Age</label>
+          <input type="number" id="child-age-${i}" class="field-input" placeholder="Age" min="4" max="18">
+        </div>
+        <div>
+          <label class="field-label">Password</label>
+          <input type="password" id="child-password-${i}" class="field-input" placeholder="Simple password">
+        </div>
+      </div>`;
+    container.appendChild(card);
+  }
+}
+
+// ── VALIDATION ────────────────────────────────────────────────
+function showError(msg){
+  document.getElementById('form-error').textContent = msg;
+}
+
+function validate(){
+  const firstName = document.getElementById('parent-first').value.trim();
+  const lastName  = document.getElementById('parent-last').value.trim();
+  const email     = document.getElementById('parent-email').value.trim();
+  const password  = document.getElementById('parent-password').value;
+  const famName   = document.getElementById('family-name').value.trim();
+  const rate      = parseFloat(document.getElementById('coin-rate').value);
+
+  if(!firstName||!lastName){ showError('Please enter your full name.'); return false; }
+  if(!email||!email.includes('@')){ showError('Please enter a valid email address.'); return false; }
+  if(password.length<6){ showError('Password must be at least 6 characters.'); return false; }
+  if(!famName){ showError('Please enter your family name.'); return false; }
+  if(isNaN(rate)||rate<0.01||rate>0.25){ showError('Coin value must be between $0.01 and $0.25.'); return false; }
+
+  for(let i=0;i<childCount;i++){
+    const name     = document.getElementById(`child-name-${i}`).value.trim();
+    const username = document.getElementById(`child-username-${i}`).value.trim();
+    const age      = document.getElementById(`child-age-${i}`).value;
+    const pass     = document.getElementById(`child-password-${i}`).value;
+
+    if(!name){ showError(`Please enter a name for Child ${i+1}.`); return false; }
+    if(!username||!/^[a-zA-Z0-9]+$/.test(username)){ showError(`Username for Child ${i+1} must be letters and numbers only.`); return false; }
+    if(!age||parseInt(age)<4||parseInt(age)>18){ showError(`Please enter a valid age for Child ${i+1}.`); return false; }
+    if(pass.length<4){ showError(`Password for Child ${i+1} must be at least 4 characters.`); return false; }
+  }
+  return true;
+}
+
+// ── SUBMIT ────────────────────────────────────────────────────
+async function submitRegistration(){
+  showError('');
+  if(!validate()) return;
+
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true;
+  btn.textContent = 'Submitting...';
+
+  const children = [];
+  for(let i=0;i<childCount;i++){
+    children.push({
+      name:     document.getElementById(`child-name-${i}`).value.trim(),
+      username: document.getElementById(`child-username-${i}`).value.trim(),
+      age:      parseInt(document.getElementById(`child-age-${i}`).value),
+      password: document.getElementById(`child-password-${i}`).value,
+    });
+  }
+
+  const payload = {
+    family_name:  document.getElementById('family-name').value.trim(),
+    parish:       document.getElementById('parish').value.trim()||null,
+    parent_first: document.getElementById('parent-first').value.trim(),
+    parent_last:  document.getElementById('parent-last').value.trim(),
+    parent_email: document.getElementById('parent-email').value.trim(),
+    coin_rate:    parseFloat(document.getElementById('coin-rate').value),
+    children_data:children,
+    submitted_at: new Date().toISOString(),
+    status:       'pending',
+  };
+
+  const {error} = await sb.from('pending_registrations').insert(payload);
+
+  if(error){
+    showError('Something went wrong. Please try again.');
+    console.error(error);
+    btn.disabled=false;
+    btn.textContent='Submit Registration ✦';
+    return;
+  }
+
+  // Show success
+  document.getElementById('reg-form').style.display='none';
+  document.getElementById('success-screen').classList.add('show');
+}
+
+// ── INIT ──────────────────────────────────────────────────────
+renderChildForms();
+updateCalc();
+</script>
+</body>
+</html>

@@ -649,6 +649,7 @@ function buildVerifyCard(m, status, onSubmit){
 
 // ── COMPLETE MISSIONS ─────────────────────────────────────────
 async function completeDailyMission(m){
+  if(new URLSearchParams(window.location.search).get('admin')==='1') return;
   if(isDailyDone(m.id)) return;
   const btn = document.querySelector(`#card-${m.id} .m-btn`);
   if(btn) btn.disabled=true;
@@ -671,6 +672,7 @@ async function completeDailyMission(m){
 }
 
 async function completeWeeklyMission(m){
+  if(new URLSearchParams(window.location.search).get('admin')==='1') return;
   if(isWeeklyDone(m.id)) return;
   const btn = document.querySelector(`#card-${m.id} .m-btn`);
   if(btn) btn.disabled=true;

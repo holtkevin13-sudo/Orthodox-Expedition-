@@ -1,0 +1,28 @@
+{
+  "name": "The Orthodox Expedition",
+  "short_name": "Expedition",
+  "description": "A Greek Orthodox family home study expedition for Nolan",
+  "start_url": "/Orthodox-Expedition-/",
+  "display": "standalone",
+  "background_color": "#0e0800",
+  "theme_color": "#c9922a",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -859,6 +859,27 @@ function showAdminBar(){
   const bar = document.getElementById('admin-bar');
   if(bar) bar.classList.add('show');
 }
+
+// ── ADMIN NAV FIX ─────────────────────────────────────────────
+// When browsing as admin, preserve ?admin=1 across all nav links
+(function(){
+  if(new URLSearchParams(window.location.search).get('admin')==='1'){
+    document.querySelectorAll('.nav-item').forEach(a=>{
+      if(a.href && !a.href.includes('?admin=1') && !a.href.includes('index.html')){
+        a.href = a.href + '?admin=1';
+      }
+    });
+    // Also update any "back" or internal links
+    document.querySelectorAll('a[href]').forEach(a=>{
+      const href=a.getAttribute('href');
+      if(href && !href.startsWith('#') && !href.startsWith('http') &&
+         !href.includes('?admin=1') && !href.includes('index.html') &&
+         !href.includes('games/')){
+        a.setAttribute('href', href + '?admin=1');
+      }
+    });
+  }
+})();
 </script>
 </body>
 </html>

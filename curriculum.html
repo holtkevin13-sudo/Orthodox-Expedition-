@@ -596,7 +596,8 @@ function renderTopics(){
     const status = mastery?mastery.status:'locked';
     const isActive = topic.id===activeTopicId;
     const isComplete = status==='complete';
-    const isLocked = status==='locked';
+    const isAdminView = new URLSearchParams(window.location.search).get('admin')==='1';
+    const isLocked = status==='locked' && !isAdminView;
     const isExpanded = expandedTopics.has(topic.id);
 
     const topicSessions = allSessions.filter(s=>s.topic_id===topic.id);
@@ -658,9 +659,10 @@ function toggleTopic(topicId){
   const card = document.getElementById(`topic-${topicId}`);
   if(!card) return;
 
+  const isAdminView = new URLSearchParams(window.location.search).get('admin')==='1';
   const mastery = masteryData.find(m=>m.topic_id===topicId);
   const status = mastery?mastery.status:'locked';
-  if(status==='locked') return; // Can't expand locked topics
+  if(status==='locked' && !isAdminView) return; // Can't expand locked topics unless admin
 
   if(expandedTopics.has(topicId)){
     expandedTopics.delete(topicId);
@@ -769,8 +771,11 @@ function renderSessionBody(s, isDone){
   }
 
   // Complete button or done indicator
+  const isAdminView = new URLSearchParams(window.location.search).get('admin')==='1';
   if(isDone){
     html+=`<div class="session-done-indicator"><span>✦</span>Session Complete<span>✦</span></div>`;
+  } else if(isAdminView){
+    html+=`<div style="font-family:'Cinzel',serif;font-size:0.72rem;color:rgba(201,146,42,0.35);text-align:center;padding:0.5rem;font-style:italic;">Admin view — completion disabled</div>`;
   } else {
     html+=`<button class="session-complete-btn" id="complete-btn-${s.id}" onclick="completeSession('${s.id}',${s.coins})">Mark Session Complete — +${s.coins} Coins</button>`;
   }
@@ -869,7 +874,7 @@ function renderMastery(topicId, topic, mastery, allSessionsDone){
       <div class="mastery-status-row">
         <span class="mastery-badge ${badgeClass}">${statusLabel}</span>
         <span class="mastery-coins-badge">+${topic.mastery_coins} coins</span>
-        ${canSubmit?`<button class="mastery-submit-btn" onclick="submitMastery(${topicId})">I'm Ready to Present</button>`:''}
+        ${canSubmit&&!new URLSearchParams(window.location.search).get('admin')?`<button class="mastery-submit-btn" onclick="submitMastery(${topicId})">I'm Ready to Present</button>`:''}
         ${isPending?'<span style="font-family:Cinzel,serif;font-size:0.68rem;color:rgba(167,139,250,0.7);">Awaiting parent approval</span>':''}
         ${isComplete?'<span style="font-family:Cinzel,serif;font-size:0.68rem;color:rgba(134,239,172,0.7);">✦ Mastered</span>':''}
       </div>

@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Fasting Rules — Orthodox Expedition</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="game-utils.js"></script>
+<style>
+:root{
+  --gold:#c9922a;--gold-light:#f0c96e;--gold-bright:#ffd700;
+  --parchment:#f4e8c1;
+  --burgundy:#6b1a1a;--byzantine:#2c1654;--byzantine-light:#4a2a7a;
+  --green:#16a34a;--green-light:#22c55e;
+  --red:#dc2626;
+  --bg:#0e0800;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overflow:hidden;}
+body{font-family:'Crimson Text',serif;background:var(--bg);background-image:radial-gradient(ellipse at 50% 0%,rgba(107,26,26,0.5) 0%,transparent 55%),radial-gradient(ellipse at 100% 100%,rgba(44,22,84,0.35) 0%,transparent 50%);display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:1.25rem;}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(201,146,42,0.02) 1px,transparent 1px),linear-gradient(90deg,rgba(201,146,42,0.02) 1px,transparent 1px);background-size:44px 44px;pointer-events:none;}
+#coin-rain{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999;overflow:hidden;}
+@keyframes coinFall{0%{transform:translateY(0) rotate(0deg);opacity:1;}85%{opacity:1;}100%{transform:translateY(110vh) rotate(540deg) scale(0.4);opacity:0;}}
+
+.back-btn{position:fixed;top:1rem;left:1rem;background:none;border:1px solid rgba(201,146,42,0.2);border-radius:8px;padding:0.4rem 0.875rem;font-family:'Cinzel',serif;font-size:0.65rem;color:rgba(201,146,42,0.45);cursor:pointer;min-height:40px;z-index:10;}
+.screen{display:none;width:100%;max-width:420px;text-align:center;}
+.screen.show{display:flex;flex-direction:column;align-items:center;}
+
+/* START */
+.game-icon{font-size:3rem;margin-bottom:0.5rem;}
+.game-title{font-family:'Cinzel Decorative',serif;font-size:clamp(1.1rem,4vw,1.4rem);color:var(--gold-light);text-shadow:0 0 20px rgba(201,146,42,0.4);margin-bottom:0.25rem;}
+.game-sub{font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.2em;color:rgba(201,146,42,0.4);text-transform:uppercase;margin-bottom:1rem;}
+.game-desc{font-size:0.85rem;color:rgba(244,232,193,0.4);font-style:italic;line-height:1.6;margin-bottom:1rem;max-width:320px;}
+.coin-info{display:inline-flex;align-items:center;gap:0.5rem;background:rgba(201,146,42,0.08);border:1px solid rgba(201,146,42,0.2);border-radius:20px;padding:0.4rem 1rem;font-family:'Cinzel',serif;font-size:0.7rem;color:rgba(201,146,42,0.6);margin-bottom:1.5rem;}
+.start-btn{padding:1rem 2.5rem;min-height:56px;background:linear-gradient(135deg,var(--gold),var(--gold-bright));border:none;border-radius:14px;font-family:'Cinzel',serif;font-size:0.9rem;letter-spacing:0.1em;color:var(--bg);font-weight:700;cursor:pointer;box-shadow:0 4px 20px rgba(255,215,0,0.25);}
+
+/* GAME */
+.score-row{display:flex;align-items:center;justify-content:space-between;width:100%;margin-bottom:0.75rem;}
+.round-lbl{font-family:'Cinzel',serif;font-size:0.65rem;color:rgba(201,146,42,0.4);}
+.score-big{font-family:'Cinzel Decorative',serif;font-size:1.5rem;color:var(--gold-bright);text-shadow:0 0 10px rgba(255,215,0,0.3);}
+.lives-row{display:flex;gap:0.25rem;}
+.life{font-size:0.95rem;}
+.life.lost{opacity:0.18;filter:grayscale(1);}
+
+.q-card{
+  width:100%;
+  background:linear-gradient(160deg,rgba(44,22,84,0.96),rgba(18,8,40,0.99) 50%,rgba(107,26,26,0.96));
+  border:1.5px solid rgba(201,146,42,0.3);border-radius:18px;
+  padding:1.5rem 1.25rem;margin-bottom:1.25rem;
+  transition:all 0.25s;position:relative;overflow:hidden;
+}
+.q-card.correct{border-color:rgba(22,163,74,0.7);animation:flashG 0.5s ease;}
+.q-card.wrong{border-color:rgba(220,38,38,0.6);animation:shakeQ 0.4s ease;}
+@keyframes flashG{0%,100%{box-shadow:none;}50%{box-shadow:0 0 24px rgba(22,163,74,0.4);}}
+@keyframes shakeQ{0%,100%{transform:translateX(0);}25%{transform:translateX(-8px);}75%{transform:translateX(8px);}}
+.q-context{font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.18em;color:rgba(201,146,42,0.4);text-transform:uppercase;margin-bottom:0.5rem;}
+.q-food{font-family:'Cinzel Decorative',serif;font-size:clamp(1.1rem,4vw,1.4rem);color:var(--parchment);text-shadow:0 0 8px rgba(255,215,0,0.15);margin-bottom:0.5rem;line-height:1.3;}
+.q-hint{font-size:0.8rem;color:rgba(244,232,193,0.4);font-style:italic;line-height:1.4;}
+.q-feedback{font-family:'Cinzel',serif;font-size:0.72rem;text-align:center;min-height:1.2rem;margin-top:0.375rem;}
+.q-feedback.ok{color:rgba(134,239,172,0.8);}
+.q-feedback.no{color:rgba(252,165,165,0.7);}
+
+.ans-btns{display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;width:100%;}
+.ans-btn{padding:1rem 0.5rem;min-height:64px;border:none;border-radius:14px;cursor:pointer;transition:all 0.15s;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0.2rem;}
+.ans-btn:active{transform:scale(0.96);}
+.ans-btn:disabled{cursor:not-allowed;}
+.btn-allowed{background:linear-gradient(145deg,rgba(22,163,74,0.2),rgba(22,163,74,0.1));border:2px solid rgba(22,163,74,0.4);}
+.btn-allowed:hover:not(:disabled){background:linear-gradient(145deg,rgba(22,163,74,0.35),rgba(22,163,74,0.2));border-color:rgba(22,163,74,0.7);}
+.btn-forbidden{background:linear-gradient(145deg,rgba(220,38,38,0.18),rgba(220,38,38,0.1));border:2px solid rgba(220,38,38,0.35);}
+.btn-forbidden:hover:not(:disabled){background:linear-gradient(145deg,rgba(220,38,38,0.32),rgba(220,38,38,0.18));border-color:rgba(220,38,38,0.6);}
+.btn-opt-correct{background:rgba(22,163,74,0.18);border-color:rgba(22,163,74,0.7);}
+.btn-opt-wrong{background:rgba(220,38,38,0.12);border-color:rgba(220,38,38,0.5);}
+.btn-icon{font-size:1.5rem;}
+.btn-lbl{font-family:'Cinzel Decorative',serif;font-size:0.85rem;color:rgba(134,239,172,0.9);}
+.btn-forbidden .btn-lbl{color:rgba(252,165,165,0.9);}
+
+/* END */
+.end-ring{width:110px;height:110px;border-radius:50%;background:linear-gradient(135deg,rgba(44,22,84,0.9),rgba(107,26,26,0.9));border:3px solid var(--gold);display:flex;flex-direction:column;align-items:center;justify-content:center;margin:0 auto 1rem;box-shadow:0 0 30px rgba(201,146,42,0.25);}
+.end-score{font-family:'Cinzel Decorative',serif;font-size:1.8rem;color:var(--gold-bright);line-height:1;}
+.end-lbl{font-family:'Cinzel',serif;font-size:0.55rem;color:rgba(201,146,42,0.5);letter-spacing:0.1em;}
+.end-title{font-family:'Cinzel Decorative',serif;font-size:1.1rem;color:var(--gold-light);margin-bottom:0.35rem;}
+.end-msg{font-size:0.82rem;color:rgba(244,232,193,0.4);font-style:italic;margin-bottom:0.5rem;line-height:1.5;max-width:300px;}
+.coin-award{font-family:'Cinzel',serif;font-size:0.85rem;color:var(--gold-bright);margin-bottom:1.25rem;text-shadow:0 0 10px rgba(255,215,0,0.3);}
+.end-btns{display:flex;gap:0.5rem;justify-content:center;}
+.play-again-btn{padding:0.75rem 1.75rem;min-height:48px;background:linear-gradient(135deg,var(--gold),var(--gold-bright));border:none;border-radius:11px;font-family:'Cinzel',serif;font-size:0.78rem;color:var(--bg);font-weight:700;cursor:pointer;}
+.back-games-btn{padding:0.75rem 1.25rem;min-height:48px;background:transparent;border:1px solid rgba(201,146,42,0.25);border-radius:11px;font-family:'Cinzel',serif;font-size:0.72rem;color:rgba(201,146,42,0.5);cursor:pointer;}
+</style>
+</head>
+<body>
+<div id="coin-rain"></div>
+<button class="back-btn" onclick="window.location.href='../games.html'">← Games</button>
+
+<!-- START -->
+<div class="screen show" id="screen-start">
+  <div class="game-icon">🌿</div>
+  <div class="game-title">Fasting Rules</div>
+  <div class="game-sub">Session Game · Topic 6</div>
+  <div class="game-desc">It is a strict fast day. A food appears. Is it allowed or forbidden? Think carefully — some answers might surprise you!</div>
+  <div class="coin-info">⚔ 10 coins for playing · 20 for winning</div>
+  <button class="start-btn" onclick="startGame()">Begin the Fast ›</button>
+</div>
+
+<!-- GAME -->
+<div class="screen" id="screen-game">
+  <div class="score-row" style="width:100%;">
+    <div class="round-lbl" id="round-lbl">Q1 of 15</div>
+    <div class="lives-row" id="lives-row"></div>
+    <div class="score-big" id="score-num">0</div>
+  </div>
+
+  <div class="q-card" id="q-card">
+    <div class="q-context" id="q-context">Strict Fast Day</div>
+    <div class="q-food" id="q-food">Loading...</div>
+    <div class="q-hint" id="q-hint"></div>
+    <div class="q-feedback" id="q-feedback"></div>
+  </div>
+
+  <div class="ans-btns">
+    <button class="ans-btn btn-allowed" id="btn-allowed" onclick="answer(true)">
+      <span class="btn-icon">✓</span>
+      <span class="btn-lbl">Allowed</span>
+    </button>
+    <button class="ans-btn btn-forbidden" id="btn-forbidden" onclick="answer(false)">
+      <span class="btn-icon">✗</span>
+      <span class="btn-lbl">Forbidden</span>
+    </button>
+  </div>
+</div>
+
+<!-- END -->
+<div class="screen" id="screen-end">
+  <div class="end-ring"><div class="end-score" id="end-score">0</div><div class="end-lbl">/ 15</div></div>
+  <div class="end-title" id="end-title">Well done!</div>
+  <div class="end-msg" id="end-msg"></div>
+  <div class="coin-award" id="coin-award"></div>
+  <div class="end-btns">
+    <button class="play-again-btn" onclick="startGame()">Try Again 🌿</button>
+    <button class="back-games-btn" onclick="window.location.href='../games.html'">Games</button>
+  </div>
+</div>
+
+<script>
+const GAME_ID = 'fasting-rules';
+const TOTAL = 15;
+
+// allowed: true = permitted on strict fast day
+const QUESTIONS = [
+  {food:'Bread',            allowed:true,  hint:'Plain bread contains no blood or animal products — always allowed.'},
+  {food:'Beef',             allowed:false, hint:'Meat contains blood — forbidden on fast days. No animal flesh.'},
+  {food:'Shrimp',           allowed:true,  hint:'Shellfish do not contain blood — they are permitted!'},
+  {food:'Olive Oil',        allowed:false, hint:'On strict fast days oil is forbidden — it was stored in animal skins.'},
+  {food:'Fish',             allowed:false, hint:'Fish is not always allowed. On strict days only shellfish is permitted.'},
+  {food:'Grapes',           allowed:true,  hint:'Grapes are fine — we can eat the fruit, we just cannot have the wine.'},
+  {food:'Cheese',           allowed:false, hint:'Dairy products come from animals — forbidden on fast days.'},
+  {food:'Hummus',           allowed:true,  hint:'Made from chickpeas — no animal products. A great fast food!'},
+  {food:'Milk',             allowed:false, hint:'Dairy is forbidden on strict fast days.'},
+  {food:'Clams',            allowed:true,  hint:'Shellfish — no blood. Permitted on strict fast days.'},
+  {food:'Chicken',          allowed:false, hint:'Poultry is meat — forbidden on fast days.'},
+  {food:'Wine',             allowed:false, hint:'Wine is forbidden on strict fast days — though allowed on some lesser fast days.'},
+  {food:'Lentil Soup',      allowed:true,  hint:'Lentils are a plant — perfectly fine for fasting. A classic Orthodox fast meal.'},
+  {food:'Eggs',             allowed:false, hint:'Eggs come from animals — forbidden on strict fast days.'},
+  {food:'Oysters',          allowed:true,  hint:'Shellfish — no blood. Allowed even on the strictest fast days.'},
+  {food:'Butter',           allowed:false, hint:'Dairy product — forbidden on fast days.'},
+  {food:'Olives',           allowed:true,  hint:'The olive itself is fine — it is only the oil that is restricted on strict days.'},
+  {food:'Squid',            allowed:true,  hint:'Squid and octopus are shellfish — no blood. Permitted on fast days.'},
+  {food:'Honey',            allowed:true,  hint:'Honey does not contain blood — permitted on fast days.'},
+  {food:'Peanut Butter',    allowed:true,  hint:'Plant-based — no animal products. A good fasting snack.'},
+];
+
+let score=0, lives=3, round=0, answered=false, shuffled=[];
+
+function shuffle(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function showScreen(id){['screen-start','screen-game','screen-end'].forEach(s=>document.getElementById(s).classList.toggle('show',s===id));}
+
+function startGame(){
+  score=0;lives=3;round=0;answered=false;
+  shuffled=shuffle([...QUESTIONS]).slice(0,TOTAL);
+  document.getElementById('score-num').textContent='0';
+  renderLives();
+  loadQuestion();
+  showScreen('screen-game');
+}
+
+function renderLives(){
+  const row=document.getElementById('lives-row');
+  row.innerHTML='';
+  for(let i=0;i<3;i++){
+    const h=document.createElement('span');
+    h.className='life'+(i>=lives?' lost':'');
+    h.textContent='♥';
+    row.appendChild(h);
+  }
+}
+
+function loadQuestion(){
+  if(round>=TOTAL||lives<=0){endGame();return;}
+  const q=shuffled[round];
+  answered=false;
+  document.getElementById('round-lbl').textContent=`Q${round+1} of ${TOTAL}`;
+  document.getElementById('q-food').textContent=q.food;
+  document.getElementById('q-hint').textContent='';
+  document.getElementById('q-card').className='q-card';
+  document.getElementById('q-feedback').textContent='';
+  document.getElementById('q-feedback').className='q-feedback';
+  document.getElementById('btn-allowed').disabled=false;
+  document.getElementById('btn-forbidden').disabled=false;
+  document.getElementById('btn-allowed').className='ans-btn btn-allowed';
+  document.getElementById('btn-forbidden').className='ans-btn btn-forbidden';
+}
+
+function answer(userSaysAllowed){
+  if(answered||lives<=0) return;
+  answered=true;
+  const q=shuffled[round];
+  const correct=userSaysAllowed===q.allowed;
+  const card=document.getElementById('q-card');
+  const fb=document.getElementById('q-feedback');
+
+  document.getElementById('btn-allowed').disabled=true;
+  document.getElementById('btn-forbidden').disabled=true;
+  document.getElementById('q-hint').textContent=q.hint;
+
+  if(correct){
+    score++;
+    card.classList.add('correct');
+    fb.textContent=`✦ Correct!`;
+    fb.className='q-feedback ok';
+    document.getElementById('score-num').textContent=score;
+  } else {
+    lives--;
+    card.classList.add('wrong');
+    fb.textContent=`✗ ${q.allowed?'Actually allowed — no blood!':'Actually forbidden on strict days.'}`;
+    fb.className='q-feedback no';
+    renderLives();
+  }
+
+  round++;
+  setTimeout(()=>{
+    if(lives<=0){endGame();}else{loadQuestion();}
+  },1400);
+}
+
+async function endGame(){
+  showScreen('screen-end');
+  document.getElementById('end-score').textContent=score;
+  const won=score>=12;
+
+  let title='',msg='';
+  if(score>=14){title='Fasting Expert!';msg=`${score}/15 — Outstanding! You know exactly what to eat on fast days.`;}
+  else if(won){title:'Well Fasted!';msg=`${score}/15 — Great knowledge! The shellfish ones catch most people.`;}
+  else if(score>=8){title='Good Try!';msg=`${score}/15 — Study Session 6.4 on fasting rules and try again.`;}
+  else{title='Keep Studying!';msg:'Orthodox fasting has some surprises. Review the fasting rules and try again!';}
+
+  if(score>=12&&score<14){title='Well Fasted!';}
+  if(score<8){msg='Orthodox fasting has some surprises. Review the fasting rules and try again!';}
+
+  document.getElementById('end-title').textContent=title;
+  document.getElementById('end-msg').textContent=msg;
+
+  const result=await GameUtils.awardCoins(GAME_ID,won,'Fasting Rules');
+  if(result.alreadyPlayed){
+    document.getElementById('coin-award').textContent='Already played today — come back tomorrow!';
+  } else if(result.awarded>0){
+    document.getElementById('coin-award').textContent=`+${result.awarded} coins earned!${won?' (Win bonus!)':''}`;
+    GameUtils.coinRain('coin-rain',result.awarded);
+  }
+}
+
+(async()=>{const prof=await GameUtils.init();if(!prof) return;})();
+</script>
+</body>
+</html>

@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Virtue vs Passion — Orthodox Expedition</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="game-utils.js"></script>
+<style>
+:root{
+  --gold:#c9922a;--gold-light:#f0c96e;--gold-bright:#ffd700;
+  --parchment:#f4e8c1;
+  --burgundy:#6b1a1a;--byzantine:#2c1654;--byzantine-light:#4a2a7a;
+  --green:#16a34a;--green-light:#22c55e;
+  --red:#dc2626;
+  --bg:#0e0800;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{min-height:100%;overflow-x:hidden;}
+body{font-family:'Crimson Text',serif;background:var(--bg);background-image:radial-gradient(ellipse at 50% 0%,rgba(107,26,26,0.5) 0%,transparent 55%),radial-gradient(ellipse at 100% 100%,rgba(44,22,84,0.35) 0%,transparent 50%);min-height:100vh;padding:1.25rem 1rem 2rem;}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(201,146,42,0.02) 1px,transparent 1px),linear-gradient(90deg,rgba(201,146,42,0.02) 1px,transparent 1px);background-size:44px 44px;pointer-events:none;}
+#coin-rain{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999;overflow:hidden;}
+@keyframes coinFall{0%{transform:translateY(0) rotate(0deg);opacity:1;}85%{opacity:1;}100%{transform:translateY(110vh) rotate(540deg) scale(0.4);opacity:0;}}
+
+.back-btn{background:none;border:1px solid rgba(201,146,42,0.2);border-radius:8px;padding:0.4rem 0.875rem;font-family:'Cinzel',serif;font-size:0.65rem;color:rgba(201,146,42,0.45);cursor:pointer;min-height:40px;margin-bottom:1.25rem;display:inline-block;}
+.screen{display:none;max-width:440px;margin:0 auto;text-align:center;}
+.screen.show{display:block;}
+
+/* START */
+.game-icon{font-size:3rem;margin-bottom:0.5rem;}
+.game-title{font-family:'Cinzel Decorative',serif;font-size:clamp(1.1rem,4vw,1.4rem);color:var(--gold-light);text-shadow:0 0 20px rgba(201,146,42,0.4);margin-bottom:0.25rem;}
+.game-sub{font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.2em;color:rgba(201,146,42,0.4);text-transform:uppercase;margin-bottom:1rem;}
+.game-desc{font-size:0.85rem;color:rgba(244,232,193,0.4);font-style:italic;line-height:1.6;margin-bottom:1rem;max-width:320px;margin-left:auto;margin-right:auto;}
+.coin-info{display:inline-flex;align-items:center;gap:0.5rem;background:rgba(201,146,42,0.08);border:1px solid rgba(201,146,42,0.2);border-radius:20px;padding:0.4rem 1rem;font-family:'Cinzel',serif;font-size:0.7rem;color:rgba(201,146,42,0.6);margin-bottom:1.5rem;}
+.start-btn{padding:0.9rem 2.5rem;min-height:52px;background:linear-gradient(135deg,var(--gold),var(--gold-bright));border:none;border-radius:13px;font-family:'Cinzel',serif;font-size:0.85rem;letter-spacing:0.1em;color:var(--bg);font-weight:700;cursor:pointer;}
+
+/* GAME */
+.game-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:0.875rem;}
+.progress-lbl{font-family:'Cinzel',serif;font-size:0.65rem;color:rgba(201,146,42,0.4);}
+.score-num{font-family:'Cinzel Decorative',serif;font-size:1.4rem;color:var(--gold-bright);text-shadow:0 0 10px rgba(255,215,0,0.3);}
+.progress-bar-wrap{width:100%;height:5px;background:rgba(255,255,255,0.05);border-radius:3px;overflow:hidden;margin-bottom:1rem;}
+.progress-bar{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--gold),var(--gold-bright));transition:width 0.4s ease;}
+
+.battle-label{font-family:'Cinzel',serif;font-size:0.62rem;letter-spacing:0.18em;color:rgba(201,146,42,0.35);text-transform:uppercase;text-align:center;margin-bottom:0.75rem;}
+
+/* Two column battle layout */
+.battle-area{display:grid;grid-template-columns:1fr auto 1fr;gap:0.4rem;align-items:start;margin-bottom:0.875rem;}
+.vs-divider{display:flex;align-items:center;justify-content:center;padding-top:0.5rem;}
+.vs-mark{font-family:'Cinzel Decorative',serif;font-size:0.9rem;color:rgba(201,146,42,0.4);}
+.col-head{font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.15em;color:rgba(220,38,38,0.5);text-transform:uppercase;text-align:center;margin-bottom:0.4rem;}
+.col-head.virtue-head{color:rgba(22,163,74,0.5);}
+
+.passion-list,.virtue-list{display:flex;flex-direction:column;gap:0.35rem;}
+.passion-card{
+  background:rgba(107,26,26,0.3);border:1.5px solid rgba(220,38,38,0.25);
+  border-radius:9px;padding:0.5rem 0.4rem;
+  font-family:'Cinzel',serif;font-size:0.66rem;color:rgba(252,165,165,0.8);
+  cursor:pointer;transition:all 0.2s;text-align:center;min-height:44px;
+  display:flex;align-items:center;justify-content:center;line-height:1.3;
+}
+.passion-card:hover{background:rgba(107,26,26,0.5);border-color:rgba(220,38,38,0.5);}
+.passion-card.selected{background:rgba(220,38,38,0.15);border-color:rgba(220,38,38,0.7);color:#fca5a5;}
+.passion-card.matched{opacity:0.35;pointer-events:none;}
+.passion-card.correct-match{background:rgba(22,163,74,0.08);border-color:rgba(22,163,74,0.4);color:rgba(134,239,172,0.8);}
+.passion-card.wrong-match{animation:shake 0.3s ease;}
+@keyframes shake{0%,100%{transform:translateX(0);}25%{transform:translateX(-5px);}75%{transform:translateX(5px);}}
+
+.virtue-card{
+  background:rgba(22,163,74,0.1);border:1.5px solid rgba(22,163,74,0.25);
+  border-radius:9px;padding:0.5rem 0.4rem;
+  font-family:'Cinzel',serif;font-size:0.66rem;color:rgba(134,239,172,0.8);
+  cursor:pointer;transition:all 0.2s;text-align:center;min-height:44px;
+  display:flex;align-items:center;justify-content:center;line-height:1.3;
+}
+.virtue-card:hover{background:rgba(22,163,74,0.2);border-color:rgba(22,163,74,0.5);}
+.virtue-card.selected{background:rgba(22,163,74,0.2);border-color:rgba(22,163,74,0.8);}
+.virtue-card.matched{opacity:0.35;pointer-events:none;}
+.virtue-card.correct-match{background:rgba(22,163,74,0.15);border-color:rgba(22,163,74,0.6);}
+.virtue-card.wrong-match{animation:shake 0.3s ease;}
+
+.match-feedback{font-family:'Cinzel',serif;font-size:0.72rem;text-align:center;min-height:1.3rem;margin-bottom:0.5rem;}
+.match-feedback.correct-fb{color:rgba(134,239,172,0.8);}
+.match-feedback.wrong-fb{color:rgba(252,165,165,0.7);}
+
+/* END */
+.result-ring{width:110px;height:110px;border-radius:50%;background:linear-gradient(135deg,rgba(44,22,84,0.9),rgba(107,26,26,0.9));border:3px solid var(--gold);display:flex;flex-direction:column;align-items:center;justify-content:center;margin:0 auto 1rem;box-shadow:0 0 30px rgba(201,146,42,0.25);}
+.result-pct{font-family:'Cinzel Decorative',serif;font-size:1.8rem;color:var(--gold-bright);line-height:1;}
+.result-lbl{font-family:'Cinzel',serif;font-size:0.55rem;color:rgba(201,146,42,0.5);letter-spacing:0.1em;}
+.result-title{font-family:'Cinzel Decorative',serif;font-size:1.1rem;color:var(--gold-light);margin-bottom:0.35rem;}
+.result-msg{font-size:0.82rem;color:rgba(244,232,193,0.4);font-style:italic;margin-bottom:0.5rem;line-height:1.5;}
+.coin-award{font-family:'Cinzel',serif;font-size:0.85rem;color:var(--gold-bright);margin-bottom:1.25rem;text-shadow:0 0 10px rgba(255,215,0,0.3);}
+.end-btns{display:flex;gap:0.5rem;justify-content:center;}
+.play-again-btn{padding:0.75rem 1.75rem;min-height:48px;background:linear-gradient(135deg,var(--gold),var(--gold-bright));border:none;border-radius:11px;font-family:'Cinzel',serif;font-size:0.78rem;color:var(--bg);font-weight:700;cursor:pointer;}
+.back-games-btn{padding:0.75rem 1.25rem;min-height:48px;background:transparent;border:1px solid rgba(201,146,42,0.25);border-radius:11px;font-family:'Cinzel',serif;font-size:0.72rem;color:rgba(201,146,42,0.5);cursor:pointer;}
+</style>
+</head>
+<body>
+<div id="coin-rain"></div>
+<button class="back-btn" onclick="window.location.href='../games.html'">← Games</button>
+
+<!-- START -->
+<div class="screen show" id="screen-start">
+  <div class="game-icon">⚖️</div>
+  <div class="game-title">Virtue vs Passion</div>
+  <div class="game-sub">Session Game · Topic 7</div>
+  <div class="game-desc">Every passion that pulls us away from God has a matching virtue that overcomes it. Match each passion on the left to its opposing virtue on the right.</div>
+  <div class="coin-info">⚔ 10 coins for playing · 20 for winning</div>
+  <button class="start-btn" onclick="startGame()">Enter the Battle ⚖️</button>
+</div>
+
+<!-- GAME -->
+<div class="screen" id="screen-game">
+  <div class="game-top">
+    <div class="progress-lbl" id="progress-lbl">0 of 8 matched</div>
+    <div class="score-num" id="score-num">0</div>
+  </div>
+  <div class="progress-bar-wrap"><div class="progress-bar" id="progress-bar" style="width:0%"></div></div>
+
+  <div class="battle-label">Tap a Passion, then tap its opposing Virtue</div>
+
+  <div class="battle-area">
+    <div>
+      <div class="col-head">The Passion</div>
+      <div class="passion-list" id="passion-list"></div>
+    </div>
+    <div class="vs-divider"><div class="vs-mark">vs</div></div>
+    <div>
+      <div class="col-head virtue-head">The Virtue</div>
+      <div class="virtue-list" id="virtue-list"></div>
+    </div>
+  </div>
+
+  <div class="match-feedback" id="match-feedback"></div>
+</div>
+
+<!-- END -->
+<div class="screen" id="screen-end" style="text-align:center;">
+  <div class="result-ring"><div class="result-pct" id="result-pct">0%</div><div class="result-lbl">correct</div></div>
+  <div class="result-title" id="result-title">Well done!</div>
+  <div class="result-msg" id="result-msg"></div>
+  <div class="coin-award" id="coin-award"></div>
+  <div class="end-btns">
+    <button class="play-again-btn" onclick="startGame()">Battle Again</button>
+    <button class="back-games-btn" onclick="window.location.href='../games.html'">Games</button>
+  </div>
+</div>
+
+<script>
+const GAME_ID = 'virtue-passion';
+
+const PAIRS = [
+  {id:'gluttony',   passion:'Gluttony',      virtue:'Fasting & Temperance',  desc:'Gluttony is overcome by fasting — training the body to obey the soul.'},
+  {id:'lust',       passion:'Lust',           virtue:'Chastity & Purity',     desc:'Lust is overcome by chastity — guarding the heart and the eyes.'},
+  {id:'greed',      passion:'Greed',          virtue:'Generosity & Almsgiving',desc:'Greed is overcome by generous giving — loosening the grip of possessions.'},
+  {id:'sadness',    passion:'Sadness',        virtue:'Joy & Gratitude',       desc:'Sadness is overcome by gratitude — giving thanks in all circumstances.'},
+  {id:'anger',      passion:'Anger',          virtue:'Patience & Meekness',   desc:'Anger is overcome by patience — waiting on God rather than reacting.'},
+  {id:'acedia',     passion:'Acedia (Sloth)', virtue:'Zeal & Perseverance',   desc:'Acedia is a spiritual laziness — overcome by persistent prayer and work.'},
+  {id:'vainglory',  passion:'Vainglory',      virtue:'Humility',              desc:'Vainglory seeks human praise — humility seeks only the praise of God.'},
+  {id:'pride',      passion:'Pride',          virtue:'Humility before God',   desc:'Pride is the root of all passions — humility before God heals the soul.'},
+];
+
+let selectedPassion=null, matches={}, score=0, wrongAttempts=0;
+const TOTAL=PAIRS.length;
+
+function shuffle(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function showScreen(id){['screen-start','screen-game','screen-end'].forEach(s=>document.getElementById(s).classList.toggle('show',s===id));}
+
+function startGame(){
+  selectedPassion=null;matches={};score=0;wrongAttempts=0;
+  document.getElementById('score-num').textContent='0';
+  document.getElementById('match-feedback').textContent='';
+  document.getElementById('match-feedback').className='match-feedback';
+  updateProgress();
+  renderCards();
+  showScreen('screen-game');
+}
+
+function updateProgress(){
+  const matched=Object.keys(matches).length;
+  const pct=(matched/TOTAL)*100;
+  document.getElementById('progress-lbl').textContent=`${matched} of ${TOTAL} matched`;
+  document.getElementById('progress-bar').style.width=pct+'%';
+  document.getElementById('score-num').textContent=score;
+}
+
+function renderCards(){
+  const shuffledPassions=shuffle([...PAIRS]);
+  const shuffledVirtues=shuffle([...PAIRS]);
+  const pList=document.getElementById('passion-list');
+  const vList=document.getElementById('virtue-list');
+  pList.innerHTML='';vList.innerHTML='';
+
+  shuffledPassions.forEach(p=>{
+    const isMatched=!!matches[p.id];
+    const card=document.createElement('div');
+    card.className=`passion-card${isMatched?' matched correct-match':''}`;
+    card.id=`pas-${p.id}`;
+    card.dataset.id=p.id;
+    card.textContent=p.passion;
+    if(!isMatched) card.onclick=()=>selectPassion(p.id);
+    pList.appendChild(card);
+  });
+
+  shuffledVirtues.forEach(p=>{
+    const isMatched=Object.values(matches).includes(p.id);
+    const card=document.createElement('div');
+    card.className=`virtue-card${isMatched?' matched correct-match':''}`;
+    card.id=`vir-${p.id}`;
+    card.dataset.id=p.id;
+    card.textContent=p.virtue;
+    if(!isMatched) card.onclick=()=>selectVirtue(p.id);
+    vList.appendChild(card);
+  });
+}
+
+function selectPassion(id){
+  document.querySelectorAll('.passion-card').forEach(c=>c.classList.remove('selected'));
+  if(selectedPassion===id){selectedPassion=null;return;}
+  selectedPassion=id;
+  const card=document.getElementById(`pas-${id}`);
+  if(card) card.classList.add('selected');
+  document.getElementById('match-feedback').textContent='Now tap its opposing virtue →';
+  document.getElementById('match-feedback').className='match-feedback';
+}
+
+function selectVirtue(virtueId){
+  if(!selectedPassion) return;
+  const isCorrect=selectedPassion===virtueId;
+  const pasCard=document.getElementById(`pas-${selectedPassion}`);
+  const virCard=document.getElementById(`vir-${virtueId}`);
+  const fb=document.getElementById('match-feedback');
+
+  if(isCorrect){
+    score++;
+    matches[selectedPassion]=virtueId;
+    if(pasCard){pasCard.classList.remove('selected');pasCard.classList.add('correct-match','matched');pasCard.onclick=null;}
+    if(virCard){virCard.classList.add('correct-match','matched');virCard.onclick=null;}
+    const pair=PAIRS.find(p=>p.id===virtueId);
+    fb.textContent=`✦ ${pair?.desc||'Correct!'}`;
+    fb.className='match-feedback correct-fb';
+    selectedPassion=null;
+    updateProgress();
+    if(Object.keys(matches).length===TOTAL) setTimeout(()=>endGame(),800);
+  } else {
+    wrongAttempts++;
+    if(pasCard) pasCard.classList.add('wrong-match');
+    if(virCard) virCard.classList.add('wrong-match');
+    fb.textContent='✗ Not quite — try a different virtue for this passion.';
+    fb.className='match-feedback wrong-fb';
+    setTimeout(()=>{
+      if(pasCard) pasCard.classList.remove('wrong-match');
+      if(virCard) virCard.classList.remove('wrong-match');
+    },600);
+  }
+}
+
+async function endGame(){
+  const pct=Math.round((score/TOTAL)*100);
+  const won=wrongAttempts<=2;
+  showScreen('screen-end');
+  document.getElementById('result-pct').textContent=pct+'%';
+
+  let title='',msg='';
+  if(wrongAttempts===0){title='Virtue Master!';msg='All 8 matched perfectly. The Fathers of the desert would be proud!';}
+  else if(won){title:'Well Matched!';msg=`All matched with only ${wrongAttempts} mistake${wrongAttempts===1?'':'s'}. You understand the spiritual battle!`;}
+  else{title='Good Try!';msg='Study the virtues and passions in Topic 7 and come back for the rematch!';}
+
+  if(wrongAttempts>0&&won){title='Well Matched!';}
+  document.getElementById('result-title').textContent=title;
+  document.getElementById('result-msg').textContent=msg;
+
+  const result=await GameUtils.awardCoins(GAME_ID,won,'Virtue vs Passion');
+  if(result.alreadyPlayed){
+    document.getElementById('coin-award').textContent='Already played today — come back tomorrow!';
+  } else if(result.awarded>0){
+    document.getElementById('coin-award').textContent=`+${result.awarded} coins earned!${won?' (Win bonus!)':''}`;
+    GameUtils.coinRain('coin-rain',result.awarded);
+  }
+}
+
+(async()=>{const prof=await GameUtils.init();if(!prof) return;})();
+</script>
+</body>
+</html>

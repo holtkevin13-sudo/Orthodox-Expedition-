@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Feast Calendar — Orthodox Expedition</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="game-utils.js"></script>
+<style>
+:root{
+  --gold:#c9922a;--gold-light:#f0c96e;--gold-bright:#ffd700;
+  --parchment:#f4e8c1;
+  --burgundy:#6b1a1a;--byzantine:#2c1654;--byzantine-light:#4a2a7a;
+  --green:#16a34a;--green-light:#22c55e;
+  --red:#dc2626;
+  --bg:#0e0800;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{min-height:100%;overflow-x:hidden;}
+body{font-family:'Crimson Text',serif;background:var(--bg);background-image:radial-gradient(ellipse at 50% 0%,rgba(107,26,26,0.5) 0%,transparent 55%),radial-gradient(ellipse at 100% 100%,rgba(44,22,84,0.35) 0%,transparent 50%);min-height:100vh;padding:1.25rem 1rem 2rem;}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(201,146,42,0.02) 1px,transparent 1px),linear-gradient(90deg,rgba(201,146,42,0.02) 1px,transparent 1px);background-size:44px 44px;pointer-events:none;}
+#coin-rain{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999;overflow:hidden;}
+@keyframes coinFall{0%{transform:translateY(0) rotate(0deg);opacity:1;}85%{opacity:1;}100%{transform:translateY(110vh) rotate(540deg) scale(0.4);opacity:0;}}
+
+.back-btn{background:none;border:1px solid rgba(201,146,42,0.2);border-radius:8px;padding:0.4rem 0.875rem;font-family:'Cinzel',serif;font-size:0.65rem;color:rgba(201,146,42,0.45);cursor:pointer;min-height:40px;margin-bottom:1.25rem;display:inline-block;}
+.screen{display:none;max-width:480px;margin:0 auto;text-align:center;}
+.screen.show{display:block;}
+
+/* START */
+.game-icon{font-size:3rem;margin-bottom:0.5rem;}
+.game-title{font-family:'Cinzel Decorative',serif;font-size:clamp(1.1rem,4vw,1.4rem);color:var(--gold-light);text-shadow:0 0 20px rgba(201,146,42,0.4);margin-bottom:0.25rem;}
+.game-sub{font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.2em;color:rgba(201,146,42,0.4);text-transform:uppercase;margin-bottom:1rem;}
+.game-desc{font-size:0.85rem;color:rgba(244,232,193,0.4);font-style:italic;line-height:1.6;margin-bottom:1rem;max-width:320px;margin-left:auto;margin-right:auto;}
+.coin-info{display:inline-flex;align-items:center;gap:0.5rem;background:rgba(201,146,42,0.08);border:1px solid rgba(201,146,42,0.2);border-radius:20px;padding:0.4rem 1rem;font-family:'Cinzel',serif;font-size:0.7rem;color:rgba(201,146,42,0.6);margin-bottom:1.5rem;}
+.start-btn{padding:0.9rem 2.5rem;min-height:52px;background:linear-gradient(135deg,var(--gold),var(--gold-bright));border:none;border-radius:13px;font-family:'Cinzel',serif;font-size:0.85rem;letter-spacing:0.1em;color:var(--bg);font-weight:700;cursor:pointer;}
+
+/* GAME */
+.game-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:0.875rem;}
+.progress-lbl{font-family:'Cinzel',serif;font-size:0.65rem;color:rgba(201,146,42,0.4);}
+.score-num{font-family:'Cinzel Decorative',serif;font-size:1.3rem;color:var(--gold-bright);text-shadow:0 0 10px rgba(255,215,0,0.3);}
+.check-btn{padding:0.45rem 1rem;min-height:38px;background:linear-gradient(135deg,var(--byzantine),var(--byzantine-light));border:none;border-radius:8px;font-family:'Cinzel',serif;font-size:0.7rem;color:rgba(244,232,193,0.9);cursor:pointer;}
+
+.instruction{font-family:'Cinzel',serif;font-size:0.62rem;letter-spacing:0.12em;color:rgba(201,146,42,0.35);text-transform:uppercase;text-align:center;margin-bottom:0.875rem;}
+
+/* Feast chips pool */
+.feast-pool{display:flex;flex-wrap:wrap;gap:0.35rem;justify-content:center;margin-bottom:1rem;}
+.feast-chip{
+  background:rgba(44,22,84,0.35);border:1.5px solid rgba(124,58,237,0.3);
+  border-radius:8px;padding:0.3rem 0.6rem;
+  font-family:'Cinzel',serif;font-size:0.62rem;color:rgba(167,139,250,0.85);
+  cursor:pointer;transition:all 0.2s;user-select:none;text-align:center;line-height:1.3;
+}
+.feast-chip:hover{background:rgba(44,22,84,0.55);border-color:rgba(124,58,237,0.55);}
+.feast-chip.selected{background:rgba(201,146,42,0.15);border-color:var(--gold);color:var(--gold-light);}
+.feast-chip.placed{opacity:0.3;pointer-events:none;}
+
+/* Calendar grid */
+.calendar-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:0.4rem;margin-bottom:0.875rem;}
+.month-cell{
+  background:rgba(244,232,193,0.03);border:1px solid rgba(201,146,42,0.15);
+  border-radius:8px;padding:0.4rem 0.25rem;text-align:center;
+  cursor:pointer;transition:all 0.2s;min-height:64px;
+  display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:0.2rem;
+}
+.month-cell:hover{border-color:rgba(201,146,42,0.35);background:rgba(201,146,42,0.04);}
+.month-cell.has-feast{border-color:rgba(124,58,237,0.35);background:rgba(44,22,84,0.12);}
+.month-cell.correct-cell{border-color:rgba(22,163,74,0.5);background:rgba(22,163,74,0.07);}
+.month-cell.wrong-cell{border-color:rgba(220,38,38,0.4);background:rgba(220,38,38,0.06);}
+.month-name{font-family:'Cinzel',serif;font-size:0.58rem;letter-spacing:0.1em;color:rgba(201,146,42,0.5);text-transform:uppercase;flex-shrink:0;}
+.month-feast{font-family:'Cinzel',serif;font-size:0.6rem;color:rgba(167,139,250,0.8);line-height:1.3;flex:1;}
+.month-result{font-size:0.7rem;}
+
+/* END */
+.result-ring{width:110px;height:110px;border-radius:50%;background:linear-gradient(135deg,rgba(44,22,84,0.9),rgba(107,26,26,0.9));border:3px solid var(--gold);display:flex;flex-direction:column;align-items:center;justify-content:center;margin:0 auto 1rem;box-shadow:0 0 30px rgba(201,146,42,0.25);}
+.result-pct{font-family:'Cinzel Decorative',serif;font-size:1.8rem;color:var(--gold-bright);line-height:1;}
+.result-lbl{font-family:'Cinzel',serif;font-size:0.55rem;color:rgba(201,146,42,0.5);letter-spacing:0.1em;}
+.result-title{font-family:'Cinzel Decorative',serif;font-size:1.1rem;color:var(--gold-light);margin-bottom:0.35rem;}
+.result-msg{font-size:0.82rem;color:rgba(244,232,193,0.4);font-style:italic;margin-bottom:0.5rem;line-height:1.5;}
+.coin-award{font-family:'Cinzel',serif;font-size:0.85rem;color:var(--gold-bright);margin-bottom:1.25rem;text-shadow:0 0 10px rgba(255,215,0,0.3);}
+.end-btns{display:flex;gap:0.5rem;justify-content:center;}
+.play-again-btn{padding:0.75rem 1.75rem;min-height:48px;background:linear-gradient(135deg,var(--gold),var(--gold-bright));border:none;border-radius:11px;font-family:'Cinzel',serif;font-size:0.78rem;color:var(--bg);font-weight:700;cursor:pointer;}
+.back-games-btn{padding:0.75rem 1.25rem;min-height:48px;background:transparent;border:1px solid rgba(201,146,42,0.25);border-radius:11px;font-family:'Cinzel',serif;font-size:0.72rem;color:rgba(201,146,42,0.5);cursor:pointer;}
+</style>
+</head>
+<body>
+<div id="coin-rain"></div>
+<button class="back-btn" onclick="window.location.href='../games.html'">← Games</button>
+
+<!-- START -->
+<div class="screen show" id="screen-start">
+  <div class="game-icon">🌟</div>
+  <div class="game-title">Feast Calendar</div>
+  <div class="game-sub">Session Game · Topic 6</div>
+  <div class="game-desc">The 12 Great Feasts each fall in a specific month. Can you place all of them on the calendar in the right month?</div>
+  <div class="coin-info">⚔ 10 coins for playing · 20 for winning</div>
+  <button class="start-btn" onclick="startGame()">Open the Calendar ›</button>
+</div>
+
+<!-- GAME -->
+<div class="screen" id="screen-game">
+  <div class="game-header">
+    <div class="progress-lbl" id="progress-lbl">0 of 12 placed</div>
+    <button class="check-btn" onclick="checkCalendar()">Check ✦</button>
+  </div>
+
+  <div class="instruction">Tap a feast, then tap its month</div>
+
+  <!-- Feast chips -->
+  <div class="feast-pool" id="feast-pool"></div>
+
+  <!-- Calendar (12 months starting from Sept — church year) -->
+  <div class="calendar-grid" id="calendar-grid"></div>
+</div>
+
+<!-- END -->
+<div class="screen" id="screen-end" style="text-align:center;">
+  <div class="result-ring">
+    <div class="result-pct" id="result-pct">0%</div>
+    <div class="result-lbl">correct</div>
+  </div>
+  <div class="result-title" id="result-title">Well done!</div>
+  <div class="result-msg" id="result-msg"></div>
+  <div class="coin-award" id="coin-award"></div>
+  <div class="end-btns">
+    <button class="play-again-btn" onclick="startGame()">Try Again</button>
+    <button class="back-games-btn" onclick="window.location.href='../games.html'">Games</button>
+  </div>
+</div>
+
+<script>
+const GAME_ID = 'feast-calendar';
+
+// Orthodox church year starts September — months in order
+const MONTHS = [
+  {id:'sept', name:'Sept', num:9},
+  {id:'oct',  name:'Oct',  num:10},
+  {id:'nov',  name:'Nov',  num:11},
+  {id:'dec',  name:'Dec',  num:12},
+  {id:'jan',  name:'Jan',  num:1},
+  {id:'feb',  name:'Feb',  num:2},
+  {id:'mar',  name:'Mar',  num:3},
+  {id:'apr',  name:'Apr',  num:4},
+  {id:'may',  name:'May',  num:5},
+  {id:'jun',  name:'Jun',  num:6},
+  {id:'jul',  name:'Jul',  num:7},
+  {id:'aug',  name:'Aug',  num:8},
+];
+
+// The 12 Great Feasts with their correct month
+const FEASTS = [
+  {id:'exaltation',  name:'Exaltation of the Cross',    month:'sept', date:'Sept 14'},
+  {id:'nativity_t',  name:'Birth of the Theotokos',     month:'sept', date:'Sept 8'},
+  {id:'entry_t',     name:'Entry into Temple',          month:'nov',  date:'Nov 21'},
+  {id:'christmas',   name:'Christmas',                  month:'dec',  date:'Dec 25'},
+  {id:'theophany',   name:'Theophany',                  month:'jan',  date:'Jan 6'},
+  {id:'presentation',name:'Presentation of Christ',    month:'feb',  date:'Feb 2'},
+  {id:'annunciation',name:'Annunciation',               month:'mar',  date:'Mar 25'},
+  {id:'palm',        name:'Palm Sunday',                month:'apr',  date:'Week before Pascha'},
+  {id:'ascension',   name:'Ascension',                  month:'may',  date:'40 days after Pascha'},
+  {id:'pentecost',   name:'Pentecost',                  month:'jun',  date:'50 days after Pascha'},
+  {id:'transfig',    name:'Transfiguration',            month:'aug',  date:'Aug 6'},
+  {id:'dormition',   name:'Dormition of the Theotokos', month:'aug',  date:'Aug 15'},
+];
+
+let selectedFeast=null, placements={};
+
+function showScreen(id){['screen-start','screen-game','screen-end'].forEach(s=>document.getElementById(s).classList.toggle('show',s===id));}
+function shuffle(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+
+function startGame(){
+  selectedFeast=null;placements={};
+  renderPool();
+  renderCalendar();
+  updateProgress();
+  showScreen('screen-game');
+}
+
+function updateProgress(){
+  document.getElementById('progress-lbl').textContent=`${Object.keys(placements).length} of ${FEASTS.length} placed`;
+}
+
+function renderPool(){
+  const el=document.getElementById('feast-pool');
+  el.innerHTML='';
+  const shuffled=shuffle([...FEASTS]);
+  shuffled.forEach(f=>{
+    const chip=document.createElement('div');
+    chip.className=`feast-chip${placements[f.id]?' placed':''}`;
+    chip.id=`chip-${f.id}`;
+    chip.textContent=f.name;
+    chip.dataset.id=f.id;
+    if(!placements[f.id]) chip.onclick=()=>selectFeast(f.id);
+    el.appendChild(chip);
+  });
+}
+
+function renderCalendar(){
+  const grid=document.getElementById('calendar-grid');
+  grid.innerHTML='';
+  MONTHS.forEach(m=>{
+    const placed=Object.entries(placements).find(([fId,mId])=>mId===m.id);
+    const feast=placed?FEASTS.find(f=>f.id===placed[0]):null;
+
+    const cell=document.createElement('div');
+    cell.className=`month-cell${feast?' has-feast':''}`;
+    cell.id=`month-${m.id}`;
+    cell.dataset.id=m.id;
+    cell.innerHTML=`
+      <div class="month-name">${m.name}</div>
+      ${feast?`<div class="month-feast">${feast.name}</div>`:''}
+      <div class="month-result" id="result-${m.id}"></div>`;
+    cell.onclick=()=>placeInMonth(m.id);
+    grid.appendChild(cell);
+  });
+}
+
+function selectFeast(id){
+  document.querySelectorAll('.feast-chip').forEach(c=>c.classList.remove('selected'));
+  if(selectedFeast===id){selectedFeast=null;return;}
+  selectedFeast=id;
+  const chip=document.getElementById(`chip-${id}`);
+  if(chip) chip.classList.add('selected');
+}
+
+function placeInMonth(monthId){
+  if(!selectedFeast) return;
+
+  // If month already has a feast, swap it back
+  const existing=Object.entries(placements).find(([,mId])=>mId===monthId);
+  if(existing){
+    delete placements[existing[0]];
+  }
+
+  // Remove feast from any previous month
+  Object.keys(placements).forEach(fId=>{
+    if(fId===selectedFeast) delete placements[fId];
+  });
+
+  placements[selectedFeast]=monthId;
+
+  // Deselect chip
+  const chip=document.getElementById(`chip-${selectedFeast}`);
+  if(chip){chip.classList.add('placed');chip.classList.remove('selected');}
+  selectedFeast=null;
+
+  renderPool();
+  renderCalendar();
+  updateProgress();
+}
+
+async function checkCalendar(){
+  const allPlaced=FEASTS.every(f=>placements[f.id]);
+  if(!allPlaced){alert('Place all 12 feasts on the calendar first!');return;}
+
+  let correct=0;
+  FEASTS.forEach(f=>{
+    const placedMonth=placements[f.id];
+    const isCorrect=placedMonth===f.month;
+    if(isCorrect) correct++;
+
+    const monthCell=document.getElementById(`month-${placedMonth}`);
+    const resultEl=document.getElementById(`result-${placedMonth}`);
+    if(monthCell){monthCell.classList.remove('has-feast');monthCell.classList.add(isCorrect?'correct-cell':'wrong-cell');}
+    if(resultEl) resultEl.textContent=isCorrect?'✦':'✗';
+  });
+
+  const pct=Math.round((correct/FEASTS.length)*100);
+  const won=pct>=80;
+
+  setTimeout(async()=>{
+    showScreen('screen-end');
+    document.getElementById('result-pct').textContent=pct+'%';
+
+    let title='',msg='';
+    if(pct===100){title='Calendar Master!';msg='All 12 Great Feasts placed perfectly. The rhythm of the Church year is yours!';}
+    else if(pct>=80){title:'Feast Expert!';msg=`${correct} of 12 correct. You know the Orthodox calendar well!`;}
+    else if(pct>=50){title='Good Try!';msg=`${correct} of 12 correct. Study the 12 Great Feasts in Topic 6 and try again.`;}
+    else{title='Keep Studying!';msg='The church calendar takes time to learn. Review Session 6.1 and try again!';}
+
+    if(pct>=80&&pct<100){title='Feast Expert!';}
+    document.getElementById('result-title').textContent=title;
+    document.getElementById('result-msg').textContent=msg;
+
+    const result=await GameUtils.awardCoins(GAME_ID,won,'Feast Calendar');
+    if(result.alreadyPlayed){
+      document.getElementById('coin-award').textContent='Already played today — come back tomorrow!';
+    } else if(result.awarded>0){
+      document.getElementById('coin-award').textContent=`+${result.awarded} coins earned!${won?' (Win bonus!)':''}`;
+      GameUtils.coinRain('coin-rain',result.awarded);
+    }
+  },1200);
+}
+
+(async()=>{const prof=await GameUtils.init();if(!prof) return;})();
+</script>
+</body>
+</html>

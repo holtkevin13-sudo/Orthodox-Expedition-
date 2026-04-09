@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Creed Catcher — Orthodox Expedition</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --gold:#c9922a;--gold-light:#f0c96e;--gold-bright:#ffd700;
+  --parchment:#f4e8c1;
+  --burgundy:#6b1a1a;--byzantine:#2c1654;
+  --green:#16a34a;--green-light:#22c55e;
+  --red:#dc2626;--red-light:#ef4444;
+  --bg:#0e0800;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overflow:hidden;}
+body{
+  font-family:'Crimson Text',serif;
+  background:var(--bg);
+  background-image:radial-gradient(ellipse at 50% 0%,rgba(107,26,26,0.5) 0%,transparent 55%),radial-gradient(ellipse at 100% 100%,rgba(44,22,84,0.35) 0%,transparent 50%);
+  display:flex;flex-direction:column;
+  height:100vh;overflow:hidden;
+}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(201,146,42,0.02) 1px,transparent 1px),linear-gradient(90deg,rgba(201,146,42,0.02) 1px,transparent 1px);background-size:44px 44px;pointer-events:none;}
+
+.back-btn{position:fixed;top:0.75rem;left:0.75rem;background:none;border:1px solid rgba(201,146,42,0.2);border-radius:7px;padding:0.3rem 0.7rem;font-family:'Cinzel',serif;font-size:0.6rem;color:rgba(201,146,42,0.4);cursor:pointer;z-index:20;min-height:36px;}
+
+.screen{display:none;flex-direction:column;align-items:center;justify-content:center;flex:1;padding:1.25rem;text-align:center;}
+.screen.show{display:flex;}
+
+/* START */
+.game-icon{font-size:3rem;margin-bottom:0.5rem;}
+.game-title{font-family:'Cinzel Decorative',serif;font-size:clamp(1.2rem,4.5vw,1.6rem);color:var(--gold-light);text-shadow:0 0 20px rgba(201,146,42,0.4);margin-bottom:0.25rem;}
+.game-sub{font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.2em;color:rgba(201,146,42,0.4);text-transform:uppercase;margin-bottom:1rem;}
+.game-desc{font-size:0.85rem;color:rgba(244,232,193,0.4);font-style:italic;line-height:1.6;margin-bottom:1.5rem;max-width:320px;}
+.start-btn{padding:1rem 2.5rem;min-height:56px;background:linear-gradient(135deg,var(--gold),var(--gold-bright));border:none;border-radius:14px;font-family:'Cinzel',serif;font-size:0.9rem;letter-spacing:0.1em;color:var(--bg);font-weight:700;cursor:pointer;box-shadow:0 4px 20px rgba(255,215,0,0.25);}
+.high-score-lbl{font-family:'Cinzel',serif;font-size:0.68rem;color:rgba(201,146,42,0.3);margin-top:1rem;}
+
+/* GAME SCREEN — full height layout */
+#screen-game{
+  display:none;flex-direction:column;
+  height:100vh;padding:0;overflow:hidden;
+  position:relative;
+}
+#screen-game.show{display:flex;}
+
+/* Top bar */
+.game-bar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0.75rem 1rem 0.5rem;
+  flex-shrink:0;z-index:10;
+}
+.gb-left{display:flex;flex-direction:column;align-items:flex-start;gap:0.1rem;}
+.gb-level{font-family:'Cinzel',serif;font-size:0.62rem;color:rgba(201,146,42,0.4);letter-spacing:0.1em;}
+.gb-score{font-family:'Cinzel Decorative',serif;font-size:1.3rem;color:var(--gold-bright);text-shadow:0 0 10px rgba(255,215,0,0.3);line-height:1;}
+.gb-right{display:flex;gap:0.3rem;}
+.life-pip{font-size:1rem;}
+.life-pip.lost{opacity:0.18;filter:grayscale(1);}
+
+/* Target line display */
+.target-area{
+  padding:0.5rem 1rem;flex-shrink:0;
+  background:rgba(244,232,193,0.03);
+  border-top:1px solid rgba(201,146,42,0.1);
+  border-bottom:1px solid rgba(201,146,42,0.1);
+}
+.target-label{font-family:'Cinzel',serif;font-size:0.58rem;letter-spacing:0.15em;color:rgba(201,146,42,0.35);text-transform:uppercase;margin-bottom:0.3rem;}
+.target-text{font-family:'Crimson Text',serif;font-size:0.88rem;color:rgba(244,232,193,0.5);font-style:italic;line-height:1.4;text-align:center;}
+
+/* Falling words arena */
+.arena{
+  flex:1;position:relative;overflow:hidden;
+  cursor:pointer;
+}
+.arena-hint{
+  position:absolute;bottom:50%;left:50%;transform:translate(-50%,50%);
+  font-family:'Cinzel',serif;font-size:0.65rem;letter-spacing:0.15em;
+  color:rgba(201,146,42,0.15);text-transform:uppercase;pointer-events:none;
+  text-align:center;
+}
+
+/* Falling word chips */
+.falling-word{
+  position:absolute;
+  background:rgba(44,22,84,0.5);border:1.5px solid rgba(124,58,237,0.3);
+  border-radius:20px;padding:0.4rem 0.875rem;
+  font-family:'Cinzel',serif;font-size:0.78rem;color:rgba(167,139,250,0.9);
+  cursor:pointer;user-select:none;transition:border-color 0.15s;
+  white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,0.3);
+}
+.falling-word:hover{border-color:rgba(124,58,237,0.6);}
+.falling-word.correct-word{
+  background:rgba(22,163,74,0.25);border-color:rgba(22,163,74,0.7);
+  color:rgba(134,239,172,0.95);animation:catchPop 0.3s ease-out;
+}
+.falling-word.wrong-word{
+  background:rgba(220,38,38,0.15);border-color:rgba(220,38,38,0.5);
+  color:rgba(252,165,165,0.8);animation:wrongShake 0.3s ease;
+}
+@keyframes catchPop{0%{transform:scale(1);}50%{transform:scale(1.2);}100%{transform:scale(1);}}
+@keyframes wrongShake{0%,100%{transform:rotate(0);}25%{transform:rotate(-5deg);}75%{transform:rotate(5deg);}}
+
+/* Caught words display */
+.caught-area{
+  padding:0.4rem 1rem;flex-shrink:0;min-height:52px;
+  border-top:1px solid rgba(201,146,42,0.1);
+  display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:0.3rem;
+}
+.caught-chip{
+  background:rgba(22,163,74,0.12);border:1px solid rgba(22,163,74,0.3);
+  border-radius:14px;padding:0.2rem 0.6rem;
+  font-family:'Cinzel',serif;font-size:0.68rem;color:rgba(134,239,172,0.8);
+}
+
+/* END */
+.end-ring{width:110px;height:110px;border-radius:50%;background:linear-gradient(135deg,rgba(44,22,84,0.9),rgba(107,26,26,0.9));border:3px solid var(--gold);display:flex;flex-direction:column;align-items:center;justify-content:center;margin:0 auto 1rem;box-shadow:0 0 30px rgba(201,146,42,0.25);}
+.end-score{font-family:'Cinzel Decorative',serif;font-size:2rem;color:var(--gold-bright);line-height:1;}
+.end-lbl{font-family:'Cinzel',serif;font-size:0.55rem;color:rgba(201,146,42,0.5);letter-spacing:0.1em;}
+.end-title{font-family:'Cinzel Decorative',serif;font-size:1.1rem;color:var(--gold-light);margin-bottom:0.35rem;}
+.end-msg{font-size:0.82rem;color:rgba(244,232,193,0.4);font-style:italic;margin-bottom:1.5rem;line-height:1.5;max-width:300px;}
+.new-record{font-family:'Cinzel',serif;font-size:0.78rem;color:var(--gold-bright);margin-bottom:1rem;animation:glow 1s ease-in-out infinite alternate;}
+@keyframes glow{from{text-shadow:none;}to{text-shadow:0 0 12px rgba(255,215,0,0.6);}}
+.end-btns{display:flex;gap:0.5rem;justify-content:center;}
+.play-again-btn{padding:0.75rem 1.75rem;min-height:48px;background:linear-gradient(135deg,var(--gold),var(--gold-bright));border:none;border-radius:11px;font-family:'Cinzel',serif;font-size:0.78rem;color:var(--bg);font-weight:700;cursor:pointer;}
+.back-games-btn{padding:0.75rem 1.25rem;min-height:48px;background:transparent;border:1px solid rgba(201,146,42,0.25);border-radius:11px;font-family:'Cinzel',serif;font-size:0.72rem;color:rgba(201,146,42,0.5);cursor:pointer;}
+</style>
+</head>
+<body>
+<button class="back-btn" onclick="window.location.href='../games.html'">← Games</button>
+
+<!-- START -->
+<div class="screen show" id="screen-start">
+  <div class="game-icon">☩</div>
+  <div class="game-title">Creed Catcher</div>
+  <div class="game-sub">Expedition Game</div>
+  <div class="game-desc">Words from the Nicene Creed fall from the sky. Tap only the words that belong in the highlighted line — avoid the imposters!</div>
+  <button class="start-btn" onclick="startGame()">Catch the Creed ☩</button>
+  <div class="high-score-lbl" id="high-score-lbl"></div>
+</div>
+
+<!-- GAME -->
+<div id="screen-game">
+  <div class="game-bar">
+    <div class="gb-left">
+      <div class="gb-level" id="gb-level">Line 1 of 14</div>
+      <div class="gb-score" id="gb-score">0</div>
+    </div>
+    <div class="gb-right" id="lives-display"></div>
+  </div>
+
+  <div class="target-area">
+    <div class="target-label">Find the words for this line:</div>
+    <div class="target-text" id="target-text">Loading...</div>
+  </div>
+
+  <div class="arena" id="arena">
+    <div class="arena-hint" id="arena-hint">Tap the correct words as they fall</div>
+  </div>
+
+  <div class="caught-area" id="caught-area"></div>
+</div>
+
+<!-- END -->
+<div class="screen" id="screen-end" style="text-align:center;">
+  <div class="end-ring">
+    <div class="end-score" id="end-score">0</div>
+    <div class="end-lbl">lines</div>
+  </div>
+  <div class="new-record" id="new-record" style="display:none;">✦ New High Score! ✦</div>
+  <div class="end-title" id="end-title">Well done!</div>
+  <div class="end-msg" id="end-msg"></div>
+  <div class="end-btns">
+    <button class="play-again-btn" onclick="startGame()">Play Again ☩</button>
+    <button class="back-games-btn" onclick="window.location.href='../games.html'">Games</button>
+  </div>
+</div>
+
+<script>
+const CREED_LINES = [
+  {line:'I believe in one God, the Father Almighty, Creator of heaven and earth, and of all things visible and invisible.',keywords:['believe','one','God','Father','Almighty','Creator','heaven','earth','visible','invisible']},
+  {line:'And in one Lord Jesus Christ, the Son of God, the Only-begotten, born of the Father before all ages.',keywords:['Lord','Jesus','Christ','Son','God','Only-begotten','born','Father','ages']},
+  {line:'Light of Light, true God of true God, begotten not created, of one essence with the Father.',keywords:['Light','true','God','begotten','created','essence','Father']},
+  {line:'Through Him all things were made.',keywords:['Through','Him','all','things','were','made']},
+  {line:'Who for us and for our salvation came down from heaven, and was incarnate of the Holy Spirit and the Virgin Mary, and became man.',keywords:['salvation','came','heaven','incarnate','Holy','Spirit','Virgin','Mary','became','man']},
+  {line:'And was crucified for us under Pontius Pilate, and suffered and was buried.',keywords:['crucified','Pontius','Pilate','suffered','buried']},
+  {line:'And rose on the third day according to the Scriptures.',keywords:['rose','third','day','Scriptures']},
+  {line:'And ascended into heaven and is seated at the right hand of the Father.',keywords:['ascended','heaven','seated','right','hand','Father']},
+  {line:'And He shall come again with glory to judge the living and the dead. His Kingdom shall have no end.',keywords:['come','glory','judge','living','dead','Kingdom','end']},
+  {line:'And in the Holy Spirit, the Lord, the Creator of Life, Who proceeds from the Father.',keywords:['Holy','Spirit','Lord','Creator','Life','proceeds','Father']},
+  {line:'Who together with the Father and the Son is worshiped and glorified, Who spoke through the Prophets.',keywords:['together','Father','Son','worshiped','glorified','Prophets']},
+  {line:'In one Holy, Catholic, and Apostolic Church.',keywords:['one','Holy','Catholic','Apostolic','Church']},
+  {line:'I acknowledge one Baptism for the remission of sins.',keywords:['acknowledge','Baptism','remission','sins']},
+  {line:'I look for the Resurrection of the dead, and the life of the age to come. Amen.',keywords:['Resurrection','dead','life','age','Amen']},
+];
+
+const IMPOSTERS = ['Allah','Buddha','Evolution','Pope','Vatican','Protestant','Sola','Filioque','Purgatory','Rapture','Tithe','Easter Bunny','Nirvana','Karma','Aura'];
+
+const TOTAL_LINES = CREED_LINES.length;
+let score=0, lives=3, lineIdx=0, caughtWords=[], neededWords=[], fallingTimers=[], gameActive=false;
+let highScore=parseInt(localStorage.getItem('cc-high')||'0');
+let fallingInterval=null;
+
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('show'));
+  document.getElementById('screen-game').style.display='none';
+  if(id==='screen-game'){
+    document.getElementById('screen-game').style.display='flex';
+  } else {
+    document.getElementById(id).classList.add('show');
+  }
+}
+
+function startGame(){
+  score=0;lives=3;lineIdx=0;gameActive=true;
+  clearAllFalling();
+  document.getElementById('gb-score').textContent='0';
+  renderLives();
+  loadLine();
+  showScreen('screen-game');
+}
+
+function renderLives(){
+  const el=document.getElementById('lives-display');
+  el.innerHTML='';
+  for(let i=0;i<3;i++){
+    const pip=document.createElement('span');
+    pip.className='life-pip'+(i>=lives?' lost':'');
+    pip.textContent='♥';
+    el.appendChild(pip);
+  }
+}
+
+function loadLine(){
+  if(lineIdx>=TOTAL_LINES||lives<=0){endGame();return;}
+  clearAllFalling();
+  caughtWords=[];
+  document.getElementById('caught-area').innerHTML='';
+  document.getElementById('arena-hint').textContent='Tap the correct words as they fall';
+
+  const creedLine=CREED_LINES[lineIdx];
+  neededWords=[...creedLine.keywords];
+
+  document.getElementById('gb-level').textContent=`Line ${lineIdx+1} of ${TOTAL_LINES}`;
+  document.getElementById('target-text').textContent=creedLine.line;
+
+  // Start dropping words
+  startFalling(creedLine);
+}
+
+function startFalling(creedLine){
+  const allWords=[...creedLine.keywords,...shuffle(IMPOSTERS).slice(0,4)];
+  let pool=shuffle([...allWords]);
+  let poolIdx=0;
+
+  fallingInterval=setInterval(()=>{
+    if(!gameActive) return;
+    if(poolIdx>=pool.length){pool=shuffle([...allWords]);poolIdx=0;}
+    dropWord(pool[poolIdx],creedLine.keywords.includes(pool[poolIdx]),creedLine);
+    poolIdx++;
+  },900);
+}
+
+function dropWord(word, isCorrect, creedLine){
+  if(!gameActive) return;
+  const arena=document.getElementById('arena');
+  const el=document.createElement('div');
+  el.className='falling-word';
+  el.textContent=word;
+  el.style.left=Math.random()*75+'%';
+  el.style.top='-40px';
+
+  const duration=4000+Math.random()*2000;
+  const startTime=Date.now();
+
+  el.onclick=()=>tapWord(el,word,isCorrect,creedLine);
+  arena.appendChild(el);
+
+  const timer=setInterval(()=>{
+    const elapsed=Date.now()-startTime;
+    const pct=elapsed/duration;
+    const arenaH=arena.offsetHeight;
+    el.style.top=(pct*arenaH)+'px';
+    if(pct>=1){el.remove();clearInterval(timer);}
+  },30);
+
+  fallingTimers.push(timer);
+  setTimeout(()=>{if(el.parentNode) el.remove();},duration+200);
+}
+
+function tapWord(el, word, isCorrect, creedLine){
+  if(!gameActive) return;
+  // Already caught this word?
+  if(caughtWords.includes(word)&&isCorrect) return;
+
+  if(isCorrect&&!caughtWords.includes(word)){
+    el.classList.add('correct-word');
+    caughtWords.push(word);
+    addCaughtChip(word);
+    setTimeout(()=>el.remove(),300);
+
+    // Check if all needed words caught
+    const allCaught=neededWords.every(w=>caughtWords.includes(w));
+    if(allCaught){
+      score++;
+      document.getElementById('gb-score').textContent=score;
+      document.getElementById('arena-hint').textContent='✦ Line complete! Moving on...';
+      lineIdx++;
+      setTimeout(loadLine,1000);
+    }
+  } else if(!isCorrect){
+    // Tapped an imposter
+    el.classList.add('wrong-word');
+    lives--;
+    renderLives();
+    setTimeout(()=>el.remove(),400);
+    if(lives<=0){gameActive=false;setTimeout(endGame,400);}
+  }
+}
+
+function addCaughtChip(word){
+  const area=document.getElementById('caught-area');
+  const chip=document.createElement('div');
+  chip.className='caught-chip';
+  chip.textContent=word;
+  area.appendChild(chip);
+}
+
+function clearAllFalling(){
+  clearInterval(fallingInterval);
+  fallingTimers.forEach(t=>clearInterval(t));
+  fallingTimers=[];
+  const arena=document.getElementById('arena');
+  if(arena) arena.querySelectorAll('.falling-word').forEach(el=>el.remove());
+}
+
+function shuffle(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+
+function endGame(){
+  gameActive=false;
+  clearAllFalling();
+  const isRecord=score>highScore;
+  if(isRecord){highScore=score;localStorage.setItem('cc-high',score);}
+  document.getElementById('end-score').textContent=score;
+  document.getElementById('new-record').style.display=isRecord?'block':'none';
+
+  let title='',msg='';
+  if(score>=12){title='Creed Champion!';msg=`${score} lines completed — extraordinary! The words of the faith are yours.`;}
+  else if(score>=8){title='Creed Catcher!';msg=`${score} lines completed — great work! Keep practicing the Creed at Liturgy.`;}
+  else if(score>=4){title='Good Effort!';msg=`${score} lines completed — you are learning! Study Session 0.4 on the Creed and try again.`;}
+  else{title='Keep Going!';msg:'The Creed takes time. Recite it every Sunday at Liturgy and try again!';}
+
+  if(score<4){msg='The Creed takes time. Recite it every Sunday at Liturgy and try again!';}
+
+  document.getElementById('end-title').textContent=title;
+  document.getElementById('end-msg').textContent=msg;
+  showScreen('screen-end');
+  document.getElementById('high-score-lbl').textContent=isRecord?'New Best!':highScore>0?`Best: ${highScore} lines`:'';
+}
+
+document.getElementById('high-score-lbl').textContent=highScore>0?`Best: ${highScore} lines`:'';
+</script>
+</body>
+</html>

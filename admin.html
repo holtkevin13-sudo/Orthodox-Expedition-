@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Admin — The Orthodox Expedition</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
@@ -649,7 +650,7 @@ function toast(msg, isError=false){
     const session = res?.data?.session ?? null;
     if(!session){ window.location.href='index.html'; return; }
     const {data:prof} = await sb.from('profiles').select('*').eq('id',session.user.id).single();
-    if(!prof||prof.role!=='admin'){
+    if(!prof||!['superuser','admin'].includes(prof.role)){
       await sb.auth.signOut();
       window.location.href='index.html';
       return;
@@ -681,7 +682,7 @@ async function loadAll(){
     sb.from('sessions').select('*').order('topic_id').order('order_index'),
     sb.from('missions').select('*').order('type').order('created_at'),
     sb.from('prizes').select('*').order('tier').order('created_at'),
-    sb.from('profiles').select('*').eq('role','explorer').single(),
+    sb.from('profiles').select('*').eq('role','explorer').eq('family_id', prof.family_id).limit(1).single(),
   ]);
   allTopics   = topicsRes.data   || [];
   allSessions = sessionsRes.data || [];

@@ -16,6 +16,11 @@ function showAdminBar(){
   const bar = document.getElementById('admin-bar');
   if(bar) bar.classList.add('show');
 }
+
+function showParentBar(){
+  const bar = document.getElementById('parent-bar');
+  if(bar) bar.classList.add('show');
+}
 </script>
 <style>
 :root{
@@ -395,6 +400,13 @@ body::before{
     <button class="admin-bar-btn" onclick="window.location.href='index.html?signout=1'">Sign Out</button>
   </div>
 </div>
+<div class="admin-bar" id="parent-bar" style="background:linear-gradient(90deg,rgba(22,84,44,0.97),rgba(12,50,22,0.97));">
+  <span class="admin-bar-label" style="color:rgba(134,239,172,0.7);">☩ Parent View — Guide Notes Visible</span>
+  <div style="display:flex;gap:0.4rem;">
+    <button class="admin-bar-btn" style="color:rgba(134,239,172,0.7);border-color:rgba(134,239,172,0.25);" onclick="window.location.href='parent.html'">← Family Dashboard</button>
+    <button class="admin-bar-btn" style="color:rgba(134,239,172,0.5);border-color:rgba(134,239,172,0.15);" onclick="window.location.href='index.html?signout=1'">Sign Out</button>
+  </div>
+</div>
 
 <div id="loading"><div class="loading-mark">☩</div></div>
 
@@ -490,8 +502,15 @@ let expandedSessions = new Set();
     if(!session){ window.location.href='index.html'; return; }
     const {data:prof} = await sb.from('profiles').select('role').eq('id',session.user.id).single();
     const isAdminView = new URLSearchParams(window.location.search).get('admin')==='1';
-    if((prof&&['superuser','admin','parent'].includes(prof.role))&&!isAdminView){ window.location.href= prof.role==='parent'?'parent.html':'admin.html'; return; }
-    if(prof&&['superuser','admin','parent'].includes(prof.role)&&isAdminView){ showAdminBar(); }
+    const isParentAccess = prof && prof.role === 'parent';
+    const isAdminAccess  = prof && ['superuser','admin'].includes(prof.role);
+
+    // Admins without ?admin=1 go to admin panel
+    if(isAdminAccess && !isAdminView){ window.location.href='admin.html'; return; }
+    // Admins with ?admin=1 see admin bar
+    if(isAdminAccess && isAdminView){ showAdminBar(); }
+    // Parents see parent bar directly — no ?admin=1 needed
+    if(isParentAccess){ showParentBar(); }
     await loadAll(session.user.id);
     document.getElementById('loading').style.display='none';
     document.getElementById('app').style.display='block';
@@ -605,7 +624,8 @@ function renderTopics(){
     const isActive = topic.id===activeTopicId;
     const isComplete = status==='complete';
     const isAdminView = new URLSearchParams(window.location.search).get('admin')==='1';
-    const isLocked = status==='locked' && !isAdminView;
+    const isParentAccess = profile && profile.role === 'parent';
+    const isLocked = status==='locked' && !isAdminView && !isParentAccess;
     const isExpanded = expandedTopics.has(topic.id);
 
     const topicSessions = allSessions.filter(s=>s.topic_id===topic.id);
@@ -1015,6 +1035,11 @@ function coinRain(amount){
 
 function showAdminBar(){
   const bar = document.getElementById('admin-bar');
+  if(bar) bar.classList.add('show');
+}
+
+function showParentBar(){
+  const bar = document.getElementById('parent-bar');
   if(bar) bar.classList.add('show');
 }
 

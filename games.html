@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Games — The Orthodox Expedition</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{
+  --gold:#c9922a;--gold-light:#f0c96e;--gold-bright:#ffd700;
+  --parchment:#f4e8c1;--parchment-dark:#e8d5a0;
+  --ink:#1a0f00;
+  --burgundy:#6b1a1a;--byzantine:#2c1654;--byzantine-light:#4a2a7a;
+  --green:#16a34a;--green-light:#22c55e;
+  --bg:#0e0800;--nav-h:72px;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{min-height:100%;overflow-x:hidden;}
+body{
+  font-family:'Crimson Text',serif;
+  background-color:var(--bg);
+  background-image:
+    radial-gradient(ellipse at 50% 0%,rgba(107,26,26,0.45) 0%,transparent 55%),
+    radial-gradient(ellipse at 100% 100%,rgba(44,22,84,0.3) 0%,transparent 50%);
+  min-height:100vh;
+}
+body::before{
+  content:'';position:fixed;inset:0;
+  background-image:
+    linear-gradient(rgba(201,146,42,0.022) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(201,146,42,0.022) 1px,transparent 1px);
+  background-size:44px 44px;pointer-events:none;z-index:0;
+}
+
+/* ── LOADING ───────────────────────────────────────────────── */
+#loading{position:fixed;inset:0;z-index:400;display:flex;align-items:center;justify-content:center;background:var(--bg);}
+.loading-mark{font-family:'Cinzel',serif;font-size:2rem;color:rgba(201,146,42,0.4);animation:pulse 1.5s ease-in-out infinite;}
+@keyframes pulse{0%,100%{opacity:0.3;}50%{opacity:0.8;}}
+
+/* ── APP ───────────────────────────────────────────────────── */
+#app{display:none;position:relative;z-index:1;}
+.page{max-width:480px;margin:0 auto;padding:1.25rem 1rem calc(var(--nav-h) + 1.5rem);}
+
+/* ── HEADER ────────────────────────────────────────────────── */
+.app-header{text-align:center;padding:1.25rem 1rem 1rem;border-bottom:1px solid rgba(201,146,42,0.18);margin-bottom:1.25rem;}
+.app-name{font-family:'Cinzel Decorative',serif;font-size:clamp(0.9rem,3.2vw,1.1rem);color:var(--gold-light);letter-spacing:0.06em;text-shadow:0 0 20px rgba(201,146,42,0.35);}
+.app-divider{color:rgba(201,146,42,0.35);letter-spacing:0.6rem;font-size:0.65rem;margin-top:0.3rem;}
+
+/* ── FEATURED GAME ─────────────────────────────────────────── */
+.featured-card{
+  position:relative;border-radius:18px;overflow:hidden;
+  margin-bottom:1.5rem;cursor:pointer;
+  border:1px solid rgba(201,146,42,0.4);
+  background:linear-gradient(145deg,rgba(44,22,84,0.97) 0%,rgba(18,8,40,0.99) 50%,rgba(107,26,26,0.97) 100%);
+  box-shadow:0 12px 40px rgba(0,0,0,0.5),0 0 20px rgba(201,146,42,0.08);
+  transition:all 0.2s;
+  text-decoration:none;display:block;
+}
+.featured-card:active{transform:scale(0.99);}
+.featured-glow{
+  position:absolute;inset:0;
+  background:radial-gradient(circle at 30% 40%,rgba(201,146,42,0.12) 0%,transparent 60%);
+  pointer-events:none;
+}
+.featured-deco{
+  position:absolute;font-size:6rem;color:rgba(201,146,42,0.06);
+  line-height:1;pointer-events:none;
+}
+.featured-deco-tl{top:-1rem;left:-0.5rem;}
+.featured-deco-br{bottom:-1rem;right:-0.5rem;}
+.featured-inner{padding:1.5rem 1.25rem;position:relative;z-index:1;}
+.featured-eyebrow{
+  font-family:'Cinzel',serif;font-size:0.58rem;letter-spacing:0.25em;
+  color:rgba(201,146,42,0.5);text-transform:uppercase;margin-bottom:0.5rem;
+}
+.featured-icon{font-size:2.5rem;margin-bottom:0.5rem;display:block;}
+.featured-title{
+  font-family:'Cinzel Decorative',serif;
+  font-size:clamp(1rem,4vw,1.3rem);
+  color:var(--gold-light);line-height:1.3;margin-bottom:0.35rem;
+}
+.featured-desc{
+  font-size:0.82rem;color:rgba(244,232,193,0.45);
+  font-style:italic;line-height:1.5;margin-bottom:0.875rem;
+}
+.featured-play{
+  display:inline-flex;align-items:center;gap:0.4rem;
+  background:linear-gradient(135deg,var(--gold),var(--gold-bright));
+  color:var(--ink);border-radius:8px;padding:0.5rem 1.25rem;
+  font-family:'Cinzel',serif;font-size:0.75rem;letter-spacing:0.08em;
+  font-weight:700;
+}
+
+/* ── SECTION HEADER ────────────────────────────────────────── */
+.games-section{margin-bottom:1.5rem;}
+.games-section-header{
+  display:flex;align-items:center;gap:0.625rem;
+  margin-bottom:0.875rem;
+  padding-bottom:0.5rem;
+  border-bottom:1px solid rgba(201,146,42,0.12);
+}
+.games-section-icon{font-size:1rem;color:rgba(201,146,42,0.5);}
+.games-section-title{
+  font-family:'Cinzel',serif;font-size:0.72rem;
+  letter-spacing:0.18em;color:rgba(201,146,42,0.5);
+  text-transform:uppercase;
+}
+.games-section-badge{
+  font-family:'Cinzel',serif;font-size:0.6rem;
+  background:rgba(201,146,42,0.1);color:rgba(201,146,42,0.55);
+  border:1px solid rgba(201,146,42,0.2);border-radius:20px;
+  padding:0.1rem 0.5rem;margin-left:auto;
+}
+
+/* ── GAME GRID ─────────────────────────────────────────────── */
+.game-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.625rem;}
+
+/* ── GAME CARD ─────────────────────────────────────────────── */
+.game-card{
+  background:rgba(244,232,193,0.03);
+  border:1px solid rgba(201,146,42,0.18);
+  border-radius:14px;padding:1rem 0.875rem;
+  display:flex;flex-direction:column;align-items:center;
+  text-align:center;gap:0.3rem;
+  text-decoration:none;
+  transition:all 0.2s;position:relative;overflow:hidden;
+}
+.game-card.available{cursor:pointer;}
+.game-card.available:hover{border-color:rgba(201,146,42,0.35);background:rgba(201,146,42,0.05);}
+.game-card.available:active{transform:scale(0.97);}
+.game-card.locked{opacity:0.45;cursor:not-allowed;}
+.game-card.session-game{border-color:rgba(124,58,237,0.2);}
+.game-card.session-game.available{border-color:rgba(124,58,237,0.35);}
+
+.game-icon{font-size:2rem;line-height:1;margin-bottom:0.1rem;}
+.game-title{
+  font-family:'Cinzel',serif;font-size:0.72rem;
+  color:rgba(244,232,193,0.75);line-height:1.3;font-weight:600;
+}
+.game-card.locked .game-title{color:rgba(244,232,193,0.4);}
+.game-desc{font-size:0.68rem;color:rgba(201,146,42,0.4);font-style:italic;line-height:1.3;}
+.game-topic{
+  font-family:'Cinzel',serif;font-size:0.58rem;
+  color:rgba(167,139,250,0.6);margin-top:0.15rem;
+}
+
+/* Coin badge on session games */
+.game-coin-badge{
+  display:flex;align-items:center;gap:0.2rem;
+  background:rgba(201,146,42,0.1);border:1px solid rgba(201,146,42,0.2);
+  border-radius:20px;padding:0.15rem 0.5rem;
+  font-family:'Cinzel',serif;font-size:0.58rem;color:rgba(201,146,42,0.6);
+  margin-top:0.1rem;
+}
+
+/* Lock overlay */
+.game-lock{
+  position:absolute;top:0.4rem;right:0.4rem;
+  font-size:0.75rem;color:rgba(201,146,42,0.25);
+}
+.game-lock-label{
+  font-family:'Cinzel',serif;font-size:0.55rem;
+  color:rgba(201,146,42,0.3);line-height:1.3;margin-top:0.1rem;
+}
+
+/* Play button on available cards */
+.game-play-btn{
+  width:100%;margin-top:0.3rem;padding:0.35rem;min-height:32px;
+  background:linear-gradient(135deg,var(--gold) 0%,var(--gold-bright) 100%);
+  border:none;border-radius:7px;
+  font-family:'Cinzel',serif;font-size:0.62rem;
+  color:var(--ink);font-weight:700;cursor:pointer;
+  pointer-events:none;
+}
+.game-card.session-game .game-play-btn{
+  background:linear-gradient(135deg,var(--byzantine),var(--byzantine-light));
+  color:rgba(244,232,193,0.9);
+}
+
+/* ── BOTTOM NAV ────────────────────────────────────────────── */
+.bottom-nav{
+  position:fixed;bottom:0;left:0;right:0;height:var(--nav-h);
+  background:rgba(8,4,0,0.97);border-top:1px solid rgba(201,146,42,0.18);
+  display:flex;align-items:stretch;backdrop-filter:blur(16px);z-index:200;
+  padding-bottom:env(safe-area-inset-bottom);
+}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0.2rem;cursor:pointer;border:none;background:none;padding:0.5rem 0.25rem;position:relative;transition:all 0.2s;text-decoration:none;}
+.nav-item:active{background:rgba(201,146,42,0.06);}
+.nav-mark{font-size:1rem;line-height:1;color:rgba(201,146,42,0.25);transition:all 0.25s;}
+.nav-label{font-family:'Cinzel',serif;font-size:0.56rem;letter-spacing:0.1em;text-transform:uppercase;color:rgba(201,146,42,0.3);transition:all 0.25s;}
+.nav-item.active .nav-mark{color:var(--gold-bright);text-shadow:0 0 12px rgba(255,215,0,0.6);}
+.nav-item.active .nav-label{color:var(--gold-light);}
+.nav-item.active::before{content:'';position:absolute;top:0;left:20%;right:20%;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent);border-radius:0 0 2px 2px;}
+
+/* ── ANIMATIONS ────────────────────────────────────────────── */
+.fade-up{opacity:0;transform:translateY(12px);animation:fadeUp 0.4s ease forwards;}
+@keyframes fadeUp{to{opacity:1;transform:translateY(0);}}
+.fade-up:nth-child(1){animation-delay:0.04s;}
+.fade-up:nth-child(2){animation-delay:0.1s;}
+.fade-up:nth-child(3){animation-delay:0.16s;}
+</style>
+</head>
+<body>
+
+<div id="loading"><div class="loading-mark">☩</div></div>
+
+<div id="app">
+<div class="page">
+
+  <!-- HEADER -->
+  <header class="app-header">
+    <div class="app-name">The Orthodox Expedition</div>
+    <div class="app-divider">✦ ☩ ✦</div>
+  </header>
+
+  <!-- FEATURED GAME -->
+  <a class="featured-card fade-up" id="featured-card" href="games/byzantine-blitz.html">
+    <div class="featured-glow"></div>
+    <div class="featured-deco featured-deco-tl">✦</div>
+    <div class="featured-deco featured-deco-br">✦</div>
+    <div class="featured-inner">
+      <div class="featured-eyebrow">⚔ Featured Expedition Game</div>
+      <span class="featured-icon">⚡</span>
+      <div class="featured-title">Byzantine Blitz</div>
+      <div class="featured-desc">60 seconds. True or false. How many can you get right? Test your Orthodox knowledge at full speed.</div>
+      <div class="featured-play">Play Now ›</div>
+    </div>
+  </a>
+
+  <!-- EXPEDITION GAMES -->
+  <div class="games-section fade-up">
+    <div class="games-section-header">
+      <span class="games-section-icon">✦</span>
+      <span class="games-section-title">Expedition Games</span>
+      <span class="games-section-badge">Always Available</span>
+    </div>
+    <div class="game-grid" id="expedition-grid"></div>
+  </div>
+
+  <!-- SESSION GAMES -->
+  <div class="games-section fade-up">
+    <div class="games-section-header">
+      <span class="games-section-icon">⊕</span>
+      <span class="games-section-title">Session Games</span>
+      <span class="games-section-badge">10 / 20 Coins</span>
+    </div>
+    <div class="game-grid" id="session-grid"></div>
+  </div>
+
+</div>
+</div>
+
+<!-- BOTTOM NAV -->
+<nav class="bottom-nav" id="bottom-nav" style="display:none;">
+  <a class="nav-item" href="home.html"><span class="nav-mark">✦</span><span class="nav-label">Home</span></a>
+  <a class="nav-item" href="missions.html"><span class="nav-mark">☩</span><span class="nav-label">Missions</span></a>
+  <a class="nav-item" href="curriculum.html"><span class="nav-mark">⊕</span><span class="nav-label">Topics</span></a>
+  <a class="nav-item" href="bazaar.html"><span class="nav-mark">◈</span><span class="nav-label">Bazaar</span></a>
+  <a class="nav-item active" href="games.html"><span class="nav-mark">⚔</span><span class="nav-label">Games</span></a>
+</nav>
+
+<script>
+const SUPABASE_URL = 'https://ksfnsryfmkafwirzgjoe.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtzZm5zcnlmbWthZndpcnpnam9lIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2ODM4MTcsImV4cCI6MjA5MTI1OTgxN30.mHQty44WBnjQY8BJ8KbPk_pp-yTcOaifGxCZPUO4xpY';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ── GAME DEFINITIONS ──────────────────────────────────────────
+const EXPEDITION_GAMES = [
+  {id:'byzantine-blitz',   title:'Byzantine Blitz',   icon:'⚡', desc:'60 seconds of true or false — go!',            url:'games/byzantine-blitz.html'},
+  {id:'saint-seeker',      title:'Saint Seeker',       icon:'⭐', desc:'Read the clue, name the saint.',               url:'games/saint-seeker.html'},
+  {id:'icon-gallery',      title:'Icon Gallery',       icon:'🎨', desc:'See the icon, choose the correct name.',        url:'games/icon-gallery.html'},
+  {id:'creed-catcher',     title:'Creed Catcher',      icon:'☩',  desc:'Catch the falling words and build the Creed.', url:'games/creed-catcher.html'},
+  {id:'feast-or-fast',     title:'Feast or Fast?',     icon:'📅', desc:'Is this day a feast or a fast? Tap fast!',      url:'games/feast-or-fast.html'},
+  {id:'heresy-hunter',     title:'Heresy Hunter',      icon:'⚔',  desc:'A heresy appears — which council struck it?',  url:'games/heresy-hunter.html'},
+];
+
+const SESSION_GAMES = [
+  {id:'liturgy-sequence',  title:'Liturgy Sequence',   icon:'🕯️', desc:'Arrange the Liturgy parts in order.',         url:'games/liturgy-sequence.html',  topicId:5, topicLabel:'Topic 5'},
+  {id:'council-timeline',  title:'Council Timeline',   icon:'🏛️', desc:'Place the 7 Councils on the right year.',     url:'games/council-timeline.html',  topicId:1, topicLabel:'Topic 1'},
+  {id:'sacrament-match',   title:'Sacrament Match',    icon:'🕊️', desc:'Match each sacrament to its visible sign.',   url:'games/sacrament-match.html',   topicId:2, topicLabel:'Topic 2'},
+  {id:'apostle-journeys',  title:'Apostle Journeys',   icon:'🗺️', desc:'Match each Apostle to where they served.',    url:'games/apostle-journeys.html',  topicId:1, topicLabel:'Topic 1'},
+  {id:'creed-builder',     title:'Creed Builder',      icon:'📜', desc:'Put the Nicene Creed in the right order.',    url:'games/creed-builder.html',     topicId:0, topicLabel:'Topic 0'},
+  {id:'feast-calendar',    title:'Feast Calendar',     icon:'🌟', desc:'Place the 12 Great Feasts in the right month.',url:'games/feast-calendar.html',   topicId:6, topicLabel:'Topic 6'},
+  {id:'fasting-rules',     title:'Fasting Rules',      icon:'🌿', desc:'True or false — allowed on a fast day?',     url:'games/fasting-rules.html',     topicId:6, topicLabel:'Topic 6'},
+  {id:'virtue-passion',    title:'Virtue vs Passion',  icon:'⚖️', desc:'Match each passion to its opposing virtue.',  url:'games/virtue-passion.html',    topicId:7, topicLabel:'Topic 7'},
+];
+
+// ── STATE ─────────────────────────────────────────────────────
+let profile = null;
+let availableTopics = [];
+
+// ── AUTH ──────────────────────────────────────────────────────
+(async()=>{
+  try {
+    const timer = new Promise(r => setTimeout(()=>r(null), 4000));
+    const res   = await Promise.race([sb.auth.getSession(), timer]);
+    const session = res?.data?.session ?? null;
+    if(!session){ window.location.href='index.html'; return; }
+    const {data:prof} = await sb.from('profiles').select('role').eq('id',session.user.id).single();
+    const isAdminView = new URLSearchParams(window.location.search).get('admin')==='1';
+    if(prof&&prof.role==='admin'&&!isAdminView){ window.location.href='admin.html'; return; }
+    await loadAll(session.user.id);
+    document.getElementById('loading').style.display='none';
+    document.getElementById('app').style.display='block';
+    document.getElementById('bottom-nav').style.display='flex';
+  } catch(e){
+    console.error('Games auth error:',e);
+    window.location.href='index.html';
+  }
+})();
+
+// ── LOAD ──────────────────────────────────────────────────────
+async function loadAll(userId){
+  const [profRes, masteryRes] = await Promise.all([
+    sb.from('profiles').select('*').eq('id',userId).single(),
+    sb.from('topic_mastery').select('topic_id,status').eq('explorer_id',userId),
+  ]);
+  profile = profRes.data;
+
+  // Topics that are available, pending, or complete
+  const mastery = masteryRes.data || [];
+  availableTopics = mastery
+    .filter(m=>m.status==='available'||m.status==='pending'||m.status==='complete')
+    .map(m=>m.topic_id);
+
+  renderExpeditionGames();
+  renderSessionGames();
+}
+
+// ── EXPEDITION GAMES ──────────────────────────────────────────
+function renderExpeditionGames(){
+  const grid = document.getElementById('expedition-grid');
+  grid.innerHTML='';
+  // Skip Byzantine Blitz — it's the featured game
+  const games = EXPEDITION_GAMES.filter(g=>g.id!=='byzantine-blitz');
+  games.forEach(g=>{
+    const card = document.createElement('a');
+    card.className='game-card available';
+    card.href=g.url;
+    card.innerHTML=`
+      <div class="game-icon">${g.icon}</div>
+      <div class="game-title">${g.title}</div>
+      <div class="game-desc">${g.desc}</div>
+      <div class="game-play-btn">Play ›</div>`;
+    grid.appendChild(card);
+  });
+}
+
+// ── SESSION GAMES ─────────────────────────────────────────────
+function renderSessionGames(){
+  const grid = document.getElementById('session-grid');
+  grid.innerHTML='';
+  SESSION_GAMES.forEach(g=>{
+    const unlocked = availableTopics.includes(g.topicId);
+    const card = document.createElement('div');
+    card.className=`game-card session-game${unlocked?' available':' locked'}`;
+    if(unlocked) card.onclick=()=>window.location.href=g.url;
+
+    card.innerHTML=`
+      ${!unlocked?'<span class="game-lock">🔒</span>':''}
+      <div class="game-icon">${g.icon}</div>
+      <div class="game-title">${g.title}</div>
+      <div class="game-desc">${g.desc}</div>
+      ${unlocked
+        ? `<div class="game-coin-badge">⚔ 10 play · 20 win</div>
+           <div class="game-play-btn">Play ›</div>`
+        : `<div class="game-lock-label">Unlocks with ${g.topicLabel}</div>`
+      }`;
+    grid.appendChild(card);
+  });
+}
+</script>
+</body>
+</html>

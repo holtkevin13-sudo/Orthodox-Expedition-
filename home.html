@@ -33,19 +33,40 @@ function renderTodayCard(mastery, completed, topics, allSessions, missions, miss
     items.push({text: m.name, coins: m.coins, done, link:'missions.html'});
   });
 
-  // 2. Current session
+  // 2. Current session — use parseInt to avoid type mismatch
   const activeMastery = mastery.find(m=>m.status==='available'||m.status==='pending');
-  if(activeMastery){
+  if(activeMastery && allSessions.length > 0){
+    const activeTopicId = parseInt(activeMastery.topic_id);
     const topicSessions = allSessions
-      .filter(s=>s.topic_id===activeMastery.topic_id)
+      .filter(s=>parseInt(s.topic_id)===activeTopicId)
       .sort((a,b)=>a.order_index-b.order_index);
     const nextSession = topicSessions.find(s=>!completed.includes(s.id));
     if(nextSession){
-      const topic = topics.find(t=>t.id===activeMastery.topic_id);
       items.push({
         text: `${nextSession.id} — ${nextSession.title}`,
         coins: nextSession.coins,
-        done: completed.includes(nextSession.id),
+        done: false,
+        link: 'curriculum.html',
+        isSession: true,
+      });
+    } else if(topicSessions.length > 0){
+      // All sessions in topic done — show mastery reminder
+      items.push({
+        text: 'Topic complete — present your mastery assignment!',
+        coins: 200,
+        done: activeMastery.status==='pending',
+        link: 'curriculum.html',
+        isSession: true,
+      });
+    }
+  } else if(!activeMastery && allSessions.length > 0){
+    // Fallback: show first incomplete session from topic 0
+    const firstIncomplete = allSessions.find(s=>parseInt(s.topic_id)===0 && !completed.includes(s.id));
+    if(firstIncomplete){
+      items.push({
+        text: `${firstIncomplete.id} — ${firstIncomplete.title}`,
+        coins: firstIncomplete.coins,
+        done: false,
         link: 'curriculum.html',
         isSession: true,
       });
@@ -113,9 +134,10 @@ function dismissRankUp(){
 // ── ANNOUNCEMENT BANNER ───────────────────────────────────────
 async function loadAnnouncement(){
   try {
+    // Only show announcements to parents and admins — not explorers
+    if(!profile || profile.role === 'explorer') return;
     const {data} = await sb.from('app_settings').select('value').eq('key','announcement').single();
     if(!data?.value) return;
-    // Check if user already dismissed this message
     const dismissed = localStorage.getItem('announcement-dismissed');
     if(dismissed === data.value) return;
     const banner = document.getElementById('announcement-banner');
@@ -1108,19 +1130,40 @@ function renderTodayCard(mastery, completed, topics, allSessions, missions, miss
     items.push({text: m.name, coins: m.coins, done, link:'missions.html'});
   });
 
-  // 2. Current session
+  // 2. Current session — use parseInt to avoid type mismatch
   const activeMastery = mastery.find(m=>m.status==='available'||m.status==='pending');
-  if(activeMastery){
+  if(activeMastery && allSessions.length > 0){
+    const activeTopicId = parseInt(activeMastery.topic_id);
     const topicSessions = allSessions
-      .filter(s=>s.topic_id===activeMastery.topic_id)
+      .filter(s=>parseInt(s.topic_id)===activeTopicId)
       .sort((a,b)=>a.order_index-b.order_index);
     const nextSession = topicSessions.find(s=>!completed.includes(s.id));
     if(nextSession){
-      const topic = topics.find(t=>t.id===activeMastery.topic_id);
       items.push({
         text: `${nextSession.id} — ${nextSession.title}`,
         coins: nextSession.coins,
-        done: completed.includes(nextSession.id),
+        done: false,
+        link: 'curriculum.html',
+        isSession: true,
+      });
+    } else if(topicSessions.length > 0){
+      // All sessions in topic done — show mastery reminder
+      items.push({
+        text: 'Topic complete — present your mastery assignment!',
+        coins: 200,
+        done: activeMastery.status==='pending',
+        link: 'curriculum.html',
+        isSession: true,
+      });
+    }
+  } else if(!activeMastery && allSessions.length > 0){
+    // Fallback: show first incomplete session from topic 0
+    const firstIncomplete = allSessions.find(s=>parseInt(s.topic_id)===0 && !completed.includes(s.id));
+    if(firstIncomplete){
+      items.push({
+        text: `${firstIncomplete.id} — ${firstIncomplete.title}`,
+        coins: firstIncomplete.coins,
+        done: false,
         link: 'curriculum.html',
         isSession: true,
       });
@@ -1188,9 +1231,10 @@ function dismissRankUp(){
 // ── ANNOUNCEMENT BANNER ───────────────────────────────────────
 async function loadAnnouncement(){
   try {
+    // Only show announcements to parents and admins — not explorers
+    if(!profile || profile.role === 'explorer') return;
     const {data} = await sb.from('app_settings').select('value').eq('key','announcement').single();
     if(!data?.value) return;
-    // Check if user already dismissed this message
     const dismissed = localStorage.getItem('announcement-dismissed');
     if(dismissed === data.value) return;
     const banner = document.getElementById('announcement-banner');
@@ -1219,9 +1263,10 @@ if('serviceWorker' in navigator){
 // ── ANNOUNCEMENT BANNER ───────────────────────────────────────
 async function loadAnnouncement(){
   try {
+    // Only show announcements to parents and admins — not explorers
+    if(!profile || profile.role === 'explorer') return;
     const {data} = await sb.from('app_settings').select('value').eq('key','announcement').single();
     if(!data?.value) return;
-    // Check if user already dismissed this message
     const dismissed = localStorage.getItem('announcement-dismissed');
     if(dismissed === data.value) return;
     const banner = document.getElementById('announcement-banner');

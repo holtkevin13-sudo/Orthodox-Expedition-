@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Family Dashboard — The Orthodox Expedition</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{
+  --gold:#c9922a;--gold-light:#f0c96e;--gold-bright:#ffd700;
+  --parchment:#f4e8c1;--ink:#1a0f00;
+  --burgundy:#6b1a1a;--byzantine:#2c1654;--byzantine-light:#4a2a7a;
+  --green:#16a34a;--green-light:#22c55e;
+  --red:#dc2626;--red-light:#ef4444;
+  --bg:#0e0800;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{min-height:100%;overflow-x:hidden;}
+body{font-family:'Crimson Text',serif;background:var(--bg);background-image:radial-gradient(ellipse at 50% 0%,rgba(107,26,26,0.45) 0%,transparent 55%),radial-gradient(ellipse at 100% 100%,rgba(44,22,84,0.3) 0%,transparent 50%);min-height:100vh;}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(201,146,42,0.022) 1px,transparent 1px),linear-gradient(90deg,rgba(201,146,42,0.022) 1px,transparent 1px);background-size:44px 44px;pointer-events:none;z-index:0;}
+
+/* ── LOADING ── */
+#loading{position:fixed;inset:0;z-index:400;display:flex;align-items:center;justify-content:center;background:var(--bg);}
+.loading-mark{font-family:'Cinzel',serif;font-size:2rem;color:rgba(201,146,42,0.4);animation:pulse 1.5s ease-in-out infinite;}
+@keyframes pulse{0%,100%{opacity:0.3;}50%{opacity:0.8;}}
+
+/* ── APP ── */
+#app{display:none;position:relative;z-index:1;}
+
+/* ── TOP BAR ── */
+.top-bar{
+  background:rgba(8,4,0,0.95);border-bottom:1px solid rgba(201,146,42,0.18);
+  padding:0.875rem 1.25rem;display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:100;backdrop-filter:blur(16px);
+}
+.top-bar-left{display:flex;flex-direction:column;}
+.top-bar-title{font-family:'Cinzel Decorative',serif;font-size:0.85rem;color:var(--gold-light);text-shadow:0 0 12px rgba(201,146,42,0.3);}
+.top-bar-sub{font-family:'Cinzel',serif;font-size:0.58rem;letter-spacing:0.15em;color:rgba(201,146,42,0.4);text-transform:uppercase;margin-top:0.15rem;}
+.top-bar-right{display:flex;gap:0.5rem;align-items:center;}
+.explorer-btn{padding:0.35rem 0.875rem;min-height:34px;background:rgba(201,146,42,0.1);border:1px solid rgba(201,146,42,0.25);border-radius:6px;font-family:'Cinzel',serif;font-size:0.6rem;color:rgba(201,146,42,0.6);cursor:pointer;transition:all 0.2s;}
+.explorer-btn:hover{background:rgba(201,146,42,0.18);}
+.logout-btn{padding:0.35rem 0.875rem;min-height:34px;background:none;border:1px solid rgba(201,146,42,0.2);border-radius:6px;font-family:'Cinzel',serif;font-size:0.6rem;color:rgba(201,146,42,0.4);cursor:pointer;}
+
+/* ── TABS ── */
+.tab-bar{
+  display:flex;overflow-x:auto;-webkit-overflow-scrolling:touch;
+  background:rgba(8,4,0,0.8);border-bottom:1px solid rgba(201,146,42,0.12);
+  padding:0 1rem;
+}
+.tab-bar::-webkit-scrollbar{display:none;}
+.tab{
+  flex:0 0 auto;padding:0.75rem 1rem;min-height:44px;
+  font-family:'Cinzel',serif;font-size:0.65rem;letter-spacing:0.12em;
+  color:rgba(201,146,42,0.35);text-transform:uppercase;cursor:pointer;
+  border:none;background:none;border-bottom:2px solid transparent;
+  transition:all 0.2s;white-space:nowrap;
+}
+.tab.active{color:var(--gold-light);border-bottom-color:var(--gold);}
+.tab-badge{
+  display:inline-block;background:#ef4444;color:white;
+  border-radius:10px;padding:0 0.3rem;font-size:0.55rem;
+  margin-left:0.3rem;min-width:16px;text-align:center;
+}
+
+/* ── PAGE ── */
+.page{max-width:600px;margin:0 auto;padding:1.25rem 1rem 3rem;}
+.tab-panel{display:none;}
+.tab-panel.active{display:block;}
+
+/* ── CHILD SELECTOR ── */
+.child-selector{
+  display:flex;gap:0.5rem;overflow-x:auto;
+  margin-bottom:1.25rem;padding-bottom:2px;
+}
+.child-selector::-webkit-scrollbar{display:none;}
+.child-chip{
+  flex:0 0 auto;padding:0.4rem 1rem;min-height:36px;
+  background:rgba(244,232,193,0.04);border:1.5px solid rgba(201,146,42,0.18);
+  border-radius:20px;font-family:'Cinzel',serif;font-size:0.65rem;
+  color:rgba(201,146,42,0.45);cursor:pointer;transition:all 0.2s;white-space:nowrap;
+}
+.child-chip.active{background:rgba(201,146,42,0.12);border-color:rgba(201,146,42,0.5);color:var(--gold-light);}
+
+/* ── SECTIONS ── */
+.section{margin-bottom:1.5rem;}
+.section-title{font-family:'Cinzel',serif;font-size:0.68rem;letter-spacing:0.18em;color:rgba(201,146,42,0.5);text-transform:uppercase;margin-bottom:0.875rem;padding-bottom:0.4rem;border-bottom:1px solid rgba(201,146,42,0.1);}
+
+/* ── STAT CARDS ── */
+.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:0.5rem;margin-bottom:1.25rem;}
+.stat-card{background:rgba(244,232,193,0.03);border:1px solid rgba(201,146,42,0.15);border-radius:12px;padding:0.875rem 0.625rem;text-align:center;}
+.stat-val{font-family:'Cinzel Decorative',serif;font-size:1.3rem;color:var(--gold-bright);text-shadow:0 0 8px rgba(255,215,0,0.3);line-height:1;}
+.stat-label{font-family:'Cinzel',serif;font-size:0.58rem;color:rgba(201,146,42,0.4);text-transform:uppercase;letter-spacing:0.1em;margin-top:0.25rem;}
+
+/* ── FORMS ── */
+.form-row{display:flex;gap:0.5rem;align-items:flex-end;margin-bottom:0.875rem;}
+.form-group{flex:1;}
+.form-label{font-family:'Cinzel',serif;font-size:0.62rem;letter-spacing:0.1em;color:rgba(201,146,42,0.5);text-transform:uppercase;display:block;margin-bottom:0.3rem;}
+.form-input{width:100%;padding:0.6rem 0.75rem;background:rgba(244,232,193,0.06);border:1px solid rgba(201,146,42,0.2);border-radius:8px;font-family:'Crimson Text',serif;font-size:0.9rem;color:var(--parchment);outline:none;transition:all 0.2s;}
+.form-input:focus{border-color:rgba(201,146,42,0.5);background:rgba(244,232,193,0.09);}
+.form-input::placeholder{color:rgba(244,232,193,0.2);}
+.form-select{width:100%;padding:0.6rem 0.75rem;background:rgba(244,232,193,0.06);border:1px solid rgba(201,146,42,0.2);border-radius:8px;font-family:'Cinzel',serif;font-size:0.75rem;color:var(--parchment);outline:none;-webkit-appearance:none;}
+
+/* ── BUTTONS ── */
+.btn{padding:0.6rem 1.25rem;min-height:40px;border:none;border-radius:8px;font-family:'Cinzel',serif;font-size:0.7rem;cursor:pointer;transition:all 0.2s;letter-spacing:0.06em;}
+.btn:active{transform:scale(0.97);}
+.btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold-bright));color:var(--ink);font-weight:700;}
+.btn-ghost{background:rgba(201,146,42,0.08);border:1px solid rgba(201,146,42,0.2);color:rgba(201,146,42,0.6);}
+.btn-green{background:rgba(22,163,74,0.15);border:1px solid rgba(22,163,74,0.35);color:rgba(134,239,172,0.9);}
+.btn-red{background:rgba(220,38,38,0.12);border:1px solid rgba(220,38,38,0.3);color:rgba(252,165,165,0.8);}
+.btn-purple{background:linear-gradient(135deg,var(--byzantine),var(--byzantine-light));color:rgba(244,232,193,0.9);}
+.btn-full{width:100%;}
+.btn-sm{padding:0.35rem 0.75rem;min-height:32px;font-size:0.62rem;}
+
+/* ── LIST ITEMS ── */
+.list-item{
+  display:flex;align-items:center;gap:0.75rem;
+  padding:0.75rem;background:rgba(244,232,193,0.03);
+  border:1px solid rgba(201,146,42,0.12);border-radius:10px;
+  margin-bottom:0.4rem;
+}
+.list-item-icon{font-size:1.1rem;flex-shrink:0;}
+.list-item-body{flex:1;min-width:0;}
+.list-item-title{font-family:'Cinzel',serif;font-size:0.75rem;color:rgba(244,232,193,0.75);line-height:1.3;}
+.list-item-sub{font-size:0.72rem;color:rgba(201,146,42,0.4);margin-top:0.1rem;}
+.list-item-actions{display:flex;gap:0.3rem;flex-shrink:0;}
+
+/* ── PRIZE CARD ── */
+.prize-row{
+  display:flex;align-items:center;gap:0.75rem;
+  padding:0.75rem;background:rgba(244,232,193,0.03);
+  border:1px solid rgba(201,146,42,0.12);border-radius:10px;margin-bottom:0.4rem;
+}
+.prize-emoji{font-size:1.3rem;flex-shrink:0;}
+.prize-info{flex:1;min-width:0;}
+.prize-name{font-family:'Cinzel',serif;font-size:0.75rem;color:rgba(244,232,193,0.7);}
+.prize-cost{font-family:'Cinzel',serif;font-size:0.65rem;color:rgba(201,146,42,0.45);margin-top:0.1rem;}
+.prize-actions{display:flex;gap:0.3rem;flex-shrink:0;}
+.prize-badge{font-family:'Cinzel',serif;font-size:0.58rem;padding:0.15rem 0.5rem;border-radius:10px;}
+.prize-badge.global{background:rgba(201,146,42,0.1);color:rgba(201,146,42,0.5);border:1px solid rgba(201,146,42,0.15);}
+.prize-badge.family{background:rgba(44,22,84,0.2);color:rgba(167,139,250,0.7);border:1px solid rgba(124,58,237,0.2);}
+
+/* ── MODAL ── */
+#modal-overlay{position:fixed;inset:0;z-index:800;background:rgba(8,4,0,0.85);display:none;align-items:flex-end;justify-content:center;padding:1rem;}
+#modal-overlay.show{display:flex;}
+.modal{width:100%;max-width:440px;background:linear-gradient(160deg,rgba(44,22,84,0.98),rgba(18,8,40,0.99) 50%,rgba(107,26,26,0.98));border:1px solid rgba(201,146,42,0.3);border-radius:20px 20px 16px 16px;padding:1.5rem;animation:slideUp 0.3s cubic-bezier(0.34,1.2,0.64,1);}
+@keyframes slideUp{from{transform:translateY(40px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+.modal-title{font-family:'Cinzel Decorative',serif;font-size:1rem;color:var(--gold-light);margin-bottom:1rem;}
+.modal-btns{display:flex;gap:0.5rem;margin-top:1rem;}
+
+/* ── COIN RATE ── */
+.rate-display{
+  background:rgba(201,146,42,0.06);border:1px solid rgba(201,146,42,0.18);
+  border-radius:10px;padding:0.875rem;margin-bottom:0.875rem;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.rate-val{font-family:'Cinzel Decorative',serif;font-size:1.4rem;color:var(--gold-bright);}
+.rate-label{font-family:'Cinzel',serif;font-size:0.62rem;color:rgba(201,146,42,0.4);}
+.rate-note{font-size:0.72rem;color:rgba(244,232,193,0.3);font-style:italic;line-height:1.5;margin-bottom:0.875rem;}
+
+/* ── EMPTY STATE ── */
+.empty-state{text-align:center;padding:2rem 1rem;color:rgba(201,146,42,0.3);font-style:italic;font-size:0.82rem;}
+
+/* ── FEEDBACK ── */
+.feedback{font-family:'Cinzel',serif;font-size:0.72rem;text-align:center;min-height:1.2rem;margin-top:0.5rem;}
+.feedback.ok{color:rgba(134,239,172,0.8);}
+.feedback.err{color:rgba(252,165,165,0.7);}
+</style>
+</head>
+<body>
+
+<div id="loading"><div class="loading-mark">☩</div></div>
+
+<!-- MODAL -->
+<div id="modal-overlay" onclick="closeModal(event)">
+  <div class="modal" id="modal-content"></div>
+</div>
+
+<div id="app">
+
+  <!-- TOP BAR -->
+  <div class="top-bar">
+    <div class="top-bar-left">
+      <div class="top-bar-title">Family Dashboard</div>
+      <div class="top-bar-sub" id="family-name-display">The Orthodox Expedition</div>
+    </div>
+    <div class="top-bar-right">
+      <button class="explorer-btn" onclick="openExplorerView()">Explorer View</button>
+      <button class="logout-btn" onclick="doLogout()">Sign Out</button>
+    </div>
+  </div>
+
+  <!-- TAB BAR -->
+  <div class="tab-bar">
+    <button class="tab active" onclick="showTab('overview')">Overview</button>
+    <button class="tab" onclick="showTab('coins')">Coins</button>
+    <button class="tab" onclick="showTab('missions')">Missions</button>
+    <button class="tab" onclick="showTab('prizes')">Prizes <span class="tab-badge" id="redemption-badge" style="display:none"></span></button>
+    <button class="tab" onclick="showTab('settings')">Settings</button>
+  </div>
+
+  <div class="page">
+
+    <!-- ── OVERVIEW TAB ── -->
+    <div class="tab-panel active" id="tab-overview">
+      <div class="child-selector" id="child-selector-overview"></div>
+
+      <div class="section">
+        <div class="section-title">Explorer Status</div>
+        <div class="stats-grid" id="overview-stats"></div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Current Progress</div>
+        <div id="overview-progress"></div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Recent Activity</div>
+        <div id="overview-activity"></div>
+      </div>
+    </div>
+
+    <!-- ── COINS TAB ── -->
+    <div class="tab-panel" id="tab-coins">
+      <div class="child-selector" id="child-selector-coins"></div>
+
+      <div class="section">
+        <div class="section-title">Award Coins</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Amount</label>
+            <input type="number" id="award-amount" class="form-input" placeholder="Coins" min="1" max="1000">
+          </div>
+          <div class="form-group" style="flex:2;">
+            <label class="form-label">Reason</label>
+            <input type="text" id="award-reason" class="form-input" placeholder="e.g. Memorized the Creed">
+          </div>
+        </div>
+        <button class="btn btn-gold btn-full" onclick="awardCoins()">Award Coins ✦</button>
+        <div class="feedback" id="award-feedback"></div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Deduct Coins</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Amount</label>
+            <input type="number" id="deduct-amount" class="form-input" placeholder="Coins" min="1">
+          </div>
+          <div class="form-group" style="flex:2;">
+            <label class="form-label">Reason</label>
+            <input type="text" id="deduct-reason" class="form-input" placeholder="Reason">
+          </div>
+        </div>
+        <button class="btn btn-red btn-full" onclick="deductCoins()">Deduct Coins</button>
+        <div class="feedback" id="deduct-feedback"></div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Coin Activity Log</div>
+        <div id="activity-log"></div>
+      </div>
+    </div>
+
+    <!-- ── MISSIONS TAB ── -->
+    <div class="tab-panel" id="tab-missions">
+      <div class="child-selector" id="child-selector-missions"></div>
+
+      <div class="section">
+        <div class="section-title">Mark Mission Complete</div>
+        <div class="form-row">
+          <div class="form-group" style="flex:2;">
+            <label class="form-label">Mission</label>
+            <select id="mission-select" class="form-select form-input"></select>
+          </div>
+        </div>
+        <button class="btn btn-gold btn-full" onclick="completeMission()">Mark Complete ✦</button>
+        <div class="feedback" id="mission-feedback"></div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Active Missions</div>
+        <div id="missions-list"></div>
+      </div>
+    </div>
+
+    <!-- ── PRIZES TAB ── -->
+    <div class="tab-panel" id="tab-prizes">
+
+      <div class="section">
+        <div class="section-title">Pending Redemptions <span class="tab-badge" id="redemption-badge-2" style="display:none;background:#ef4444;color:white;border-radius:10px;padding:0 0.3rem;font-size:0.6rem;margin-left:0.3rem;"></span></div>
+        <div id="redemptions-list"></div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">My Family's Prizes</div>
+        <button class="btn btn-purple btn-full" onclick="openAddPrizeModal()" style="margin-bottom:0.875rem;">+ Add Family Prize</button>
+        <div id="family-prizes-list"></div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Global Prizes</div>
+        <p style="font-size:0.78rem;color:rgba(244,232,193,0.35);font-style:italic;margin-bottom:0.875rem;">These prizes are available to all families. Managed by the expedition administrator.</p>
+        <div id="global-prizes-list"></div>
+      </div>
+    </div>
+
+    <!-- ── SETTINGS TAB ── -->
+    <div class="tab-panel" id="tab-settings">
+
+      <div class="section">
+        <div class="section-title">Coin Value</div>
+        <div class="rate-display">
+          <div>
+            <div class="rate-label">Current Rate</div>
+            <div class="rate-val" id="rate-display">$0.02</div>
+            <div class="rate-label">per coin</div>
+          </div>
+          <button class="btn btn-ghost" onclick="openRateModal()">Change Rate</button>
+        </div>
+        <div class="rate-note" id="rate-note">Coin rate can be changed once every 30 days.</div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Explorer View</div>
+        <p style="font-size:0.78rem;color:rgba(244,232,193,0.35);font-style:italic;margin-bottom:0.875rem;">See the app exactly as your child sees it.</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;">
+          <button class="btn btn-ghost" onclick="window.open('home.html?admin=1','_blank')">✦ Home</button>
+          <button class="btn btn-ghost" onclick="window.open('missions.html?admin=1','_blank')">☩ Missions</button>
+          <button class="btn btn-ghost" onclick="window.open('curriculum.html?admin=1','_blank')">⊕ Topics</button>
+          <button class="btn btn-ghost" onclick="window.open('bazaar.html?admin=1','_blank')">◈ Bazaar</button>
+          <button class="btn btn-ghost" onclick="window.open('games.html?admin=1','_blank')">⚔ Games</button>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Family Info</div>
+        <div id="family-info"></div>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://ksfnsryfmkafwirzgjoe.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtzZm5zcnlmbWthZndpcnpnam9lIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2ODM4MTcsImV4cCI6MjA5MTI1OTgxN30.mHQty44WBnjQY8BJ8KbPk_pp-yTcOaifGxCZPUO4xpY';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ── STATE ─────────────────────────────────────────────────────
+let parentProfile = null;
+let family = null;
+let children = [];
+let selectedChild = null;
+let allMissions = [];
+let completedMissionIds = [];
+let allPrizes = [];
+let pendingRedemptions = [];
+let activityLog = [];
+
+// ── AUTH ──────────────────────────────────────────────────────
+(async()=>{
+  try {
+    const timer = new Promise(r=>setTimeout(()=>r(null),4000));
+    const res   = await Promise.race([sb.auth.getSession(),timer]);
+    const session = res?.data?.session??null;
+    if(!session){window.location.href='index.html';return;}
+
+    const {data:prof} = await sb.from('profiles').select('*').eq('id',session.user.id).single();
+    if(!prof||!['parent','admin','superuser'].includes(prof.role)){
+      window.location.href='index.html';return;
+    }
+    parentProfile=prof;
+    await loadAll();
+    document.getElementById('loading').style.display='none';
+    document.getElementById('app').style.display='block';
+  } catch(e){
+    console.error('Parent auth error:',e);
+    window.location.href='index.html';
+  }
+})();
+
+// ── LOAD ──────────────────────────────────────────────────────
+async function loadAll(){
+  // Load family
+  const {data:fam} = await sb.from('families').select('*').eq('id',parentProfile.family_id).single();
+  family=fam;
+  document.getElementById('family-name-display').textContent=fam?.name||'Family Dashboard';
+  document.getElementById('rate-display').textContent='$'+parseFloat(fam?.coin_rate||0.02).toFixed(2);
+
+  // Load children (explorers in same family)
+  const {data:kids} = await sb.from('profiles')
+    .select('*').eq('family_id',parentProfile.family_id).eq('role','explorer');
+  children=kids||[];
+
+  if(children.length>0){
+    selectedChild=children[0];
+  }
+
+  // Load missions, prizes, redemptions
+  const [missRes,prizRes,redRes] = await Promise.all([
+    sb.from('missions').select('*').order('type').order('order_index'),
+    sb.from('prizes').select('*').eq('is_active',true).order('tier').order('cost'),
+    sb.from('redemptions').select('*,profiles(name)').eq('status','pending').order('redeemed_at',{ascending:false}),
+  ]);
+  allMissions=missRes.data||[];
+  allPrizes=prizRes.data||[];
+  pendingRedemptions=(redRes.data||[]).filter(r=>children.some(c=>c.id===r.explorer_id));
+
+  renderAll();
+}
+
+async function loadChildData(){
+  if(!selectedChild) return;
+  const [spRes,tmRes,actRes,mcRes] = await Promise.all([
+    sb.from('session_progress').select('session_id,coins_awarded,completed_at').eq('explorer_id',selectedChild.id),
+    sb.from('topic_mastery').select('topic_id,status').eq('explorer_id',selectedChild.id),
+    sb.from('activity_log').select('*').eq('explorer_id',selectedChild.id).order('created_at',{ascending:false}).limit(20),
+    sb.from('mission_completions').select('mission_id').eq('explorer_id',selectedChild.id),
+  ]);
+  activityLog=actRes.data||[];
+  completedMissionIds=(mcRes.data||[]).map(m=>m.mission_id);
+
+  // Refresh selected child's profile
+  const {data:fresh} = await sb.from('profiles').select('*').eq('id',selectedChild.id).single();
+  if(fresh) selectedChild=fresh;
+
+  renderChildPanels();
+}
+
+// ── RENDER ────────────────────────────────────────────────────
+function renderAll(){
+  renderChildSelectors();
+  renderPrizesTab();
+  renderRedemptions();
+  renderFamilyInfo();
+  if(selectedChild) loadChildData();
+}
+
+function renderChildSelectors(){
+  ['overview','coins','missions'].forEach(tab=>{
+    const el=document.getElementById(`child-selector-${tab}`);
+    if(!el) return;
+    el.innerHTML='';
+    children.forEach(child=>{
+      const chip=document.createElement('button');
+      chip.className=`child-chip${child.id===selectedChild?.id?' active':''}`;
+      chip.textContent=child.name;
+      chip.onclick=()=>{selectedChild=child;renderChildSelectors();loadChildData();};
+      el.appendChild(chip);
+    });
+  });
+}
+
+function renderChildPanels(){
+  renderOverview();
+  renderActivityLog();
+  renderMissionsTab();
+}
+
+// ── OVERVIEW ──────────────────────────────────────────────────
+function renderOverview(){
+  if(!selectedChild) return;
+  const c=selectedChild;
+  const rate=parseFloat(family?.coin_rate||0.02);
+
+  document.getElementById('overview-stats').innerHTML=`
+    <div class="stat-card">
+      <div class="stat-val">${(c.coins||0).toLocaleString()}</div>
+      <div class="stat-label">Coins</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val">$${((c.coins||0)*rate).toFixed(2)}</div>
+      <div class="stat-label">Value</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val">${c.sessions_attended||0}</div>
+      <div class="stat-label">Sessions</div>
+    </div>`;
+
+  document.getElementById('overview-progress').innerHTML=`
+    <div class="list-item">
+      <span class="list-item-icon">✦</span>
+      <div class="list-item-body">
+        <div class="list-item-title">${c.name}'s Username</div>
+        <div class="list-item-sub">${c.username||'—'}</div>
+      </div>
+    </div>
+    <div class="list-item">
+      <span class="list-item-icon">◈</span>
+      <div class="list-item-body">
+        <div class="list-item-title">Lifetime Coins Earned</div>
+        <div class="list-item-sub">${(c.lifetime_coins||0).toLocaleString()} coins = $${((c.lifetime_coins||0)*rate).toFixed(2)}</div>
+      </div>
+    </div>`;
+}
+
+// ── ACTIVITY LOG ──────────────────────────────────────────────
+function renderActivityLog(){
+  const el=document.getElementById('overview-activity');
+  if(!activityLog.length){el.innerHTML='<div class="empty-state">No activity yet.</div>';return;}
+  el.innerHTML='';
+  activityLog.slice(0,10).forEach(a=>{
+    const isPos=(a.amount||0)>=0;
+    const d=new Date(a.created_at).toLocaleDateString('en-US',{month:'short',day:'numeric'});
+    const item=document.createElement('div');
+    item.className='list-item';
+    item.innerHTML=`
+      <span class="list-item-icon">${isPos?'✦':'◈'}</span>
+      <div class="list-item-body">
+        <div class="list-item-title">${a.reason||'Coin activity'}</div>
+        <div class="list-item-sub">${d}</div>
+      </div>
+      <span style="font-family:'Cinzel',serif;font-size:0.78rem;color:${isPos?'rgba(134,239,172,0.8)':'rgba(252,165,165,0.7)'};">
+        ${isPos?'+':''}${a.amount}
+      </span>`;
+    el.appendChild(item);
+  });
+
+  // Also render in coins tab
+  const actEl=document.getElementById('activity-log');
+  if(actEl) actEl.innerHTML=el.innerHTML;
+}
+
+// ── COINS ─────────────────────────────────────────────────────
+async function awardCoins(){
+  const amount=parseInt(document.getElementById('award-amount').value);
+  const reason=document.getElementById('award-reason').value.trim();
+  const fb=document.getElementById('award-feedback');
+  if(!amount||amount<1){fb.textContent='Enter a valid amount.';fb.className='feedback err';return;}
+  if(!reason){fb.textContent='Enter a reason.';fb.className='feedback err';return;}
+  if(!selectedChild){fb.textContent='Select a child first.';fb.className='feedback err';return;}
+
+  const newCoins=(selectedChild.coins||0)+amount;
+  const newLifetime=(selectedChild.lifetime_coins||0)+amount;
+  await Promise.all([
+    sb.from('profiles').update({coins:newCoins,lifetime_coins:newLifetime}).eq('id',selectedChild.id),
+    sb.from('activity_log').insert({explorer_id:selectedChild.id,amount,reason,created_at:new Date().toISOString()}),
+  ]);
+  fb.textContent=`✦ ${amount} coins awarded to ${selectedChild.name}!`;
+  fb.className='feedback ok';
+  document.getElementById('award-amount').value='';
+  document.getElementById('award-reason').value='';
+  await loadChildData();
+}
+
+async function deductCoins(){
+  const amount=parseInt(document.getElementById('deduct-amount').value);
+  const reason=document.getElementById('deduct-reason').value.trim();
+  const fb=document.getElementById('deduct-feedback');
+  if(!amount||amount<1){fb.textContent='Enter a valid amount.';fb.className='feedback err';return;}
+  if(!selectedChild){fb.textContent='Select a child first.';fb.className='feedback err';return;}
+
+  const newCoins=Math.max(0,(selectedChild.coins||0)-amount);
+  await Promise.all([
+    sb.from('profiles').update({coins:newCoins}).eq('id',selectedChild.id),
+    sb.from('activity_log').insert({explorer_id:selectedChild.id,amount:-amount,reason:reason||'Deduction',created_at:new Date().toISOString()}),
+  ]);
+  fb.textContent=`${amount} coins deducted from ${selectedChild.name}.`;
+  fb.className='feedback ok';
+  document.getElementById('deduct-amount').value='';
+  document.getElementById('deduct-reason').value='';
+  await loadChildData();
+}
+
+// ── MISSIONS ──────────────────────────────────────────────────
+function renderMissionsTab(){
+  const select=document.getElementById('mission-select');
+  const incomplete=allMissions.filter(m=>!completedMissionIds.includes(m.id));
+  select.innerHTML=incomplete.map(m=>`<option value="${m.id}">${m.title} (+${m.coins} coins)</option>`).join('');
+  if(!incomplete.length) select.innerHTML='<option>All missions complete!</option>';
+
+  const list=document.getElementById('missions-list');
+  list.innerHTML='';
+  allMissions.forEach(m=>{
+    const done=completedMissionIds.includes(m.id);
+    const item=document.createElement('div');
+    item.className='list-item';
+    item.innerHTML=`
+      <span class="list-item-icon">${done?'✦':'☩'}</span>
+      <div class="list-item-body">
+        <div class="list-item-title">${m.title}</div>
+        <div class="list-item-sub">${m.type} · +${m.coins} coins${done?' · Complete':''}</div>
+      </div>
+      ${!done?`<button class="btn btn-green btn-sm" onclick="completeMissionDirect('${m.id}',${m.coins})">Complete</button>`:''}`;
+    list.appendChild(item);
+  });
+}
+
+async function completeMission(){
+  const missionId=document.getElementById('mission-select').value;
+  const mission=allMissions.find(m=>m.id===missionId);
+  if(!mission||!selectedChild) return;
+  await completeMissionDirect(missionId, mission.coins);
+}
+
+async function completeMissionDirect(missionId, coins){
+  if(!selectedChild||completedMissionIds.includes(missionId)) return;
+  const fb=document.getElementById('mission-feedback');
+  await Promise.all([
+    sb.from('mission_completions').insert({explorer_id:selectedChild.id,mission_id:missionId,completed_at:new Date().toISOString(),coins_awarded:coins}),
+    sb.from('profiles').update({coins:(selectedChild.coins||0)+coins,lifetime_coins:(selectedChild.lifetime_coins||0)+coins}).eq('id',selectedChild.id),
+    sb.from('activity_log').insert({explorer_id:selectedChild.id,amount:coins,reason:`Mission complete`,created_at:new Date().toISOString()}),
+  ]);
+  if(fb){fb.textContent=`✦ Mission marked complete! +${coins} coins`;fb.className='feedback ok';}
+  await loadChildData();
+}
+
+// ── PRIZES ────────────────────────────────────────────────────
+function renderPrizesTab(){
+  // Global prizes
+  const globalEl=document.getElementById('global-prizes-list');
+  const global=allPrizes.filter(p=>p.is_global||p.family_id===null);
+  globalEl.innerHTML='';
+  if(!global.length){globalEl.innerHTML='<div class="empty-state">No global prizes yet.</div>';return;}
+  global.forEach(p=>{
+    const rate=parseFloat(family?.coin_rate||0.02);
+    const row=document.createElement('div');
+    row.className='prize-row';
+    row.innerHTML=`
+      <span class="prize-emoji">${p.emoji}</span>
+      <div class="prize-info">
+        <div class="prize-name">${p.name}</div>
+        <div class="prize-cost">${p.cost.toLocaleString()} coins · $${(p.cost*rate).toFixed(2)}</div>
+      </div>
+      <span class="prize-badge global">Global</span>`;
+    globalEl.appendChild(row);
+  });
+
+  // Family prizes
+  const familyEl=document.getElementById('family-prizes-list');
+  const familyPrizes=allPrizes.filter(p=>p.family_id===parentProfile.family_id);
+  familyEl.innerHTML='';
+  if(!familyPrizes.length){familyEl.innerHTML='<div class="empty-state">No family prizes yet. Add your own above!</div>';return;}
+  familyPrizes.forEach(p=>{
+    const rate=parseFloat(family?.coin_rate||0.02);
+    const row=document.createElement('div');
+    row.className='prize-row';
+    row.innerHTML=`
+      <span class="prize-emoji">${p.emoji}</span>
+      <div class="prize-info">
+        <div class="prize-name">${p.name}</div>
+        <div class="prize-cost">${p.cost.toLocaleString()} coins · $${(p.cost*rate).toFixed(2)}</div>
+      </div>
+      <div class="prize-actions">
+        <button class="btn btn-ghost btn-sm" onclick="openEditPrizeModal('${p.id}')">Edit</button>
+        <button class="btn btn-red btn-sm" onclick="togglePrize('${p.id}',${!p.is_active})">${p.is_active?'Hide':'Show'}</button>
+      </div>`;
+    familyEl.appendChild(row);
+  });
+}
+
+function renderRedemptions(){
+  const el=document.getElementById('redemptions-list');
+  const badge=document.getElementById('redemption-badge');
+  const badge2=document.getElementById('redemption-badge-2');
+  if(!el) return;
+
+  const myRedemptions=pendingRedemptions.filter(r=>children.some(c=>c.id===r.explorer_id));
+
+  if(badge){badge.style.display=myRedemptions.length?'inline':'none';badge.textContent=myRedemptions.length;}
+  if(badge2){badge2.style.display=myRedemptions.length?'inline':'none';badge2.textContent=myRedemptions.length;}
+
+  if(!myRedemptions.length){el.innerHTML='<div class="empty-state">No pending redemptions.</div>';return;}
+  el.innerHTML='';
+  myRedemptions.forEach(r=>{
+    const child=children.find(c=>c.id===r.explorer_id);
+    const prize=allPrizes.find(p=>p.id===r.prize_id);
+    const d=new Date(r.redeemed_at).toLocaleDateString('en-US',{month:'short',day:'numeric'});
+    const row=document.createElement('div');
+    row.className='list-item';
+    row.innerHTML=`
+      <span class="list-item-icon">${prize?.emoji||'🎁'}</span>
+      <div class="list-item-body">
+        <div class="list-item-title">${r.prize_name}</div>
+        <div class="list-item-sub">${child?.name||'Explorer'} · ${r.coins_spent} coins · ${d}</div>
+      </div>
+      <div class="list-item-actions">
+        <button class="btn btn-green btn-sm" onclick="approveRedemption('${r.id}')">✦ Done</button>
+      </div>`;
+    el.appendChild(row);
+  });
+}
+
+async function approveRedemption(id){
+  await sb.from('redemptions').update({status:'approved',approved_at:new Date().toISOString()}).eq('id',id);
+  pendingRedemptions=pendingRedemptions.filter(r=>r.id!==id);
+  renderRedemptions();
+}
+
+// ── ADD/EDIT PRIZE MODAL ──────────────────────────────────────
+function openAddPrizeModal(){
+  const TIERS=[{id:0,label:'🥉 Common'},{id:1,label:'🥈 Rare'},{id:2,label:'🥇 Legendary'},{id:3,label:'💎 Epic'}];
+  document.getElementById('modal-content').innerHTML=`
+    <div class="modal-title">Add Family Prize</div>
+    <div class="form-group" style="margin-bottom:0.75rem;">
+      <label class="form-label">Emoji</label>
+      <input type="text" id="m-emoji" class="form-input" placeholder="🎁" maxlength="4" style="width:80px;">
+    </div>
+    <div class="form-group" style="margin-bottom:0.75rem;">
+      <label class="form-label">Prize Name</label>
+      <input type="text" id="m-name" class="form-input" placeholder="Prize name">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Coins</label>
+        <input type="number" id="m-cost" class="form-input" placeholder="500" min="1">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Tier</label>
+        <select id="m-tier" class="form-select form-input">
+          ${TIERS.map(t=>`<option value="${t.id}">${t.label}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+    <div class="feedback" id="m-feedback"></div>
+    <div class="modal-btns">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-gold" onclick="savePrize()">Add Prize ✦</button>
+    </div>`;
+  document.getElementById('modal-overlay').classList.add('show');
+}
+
+async function savePrize(){
+  const emoji=document.getElementById('m-emoji').value.trim()||'🎁';
+  const name=document.getElementById('m-name').value.trim();
+  const cost=parseInt(document.getElementById('m-cost').value);
+  const tier=parseInt(document.getElementById('m-tier').value);
+  const fb=document.getElementById('m-feedback');
+  if(!name){fb.textContent='Enter a prize name.';fb.className='feedback err';return;}
+  if(!cost||cost<1){fb.textContent='Enter a valid coin cost.';fb.className='feedback err';return;}
+
+  await sb.from('prizes').insert({
+    name,emoji,cost,tier,
+    family_id:parentProfile.family_id,
+    is_global:false,is_active:true,
+    created_by:parentProfile.id,
+  });
+  closeModal();
+  const {data} = await sb.from('prizes').select('*').eq('is_active',true).order('tier').order('cost');
+  allPrizes=data||[];
+  renderPrizesTab();
+}
+
+async function togglePrize(id, newState){
+  await sb.from('prizes').update({is_active:newState}).eq('id',id);
+  const p=allPrizes.find(p=>p.id===id);
+  if(p) p.is_active=newState;
+  renderPrizesTab();
+}
+
+// ── SETTINGS ─────────────────────────────────────────────────
+function renderFamilyInfo(){
+  const el=document.getElementById('family-info');
+  if(!family||!el) return;
+  el.innerHTML=`
+    <div class="list-item">
+      <span class="list-item-icon">✦</span>
+      <div class="list-item-body">
+        <div class="list-item-title">${family.name}</div>
+        <div class="list-item-sub">${family.parish||'No parish listed'}</div>
+      </div>
+    </div>
+    <div class="list-item">
+      <span class="list-item-icon">☩</span>
+      <div class="list-item-body">
+        <div class="list-item-title">Status</div>
+        <div class="list-item-sub">${family.status==='approved'?'✦ Approved and active':'Pending'}</div>
+      </div>
+    </div>`;
+}
+
+function openRateModal(){
+  const current=parseFloat(family?.coin_rate||0.02);
+  document.getElementById('modal-content').innerHTML=`
+    <div class="modal-title">Change Coin Rate</div>
+    <p style="font-size:0.8rem;color:rgba(244,232,193,0.4);font-style:italic;margin-bottom:1rem;line-height:1.5;">
+      Coin rate can only be changed once every 30 days. Current rate: $${current.toFixed(2)} per coin.
+    </p>
+    <div class="form-group" style="margin-bottom:0.875rem;">
+      <label class="form-label">New Rate ($ per coin)</label>
+      <input type="number" id="m-rate" class="form-input" value="${current}" min="0.01" max="0.25" step="0.01">
+    </div>
+    <div class="feedback" id="m-feedback"></div>
+    <div class="modal-btns">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-gold" onclick="saveRate()">Update Rate</button>
+    </div>`;
+  document.getElementById('modal-overlay').classList.add('show');
+}
+
+async function saveRate(){
+  const rate=parseFloat(document.getElementById('m-rate').value);
+  const fb=document.getElementById('m-feedback');
+  if(isNaN(rate)||rate<0.01||rate>0.25){fb.textContent='Rate must be between $0.01 and $0.25.';fb.className='feedback err';return;}
+  const {error}=await sb.from('families').update({coin_rate:rate}).eq('id',family.id);
+  if(error){fb.textContent=error.message;fb.className='feedback err';return;}
+  family.coin_rate=rate;
+  document.getElementById('rate-display').textContent='$'+rate.toFixed(2);
+  closeModal();
+}
+
+// ── MODAL UTILS ───────────────────────────────────────────────
+function closeModal(e){
+  if(e&&e.target!==document.getElementById('modal-overlay')) return;
+  document.getElementById('modal-overlay').classList.remove('show');
+}
+
+// ── TABS ──────────────────────────────────────────────────────
+function showTab(name){
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById(`tab-${name}`).classList.add('active');
+  document.querySelectorAll('.tab').forEach(t=>{
+    if(t.textContent.toLowerCase().includes(name.substring(0,4))) t.classList.add('active');
+  });
+}
+
+// ── NAVIGATION ────────────────────────────────────────────────
+function openExplorerView(){
+  window.open('home.html?admin=1','_blank');
+}
+
+async function doLogout(){
+  await sb.auth.signOut();
+  window.location.href='index.html';
+}
+</script>
+</body>
+</html>

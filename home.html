@@ -109,6 +109,29 @@ function renderPrayerStreak(missions, missionComps){
 function dismissRankUp(){
   closeRankup();
 }
+
+// ── ANNOUNCEMENT BANNER ───────────────────────────────────────
+async function loadAnnouncement(){
+  try {
+    const {data} = await sb.from('app_settings').select('value').eq('key','announcement').single();
+    if(!data?.value) return;
+    // Check if user already dismissed this message
+    const dismissed = localStorage.getItem('announcement-dismissed');
+    if(dismissed === data.value) return;
+    const banner = document.getElementById('announcement-banner');
+    const text   = document.getElementById('announcement-text');
+    if(banner && text){
+      text.textContent = data.value;
+      banner.classList.add('show');
+    }
+  } catch(e){ /* no announcement set */ }
+}
+
+function dismissAnnouncement(){
+  const text = document.getElementById('announcement-text').textContent;
+  localStorage.setItem('announcement-dismissed', text);
+  document.getElementById('announcement-banner').classList.remove('show');
+}
 </script>
 <style>
 /* ── VARIABLES ─────────────────────────────────────────────── */
@@ -524,6 +547,26 @@ body::before{
 .streak-center{flex:1;min-width:0;}
 .streak-title{font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.1em;
   color:rgba(201,146,42,0.45);text-transform:uppercase;margin-bottom:0.3rem;}
+
+/* ── ANNOUNCEMENT BANNER ──────────────────────────────────────── */
+.announcement-banner{
+  display:none;
+  background:linear-gradient(135deg,rgba(44,22,84,0.6),rgba(107,26,26,0.5));
+  border:1px solid rgba(201,146,42,0.35);border-radius:12px;
+  padding:0.75rem 1rem;margin-bottom:0.875rem;
+  position:relative;
+}
+.announcement-banner.show{display:block;}
+.announcement-text{font-size:0.82rem;color:rgba(244,232,193,0.75);line-height:1.5;padding-right:1.5rem;}
+.announcement-dismiss{
+  position:absolute;top:0.5rem;right:0.625rem;
+  background:none;border:none;color:rgba(201,146,42,0.4);
+  font-size:1rem;cursor:pointer;padding:0.25rem;
+}
+.announcement-label{
+  font-family:'Cinzel',serif;font-size:0.58rem;letter-spacing:0.18em;
+  color:rgba(201,146,42,0.55);text-transform:uppercase;margin-bottom:0.3rem;
+}
 </style>
 </head>
 <body>
@@ -565,6 +608,13 @@ body::before{
       </div>
       <div class="app-divider">✦ ☩ ✦</div>
     </header>
+
+    <!-- ANNOUNCEMENT BANNER -->
+    <div class="announcement-banner" id="announcement-banner">
+      <div class="announcement-label">☩ Message from the Expedition</div>
+      <div class="announcement-text" id="announcement-text"></div>
+      <button class="announcement-dismiss" onclick="dismissAnnouncement()">✕</button>
+    </div>
 
     <!-- RANK HERO -->
     <div class="rank-hero fade-up" id="rank-hero">
@@ -799,6 +849,7 @@ async function loadData(userId){
   checkNotifications(mastery, completed);
   renderTodayCard(mastery, completed, topics, allSessions, missions, missionComps, today);
   renderPrayerStreak(missions, missionComps);
+  loadAnnouncement();
 }
 
 // ── RENDER ────────────────────────────────────────────────────
@@ -1133,6 +1184,29 @@ function renderPrayerStreak(missions, missionComps){
 function dismissRankUp(){
   closeRankup();
 }
+
+// ── ANNOUNCEMENT BANNER ───────────────────────────────────────
+async function loadAnnouncement(){
+  try {
+    const {data} = await sb.from('app_settings').select('value').eq('key','announcement').single();
+    if(!data?.value) return;
+    // Check if user already dismissed this message
+    const dismissed = localStorage.getItem('announcement-dismissed');
+    if(dismissed === data.value) return;
+    const banner = document.getElementById('announcement-banner');
+    const text   = document.getElementById('announcement-text');
+    if(banner && text){
+      text.textContent = data.value;
+      banner.classList.add('show');
+    }
+  } catch(e){ /* no announcement set */ }
+}
+
+function dismissAnnouncement(){
+  const text = document.getElementById('announcement-text').textContent;
+  localStorage.setItem('announcement-dismissed', text);
+  document.getElementById('announcement-banner').classList.remove('show');
+}
 </script>
 
 <script>
@@ -1140,6 +1214,29 @@ if('serviceWorker' in navigator){
   window.addEventListener('load',()=>{
     navigator.serviceWorker.register('sw.js').catch(()=>{});
   });
+}
+
+// ── ANNOUNCEMENT BANNER ───────────────────────────────────────
+async function loadAnnouncement(){
+  try {
+    const {data} = await sb.from('app_settings').select('value').eq('key','announcement').single();
+    if(!data?.value) return;
+    // Check if user already dismissed this message
+    const dismissed = localStorage.getItem('announcement-dismissed');
+    if(dismissed === data.value) return;
+    const banner = document.getElementById('announcement-banner');
+    const text   = document.getElementById('announcement-text');
+    if(banner && text){
+      text.textContent = data.value;
+      banner.classList.add('show');
+    }
+  } catch(e){ /* no announcement set */ }
+}
+
+function dismissAnnouncement(){
+  const text = document.getElementById('announcement-text').textContent;
+  localStorage.setItem('announcement-dismissed', text);
+  document.getElementById('announcement-banner').classList.remove('show');
 }
 </script>
 </body>

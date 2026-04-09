@@ -4,7 +4,7 @@
  * Include this in any page that needs to send emails
  */
 
-const RESEND_API_KEY = 're_VB4icWrk_CrTp2dcATgn5cfwTEoHNhjgH';
+const RESEND_API_KEY = 're_Ka1K4Miz_C7umkQ3RBU72us2hpbFBerPv';
 const FROM_EMAIL     = 'hello@orthodoxcompanion.com';
 const FROM_NAME      = 'The Orthodox Expedition';
 const KEVIN_EMAIL    = 'holt.kevin13@gmail.com';

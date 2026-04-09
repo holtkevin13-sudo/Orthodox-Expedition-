@@ -1,0 +1,27 @@
+{
+  "generated": "2025-01-01T00:00:00.000Z",
+  "note": "This is a starter index. Run games/saints-index-generator.html to generate the full index from the Companion repository.",
+  "count": 20,
+  "saints": [
+    "Saint Basil the Great, Archbishop of Caesarea in Cappadocia (01-01).jpg",
+    "Saint John Chrysostom, Archbishop of Constantinople (11-13).jpg",
+    "Saint Nicholas of Myra (12-06).jpg",
+    "Saint George the Great Martyr (04-23).jpg",
+    "Saint Panteleimon the Great Martyr and Healer (07-27).jpg",
+    "Saint Mary of Egypt (04-01).jpg",
+    "Saint Seraphim of Sarov (01-02).jpg",
+    "Saint Andrew the Apostle (11-30).jpg",
+    "Saint Mark the Apostle (04-25).jpg",
+    "Saint Thomas the Apostle (10-06).jpg",
+    "Saint Luke the Apostle and Evangelist (10-18).jpg",
+    "Saint Athanasius the Great, Pope of Alexandria (05-02).jpg",
+    "Saint Ignatius the God-bearer, Bishop of Antioch (12-20).jpg",
+    "Saint Polycarp, Bishop of Smyrna (02-23).jpg",
+    "Saint Demetrius the Great Martyr of Thessaloniki (10-26).jpg",
+    "Saint John the Theologian and Apostle (09-26).jpg",
+    "Saint John the Forerunner and Baptist (01-07).jpg",
+    "Saint Mary Magdalene the Myrrh-bearer and Equal-to-the-Apostles (07-22).jpg",
+    "Saint Photios the Great, Patriarch of Constantinople (02-06).jpg",
+    "Saint Luke, Archbishop of Simferopol and Crimea (06-11).jpg"
+  ]
+}

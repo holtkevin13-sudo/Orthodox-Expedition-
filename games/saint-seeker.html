@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Saint Seeker — Orthodox Expedition</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --gold:#c9922a;--gold-light:#f0c96e;--gold-bright:#ffd700;
+  --parchment:#f4e8c1;
+  --burgundy:#6b1a1a;--byzantine:#2c1654;
+  --green:#16a34a;--green-light:#22c55e;
+  --red:#dc2626;
+  --bg:#0e0800;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{min-height:100%;overflow-x:hidden;}
+body{
+  font-family:'Crimson Text',serif;
+  background:var(--bg);
+  background-image:radial-gradient(ellipse at 50% 0%,rgba(107,26,26,0.5) 0%,transparent 55%),radial-gradient(ellipse at 100% 100%,rgba(44,22,84,0.35) 0%,transparent 50%);
+  min-height:100vh;padding:1.25rem 1rem 2rem;
+}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(201,146,42,0.02) 1px,transparent 1px),linear-gradient(90deg,rgba(201,146,42,0.02) 1px,transparent 1px);background-size:44px 44px;pointer-events:none;}
+
+.back-btn{background:none;border:1px solid rgba(201,146,42,0.2);border-radius:8px;padding:0.4rem 0.875rem;font-family:'Cinzel',serif;font-size:0.65rem;color:rgba(201,146,42,0.45);cursor:pointer;min-height:40px;margin-bottom:1.25rem;display:inline-block;}
+
+.screen{display:none;max-width:440px;margin:0 auto;text-align:center;}
+.screen.show{display:block;}
+
+/* START */
+.game-icon{font-size:3rem;margin-bottom:0.5rem;}
+.game-title{font-family:'Cinzel Decorative',serif;font-size:clamp(1.2rem,4.5vw,1.6rem);color:var(--gold-light);text-shadow:0 0 20px rgba(201,146,42,0.4);margin-bottom:0.25rem;}
+.game-sub{font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.2em;color:rgba(201,146,42,0.4);text-transform:uppercase;margin-bottom:1rem;}
+.game-desc{font-size:0.85rem;color:rgba(244,232,193,0.4);font-style:italic;line-height:1.6;margin-bottom:1.5rem;max-width:320px;margin-left:auto;margin-right:auto;}
+.start-btn{padding:1rem 2.5rem;min-height:56px;background:linear-gradient(135deg,var(--gold),var(--gold-bright));border:none;border-radius:14px;font-family:'Cinzel',serif;font-size:0.9rem;letter-spacing:0.1em;color:var(--bg);font-weight:700;cursor:pointer;box-shadow:0 4px 20px rgba(255,215,0,0.25);}
+.start-btn:active{transform:scale(0.97);}
+.high-score-lbl{font-family:'Cinzel',serif;font-size:0.68rem;color:rgba(201,146,42,0.3);margin-top:1rem;}
+
+/* GAME */
+.game-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem;}
+.round-display{font-family:'Cinzel',serif;font-size:0.68rem;color:rgba(201,146,42,0.4);letter-spacing:0.1em;}
+.score-display{text-align:right;}
+.score-big{font-family:'Cinzel Decorative',serif;font-size:1.5rem;color:var(--gold-bright);text-shadow:0 0 10px rgba(255,215,0,0.3);line-height:1;}
+.score-sub-lbl{font-family:'Cinzel',serif;font-size:0.55rem;color:rgba(201,146,42,0.35);letter-spacing:0.1em;text-transform:uppercase;}
+
+/* Clue reveal system */
+.clue-card{
+  background:linear-gradient(160deg,rgba(44,22,84,0.96),rgba(18,8,40,0.99) 50%,rgba(107,26,26,0.96));
+  border:1.5px solid rgba(201,146,42,0.3);border-radius:18px;
+  padding:1.25rem;margin-bottom:1rem;
+  transition:all 0.25s;
+}
+.clue-card.correct{border-color:rgba(22,163,74,0.7);animation:flashG 0.5s ease;}
+.clue-card.wrong{border-color:rgba(220,38,38,0.6);animation:shakeC 0.4s ease;}
+@keyframes flashG{0%,100%{box-shadow:none;}50%{box-shadow:0 0 24px rgba(22,163,74,0.4);}}
+@keyframes shakeC{0%,100%{transform:translateX(0);}25%{transform:translateX(-8px);}75%{transform:translateX(8px);}}
+
+.clue-eyebrow{font-family:'Cinzel',serif;font-size:0.58rem;letter-spacing:0.2em;color:rgba(201,146,42,0.45);text-transform:uppercase;margin-bottom:0.625rem;}
+.clues-list{display:flex;flex-direction:column;gap:0.4rem;margin-bottom:0;}
+.clue-item{
+  display:flex;align-items:flex-start;gap:0.5rem;
+  font-size:0.82rem;color:rgba(244,232,193,0.6);
+  line-height:1.4;text-align:left;
+  padding:0.4rem 0;border-bottom:1px solid rgba(201,146,42,0.08);
+}
+.clue-item:last-child{border-bottom:none;}
+.clue-mark{color:rgba(201,146,42,0.4);flex-shrink:0;font-size:0.7rem;margin-top:0.15rem;}
+.clue-item.hidden{opacity:0;height:0;padding:0;overflow:hidden;border:none;}
+
+.clue-points{
+  display:flex;align-items:center;justify-content:center;gap:0.5rem;
+  margin-bottom:0.875rem;
+}
+.point-pip{
+  width:10px;height:10px;border-radius:50%;
+  background:rgba(201,146,42,0.15);border:1px solid rgba(201,146,42,0.2);
+  transition:all 0.3s;
+}
+.point-pip.active{background:var(--gold);border-color:var(--gold-bright);box-shadow:0 0 6px rgba(255,215,0,0.4);}
+.point-pip.used{background:rgba(201,146,42,0.08);border-color:rgba(201,146,42,0.1);}
+.points-label{font-family:'Cinzel',serif;font-size:0.65rem;color:rgba(201,146,42,0.4);}
+
+/* Options */
+.options-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-bottom:0.75rem;}
+.opt-btn{
+  padding:0.75rem 0.5rem;min-height:52px;
+  background:rgba(44,22,84,0.25);border:1.5px solid rgba(124,58,237,0.25);
+  border-radius:11px;font-family:'Cinzel',serif;font-size:0.72rem;
+  color:rgba(167,139,250,0.85);cursor:pointer;transition:all 0.15s;
+  text-align:center;line-height:1.3;
+}
+.opt-btn:hover:not(:disabled){background:rgba(44,22,84,0.45);border-color:rgba(124,58,237,0.5);}
+.opt-btn:active:not(:disabled){transform:scale(0.96);}
+.opt-btn:disabled{cursor:not-allowed;}
+.opt-btn.correct-opt{background:rgba(22,163,74,0.15);border-color:rgba(22,163,74,0.6);color:rgba(134,239,172,0.9);}
+.opt-btn.wrong-opt{background:rgba(220,38,38,0.1);border-color:rgba(220,38,38,0.4);color:rgba(252,165,165,0.7);}
+
+.hint-btn{
+  width:100%;padding:0.5rem;min-height:40px;
+  background:rgba(201,146,42,0.06);border:1px solid rgba(201,146,42,0.18);
+  border-radius:8px;font-family:'Cinzel',serif;font-size:0.68rem;
+  color:rgba(201,146,42,0.5);cursor:pointer;transition:all 0.2s;margin-bottom:0.5rem;
+}
+.hint-btn:hover:not(:disabled){border-color:rgba(201,146,42,0.35);color:rgba(201,146,42,0.7);}
+.hint-btn:disabled{opacity:0.4;cursor:not-allowed;}
+
+.feedback-row{font-family:'Cinzel',serif;font-size:0.72rem;text-align:center;min-height:1.2rem;}
+.feedback-row.correct-fb{color:rgba(134,239,172,0.8);}
+.feedback-row.wrong-fb{color:rgba(252,165,165,0.7);}
+
+/* END */
+.end-ring{width:110px;height:110px;border-radius:50%;background:linear-gradient(135deg,rgba(44,22,84,0.9),rgba(107,26,26,0.9));border:3px solid var(--gold);display:flex;flex-direction:column;align-items:center;justify-content:center;margin:0 auto 1rem;box-shadow:0 0 30px rgba(201,146,42,0.25);}
+.end-score{font-family:'Cinzel Decorative',serif;font-size:2rem;color:var(--gold-bright);line-height:1;}
+.end-lbl{font-family:'Cinzel',serif;font-size:0.55rem;color:rgba(201,146,42,0.5);letter-spacing:0.1em;}
+.end-title{font-family:'Cinzel Decorative',serif;font-size:1.1rem;color:var(--gold-light);margin-bottom:0.35rem;}
+.end-msg{font-size:0.82rem;color:rgba(244,232,193,0.4);font-style:italic;margin-bottom:1.5rem;line-height:1.5;max-width:300px;margin-left:auto;margin-right:auto;}
+.new-record{font-family:'Cinzel',serif;font-size:0.78rem;color:var(--gold-bright);margin-bottom:1rem;animation:glow 1s ease-in-out infinite alternate;}
+@keyframes glow{from{text-shadow:none;}to{text-shadow:0 0 12px rgba(255,215,0,0.6);}}
+.end-btns{display:flex;gap:0.5rem;justify-content:center;}
+.play-again-btn{padding:0.75rem 1.75rem;min-height:48px;background:linear-gradient(135deg,var(--gold),var(--gold-bright));border:none;border-radius:11px;font-family:'Cinzel',serif;font-size:0.78rem;color:var(--bg);font-weight:700;cursor:pointer;}
+.back-games-btn{padding:0.75rem 1.25rem;min-height:48px;background:transparent;border:1px solid rgba(201,146,42,0.25);border-radius:11px;font-family:'Cinzel',serif;font-size:0.72rem;color:rgba(201,146,42,0.5);cursor:pointer;}
+</style>
+</head>
+<body>
+<button class="back-btn" onclick="window.location.href='../games.html'">← Games</button>
+
+<!-- START -->
+<div class="screen show" id="screen-start">
+  <div class="game-icon">⭐</div>
+  <div class="game-title">Saint Seeker</div>
+  <div class="game-sub">Expedition Game</div>
+  <div class="game-desc">Clues appear one by one. Guess the saint early for more points. Use hints wisely — each clue costs a point!</div>
+  <button class="start-btn" onclick="startGame()">Seek the Saints ⭐</button>
+  <div class="high-score-lbl" id="high-score-lbl"></div>
+</div>
+
+<!-- GAME -->
+<div class="screen" id="screen-game">
+  <div class="game-top">
+    <div class="round-display" id="round-display">Round 1 of 10</div>
+    <div class="score-display">
+      <div class="score-big" id="score-big">0</div>
+      <div class="score-sub-lbl">points</div>
+    </div>
+  </div>
+
+  <!-- Point pips showing value of current question -->
+  <div class="clue-points" id="clue-points"></div>
+
+  <div class="clue-card" id="clue-card">
+    <div class="clue-eyebrow">Who Am I? — Read the clues</div>
+    <div class="clues-list" id="clues-list"></div>
+  </div>
+
+  <div class="options-grid" id="options-grid"></div>
+  <button class="hint-btn" id="hint-btn" onclick="revealNextClue()">Reveal Next Clue (−1 point)</button>
+  <div class="feedback-row" id="feedback-row"></div>
+</div>
+
+<!-- END -->
+<div class="screen" id="screen-end" style="text-align:center;">
+  <div class="end-ring">
+    <div class="end-score" id="end-score">0</div>
+    <div class="end-lbl">points</div>
+  </div>
+  <div class="new-record" id="new-record" style="display:none;">✦ New High Score! ✦</div>
+  <div class="end-title" id="end-title">Well done!</div>
+  <div class="end-msg" id="end-msg"></div>
+  <div class="end-btns">
+    <button class="play-again-btn" onclick="startGame()">Seek Again ⭐</button>
+    <button class="back-games-btn" onclick="window.location.href='../games.html'">Games</button>
+  </div>
+</div>
+
+<script>
+const MAX_ROUNDS = 10;
+const MAX_CLUES  = 4; // clues per question, each reveal costs 1 point, start at MAX_CLUES points
+
+const ALL_SAINTS = [
+  {
+    name:'St. Nicholas of Myra',
+    clues:[
+      'I was the Bishop of Myra in what is now Turkey.',
+      'I attended the Council of Nicea in 325 AD and defended the faith against Arius.',
+      'I am famous for secretly giving gold to three poor sisters so they could be married.',
+      'Western Christians turned me into a gift-giving figure you might recognize.',
+    ],
+    options:['St. Nicholas of Myra','St. Basil the Great','St. John Chrysostom','St. Gregory of Nyssa'],
+  },
+  {
+    name:'St. John Chrysostom',
+    clues:[
+      'My name means "golden-mouthed" in Greek — I was famous for my preaching.',
+      'I was the Archbishop of Constantinople and one of the Three Holy Hierarchs.',
+      'I wrote the most commonly used Divine Liturgy in the Orthodox Church.',
+      'I was exiled twice for criticizing the Empress Eudoxia and died in exile.',
+    ],
+    options:['St. Basil the Great','St. John Chrysostom','St. Athanasius','St. Ignatius of Antioch'],
+  },
+  {
+    name:'St. Athanasius',
+    clues:[
+      'I was a deacon at the Council of Nicea at only 27 years old.',
+      'I spent most of my life defending the faith against Arianism.',
+      'I was exiled five times by four different Roman Emperors.',
+      'They said "Athanasius against the world" — I stood almost alone for the truth.',
+    ],
+    options:['St. Cyril of Alexandria','St. Athanasius','St. John Chrysostom','St. Gregory the Theologian'],
+  },
+  {
+    name:'St. Mary of Egypt',
+    clues:[
+      'I lived a sinful life in Alexandria for seventeen years.',
+      'I tried to enter the Church of the Holy Sepulchre in Jerusalem and an invisible force stopped me.',
+      'I repented before an icon of the Theotokos and spent 47 years alone in the desert.',
+      'I am commemorated on the 5th Sunday of Great Lent as an example of repentance.',
+    ],
+    options:['St. Mary Magdalene','St. Mary of Egypt','St. Macrina','St. Photini'],
+  },
+  {
+    name:'St. Basil the Great',
+    clues:[
+      'I am one of the Three Holy Hierarchs and a Cappadocian Father.',
+      'I wrote a longer Divine Liturgy used ten times a year in the Orthodox Church.',
+      'I built a great complex of hospitals, homes for the poor, and schools called the Basileias.',
+      'I am also known for writing the rules of monastic life still followed by monks today.',
+    ],
+    options:['St. Basil the Great','St. John Chrysostom','St. Gregory of Nazianzus','St. Nicholas of Myra'],
+  },
+  {
+    name:'St. George',
+    clues:[
+      'I was a Roman soldier and a Christian who refused to deny my faith.',
+      'Emperor Diocletian had me tortured and executed around 303 AD.',
+      'I am one of the most venerated saints in the Orthodox Church.',
+      'Western Christians tell a famous story of me slaying a dragon.',
+    ],
+    options:['St. Demetrius','St. George','St. Theodore Stratelates','St. Sebastian'],
+  },
+  {
+    name:'St. Ignatius of Antioch',
+    clues:[
+      'As a little boy I was hugged by Christ himself — I am called "God-bearer."',
+      'I was a disciple of the Apostle John and became Bishop of Antioch.',
+      'While being taken to Rome to be martyred by lions I wrote letters to seven churches.',
+      'Before being fed to lions I said: "I long to be with Him as a pure loaf, ground by wild beasts."',
+    ],
+    options:['St. Polycarp of Smyrna','St. Clement of Rome','St. Ignatius of Antioch','St. Justin Martyr'],
+  },
+  {
+    name:'St. Panteleimon',
+    clues:[
+      'I was a physician who healed people freely in the name of Jesus Christ.',
+      'I am called the "Great Martyr and Healer" in the Orthodox Church.',
+      'I had the gifts of faith, healing, and mighty acts all at once.',
+      'I was martyred under Emperor Maximian — my feast day is July 27.',
+    ],
+    options:['St. Luke of Crimea','St. Panteleimon','St. Cosmas','St. Raphael of Brooklyn'],
+  },
+  {
+    name:'St. Polycarp of Smyrna',
+    clues:[
+      'I was a close friend of the Apostle John and sometimes travelled with him.',
+      'St. Ignatius wrote me a letter on his way to martyrdom in Rome.',
+      'When asked to deny Christ I said: "86 years I have served Him and He has never done me wrong."',
+      'The fire refused to burn me — so the pagans stabbed me instead.',
+    ],
+    options:['St. Clement of Rome','St. Justin Martyr','St. Polycarp of Smyrna','St. Ignatius of Antioch'],
+  },
+  {
+    name:'St. John of Damascus',
+    clues:[
+      'I lived under Muslim rule but served as an official in the court of the Caliph.',
+      'I wrote three important treatises defending the veneration of holy icons.',
+      'I am considered one of the last of the Eastern Church Fathers.',
+      'My writings were key at the 2nd Council of Nicea in 787 AD which restored icons.',
+    ],
+    options:['St. Theodore of Stoudios','St. John of Damascus','St. Maximus the Confessor','St. Photios of Constantinople'],
+  },
+  {
+    name:'St. Luke of Crimea',
+    clues:[
+      'I was a surgeon and professor of medicine in the 20th century.',
+      'I was exiled to Siberia three times by the Communist Soviet government.',
+      'I continued to practice surgery even as a bishop, wearing my vestments in the operating room.',
+      'I was glorified as a saint in 1996 — my relics rest in Simferopol, Crimea.',
+    ],
+    options:['St. Raphael of Brooklyn','St. Luke of Crimea','St. Paisios of Mount Athos','St. Porphyrios of Kavsokalyvia'],
+  },
+  {
+    name:'St. Photios of Constantinople',
+    clues:[
+      'I was the Patriarch of Constantinople in the 9th century.',
+      'A national Greek Orthodox shrine near St. Augustine, Florida is named after me.',
+      'I fought against the addition of the Filioque to the Nicene Creed by Rome.',
+      'I wrote important theological works and was a great defender of Orthodox Christianity.',
+    ],
+    options:['St. Gregory Palamas','St. Photios of Constantinople','St. Mark of Ephesus','St. Cyril the Equal-to-the-Apostles'],
+  },
+];
+
+let score=0, round=0, cluesShown=0, answered=false, pointValue=MAX_CLUES;
+let shuffled=[], currentQ=null;
+let highScore=parseInt(localStorage.getItem('ss-high')||'0');
+
+function shuffle(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function showScreen(id){['screen-start','screen-game','screen-end'].forEach(s=>document.getElementById(s).classList.toggle('show',s===id));}
+
+function startGame(){
+  score=0;round=0;answered=false;
+  shuffled=shuffle(ALL_SAINTS).slice(0,MAX_ROUNDS);
+  document.getElementById('score-big').textContent='0';
+  loadRound();
+  showScreen('screen-game');
+}
+
+function loadRound(){
+  if(round>=MAX_ROUNDS){endGame();return;}
+  currentQ=shuffled[round];
+  cluesShown=1;
+  pointValue=MAX_CLUES;
+  answered=false;
+
+  document.getElementById('round-display').textContent=`Round ${round+1} of ${MAX_ROUNDS}`;
+  document.getElementById('clue-card').className='clue-card';
+  document.getElementById('feedback-row').textContent='';
+  document.getElementById('feedback-row').className='feedback-row';
+  document.getElementById('hint-btn').disabled=false;
+  document.getElementById('hint-btn').textContent='Reveal Next Clue (−1 point)';
+
+  renderPips();
+  renderClues();
+  renderOptions();
+}
+
+function renderPips(){
+  const el=document.getElementById('clue-points');
+  el.innerHTML='';
+  const lbl=document.createElement('span');
+  lbl.className='points-label';lbl.textContent='Worth:';
+  el.appendChild(lbl);
+  for(let i=0;i<MAX_CLUES;i++){
+    const pip=document.createElement('div');
+    pip.className=`point-pip${i<pointValue?' active':' used'}`;
+    el.appendChild(pip);
+  }
+  const lbl2=document.createElement('span');
+  lbl2.className='points-label';lbl2.textContent=`${pointValue} pt${pointValue!==1?'s':''}`;
+  el.appendChild(lbl2);
+}
+
+function renderClues(){
+  const el=document.getElementById('clues-list');
+  el.innerHTML='';
+  currentQ.clues.forEach((clue,i)=>{
+    const item=document.createElement('div');
+    item.className=`clue-item${i>=cluesShown?' hidden':''}`;
+    item.innerHTML=`<span class="clue-mark">›</span>${clue}`;
+    el.appendChild(item);
+  });
+  // Disable hint button if all clues shown
+  document.getElementById('hint-btn').disabled=cluesShown>=currentQ.clues.length||answered;
+  if(cluesShown>=currentQ.clues.length){
+    document.getElementById('hint-btn').textContent='All clues revealed';
+  }
+}
+
+function revealNextClue(){
+  if(cluesShown>=currentQ.clues.length||answered) return;
+  cluesShown++;
+  pointValue=Math.max(1,pointValue-1);
+  renderPips();
+  renderClues();
+}
+
+function renderOptions(){
+  const grid=document.getElementById('options-grid');
+  grid.innerHTML='';
+  const opts=shuffle([...currentQ.options]);
+  opts.forEach(opt=>{
+    const btn=document.createElement('button');
+    btn.className='opt-btn';
+    btn.textContent=opt;
+    btn.onclick=()=>answer(opt===currentQ.name,opt);
+    grid.appendChild(btn);
+  });
+}
+
+function answer(correct, chosen){
+  if(answered) return;
+  answered=true;
+  document.getElementById('hint-btn').disabled=true;
+  document.querySelectorAll('.opt-btn').forEach(b=>{
+    b.disabled=true;
+    if(b.textContent===currentQ.name) b.classList.add('correct-opt');
+    else if(b.textContent===chosen&&!correct) b.classList.add('wrong-opt');
+  });
+
+  const card=document.getElementById('clue-card');
+  const fb=document.getElementById('feedback-row');
+
+  if(correct){
+    score+=pointValue;
+    card.classList.add('correct');
+    fb.textContent=`✦ Correct! +${pointValue} point${pointValue!==1?'s':''}`;
+    fb.className='feedback-row correct-fb';
+    document.getElementById('score-big').textContent=score;
+  } else {
+    card.classList.add('wrong');
+    fb.textContent=`✗ It was ${currentQ.name}`;
+    fb.className='feedback-row wrong-fb';
+  }
+
+  round++;
+  setTimeout(loadRound,1600);
+}
+
+function endGame(){
+  const isRecord=score>highScore;
+  if(isRecord){highScore=score;localStorage.setItem('ss-high',score);}
+  document.getElementById('end-score').textContent=score;
+  document.getElementById('new-record').style.display=isRecord?'block':'none';
+
+  const maxPossible=MAX_ROUNDS*MAX_CLUES;
+  const pct=Math.round((score/maxPossible)*100);
+  let title='',msg='';
+  if(pct>=80){title='Saint Scholar!';msg=`${score} points — outstanding! You know the saints of the Church.`;}
+  else if(pct>=55){title:'Holy Explorer!';msg=`${score} points — great work! Keep reading the lives of the saints.`;}
+  else if(pct>=30){title='Good Seeker!';msg=`${score} points — you are learning. Study the saints and try again!`;}
+  else{title='Keep Seeking!';msg='The saints have wonderful stories. Read about them and try again!';}
+
+  // Fix the ternary bug above
+  if(pct>=55&&pct<80){title='Holy Explorer!';msg=`${score} points — great work! Keep reading the lives of the saints.`;}
+
+  document.getElementById('end-title').textContent=title;
+  document.getElementById('end-msg').textContent=msg;
+  showScreen('screen-end');
+  document.getElementById('high-score-lbl').textContent=isRecord?'New Best!':highScore>0?`Best: ${highScore} pts`:'';
+}
+
+document.getElementById('high-score-lbl').textContent=highScore>0?`Best: ${highScore} pts`:'';
+</script>
+</body>
+</html>

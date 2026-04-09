@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Apostle Journeys — Orthodox Expedition</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="game-utils.js"></script>
+<style>
+:root{
+  --gold:#c9922a;--gold-light:#f0c96e;--gold-bright:#ffd700;
+  --parchment:#f4e8c1;
+  --burgundy:#6b1a1a;--byzantine:#2c1654;--byzantine-light:#4a2a7a;
+  --green:#16a34a;--green-light:#22c55e;
+  --red:#dc2626;
+  --bg:#0e0800;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{min-height:100%;overflow-x:hidden;}
+body{
+  font-family:'Crimson Text',serif;
+  background:var(--bg);
+  background-image:radial-gradient(ellipse at 50% 0%,rgba(107,26,26,0.5) 0%,transparent 55%),radial-gradient(ellipse at 100% 100%,rgba(44,22,84,0.35) 0%,transparent 50%);
+  min-height:100vh;padding:1.25rem 1rem 2rem;
+}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(201,146,42,0.02) 1px,transparent 1px),linear-gradient(90deg,rgba(201,146,42,0.02) 1px,transparent 1px);background-size:44px 44px;pointer-events:none;}
+#coin-rain{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999;overflow:hidden;}
+@keyframes coinFall{0%{transform:translateY(0) rotate(0deg);opacity:1;}85%{opacity:1;}100%{transform:translateY(110vh) rotate(540deg) scale(0.4);opacity:0;}}
+
+.back-btn{background:none;border:1px solid rgba(201,146,42,0.2);border-radius:8px;padding:0.4rem 0.875rem;font-family:'Cinzel',serif;font-size:0.65rem;color:rgba(201,146,42,0.45);cursor:pointer;min-height:40px;margin-bottom:1.25rem;display:inline-block;}
+
+.screen{display:none;max-width:440px;margin:0 auto;text-align:center;}
+.screen.show{display:block;}
+
+/* START */
+.game-icon{font-size:3rem;margin-bottom:0.5rem;}
+.game-title{font-family:'Cinzel Decorative',serif;font-size:clamp(1.1rem,4vw,1.4rem);color:var(--gold-light);text-shadow:0 0 20px rgba(201,146,42,0.4);margin-bottom:0.25rem;}
+.game-sub{font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.2em;color:rgba(201,146,42,0.4);text-transform:uppercase;margin-bottom:1rem;}
+.game-desc{font-size:0.85rem;color:rgba(244,232,193,0.4);font-style:italic;line-height:1.6;margin-bottom:1rem;max-width:320px;margin-left:auto;margin-right:auto;}
+.coin-info{display:inline-flex;align-items:center;gap:0.5rem;background:rgba(201,146,42,0.08);border:1px solid rgba(201,146,42,0.2);border-radius:20px;padding:0.4rem 1rem;font-family:'Cinzel',serif;font-size:0.7rem;color:rgba(201,146,42,0.6);margin-bottom:1.5rem;}
+.start-btn{padding:0.9rem 2.5rem;min-height:52px;background:linear-gradient(135deg,var(--gold),var(--gold-bright));border:none;border-radius:13px;font-family:'Cinzel',serif;font-size:0.85rem;letter-spacing:0.1em;color:var(--bg);font-weight:700;cursor:pointer;}
+
+/* GAME */
+.progress-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem;}
+.progress-lbl{font-family:'Cinzel',serif;font-size:0.65rem;color:rgba(201,146,42,0.4);letter-spacing:0.1em;}
+.score-num{font-family:'Cinzel Decorative',serif;font-size:1.4rem;color:var(--gold-bright);text-shadow:0 0 10px rgba(255,215,0,0.3);}
+.progress-bar-wrap{width:100%;height:5px;background:rgba(255,255,255,0.05);border-radius:3px;overflow:hidden;margin-bottom:1.25rem;}
+.progress-bar{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--gold),var(--gold-bright));transition:width 0.4s ease;}
+
+.match-instruction{font-family:'Cinzel',serif;font-size:0.62rem;letter-spacing:0.12em;color:rgba(201,146,42,0.4);text-transform:uppercase;text-align:center;margin-bottom:1rem;}
+
+/* Two-column layout */
+.match-area{display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-bottom:0.875rem;align-items:start;}
+.col-header{font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.18em;color:rgba(201,146,42,0.4);text-transform:uppercase;text-align:center;margin-bottom:0.4rem;}
+
+.apostle-list,.place-list{display:flex;flex-direction:column;gap:0.4rem;}
+
+.apostle-card{
+  background:rgba(44,22,84,0.3);border:1.5px solid rgba(124,58,237,0.3);
+  border-radius:10px;padding:0.5rem;
+  font-family:'Cinzel',serif;font-size:0.68rem;color:rgba(167,139,250,0.85);
+  cursor:pointer;transition:all 0.2s;text-align:center;
+  min-height:44px;display:flex;align-items:center;justify-content:center;
+  line-height:1.3;gap:0.3rem;flex-direction:column;
+}
+.apostle-card:hover{background:rgba(44,22,84,0.5);border-color:rgba(124,58,237,0.55);}
+.apostle-card.selected{background:rgba(201,146,42,0.15);border-color:var(--gold);color:var(--gold-light);}
+.apostle-card.matched{opacity:0.35;pointer-events:none;}
+.apostle-card.correct-match{background:rgba(22,163,74,0.12);border-color:rgba(22,163,74,0.5);color:rgba(134,239,172,0.85);}
+.apostle-card.wrong-match{animation:shake 0.3s ease;}
+@keyframes shake{0%,100%{transform:translateX(0);}25%{transform:translateX(-5px);}75%{transform:translateX(5px);}}
+.apostle-martyrdom{font-size:0.58rem;color:rgba(201,146,42,0.35);font-family:'Crimson Text',serif;font-style:italic;}
+
+.place-card{
+  background:rgba(107,26,26,0.2);border:1.5px solid rgba(201,146,42,0.2);
+  border-radius:10px;padding:0.5rem;
+  font-family:'Crimson Text',serif;font-size:0.8rem;color:rgba(244,232,193,0.6);
+  cursor:pointer;transition:all 0.2s;text-align:center;
+  min-height:44px;display:flex;align-items:center;justify-content:center;
+  line-height:1.3;font-style:italic;flex-direction:column;gap:0.15rem;
+}
+.place-card:hover{background:rgba(107,26,26,0.35);border-color:rgba(201,146,42,0.4);}
+.place-card.selected{background:rgba(201,146,42,0.1);border-color:var(--gold);}
+.place-card.matched{opacity:0.35;pointer-events:none;}
+.place-card.correct-match{background:rgba(22,163,74,0.1);border-color:rgba(22,163,74,0.45);color:rgba(134,239,172,0.8);}
+.place-card.wrong-match{animation:shake 0.3s ease;}
+.place-region{font-size:0.62rem;color:rgba(201,146,42,0.3);font-style:normal;font-family:'Cinzel',serif;}
+
+.match-feedback{font-family:'Cinzel',serif;font-size:0.72rem;text-align:center;min-height:1.3rem;margin-bottom:0.5rem;}
+.match-feedback.correct-fb{color:rgba(134,239,172,0.8);}
+.match-feedback.wrong-fb{color:rgba(252,165,165,0.7);}
+
+/* END */
+.result-ring{width:110px;height:110px;border-radius:50%;background:linear-gradient(135deg,rgba(44,22,84,0.9),rgba(107,26,26,0.9));border:3px solid var(--gold);display:flex;flex-direction:column;align-items:center;justify-content:center;margin:0 auto 1rem;box-shadow:0 0 30px rgba(201,146,42,0.25);}
+.result-pct{font-family:'Cinzel Decorative',serif;font-size:1.8rem;color:var(--gold-bright);line-height:1;}
+.result-lbl{font-family:'Cinzel',serif;font-size:0.55rem;color:rgba(201,146,42,0.5);letter-spacing:0.1em;}
+.result-title{font-family:'Cinzel Decorative',serif;font-size:1.1rem;color:var(--gold-light);margin-bottom:0.35rem;}
+.result-msg{font-size:0.82rem;color:rgba(244,232,193,0.4);font-style:italic;margin-bottom:0.5rem;line-height:1.5;}
+.coin-award{font-family:'Cinzel',serif;font-size:0.85rem;color:var(--gold-bright);margin-bottom:1.25rem;text-shadow:0 0 10px rgba(255,215,0,0.3);}
+.end-btns{display:flex;gap:0.5rem;justify-content:center;}
+.play-again-btn{padding:0.75rem 1.75rem;min-height:48px;background:linear-gradient(135deg,var(--gold),var(--gold-bright));border:none;border-radius:11px;font-family:'Cinzel',serif;font-size:0.78rem;color:var(--bg);font-weight:700;cursor:pointer;}
+.back-games-btn{padding:0.75rem 1.25rem;min-height:48px;background:transparent;border:1px solid rgba(201,146,42,0.25);border-radius:11px;font-family:'Cinzel',serif;font-size:0.72rem;color:rgba(201,146,42,0.5);cursor:pointer;}
+</style>
+</head>
+<body>
+<div id="coin-rain"></div>
+<button class="back-btn" onclick="window.location.href='../games.html'">← Games</button>
+
+<!-- START -->
+<div class="screen show" id="screen-start">
+  <div class="game-icon">🗺️</div>
+  <div class="game-title">Apostle Journeys</div>
+  <div class="game-sub">Session Game · Topic 1</div>
+  <div class="game-desc">The Apostles traveled the world to found the Church. Match each Apostle to the Patriarchate or region where they served and were martyred.</div>
+  <div class="coin-info">⚔ 10 coins for playing · 20 for winning</div>
+  <button class="start-btn" onclick="startGame()">Begin the Journey ›</button>
+</div>
+
+<!-- GAME -->
+<div class="screen" id="screen-game">
+  <div class="progress-row">
+    <div class="progress-lbl" id="progress-lbl">0 of 10 matched</div>
+    <div class="score-num" id="score-num">0</div>
+  </div>
+  <div class="progress-bar-wrap"><div class="progress-bar" id="progress-bar" style="width:0%"></div></div>
+  <div class="match-instruction">Tap an Apostle, then tap where they served</div>
+  <div class="match-area">
+    <div>
+      <div class="col-header">The Apostle</div>
+      <div class="apostle-list" id="apostle-list"></div>
+    </div>
+    <div>
+      <div class="col-header">Where They Served</div>
+      <div class="place-list" id="place-list"></div>
+    </div>
+  </div>
+  <div class="match-feedback" id="match-feedback"></div>
+</div>
+
+<!-- END -->
+<div class="screen" id="screen-end" style="text-align:center;">
+  <div class="result-ring">
+    <div class="result-pct" id="result-pct">0%</div>
+    <div class="result-lbl">correct</div>
+  </div>
+  <div class="result-title" id="result-title">Well done!</div>
+  <div class="result-msg" id="result-msg"></div>
+  <div class="coin-award" id="coin-award"></div>
+  <div class="end-btns">
+    <button class="play-again-btn" onclick="startGame()">Try Again</button>
+    <button class="back-games-btn" onclick="window.location.href='../games.html'">Games</button>
+  </div>
+</div>
+
+<script>
+const GAME_ID = 'apostle-journeys';
+
+const APOSTLES = [
+  {id:'peter',     name:'St. Peter',      martyrdom:'Crucified upside down',   place:'Rome & Antioch',      region:'Italy & Syria',          fact:'Founded both Rome and Antioch — the two most important sees'},
+  {id:'andrew',    name:'St. Andrew',     martyrdom:'Crucified on an X-cross',  place:'Constantinople',      region:'Greece & Byzantium',     fact:'Patron of Constantinople — his relics rest there'},
+  {id:'mark',      name:'St. Mark',       martyrdom:'Dragged through the streets',place:'Alexandria',         region:'Egypt & North Africa',   fact:'Wrote the Gospel of Mark and founded the Coptic Church'},
+  {id:'james_j',   name:'St. James (Jerusalem)',martyrdom:'Thrown from the Temple',place:'Jerusalem',         region:'The Holy Land',          fact:'First bishop of Jerusalem — brother of the Lord'},
+  {id:'john',      name:'St. John',       martyrdom:'Reposed peacefully',       place:'Ephesus',             region:'Asia Minor (Turkey)',     fact:'The only Apostle not martyred — wrote the Gospel, Epistles, and Revelation'},
+  {id:'paul',      name:'St. Paul',       martyrdom:'Beheaded in Rome',         place:'Gentile Nations',     region:'Greece, Asia Minor, Rome',fact:'Apostle to the Gentiles — wrote most of the New Testament letters'},
+  {id:'thomas',    name:'St. Thomas',     martyrdom:'Pierced with five spears', place:'India',               region:'Persia & India',         fact:'Brought the faith to India — the Thomas Christians trace to him'},
+  {id:'matthew',   name:'St. Matthew',    martyrdom:'Burned alive',             place:'Ethiopia',            region:'Persia & Ethiopia',      fact:'Wrote the Gospel of Matthew — served in Africa'},
+  {id:'bartholomew',name:'St. Bartholomew',martyrdom:'Crucified then beheaded', place:'Armenia',             region:'Armenia & India',        fact:'Patron saint of Armenia — brought Christianity there'},
+  {id:'luke',      name:'St. Luke',       martyrdom:'Crucified in Greece',      place:'Greece',              region:'Achaia & Greece',        fact:'Wrote the Gospel of Luke and Acts — also painted the first icon'},
+];
+
+let selectedApostle=null, matches={}, score=0, wrongAttempts=0;
+const TOTAL=APOSTLES.length;
+
+function shuffle(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function showScreen(id){['screen-start','screen-game','screen-end'].forEach(s=>document.getElementById(s).classList.toggle('show',s===id));}
+
+function startGame(){
+  selectedApostle=null;matches={};score=0;wrongAttempts=0;
+  document.getElementById('score-num').textContent='0';
+  document.getElementById('match-feedback').textContent='';
+  document.getElementById('match-feedback').className='match-feedback';
+  updateProgress();
+  renderCards();
+  showScreen('screen-game');
+}
+
+function updateProgress(){
+  const matched=Object.keys(matches).length;
+  const pct=(matched/TOTAL)*100;
+  document.getElementById('progress-lbl').textContent=`${matched} of ${TOTAL} matched`;
+  document.getElementById('progress-bar').style.width=pct+'%';
+  document.getElementById('score-num').textContent=score;
+}
+
+function renderCards(){
+  const shuffledApostles=shuffle([...APOSTLES]);
+  const shuffledPlaces=shuffle([...APOSTLES]);
+
+  const aList=document.getElementById('apostle-list');
+  const pList=document.getElementById('place-list');
+  aList.innerHTML='';pList.innerHTML='';
+
+  shuffledApostles.forEach(a=>{
+    const isMatched=!!matches[a.id];
+    const card=document.createElement('div');
+    card.className=`apostle-card${isMatched?' matched correct-match':''}`;
+    card.id=`apo-${a.id}`;
+    card.dataset.id=a.id;
+    card.innerHTML=`${a.name}<span class="apostle-martyrdom">${a.martyrdom}</span>`;
+    if(!isMatched) card.onclick=()=>selectApostle(a.id);
+    aList.appendChild(card);
+  });
+
+  shuffledPlaces.forEach(a=>{
+    const isMatched=Object.values(matches).includes(a.id);
+    const card=document.createElement('div');
+    card.className=`place-card${isMatched?' matched correct-match':''}`;
+    card.id=`place-${a.id}`;
+    card.dataset.id=a.id;
+    card.innerHTML=`${a.place}<span class="place-region">${a.region}</span>`;
+    if(!isMatched) card.onclick=()=>selectPlace(a.id);
+    pList.appendChild(card);
+  });
+}
+
+function selectApostle(id){
+  document.querySelectorAll('.apostle-card').forEach(c=>c.classList.remove('selected'));
+  if(selectedApostle===id){selectedApostle=null;return;}
+  selectedApostle=id;
+  const card=document.getElementById(`apo-${id}`);
+  if(card) card.classList.add('selected');
+  document.getElementById('match-feedback').textContent='Now tap where this Apostle served →';
+  document.getElementById('match-feedback').className='match-feedback';
+}
+
+function selectPlace(placeId){
+  if(!selectedApostle) return;
+  const isCorrect=selectedApostle===placeId;
+  const apoCard=document.getElementById(`apo-${selectedApostle}`);
+  const placeCard=document.getElementById(`place-${placeId}`);
+  const fb=document.getElementById('match-feedback');
+
+  if(isCorrect){
+    score++;
+    matches[selectedApostle]=placeId;
+    if(apoCard){apoCard.classList.remove('selected');apoCard.classList.add('correct-match','matched');apoCard.onclick=null;}
+    if(placeCard){placeCard.classList.add('correct-match','matched');placeCard.onclick=null;}
+    const apostle=APOSTLES.find(a=>a.id===placeId);
+    fb.textContent=`✦ Correct! ${apostle?.fact||''}`;
+    fb.className='match-feedback correct-fb';
+    selectedApostle=null;
+    updateProgress();
+    if(Object.keys(matches).length===TOTAL) setTimeout(()=>endGame(),800);
+  } else {
+    wrongAttempts++;
+    if(apoCard) apoCard.classList.add('wrong-match');
+    if(placeCard) placeCard.classList.add('wrong-match');
+    fb.textContent='✗ Not quite — try a different place for this Apostle.';
+    fb.className='match-feedback wrong-fb';
+    setTimeout(()=>{
+      if(apoCard) apoCard.classList.remove('wrong-match');
+      if(placeCard) placeCard.classList.remove('wrong-match');
+    },600);
+  }
+}
+
+async function endGame(){
+  const pct=Math.round((score/TOTAL)*100);
+  const won=wrongAttempts<=3;
+  showScreen('screen-end');
+  document.getElementById('result-pct').textContent=pct+'%';
+
+  let title='',msg='';
+  if(wrongAttempts===0){title='Perfect Pilgrim!';msg='All 10 matched without a single mistake. The Apostles would be proud!';}
+  else if(won){title:'Apostle Expert!';msg=`All matched with only ${wrongAttempts} mistake${wrongAttempts===1?'':'s'}. You know where the Church was planted!`;}
+  else{title='Good Try!';msg='Study the Five Patriarchates in Topic 1 and the journeys of the Apostles — then try again!';}
+
+  if(wrongAttempts>0&&won){title='Apostle Expert!';}
+
+  document.getElementById('result-title').textContent=title;
+  document.getElementById('result-msg').textContent=msg;
+
+  const result=await GameUtils.awardCoins(GAME_ID,won,'Apostle Journeys');
+  if(result.alreadyPlayed){
+    document.getElementById('coin-award').textContent='Already played today — come back tomorrow!';
+  } else if(result.awarded>0){
+    document.getElementById('coin-award').textContent=`+${result.awarded} coins earned!${won?' (Win bonus!)':''}`;
+    GameUtils.coinRain('coin-rain',result.awarded);
+  }
+}
+
+(async()=>{
+  const prof=await GameUtils.init();
+  if(!prof) return;
+})();
+</script>
+</body>
+</html>

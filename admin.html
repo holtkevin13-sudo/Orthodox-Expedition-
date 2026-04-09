@@ -337,13 +337,24 @@ body::before{
     <!-- Explorer View Links -->
     <div class="section">
       <div class="section-title">Explorer View</div>
-      <p style="font-size:0.8rem;color:rgba(201,146,42,0.4);font-style:italic;margin-bottom:0.875rem;">Open any explorer page to see what Nolan sees. These open in a new tab.</p>
+      <p style="font-size:0.8rem;color:rgba(201,146,42,0.4);font-style:italic;margin-bottom:0.875rem;">Open any explorer page to see and play just like Nolan. Opens in a new tab — all navigation works.</p>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;">
         <button class="btn btn-ghost btn-full" onclick="window.open('home.html?admin=1','_blank')">✦ Home</button>
         <button class="btn btn-ghost btn-full" onclick="window.open('missions.html?admin=1','_blank')">☩ Missions</button>
         <button class="btn btn-ghost btn-full" onclick="window.open('curriculum.html?admin=1','_blank')">⊕ Topics</button>
         <button class="btn btn-ghost btn-full" onclick="window.open('bazaar.html?admin=1','_blank')">◈ Bazaar</button>
+        <button class="btn btn-ghost btn-full" onclick="window.open('games.html?admin=1','_blank')">⚔ Games</button>
       </div>
+    </div>
+
+    <!-- Admin Tools -->
+    <div class="section">
+      <div class="section-title">Admin Tools</div>
+      <p style="font-size:0.8rem;color:rgba(201,146,42,0.4);font-style:italic;margin-bottom:0.875rem;">Maintenance tools — run these when needed.</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;">
+        <button class="btn btn-ghost btn-full" onclick="window.open('games/saints-index-generator.html','_blank')">🎨 Update Saints Index</button>
+      </div>
+      <p style="font-size:0.72rem;color:rgba(201,146,42,0.3);font-style:italic;margin-top:0.5rem;">Run Saints Index after adding new icons to the Companion repo.</p>
     </div>
 
     <!-- Explorer Stats -->

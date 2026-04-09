@@ -851,7 +851,7 @@ body{background:var(--bg-page);color:var(--text);}
         <div class="expedition-banner-eyebrow">☦ The Orthodox Expedition</div>
         <div class="expedition-banner-ref" id="expeditionBannerRef">This Week's Reading</div>
       </div>
-      <a class="expedition-return-btn" id="expeditionReturnBtn" href="curriculum.html">
+      <a class="expedition-return-btn" id="expeditionReturnBtn" href="curriculum.html" onclick="window.location.href='curriculum.html';return false;">
         ‹ Return to Expedition
       </a>
     </div>
@@ -1939,7 +1939,7 @@ function formatDate(iso) {
 
 // ── Nav ────────────────────────────────────────────────────────
 var drawerOpen = false;
-function toggleDrawer(){drawerOpen=!drawerOpen;document.getElementById('navDrawer').classList.toggle('open',drawerOpen);document.getElementById('hamburger').classList.toggle('open',drawerOpen);}
+function toggleDrawer(){ /* drawer removed — Expedition uses bottom nav */ }
 // Drawer removed — Expedition uses bottom nav
 
 // ── Theme ─────────────────────────────────────────────────────
@@ -2008,7 +2008,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<!-- auth-nav.js removed — Orthodox Expedition uses built-in auth -->
+<!-- auth-nav.js removed — Expedition uses built-in auth -->
 <!-- Cloudflare Web Analytics --><script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "c60c8b59423c45a8a4773eec3a8d5b6e"}'></script><!-- End Cloudflare Web Analytics -->
 <script src="/analytics-tracker.js"></script>
 </body>

@@ -239,9 +239,229 @@ body{
   color:rgba(61,31,8,0.3);text-transform:uppercase;
 }
 .empty-journal-icon{font-size:2.5rem;margin-bottom:0.75rem;opacity:0.3;}
+
+/* ══════════════════════════════════════════════════════════
+   LEATHER COVER — FIELD MANUAL OPENING ANIMATION
+   ══════════════════════════════════════════════════════════ */
+
+#journal-cover {
+  position:fixed;inset:0;z-index:600;
+  display:none;flex-direction:column;
+  align-items:center;justify-content:center;
+  background:
+    radial-gradient(ellipse at 30% 20%,#4a2010 0%,#2a1005 50%,#1a0a02 100%);
+  overflow:hidden;
+}
+#journal-cover.active { display:flex; }
+
+/* Leather texture — subtle noise pattern */
+#journal-cover::before {
+  content:'';position:absolute;inset:0;
+  background-image:
+    repeating-linear-gradient(
+      45deg,
+      rgba(255,255,255,0.012) 0px,
+      rgba(255,255,255,0.012) 1px,
+      transparent 1px,
+      transparent 8px
+    ),
+    repeating-linear-gradient(
+      -45deg,
+      rgba(0,0,0,0.04) 0px,
+      rgba(0,0,0,0.04) 1px,
+      transparent 1px,
+      transparent 8px
+    );
+  pointer-events:none;
+}
+
+/* Worn edge vignette */
+#journal-cover::after {
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse at 50% 50%,transparent 50%,rgba(0,0,0,0.55) 100%);
+  pointer-events:none;
+}
+
+/* Corner ornaments */
+.cover-corner-mark {
+  position:absolute;font-size:1rem;color:rgba(201,146,42,0.25);
+  font-family:'Cinzel',serif;line-height:1;
+}
+.cover-corner-mark.tl{top:1.25rem;left:1.5rem;}
+.cover-corner-mark.tr{top:1.25rem;right:1.5rem;}
+.cover-corner-mark.bl{bottom:1.25rem;left:1.5rem;}
+.cover-corner-mark.br{bottom:1.25rem;right:1.5rem;}
+
+/* Border frame */
+.cover-frame {
+  position:absolute;
+  inset:0.875rem;
+  border:1px solid rgba(201,146,42,0.15);
+  border-radius:3px;
+  pointer-events:none;
+}
+.cover-frame::before {
+  content:'';position:absolute;inset:6px;
+  border:1px solid rgba(201,146,42,0.08);
+  border-radius:2px;
+}
+
+/* The spine line */
+.cover-spine {
+  position:absolute;left:0;top:0;bottom:0;width:22px;
+  background:linear-gradient(90deg,#1a0802,#3d1f08 70%,#2a1005);
+  border-right:1px solid rgba(201,146,42,0.12);
+}
+
+/* Cover content */
+.cover-body {
+  position:relative;z-index:1;
+  text-align:center;padding:0 2.5rem;
+  max-width:340px;width:100%;
+}
+
+/* Embossed cross */
+.cover-emboss-cross {
+  font-family:'Cinzel',serif;font-size:2.5rem;
+  color:rgba(201,146,42,0.25);
+  text-shadow:
+    0 1px 0 rgba(255,200,80,0.12),
+    0 -1px 0 rgba(0,0,0,0.4);
+  margin-bottom:1rem;
+  letter-spacing:0.5rem;
+}
+
+/* Embossed title */
+.cover-title-main {
+  font-family:'Cinzel Decorative',serif;
+  font-size:clamp(1.1rem,5vw,1.5rem);
+  color:rgba(201,146,42,0.45);
+  text-shadow:
+    0 1px 0 rgba(255,200,80,0.1),
+    0 -1px 0 rgba(0,0,0,0.5),
+    0 0 20px rgba(201,146,42,0.08);
+  letter-spacing:0.05em;
+  line-height:1.3;
+  margin-bottom:0.35rem;
+}
+.cover-title-sub {
+  font-family:'Cinzel',serif;
+  font-size:0.6rem;
+  letter-spacing:0.25em;
+  text-transform:uppercase;
+  color:rgba(201,146,42,0.22);
+  margin-bottom:1.25rem;
+}
+
+.cover-rule-line {
+  width:50%;height:1px;margin:0 auto 1.25rem;
+  background:linear-gradient(90deg,transparent,rgba(201,146,42,0.2),transparent);
+}
+
+/* Explorer info */
+.cover-explorer-label {
+  font-family:'Cinzel',serif;font-size:0.5rem;
+  letter-spacing:0.22em;text-transform:uppercase;
+  color:rgba(201,146,42,0.2);margin-bottom:0.35rem;
+}
+.cover-explorer-name {
+  font-family:'Cinzel',serif;font-size:clamp(0.95rem,4vw,1.15rem);
+  color:rgba(201,146,42,0.38);letter-spacing:0.08em;
+  text-shadow:0 1px 0 rgba(0,0,0,0.4);
+  margin-bottom:0.5rem;
+}
+.cover-rank-line {
+  font-family:'Cinzel',serif;font-size:0.55rem;
+  letter-spacing:0.16em;text-transform:uppercase;
+  color:rgba(201,146,42,0.18);margin-bottom:1.5rem;
+}
+.cover-bottom-mark {
+  font-size:0.65rem;letter-spacing:0.5rem;
+  color:rgba(201,146,42,0.14);font-family:'Cinzel',serif;
+}
+
+/* Opening animation — cover lifts up */
+#journal-cover.opening {
+  animation:coverLift 1s cubic-bezier(0.4,0,0.2,1) forwards;
+}
+@keyframes coverLift {
+  0%   { transform:translateY(0); opacity:1; }
+  70%  { transform:translateY(-80%); opacity:0.7; }
+  100% { transform:translateY(-100%); opacity:0; }
+}
+
+/* ── ENHANCED ENTRY DISPLAY ─────────────────────────────────── */
+/* Ruled writing area */
+.writing-area {
+  background-image:
+    linear-gradient(rgba(61,31,8,0.07) 1px, transparent 1px) !important;
+  background-size: 100% 2rem !important;
+  background-attachment: local !important;
+  padding-left: 3rem !important;
+  border-left: 3px solid rgba(180,30,30,0.15) !important;
+  font-family:'Caveat',cursive !important;
+  font-size:1.1rem !important;
+  line-height:2rem !important;
+}
+
+/* Enhanced entry cards */
+.journal-entry {
+  position:relative;
+  background:rgba(255,252,240,0.85);
+  border-radius:2px;
+  padding:1rem 1rem 1rem 3rem;
+  margin-bottom:1rem;
+  border:none !important;
+  border-left:none !important;
+  box-shadow:
+    0 2px 8px rgba(0,0,0,0.08),
+    0 1px 2px rgba(0,0,0,0.05),
+    -2px 0 0 0 var(--entry-accent, #5c3010),
+    2px 0 4px rgba(0,0,0,0.06);
+  /* Ruled lines on entry cards */
+  background-image:
+    linear-gradient(rgba(61,31,8,0.055) 1px, transparent 1px);
+  background-size: 100% 1.75rem;
+}
+/* Red margin line */
+.journal-entry::before {
+  content:'';
+  position:absolute;left:2.25rem;top:0;bottom:0;
+  width:1.5px;
+  background:rgba(180,30,30,0.18);
+}
+/* Category accent line */
+.journal-entry::after {
+  content:'';
+  position:absolute;left:0;top:0;bottom:0;
+  width:4px;
+  background:var(--entry-accent, #5c3010);
+  border-radius:2px 0 0 2px;
+}
+
 </style>
 </head>
 <body>
+
+<!-- FIELD MANUAL LEATHER COVER -->
+<div id="journal-cover">
+  <div class="cover-spine"></div>
+  <div class="cover-frame"></div>
+  <div class="cover-corner-mark tl">✦</div>
+  <div class="cover-corner-mark tr">✦</div>
+  <div class="cover-corner-mark bl">✦</div>
+  <div class="cover-corner-mark br">✦</div>
+  <div class="cover-body">
+    <div class="cover-emboss-cross">☩</div>
+    <div class="cover-title-main">Field Manual</div>
+    <div class="cover-title-sub">The Orthodox Expedition</div>
+    <div class="cover-rule-line"></div>
+    <div class="cover-explorer-label">Explorer</div>
+    <div class="cover-explorer-name" id="cover-explorer-name">—</div>
+    <div class="cover-rank-line" id="cover-rank-line">Novice Explorer</div>
+    <div class="cover-bottom-mark">✦ ☩ ✦</div>
+  </div>
+</div>
 
 <div class="binding-rings">
   <div class="ring"></div>
@@ -437,12 +657,32 @@ const STAMPS = ['☩','✦','⊕','◈','⚔','🗺','📜','🏺','🔍','⭐',
     if(!prof){ window.location.href='index.html'; return; }
 
     profile = prof;
-    document.getElementById('explorer-name').textContent = prof.name;
+    document.getElementById('explorer-name').textContent = prof.name || 'Explorer';
+
+    // Populate cover
+    const coverName = document.getElementById('cover-explorer-name');
+    if(coverName) coverName.textContent = prof.name || 'Explorer';
+
     buildUI();
     await loadEntries();
 
     document.getElementById('loading').style.display='none';
     document.getElementById('app').style.display='block';
+
+    // Show leather cover animation — once per session
+    const coverSeen = sessionStorage.getItem('journal-cover-seen');
+    if(!coverSeen){
+      sessionStorage.setItem('journal-cover-seen','1');
+      const coverEl = document.getElementById('journal-cover');
+      if(coverEl){
+        coverEl.classList.add('active');
+        // Hold, then lift cover away
+        setTimeout(()=>{
+          coverEl.classList.add('opening');
+          setTimeout(()=>{ coverEl.style.display='none'; }, 950);
+        }, 1800);
+      }
+    }
   } catch(e){
     console.error(e);
     window.location.href='index.html';
@@ -674,6 +914,7 @@ function renderEntries(){
 
     const div = document.createElement('div');
     div.className = 'journal-entry';
+    div.style.setProperty('--entry-accent', cat.color);
     div.style.borderLeftColor = cat.color;
     div.innerHTML=`
       <div class="entry-meta">

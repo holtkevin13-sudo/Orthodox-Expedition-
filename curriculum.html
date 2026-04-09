@@ -743,7 +743,7 @@ function renderSessionBody(s, isDone){
   // Determine role visibility
   const isParentRole = profile && ['parent','admin','superuser'].includes(profile.role);
   const isAdminView  = new URLSearchParams(window.location.search).get('admin')==='1';
-  const showParentGuide = isParentRole || isAdminView;
+  const showParentGuide = isParentRole; // Only parent/admin/superuser roles see guide notes
 
   // ── DESCRIPTION ──
   let html=`<div class="session-description">${s.description||''}</div>`;
@@ -795,6 +795,15 @@ function renderSessionBody(s, isDone){
     <div class="journal-box">
       <div class="journal-label">✎ Field Manual</div>
       <div class="journal-text">${s.journal_prompt}</div>
+      <a href="journal.html" style="
+        display:inline-flex;align-items:center;gap:0.35rem;
+        margin-top:0.625rem;
+        font-family:'Cinzel',serif;font-size:0.62rem;
+        letter-spacing:0.08em;text-transform:uppercase;
+        color:rgba(201,146,42,0.6);text-decoration:none;
+        border-bottom:1px solid rgba(201,146,42,0.25);
+        padding-bottom:2px;transition:color 0.2s;
+      ">Open Field Manual ›</a>
     </div>`;
   }
 

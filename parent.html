@@ -579,9 +579,12 @@ async function deductCoins(){
 // ── MISSIONS ──────────────────────────────────────────────────
 function renderMissionsTab(){
   const select=document.getElementById('mission-select');
-  const incomplete=allMissions.filter(m=>!completedMissionIds.includes(m.id));
-  select.innerHTML=incomplete.map(m=>`<option value="${m.id}">${m.title} (+${m.coins} coins)</option>`).join('');
-  if(!incomplete.length) select.innerHTML='<option>All missions complete!</option>';
+  // Show all active missions — parent can override completions
+  select.innerHTML=allMissions.map(m=>{
+    const done = completedMissionIds.includes(m.id);
+    return `<option value="${m.id}">${done?'✦ ':''}${m.name||m.title} (+${m.coins} coins)${done?' — done':''}</option>`;
+  }).join('');
+  if(!allMissions.length) select.innerHTML='<option>No missions loaded</option>';
 
   const list=document.getElementById('missions-list');
   list.innerHTML='';
@@ -610,21 +613,51 @@ async function completeMission(){
 }
 
 async function completeMissionDirect(missionId, coins, notes=''){
-  if(!selectedChild||completedMissionIds.includes(missionId)) return;
+  if(!selectedChild) return;
   const fb=document.getElementById('mission-feedback');
-  await Promise.all([
-    sb.from('mission_completions').insert({
-      explorer_id:selectedChild.id,
-      mission_id:missionId,
-      completed_at:new Date().toISOString(),
-      coins_awarded:coins,
-      notes:notes||null,
-    }),
-    sb.from('profiles').update({coins:(selectedChild.coins||0)+coins,lifetime_coins:(selectedChild.lifetime_coins||0)+coins}).eq('id',selectedChild.id),
-    sb.from('activity_log').insert({explorer_id:selectedChild.id,amount:coins,reason:`Mission complete${notes?' — '+notes:''}`,created_at:new Date().toISOString()}),
-  ]);
-  if(fb){fb.textContent=`✦ Mission marked complete! +${coins} coins`;fb.className='feedback ok';}
-  await loadChildData();
+  if(fb){fb.textContent='Saving...';fb.className='feedback';}
+
+  try {
+    // Insert completion — try with notes first, fall back without if column missing
+    const insertData = {
+      explorer_id:  selectedChild.id,
+      mission_id:   missionId,
+      completed_at: new Date().toISOString(),
+      coins_awarded: coins,
+      day_key:      new Date().toISOString().slice(0,10),
+      week_key:     getWeekKey(),
+    };
+    if(notes) insertData.notes = notes;
+
+    const {error:insertErr} = await sb.from('mission_completions').insert(insertData);
+    if(insertErr) throw insertErr;
+
+    await Promise.all([
+      sb.from('profiles').update({
+        coins:(selectedChild.coins||0)+coins,
+        lifetime_coins:(selectedChild.lifetime_coins||0)+coins,
+      }).eq('id',selectedChild.id),
+      sb.from('activity_log').insert({
+        explorer_id:selectedChild.id,
+        amount:coins,
+        reason:`Mission complete${notes?' — '+notes:''}`,
+        created_at:new Date().toISOString(),
+      }),
+    ]);
+
+    if(fb){fb.textContent=`✦ Mission marked complete! +${coins} coins`;fb.className='feedback ok';}
+    await loadChildData();
+  } catch(e){
+    console.error('Mission completion error:', e);
+    if(fb){fb.textContent='Error: '+e.message;fb.className='feedback err';}
+  }
+}
+
+function getWeekKey(){
+  const now = new Date();
+  const start = new Date(now);
+  start.setDate(now.getDate() - now.getDay());
+  return start.toISOString().slice(0,10);
 }
 
 // ── PRIZES ────────────────────────────────────────────────────

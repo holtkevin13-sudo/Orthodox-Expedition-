@@ -12,8 +12,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>The Orthodox Expedition</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
 function showAdminBar(){
   const bar = document.getElementById('admin-bar');
   if(bar) bar.classList.add('show');
@@ -652,6 +651,86 @@ body::before{
 .dest-card-bazaar.has-affordable{
   animation:affordableGlow 2.5s ease-in-out infinite;
 }
+
+/* ══════════════════════════════════════════════════════════
+   EXPEDITION MAP ENTRY ANIMATION
+   ══════════════════════════════════════════════════════════ */
+#expedition-map{
+  position:fixed;inset:0;z-index:500;
+  display:none;align-items:center;justify-content:center;
+  background:#0a0500;overflow:hidden;
+}
+#expedition-map.active{display:flex;}
+#expedition-map::before{
+  content:'';position:absolute;inset:0;
+  background:
+    radial-gradient(ellipse at 50% 50%,rgba(201,146,42,0.06) 0%,transparent 65%),
+    radial-gradient(ellipse at 50% 50%,rgba(0,0,0,0.9) 0%,rgba(0,0,0,0.4) 100%);
+  z-index:0;animation:vignetteReveal 2.9s ease forwards;
+}
+@keyframes vignetteReveal{0%{opacity:0;}20%{opacity:1;}80%{opacity:1;}100%{opacity:0;}}
+.map-parchment{
+  position:relative;z-index:1;width:min(88vw,420px);
+  background:radial-gradient(ellipse at 30% 20%,#f5e8c8 0%,#ead5a0 40%,#d4b870 100%);
+  border-radius:4px;padding:2.5rem 2rem;
+  box-shadow:0 0 0 1px rgba(138,90,0,0.4),0 0 0 4px rgba(107,70,10,0.15),
+    0 8px 60px rgba(0,0,0,0.85),inset 0 0 40px rgba(138,90,0,0.08);
+  animation:mapReveal 2.9s cubic-bezier(0.22,1,0.36,1) forwards;
+}
+.map-parchment::before{
+  content:'';position:absolute;inset:0;border-radius:4px;pointer-events:none;
+  background:
+    radial-gradient(ellipse at 0% 0%,rgba(80,40,0,0.15) 0%,transparent 40%),
+    radial-gradient(ellipse at 100% 0%,rgba(80,40,0,0.12) 0%,transparent 40%),
+    radial-gradient(ellipse at 0% 100%,rgba(80,40,0,0.18) 0%,transparent 40%),
+    radial-gradient(ellipse at 100% 100%,rgba(80,40,0,0.2) 0%,transparent 40%);
+}
+.map-parchment::after{
+  content:'';position:absolute;inset:0;border-radius:4px;pointer-events:none;
+  background-image:
+    linear-gradient(rgba(138,90,0,0.06) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(138,90,0,0.06) 1px,transparent 1px);
+  background-size:32px 32px;
+}
+@keyframes mapReveal{
+  0%{opacity:0;transform:scale(0.88) translateY(20px);}
+  18%{opacity:1;transform:scale(1.01) translateY(0);}
+  75%{opacity:1;transform:scale(1) translateY(0);}
+  100%{opacity:0;transform:scale(1.03) translateY(-12px);}
+}
+.map-corner{position:absolute;font-size:1.1rem;color:rgba(80,40,0,0.18);line-height:1;}
+.map-corner.tl{top:0.5rem;left:0.625rem;}
+.map-corner.tr{top:0.5rem;right:0.625rem;}
+.map-corner.bl{bottom:0.5rem;left:0.625rem;}
+.map-corner.br{bottom:0.5rem;right:0.625rem;}
+.map-compass{position:absolute;top:1rem;right:1.25rem;width:46px;height:46px;opacity:0.16;}
+.compass-ring{width:46px;height:46px;border:1.5px solid #5a3800;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;position:relative;}
+.compass-ring::before,.compass-ring::after{content:'';position:absolute;background:#5a3800;}
+.compass-ring::before{width:1px;height:90%;}
+.compass-ring::after{width:90%;height:1px;}
+.compass-n{position:absolute;top:-2px;left:50%;transform:translateX(-50%);
+  font-family:'Cinzel',serif;font-size:0.45rem;color:#5a3800;font-weight:700;}
+.map-content{text-align:center;position:relative;z-index:1;}
+.map-eyecross{font-family:'Cinzel',serif;font-size:0.65rem;letter-spacing:0.8rem;
+  color:rgba(80,40,0,0.3);margin-bottom:0.75rem;}
+.map-title{font-family:'Cinzel Decorative',serif;font-size:clamp(1rem,5vw,1.3rem);
+  color:#3d1f00;letter-spacing:0.04em;line-height:1.25;
+  text-shadow:0 1px 2px rgba(255,255,255,0.35);margin-bottom:0.35rem;}
+.map-divider{font-size:0.6rem;letter-spacing:0.6rem;color:rgba(80,40,0,0.25);margin-bottom:0.75rem;}
+.map-rule{width:55%;height:1px;margin:0 auto 0.875rem;
+  background:linear-gradient(90deg,transparent,rgba(80,40,0,0.2),transparent);}
+.map-explorer-label{font-family:'Cinzel',serif;font-size:0.52rem;letter-spacing:0.22em;
+  text-transform:uppercase;color:rgba(80,40,0,0.3);margin-bottom:0.3rem;}
+.map-explorer-name{font-family:'Cinzel',serif;font-size:clamp(1rem,4vw,1.15rem);
+  color:#4a2800;letter-spacing:0.06em;margin-bottom:0.5rem;}
+.map-rank-badge{display:inline-block;font-family:'Cinzel',serif;font-size:0.58rem;
+  letter-spacing:0.1em;text-transform:uppercase;color:rgba(80,40,0,0.45);
+  background:rgba(80,40,0,0.06);border:1px solid rgba(80,40,0,0.14);
+  border-radius:20px;padding:0.2rem 0.875rem;margin-bottom:0.875rem;}
+.map-bottom{font-size:0.6rem;letter-spacing:0.55rem;color:rgba(80,40,0,0.18);}
+#expedition-map.fade-out{animation:mapFade 0.5s ease forwards;}
+@keyframes mapFade{to{opacity:0;pointer-events:none;}}
 </style>
 </head>
 <body>
@@ -666,6 +745,34 @@ body::before{
     <button class="admin-bar-btn" onclick="window.location.href='index.html?signout=1'">Sign Out</button>
   </div>
 </div>
+<!-- EXPEDITION MAP ANIMATION -->
+<div id="expedition-map">
+  <div class="map-parchment">
+    <div class="map-corner tl">✦</div>
+    <div class="map-corner tr">✦</div>
+    <div class="map-corner bl">✦</div>
+    <div class="map-corner br">✦</div>
+    <div class="map-compass">
+      <div class="compass-ring">
+        <span class="compass-n">N</span>
+        <span style="position:absolute;bottom:-2px;left:50%;transform:translateX(-50%);font-family:'Cinzel',serif;font-size:0.45rem;color:#5a3800;">S</span>
+        <span style="position:absolute;right:-2px;top:50%;transform:translateY(-50%);font-family:'Cinzel',serif;font-size:0.45rem;color:#5a3800;">E</span>
+        <span style="position:absolute;left:-2px;top:50%;transform:translateY(-50%);font-family:'Cinzel',serif;font-size:0.45rem;color:#5a3800;">W</span>
+      </div>
+    </div>
+    <div class="map-content">
+      <div class="map-eyecross">✦ ☩ ✦</div>
+      <div class="map-title">The Orthodox<br>Expedition</div>
+      <div class="map-divider">✦ · ✦</div>
+      <div class="map-rule"></div>
+      <div class="map-explorer-label">Explorer</div>
+      <div class="map-explorer-name" id="map-explorer-name">Loading…</div>
+      <div class="map-rank-badge" id="map-rank-badge">Novice Explorer</div>
+      <div class="map-bottom">☩</div>
+    </div>
+  </div>
+</div>
+
 <div id="loading"><div class="loading-cross">☩</div></div>
 
 
@@ -932,8 +1039,47 @@ async function doLogout(){
 
 function showApp(){
   document.getElementById('loading').style.display='none';
-  document.getElementById('app').style.display='block';
-  document.getElementById('bottom-nav').style.display='flex';
+
+  const mapSeen = sessionStorage.getItem('map-seen');
+  if(!mapSeen){
+    sessionStorage.setItem('map-seen','1');
+
+    // Populate the cover with explorer info
+    const p = profile;
+    if(p){
+      const nameEl = document.getElementById('map-explorer-name');
+      const rankEl = document.getElementById('map-rank-badge');
+      if(nameEl) nameEl.textContent = p.display_name || p.username || p.name || 'Explorer';
+      if(rankEl && p.lifetime_coins !== undefined){
+        const rank = calcRank(p.lifetime_coins, p.sessions_attended||0, p.topics_mastered||0);
+        rankEl.textContent = rank.title;
+      }
+    }
+
+    // Show the map — app stays hidden underneath
+    const mapEl = document.getElementById('expedition-map');
+    if(mapEl){
+      mapEl.classList.add('active');
+      // Reveal app at same moment map starts fading out (2400ms hold)
+      setTimeout(()=>{
+        document.getElementById('app').style.display='block';
+        document.getElementById('bottom-nav').style.display='flex';
+      }, 2350);
+      // Then fade the map overlay out over it
+      setTimeout(()=>{
+        mapEl.classList.add('fade-out');
+        setTimeout(()=>{ mapEl.style.display='none'; }, 500);
+      }, 2400);
+    } else {
+      // Fallback if no map element
+      document.getElementById('app').style.display='block';
+      document.getElementById('bottom-nav').style.display='flex';
+    }
+  } else {
+    // Map already seen this session — show app immediately
+    document.getElementById('app').style.display='block';
+    document.getElementById('bottom-nav').style.display='flex';
+  }
 }
 
 // ── LOAD DATA ─────────────────────────────────────────────────

@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>The Orthodox Expedition</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
@@ -838,8 +839,8 @@ function closeRankup(){
     if(!session){ window.location.href='index.html'; return; }
     const {data:prof} = await sb.from('profiles').select('role').eq('id',session.user.id).single();
     const isAdminView = new URLSearchParams(window.location.search).get('admin')==='1';
-    if(prof && prof.role === 'admin' && !isAdminView){ window.location.href='admin.html'; return; }
-    if(prof && prof.role === 'admin' && isAdminView){ showAdminBar(); }
+    if(prof && ['superuser','admin','parent'].includes(prof.role) && !isAdminView){ window.location.href= prof.role==='parent'?'parent.html':'admin.html'; return; }
+    if(prof && ['superuser','admin','parent'].includes(prof.role) && isAdminView){ showAdminBar(); }
     await loadData(session.user.id);
     showApp();
   } catch(e) {

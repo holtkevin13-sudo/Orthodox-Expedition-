@@ -87,16 +87,17 @@ async function declineFamily(regId){
 html,body{min-height:100%;background-color:var(--bg);}
 body{
   font-family:'Crimson Text',serif;
+  background-color:#0d1117;
   background-image:
-    radial-gradient(ellipse at 0% 0%,rgba(244,232,193,0.03) 0%,transparent 50%),
-    radial-gradient(ellipse at 100% 100%,rgba(201,146,42,0.04) 0%,transparent 50%);
-  color:var(--ink);
+    radial-gradient(ellipse at 0% 0%,rgba(44,22,84,0.4) 0%,transparent 55%),
+    radial-gradient(ellipse at 100% 100%,rgba(107,26,26,0.3) 0%,transparent 50%);
+  color:#e8e0d0;
 }
 body::before{
   content:'';position:fixed;inset:0;
   background-image:
-    linear-gradient(rgba(201,146,42,0.015) 1px,transparent 1px),
-    linear-gradient(90deg,rgba(201,146,42,0.015) 1px,transparent 1px);
+    linear-gradient(rgba(201,146,42,0.04) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(201,146,42,0.04) 1px,transparent 1px);
   background-size:44px 44px;pointer-events:none;z-index:0;
 }
 
@@ -109,6 +110,28 @@ body::before{
 #app{display:none;position:relative;z-index:1;min-height:100vh;}
 .admin-layout{display:flex;flex-direction:column;min-height:100vh;}
 
+
+/* ── ROLE BADGE ──────────────────────────────────────────────── */
+.role-badge{
+  font-family:'Cinzel',serif;font-size:0.58rem;letter-spacing:0.12em;
+  padding:0.2rem 0.625rem;border-radius:12px;text-transform:uppercase;
+  font-weight:700;
+}
+.role-badge.superuser{
+  background:linear-gradient(135deg,rgba(255,215,0,0.2),rgba(201,146,42,0.15));
+  border:1px solid rgba(255,215,0,0.4);color:var(--gold-bright);
+  text-shadow:0 0 8px rgba(255,215,0,0.3);
+}
+.role-badge.admin{
+  background:rgba(44,22,84,0.3);border:1px solid rgba(124,58,237,0.35);
+  color:rgba(167,139,250,0.9);
+}
+
+/* ── LAST LOGIN ──────────────────────────────────────────────── */
+.last-login-text{
+  font-family:'Cinzel',serif;font-size:0.58rem;
+  color:rgba(201,146,42,0.4);letter-spacing:0.08em;
+}
 /* ── TOP BAR ─────────────────────────────────────────────────── */
 .top-bar{
   background:rgba(26,18,8,0.97);
@@ -153,7 +176,7 @@ body::before{
 .section{margin-bottom:1.75rem;}
 .section-title{
   font-family:'Cinzel',serif;font-size:0.7rem;letter-spacing:0.2em;
-  text-transform:uppercase;color:rgba(201,146,42,0.5);
+  text-transform:uppercase;color:rgba(201,146,42,0.75);
   margin-bottom:0.875rem;padding-bottom:0.5rem;
   border-bottom:1px solid var(--border);
   display:flex;align-items:center;justify-content:space-between;
@@ -378,7 +401,13 @@ body::before{
       <div class="top-bar-sub">Lead Explorer Panel</div>
     </div>
     <div class="top-bar-right">
-      <span class="admin-name" id="admin-name-display"></span>
+      <div style="text-align:right;">
+        <div style="display:flex;align-items:center;gap:0.5rem;justify-content:flex-end;margin-bottom:0.2rem;">
+          <span class="admin-name" id="admin-name-display"></span>
+          <span class="role-badge" id="role-badge"></span>
+        </div>
+        <div class="last-login-text" id="last-login-display"></div>
+      </div>
       <button class="logout-btn" onclick="openExplorerView()">Explorer View</button>
       <button class="logout-btn" onclick="doLogout()">Sign Out</button>
     </div>
@@ -415,14 +444,14 @@ body::before{
       </div>
     </div>
 
-    <!-- Admin Tools -->
-    <div class="section">
-      <div class="section-title">Admin Tools</div>
-      <p style="font-size:0.8rem;color:rgba(201,146,42,0.4);font-style:italic;margin-bottom:0.875rem;">Maintenance tools — run these when needed.</p>
+    <!-- Admin Tools — superuser only -->
+    <div class="section" id="superuser-tools" style="display:none;">
+      <div class="section-title">⚙ Superuser Tools</div>
+      <p style="font-size:0.78rem;color:rgba(201,146,42,0.45);font-style:italic;margin-bottom:0.875rem;">These tools are only visible to the superuser account.</p>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;">
         <button class="btn btn-ghost btn-full" onclick="window.open('games/saints-index-generator.html','_blank')">🎨 Update Saints Index</button>
       </div>
-      <p style="font-size:0.72rem;color:rgba(201,146,42,0.3);font-style:italic;margin-top:0.5rem;">Run Saints Index after adding new icons to the Companion repo.</p>
+      <p style="font-size:0.72rem;color:rgba(201,146,42,0.3);font-style:italic;margin-top:0.5rem;">Run after adding new icons to the Companion repo.</p>
     </div>
 
     <!-- Explorer Stats -->
@@ -724,6 +753,37 @@ function toast(msg, isError=false){
     }
     adminProfile = prof;
     document.getElementById('admin-name-display').textContent = prof.name;
+
+    // Role badge
+    const roleBadge = document.getElementById('role-badge');
+    if(roleBadge){
+      roleBadge.textContent = prof.role === 'superuser' ? '✦ Superuser' : 'Admin';
+      roleBadge.className = 'role-badge ' + prof.role;
+    }
+
+    // Last login from Supabase session
+    const lastLogin = session?.user?.last_sign_in_at;
+    const loginEl = document.getElementById('last-login-display');
+    if(loginEl && lastLogin){
+      const d = new Date(lastLogin);
+      const now = new Date();
+      const diffMs = now - d;
+      const diffMins = Math.floor(diffMs/60000);
+      const diffHrs = Math.floor(diffMins/60);
+      const diffDays = Math.floor(diffHrs/24);
+      let loginStr = '';
+      if(diffMins < 2) loginStr = 'Last login: just now';
+      else if(diffMins < 60) loginStr = `Last login: ${diffMins}m ago`;
+      else if(diffHrs < 24) loginStr = `Last login: ${diffHrs}h ago`;
+      else loginStr = `Last login: ${d.toLocaleDateString('en-US',{month:'short',day:'numeric'})}`;
+      loginEl.textContent = loginStr;
+    }
+
+    // Show superuser-only tools
+    if(prof.role === 'superuser'){
+      const el = document.getElementById('superuser-tools');
+      if(el) el.style.display = 'block';
+    }
     await loadAll();
     document.getElementById('loading').style.display='none';
     document.getElementById('app').style.display='block';

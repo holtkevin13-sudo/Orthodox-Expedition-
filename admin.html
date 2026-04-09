@@ -2,6 +2,12 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#c9922a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Expedition">
+
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Admin — The Orthodox Expedition</title>
@@ -66,6 +72,283 @@ async function declineFamily(regId){
     reviewed_by: adminProfile.id,
   }).eq('id',regId);
   loadPendingRegistrations();
+}
+
+// ══════════════════════════════════════════════════════════════
+// FAMILIES MANAGEMENT
+// ══════════════════════════════════════════════════════════════
+let allFamilies = [];
+let allFamilyProfiles = [];
+
+async function loadFamiliesPanel(){
+  const [famRes, profRes] = await Promise.all([
+    sb.from('families').select('*').order('created_at', {ascending:false}),
+    sb.from('profiles').select('id,name,role,family_id,username,coins,lifetime_coins,sessions_attended,last_sign_in_at').neq('role','superuser'),
+  ]);
+  allFamilies = famRes.data || [];
+  allFamilyProfiles = profRes.data || [];
+  renderFamiliesList(allFamilies);
+}
+
+function filterFamilies(){
+  const search = document.getElementById('families-search').value.toLowerCase();
+  const status = document.getElementById('families-status-filter').value;
+  let filtered = allFamilies;
+  if(status !== 'all') filtered = filtered.filter(f=>f.status===status);
+  if(search) filtered = filtered.filter(f=>
+    f.name.toLowerCase().includes(search) ||
+    f.parent_email.toLowerCase().includes(search) ||
+    (f.parish||'').toLowerCase().includes(search)
+  );
+  renderFamiliesList(filtered);
+}
+
+function renderFamiliesList(families){
+  const el = document.getElementById('families-list');
+  const detail = document.getElementById('family-detail');
+  if(!el) return;
+  el.style.display = 'block';
+  detail.style.display = 'none';
+
+  if(!families.length){
+    el.innerHTML='<div style="font-size:0.8rem;color:rgba(201,146,42,0.3);font-style:italic;padding:1rem 0;">No families found.</div>';
+    return;
+  }
+
+  el.innerHTML = '';
+  families.forEach(fam => {
+    const children = allFamilyProfiles.filter(p=>p.family_id===fam.id && p.role==='explorer');
+    const parents  = allFamilyProfiles.filter(p=>p.family_id===fam.id && p.role==='parent');
+    const totalCoins = children.reduce((sum,c)=>(sum+(c.coins||0)),0);
+    const joined = new Date(fam.created_at).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+
+    const statusColor = fam.status==='approved'?'rgba(22,163,74,0.7)':fam.status==='pending'?'rgba(255,215,0,0.6)':'rgba(220,38,38,0.6)';
+
+    const row = document.createElement('div');
+    row.style.cssText='display:flex;align-items:center;gap:0.75rem;padding:0.875rem;background:rgba(244,232,193,0.03);border:1px solid rgba(201,146,42,0.12);border-radius:10px;margin-bottom:0.4rem;cursor:pointer;transition:all 0.2s;';
+    row.onmouseenter = ()=>row.style.background='rgba(201,146,42,0.05)';
+    row.onmouseleave = ()=>row.style.background='rgba(244,232,193,0.03)';
+    row.onclick = ()=>openFamilyDetail(fam.id);
+    row.innerHTML=`
+      <div style="flex:1;min-width:0;">
+        <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.15rem;">
+          <span style="font-family:'Cinzel',serif;font-size:0.8rem;color:rgba(244,232,193,0.8);">${fam.name}</span>
+          <span style="font-family:'Cinzel',serif;font-size:0.58rem;color:${statusColor};border:1px solid ${statusColor};border-radius:10px;padding:0.1rem 0.4rem;">${fam.status}</span>
+        </div>
+        <div style="font-size:0.72rem;color:rgba(201,146,42,0.4);">${fam.parent_email}${fam.parish?' · '+fam.parish:''}</div>
+        <div style="font-size:0.68rem;color:rgba(201,146,42,0.3);margin-top:0.1rem;">Joined ${joined} · ${children.length} child${children.length!==1?'ren':''} · $${parseFloat(fam.coin_rate||0.02).toFixed(2)}/coin</div>
+      </div>
+      <div style="text-align:right;flex-shrink:0;">
+        <div style="font-family:'Cinzel Decorative',serif;font-size:1rem;color:rgba(255,215,0,0.7);">${totalCoins.toLocaleString()}</div>
+        <div style="font-family:'Cinzel',serif;font-size:0.58rem;color:rgba(201,146,42,0.3);">coins</div>
+      </div>
+      <div style="color:rgba(201,146,42,0.3);font-size:0.875rem;">›</div>`;
+    el.appendChild(row);
+  });
+}
+
+function openFamilyDetail(familyId){
+  const fam = allFamilies.find(f=>f.id===familyId);
+  if(!fam) return;
+  const children = allFamilyProfiles.filter(p=>p.family_id===familyId && p.role==='explorer');
+  const parents  = allFamilyProfiles.filter(p=>p.family_id===familyId && p.role==='parent');
+
+  document.getElementById('family-detail-name').textContent = fam.name;
+  document.getElementById('families-list').style.display = 'none';
+  document.getElementById('family-detail').style.display = 'block';
+
+  const content = document.getElementById('family-detail-content');
+  const joined = new Date(fam.created_at).toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
+  const rate = parseFloat(fam.coin_rate||0.02);
+
+  let childRows = children.map(c=>`
+    <div style="display:flex;align-items:center;gap:0.75rem;padding:0.625rem 0;border-bottom:1px solid rgba(201,146,42,0.08);">
+      <span style="font-size:1rem;">✦</span>
+      <div style="flex:1;">
+        <div style="font-family:'Cinzel',serif;font-size:0.75rem;color:rgba(244,232,193,0.7);">${c.name} <span style="color:rgba(201,146,42,0.4);font-size:0.65rem;">@${c.username||'no username'}</span></div>
+        <div style="font-size:0.68rem;color:rgba(201,146,42,0.35);">${(c.sessions_attended||0)} sessions · ${(c.coins||0).toLocaleString()} coins · $${((c.lifetime_coins||0)*rate).toFixed(2)} lifetime</div>
+      </div>
+    </div>`).join('');
+
+  const statusOptions = ['approved','pending','suspended'].map(s=>
+    `<option value="${s}"${fam.status===s?' selected':''}>${s}</option>`
+  ).join('');
+
+  content.innerHTML=`
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-bottom:1.25rem;">
+      <div style="background:rgba(244,232,193,0.03);border:1px solid rgba(201,146,42,0.12);border-radius:10px;padding:0.75rem;text-align:center;">
+        <div style="font-family:'Cinzel Decorative',serif;font-size:1.3rem;color:rgba(255,215,0,0.7);">${children.length}</div>
+        <div style="font-family:'Cinzel',serif;font-size:0.6rem;color:rgba(201,146,42,0.4);">Children</div>
+      </div>
+      <div style="background:rgba(244,232,193,0.03);border:1px solid rgba(201,146,42,0.12);border-radius:10px;padding:0.75rem;text-align:center;">
+        <div style="font-family:'Cinzel Decorative',serif;font-size:1.3rem;color:rgba(255,215,0,0.7);">$${rate.toFixed(2)}</div>
+        <div style="font-family:'Cinzel',serif;font-size:0.6rem;color:rgba(201,146,42,0.4);">Coin Rate</div>
+      </div>
+    </div>
+
+    <div style="margin-bottom:1rem;">
+      <div style="font-family:'Cinzel',serif;font-size:0.65rem;letter-spacing:0.15em;color:rgba(201,146,42,0.5);text-transform:uppercase;margin-bottom:0.5rem;">Family Info</div>
+      <div style="font-size:0.78rem;color:rgba(244,232,193,0.5);line-height:1.8;">
+        <div>${fam.parent_email}</div>
+        ${fam.parish?`<div>${fam.parish}</div>`:''}
+        <div>Joined: ${joined}</div>
+      </div>
+    </div>
+
+    <div style="margin-bottom:1rem;">
+      <div style="font-family:'Cinzel',serif;font-size:0.65rem;letter-spacing:0.15em;color:rgba(201,146,42,0.5);text-transform:uppercase;margin-bottom:0.5rem;">Explorers</div>
+      ${childRows || '<div style="font-size:0.78rem;color:rgba(201,146,42,0.3);font-style:italic;">No children yet</div>'}
+    </div>
+
+    <div style="margin-bottom:1rem;">
+      <div style="font-family:'Cinzel',serif;font-size:0.65rem;letter-spacing:0.15em;color:rgba(201,146,42,0.5);text-transform:uppercase;margin-bottom:0.5rem;">Account Status</div>
+      <div style="display:flex;gap:0.5rem;align-items:center;">
+        <select id="fam-status-${fam.id}" class="form-input" style="width:160px;">
+          ${statusOptions}
+        </select>
+        <button class="btn btn-gold" onclick="updateFamilyStatus('${fam.id}')">Update</button>
+      </div>
+      <div id="fam-status-feedback-${fam.id}" style="font-family:'Cinzel',serif;font-size:0.68rem;margin-top:0.4rem;min-height:1rem;"></div>
+    </div>`;
+}
+
+function closeFamilyDetail(){
+  document.getElementById('family-detail').style.display = 'none';
+  document.getElementById('families-list').style.display = 'block';
+}
+
+async function updateFamilyStatus(familyId){
+  const newStatus = document.getElementById(`fam-status-${familyId}`).value;
+  const fb = document.getElementById(`fam-status-feedback-${familyId}`);
+  const {error} = await sb.from('families').update({status:newStatus}).eq('id',familyId);
+  if(error){
+    fb.textContent='Error: '+error.message;fb.style.color='rgba(252,165,165,0.7)';
+  } else {
+    const fam = allFamilies.find(f=>f.id===familyId);
+    if(fam) fam.status=newStatus;
+    fb.textContent='✦ Status updated';fb.style.color='rgba(134,239,172,0.8)';
+  }
+}
+
+// ── ANNOUNCEMENT SYSTEM ───────────────────────────────────────
+async function loadCurrentAnnouncement(){
+  const {data} = await sb.from('app_settings').select('value').eq('key','announcement').single();
+  const el = document.getElementById('current-announcement-display');
+  const textarea = document.getElementById('announcement-text');
+  if(data?.value && el){
+    el.innerHTML=`<div style="background:rgba(201,146,42,0.08);border:1px solid rgba(201,146,42,0.2);border-radius:8px;padding:0.75rem;font-size:0.8rem;color:rgba(244,232,193,0.6);">
+      <div style="font-family:'Cinzel',serif;font-size:0.6rem;color:rgba(201,146,42,0.5);text-transform:uppercase;margin-bottom:0.3rem;">Current announcement:</div>
+      ${data.value}
+    </div>`;
+    if(textarea) textarea.value = data.value;
+  }
+}
+
+async function saveAnnouncement(){
+  const text = document.getElementById('announcement-text').value.trim();
+  const fb = document.getElementById('announcement-feedback');
+  await sb.from('app_settings').upsert({key:'announcement',value:text});
+  fb.textContent = text ? '✦ Announcement posted to all families!' : '✦ Announcement cleared.';
+  fb.className = 'feedback ok';
+  loadCurrentAnnouncement();
+}
+
+async function clearAnnouncement(){
+  document.getElementById('announcement-text').value = '';
+  await saveAnnouncement();
+}
+
+// ── BULK VIDEO EDITOR ─────────────────────────────────────────
+let bulkVideoData = [];
+
+async function loadBulkVideoEditor(){
+  const {data} = await sb.from('sessions').select('id,title,topic_id,video_url').order('topic_id').order('order_index');
+  bulkVideoData = data || [];
+  renderBulkVideoTable();
+}
+
+function renderBulkVideoTable(){
+  const el = document.getElementById('bulk-video-table');
+  if(!el) return;
+  if(!bulkVideoData.length){ el.innerHTML='<div style="font-size:0.8rem;color:rgba(201,146,42,0.3);font-style:italic;">Loading...</div>'; return; }
+
+  const topicNames = {0:'Foundations',1:'Scripture & History',2:'Sacraments',3:'Theotokos & Saints',4:'Church Building',5:'Worship & Prayer',6:'Church Year',7:'Living the Faith',8:'Eschatology',9:'Grand Finale',10:'Conclusion'};
+
+  let html = `<table style="width:100%;border-collapse:collapse;font-size:0.75rem;">
+    <thead>
+      <tr style="border-bottom:1px solid rgba(201,146,42,0.2);">
+        <th style="text-align:left;padding:0.4rem 0.5rem;font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.12em;color:rgba(201,146,42,0.5);text-transform:uppercase;width:60px;">ID</th>
+        <th style="text-align:left;padding:0.4rem 0.5rem;font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.12em;color:rgba(201,146,42,0.5);text-transform:uppercase;">Session</th>
+        <th style="text-align:left;padding:0.4rem 0.5rem;font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.12em;color:rgba(201,146,42,0.5);text-transform:uppercase;min-width:200px;">YouTube URL</th>
+      </tr>
+    </thead>
+    <tbody>`;
+
+  let lastTopic = null;
+  bulkVideoData.forEach(s => {
+    if(s.topic_id !== lastTopic){
+      lastTopic = s.topic_id;
+      html += `<tr><td colspan="3" style="padding:0.5rem 0.5rem 0.25rem;font-family:'Cinzel',serif;font-size:0.62rem;color:rgba(201,146,42,0.55);text-transform:uppercase;letter-spacing:0.15em;border-top:1px solid rgba(201,146,42,0.1);">${topicNames[s.topic_id]||'Topic '+s.topic_id}</td></tr>`;
+    }
+    const hasUrl = s.video_url && s.video_url.length > 0;
+    html += `<tr style="border-bottom:1px solid rgba(201,146,42,0.06);">
+      <td style="padding:0.4rem 0.5rem;color:rgba(201,146,42,0.4);font-family:'Cinzel',serif;">${s.id}</td>
+      <td style="padding:0.4rem 0.5rem;color:rgba(244,232,193,${hasUrl?'0.7':'0.45'});">${s.title}</td>
+      <td style="padding:0.3rem 0.5rem;">
+        <input type="text" 
+          id="vid-${s.id}" 
+          value="${s.video_url||''}" 
+          placeholder="https://youtube.com/watch?v=..."
+          style="width:100%;padding:0.3rem 0.5rem;background:rgba(244,232,193,${hasUrl?'0.08':'0.04'});
+          border:1px solid rgba(201,146,42,${hasUrl?'0.3':'0.15'});border-radius:5px;
+          font-family:'Crimson Text',serif;font-size:0.78rem;color:rgba(244,232,193,0.8);outline:none;">
+      </td>
+    </tr>`;
+  });
+
+  html += '</tbody></table>';
+  el.innerHTML = html;
+}
+
+async function saveBulkVideos(){
+  const fb = document.getElementById('bulk-video-feedback');
+  fb.textContent = 'Saving...';
+  fb.className = 'feedback';
+
+  const updates = [];
+  bulkVideoData.forEach(s => {
+    const input = document.getElementById(`vid-${s.id}`);
+    if(!input) return;
+    const newUrl = input.value.trim();
+    if(newUrl !== (s.video_url||'').trim()){
+      updates.push({id: s.id, video_url: newUrl||null});
+    }
+  });
+
+  if(!updates.length){
+    fb.textContent = 'No changes to save.';
+    fb.className = 'feedback';
+    return;
+  }
+
+  let errors = 0;
+  await Promise.all(updates.map(async u => {
+    const {error} = await sb.from('sessions').update({video_url:u.video_url}).eq('id',u.id);
+    if(error) errors++;
+    else {
+      const s = bulkVideoData.find(s=>s.id===u.id);
+      if(s) s.video_url = u.video_url;
+    }
+  }));
+
+  if(errors){
+    fb.textContent = `Saved with ${errors} error(s). Check console.`;
+    fb.className = 'feedback err';
+  } else {
+    fb.textContent = `✦ ${updates.length} session${updates.length!==1?'s':''} updated successfully!`;
+    fb.className = 'feedback ok';
+    renderBulkVideoTable(); // Re-render to show updated state
+  }
 }
 </script>
 <style>
@@ -416,6 +699,7 @@ body::before{
   <!-- ADMIN TABS -->
   <div class="admin-tabs">
     <button class="admin-tab active" id="atab-dashboard"  onclick="switchTab('dashboard')">Dashboard</button>
+    <button class="admin-tab"        id="atab-families"   onclick="switchTab('families')">Families</button>
     <button class="admin-tab"        id="atab-curriculum" onclick="switchTab('curriculum')">Curriculum</button>
     <button class="admin-tab"        id="atab-missions"   onclick="switchTab('missions')">Missions</button>
     <button class="admin-tab"        id="atab-bazaar"     onclick="switchTab('bazaar')">Bazaar</button>
@@ -518,6 +802,16 @@ body::before{
 
   <!-- ── CURRICULUM ── -->
   <div class="admin-panel" id="panel-curriculum">
+    <div class="section">
+      <div class="section-title">Bulk Video URL Editor</div>
+      <p style="font-size:0.78rem;color:rgba(244,232,193,0.4);font-style:italic;margin-bottom:0.875rem;">Add YouTube URLs to multiple sessions at once. The table loads all sessions — paste a URL into any row and click Save All.</p>
+      <div style="display:flex;gap:0.5rem;margin-bottom:0.625rem;">
+        <button class="btn btn-gold" onclick="saveBulkVideos()">Save All Changes ✦</button>
+        <button class="btn btn-ghost" onclick="loadBulkVideoEditor()">Refresh</button>
+      </div>
+      <div class="feedback" id="bulk-video-feedback"></div>
+      <div id="bulk-video-table" style="margin-top:0.75rem;overflow-x:auto;"></div>
+    </div>
     <div class="section">
       <div class="section-title">All Topics & Sessions</div>
       <p style="font-size:0.8rem;color:rgba(201,146,42,0.4);font-style:italic;margin-bottom:1rem;">Tap a topic to expand. Tap Edit on any session to update its video, game link, or content.</p>
@@ -634,7 +928,53 @@ body::before{
   </div><!-- /bazaar -->
 
   <!-- ── SETTINGS ── -->
+  <!-- ── FAMILIES PANEL ─────────────────────────────────────── -->
+  <div class="admin-panel" id="panel-families">
+
+    <div class="section">
+      <div class="section-title">All Families</div>
+      <div id="families-search-row" style="display:flex;gap:0.5rem;margin-bottom:0.875rem;">
+        <input type="text" id="families-search" class="form-input" placeholder="Search by family name or email..." oninput="filterFamilies()" style="flex:1;">
+        <select id="families-status-filter" class="form-input" style="width:130px;" onchange="filterFamilies()">
+          <option value="all">All Status</option>
+          <option value="approved">Approved</option>
+          <option value="pending">Pending</option>
+          <option value="suspended">Suspended</option>
+        </select>
+      </div>
+      <div id="families-list"></div>
+    </div>
+
+    <!-- FAMILY DETAIL DRAWER -->
+    <div id="family-detail" style="display:none;">
+      <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:1rem;">
+        <button onclick="closeFamilyDetail()" class="btn btn-ghost btn-sm">← Back</button>
+        <span style="font-family:'Cinzel',serif;font-size:0.75rem;color:rgba(201,146,42,0.6);" id="family-detail-name"></span>
+      </div>
+      <div id="family-detail-content"></div>
+    </div>
+
+  </div>
+
   <div class="admin-panel" id="panel-settings">
+
+    <!-- GLOBAL ANNOUNCEMENT -->
+    <div class="section">
+      <div class="section-title">Global Announcement</div>
+      <p style="font-size:0.78rem;color:rgba(244,232,193,0.4);font-style:italic;margin-bottom:0.875rem;">This message appears as a dismissable banner on every family's home screen. Leave blank to clear the current announcement.</p>
+      <div class="form-group" style="margin-bottom:0.5rem;">
+        <label class="form-label">Announcement Text</label>
+        <textarea id="announcement-text" class="form-input" rows="3" placeholder="e.g. We just added videos to Topic 3 sessions! Check the curriculum." style="resize:vertical;font-family:'Crimson Text',serif;font-size:0.9rem;"></textarea>
+      </div>
+      <div style="display:flex;gap:0.5rem;">
+        <button class="btn btn-gold" onclick="saveAnnouncement()">Post Announcement ✦</button>
+        <button class="btn btn-ghost" onclick="clearAnnouncement()">Clear</button>
+      </div>
+      <div class="feedback" id="announcement-feedback"></div>
+      <div id="current-announcement-display" style="margin-top:0.75rem;"></div>
+    </div>
+
+
 
     <!-- Explorer profile -->
     <div class="section">
@@ -1421,14 +1761,17 @@ async function confirmReset(){
 // ── TAB SWITCHING ─────────────────────────────────────────────
 function switchTab(tab){
   activeTab=tab;
-  ['dashboard','curriculum','missions','bazaar','settings'].forEach(t=>{
-    document.getElementById('atab-'+t).classList.toggle('active',t===tab);
-    document.getElementById('panel-'+t).classList.toggle('show',t===tab);
+  ['dashboard','curriculum','missions','bazaar','settings','families'].forEach(t=>{
+    const tabEl = document.getElementById('atab-'+t);
+    const panelEl = document.getElementById('panel-'+t);
+    if(tabEl) tabEl.classList.toggle('active',t===tab);
+    if(panelEl) panelEl.classList.toggle('show',t===tab);
   });
-  if(tab==='curriculum') renderCurriculum();
+  if(tab==='curriculum'){renderCurriculum();loadBulkVideoEditor();}
   if(tab==='missions')   renderMissions();
   if(tab==='bazaar')     renderBazaar();
-  if(tab==='settings')   loadSettingsForm();
+  if(tab==='settings'){loadSettingsForm();loadCurrentAnnouncement();}
+  if(tab==='families')   loadFamiliesPanel();
 }
 
 // ── PENDING APPROVALS ─────────────────────────────────────────
@@ -1570,6 +1913,568 @@ async function declineFamily(regId){
     reviewed_by: adminProfile.id,
   }).eq('id',regId);
   loadPendingRegistrations();
+}
+
+// ══════════════════════════════════════════════════════════════
+// FAMILIES MANAGEMENT
+// ══════════════════════════════════════════════════════════════
+let allFamilies = [];
+let allFamilyProfiles = [];
+
+async function loadFamiliesPanel(){
+  const [famRes, profRes] = await Promise.all([
+    sb.from('families').select('*').order('created_at', {ascending:false}),
+    sb.from('profiles').select('id,name,role,family_id,username,coins,lifetime_coins,sessions_attended,last_sign_in_at').neq('role','superuser'),
+  ]);
+  allFamilies = famRes.data || [];
+  allFamilyProfiles = profRes.data || [];
+  renderFamiliesList(allFamilies);
+}
+
+function filterFamilies(){
+  const search = document.getElementById('families-search').value.toLowerCase();
+  const status = document.getElementById('families-status-filter').value;
+  let filtered = allFamilies;
+  if(status !== 'all') filtered = filtered.filter(f=>f.status===status);
+  if(search) filtered = filtered.filter(f=>
+    f.name.toLowerCase().includes(search) ||
+    f.parent_email.toLowerCase().includes(search) ||
+    (f.parish||'').toLowerCase().includes(search)
+  );
+  renderFamiliesList(filtered);
+}
+
+function renderFamiliesList(families){
+  const el = document.getElementById('families-list');
+  const detail = document.getElementById('family-detail');
+  if(!el) return;
+  el.style.display = 'block';
+  detail.style.display = 'none';
+
+  if(!families.length){
+    el.innerHTML='<div style="font-size:0.8rem;color:rgba(201,146,42,0.3);font-style:italic;padding:1rem 0;">No families found.</div>';
+    return;
+  }
+
+  el.innerHTML = '';
+  families.forEach(fam => {
+    const children = allFamilyProfiles.filter(p=>p.family_id===fam.id && p.role==='explorer');
+    const parents  = allFamilyProfiles.filter(p=>p.family_id===fam.id && p.role==='parent');
+    const totalCoins = children.reduce((sum,c)=>(sum+(c.coins||0)),0);
+    const joined = new Date(fam.created_at).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+
+    const statusColor = fam.status==='approved'?'rgba(22,163,74,0.7)':fam.status==='pending'?'rgba(255,215,0,0.6)':'rgba(220,38,38,0.6)';
+
+    const row = document.createElement('div');
+    row.style.cssText='display:flex;align-items:center;gap:0.75rem;padding:0.875rem;background:rgba(244,232,193,0.03);border:1px solid rgba(201,146,42,0.12);border-radius:10px;margin-bottom:0.4rem;cursor:pointer;transition:all 0.2s;';
+    row.onmouseenter = ()=>row.style.background='rgba(201,146,42,0.05)';
+    row.onmouseleave = ()=>row.style.background='rgba(244,232,193,0.03)';
+    row.onclick = ()=>openFamilyDetail(fam.id);
+    row.innerHTML=`
+      <div style="flex:1;min-width:0;">
+        <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.15rem;">
+          <span style="font-family:'Cinzel',serif;font-size:0.8rem;color:rgba(244,232,193,0.8);">${fam.name}</span>
+          <span style="font-family:'Cinzel',serif;font-size:0.58rem;color:${statusColor};border:1px solid ${statusColor};border-radius:10px;padding:0.1rem 0.4rem;">${fam.status}</span>
+        </div>
+        <div style="font-size:0.72rem;color:rgba(201,146,42,0.4);">${fam.parent_email}${fam.parish?' · '+fam.parish:''}</div>
+        <div style="font-size:0.68rem;color:rgba(201,146,42,0.3);margin-top:0.1rem;">Joined ${joined} · ${children.length} child${children.length!==1?'ren':''} · $${parseFloat(fam.coin_rate||0.02).toFixed(2)}/coin</div>
+      </div>
+      <div style="text-align:right;flex-shrink:0;">
+        <div style="font-family:'Cinzel Decorative',serif;font-size:1rem;color:rgba(255,215,0,0.7);">${totalCoins.toLocaleString()}</div>
+        <div style="font-family:'Cinzel',serif;font-size:0.58rem;color:rgba(201,146,42,0.3);">coins</div>
+      </div>
+      <div style="color:rgba(201,146,42,0.3);font-size:0.875rem;">›</div>`;
+    el.appendChild(row);
+  });
+}
+
+function openFamilyDetail(familyId){
+  const fam = allFamilies.find(f=>f.id===familyId);
+  if(!fam) return;
+  const children = allFamilyProfiles.filter(p=>p.family_id===familyId && p.role==='explorer');
+  const parents  = allFamilyProfiles.filter(p=>p.family_id===familyId && p.role==='parent');
+
+  document.getElementById('family-detail-name').textContent = fam.name;
+  document.getElementById('families-list').style.display = 'none';
+  document.getElementById('family-detail').style.display = 'block';
+
+  const content = document.getElementById('family-detail-content');
+  const joined = new Date(fam.created_at).toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
+  const rate = parseFloat(fam.coin_rate||0.02);
+
+  let childRows = children.map(c=>`
+    <div style="display:flex;align-items:center;gap:0.75rem;padding:0.625rem 0;border-bottom:1px solid rgba(201,146,42,0.08);">
+      <span style="font-size:1rem;">✦</span>
+      <div style="flex:1;">
+        <div style="font-family:'Cinzel',serif;font-size:0.75rem;color:rgba(244,232,193,0.7);">${c.name} <span style="color:rgba(201,146,42,0.4);font-size:0.65rem;">@${c.username||'no username'}</span></div>
+        <div style="font-size:0.68rem;color:rgba(201,146,42,0.35);">${(c.sessions_attended||0)} sessions · ${(c.coins||0).toLocaleString()} coins · $${((c.lifetime_coins||0)*rate).toFixed(2)} lifetime</div>
+      </div>
+    </div>`).join('');
+
+  const statusOptions = ['approved','pending','suspended'].map(s=>
+    `<option value="${s}"${fam.status===s?' selected':''}>${s}</option>`
+  ).join('');
+
+  content.innerHTML=`
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-bottom:1.25rem;">
+      <div style="background:rgba(244,232,193,0.03);border:1px solid rgba(201,146,42,0.12);border-radius:10px;padding:0.75rem;text-align:center;">
+        <div style="font-family:'Cinzel Decorative',serif;font-size:1.3rem;color:rgba(255,215,0,0.7);">${children.length}</div>
+        <div style="font-family:'Cinzel',serif;font-size:0.6rem;color:rgba(201,146,42,0.4);">Children</div>
+      </div>
+      <div style="background:rgba(244,232,193,0.03);border:1px solid rgba(201,146,42,0.12);border-radius:10px;padding:0.75rem;text-align:center;">
+        <div style="font-family:'Cinzel Decorative',serif;font-size:1.3rem;color:rgba(255,215,0,0.7);">$${rate.toFixed(2)}</div>
+        <div style="font-family:'Cinzel',serif;font-size:0.6rem;color:rgba(201,146,42,0.4);">Coin Rate</div>
+      </div>
+    </div>
+
+    <div style="margin-bottom:1rem;">
+      <div style="font-family:'Cinzel',serif;font-size:0.65rem;letter-spacing:0.15em;color:rgba(201,146,42,0.5);text-transform:uppercase;margin-bottom:0.5rem;">Family Info</div>
+      <div style="font-size:0.78rem;color:rgba(244,232,193,0.5);line-height:1.8;">
+        <div>${fam.parent_email}</div>
+        ${fam.parish?`<div>${fam.parish}</div>`:''}
+        <div>Joined: ${joined}</div>
+      </div>
+    </div>
+
+    <div style="margin-bottom:1rem;">
+      <div style="font-family:'Cinzel',serif;font-size:0.65rem;letter-spacing:0.15em;color:rgba(201,146,42,0.5);text-transform:uppercase;margin-bottom:0.5rem;">Explorers</div>
+      ${childRows || '<div style="font-size:0.78rem;color:rgba(201,146,42,0.3);font-style:italic;">No children yet</div>'}
+    </div>
+
+    <div style="margin-bottom:1rem;">
+      <div style="font-family:'Cinzel',serif;font-size:0.65rem;letter-spacing:0.15em;color:rgba(201,146,42,0.5);text-transform:uppercase;margin-bottom:0.5rem;">Account Status</div>
+      <div style="display:flex;gap:0.5rem;align-items:center;">
+        <select id="fam-status-${fam.id}" class="form-input" style="width:160px;">
+          ${statusOptions}
+        </select>
+        <button class="btn btn-gold" onclick="updateFamilyStatus('${fam.id}')">Update</button>
+      </div>
+      <div id="fam-status-feedback-${fam.id}" style="font-family:'Cinzel',serif;font-size:0.68rem;margin-top:0.4rem;min-height:1rem;"></div>
+    </div>`;
+}
+
+function closeFamilyDetail(){
+  document.getElementById('family-detail').style.display = 'none';
+  document.getElementById('families-list').style.display = 'block';
+}
+
+async function updateFamilyStatus(familyId){
+  const newStatus = document.getElementById(`fam-status-${familyId}`).value;
+  const fb = document.getElementById(`fam-status-feedback-${familyId}`);
+  const {error} = await sb.from('families').update({status:newStatus}).eq('id',familyId);
+  if(error){
+    fb.textContent='Error: '+error.message;fb.style.color='rgba(252,165,165,0.7)';
+  } else {
+    const fam = allFamilies.find(f=>f.id===familyId);
+    if(fam) fam.status=newStatus;
+    fb.textContent='✦ Status updated';fb.style.color='rgba(134,239,172,0.8)';
+  }
+}
+
+// ── ANNOUNCEMENT SYSTEM ───────────────────────────────────────
+async function loadCurrentAnnouncement(){
+  const {data} = await sb.from('app_settings').select('value').eq('key','announcement').single();
+  const el = document.getElementById('current-announcement-display');
+  const textarea = document.getElementById('announcement-text');
+  if(data?.value && el){
+    el.innerHTML=`<div style="background:rgba(201,146,42,0.08);border:1px solid rgba(201,146,42,0.2);border-radius:8px;padding:0.75rem;font-size:0.8rem;color:rgba(244,232,193,0.6);">
+      <div style="font-family:'Cinzel',serif;font-size:0.6rem;color:rgba(201,146,42,0.5);text-transform:uppercase;margin-bottom:0.3rem;">Current announcement:</div>
+      ${data.value}
+    </div>`;
+    if(textarea) textarea.value = data.value;
+  }
+}
+
+async function saveAnnouncement(){
+  const text = document.getElementById('announcement-text').value.trim();
+  const fb = document.getElementById('announcement-feedback');
+  await sb.from('app_settings').upsert({key:'announcement',value:text});
+  fb.textContent = text ? '✦ Announcement posted to all families!' : '✦ Announcement cleared.';
+  fb.className = 'feedback ok';
+  loadCurrentAnnouncement();
+}
+
+async function clearAnnouncement(){
+  document.getElementById('announcement-text').value = '';
+  await saveAnnouncement();
+}
+
+// ── BULK VIDEO EDITOR ─────────────────────────────────────────
+let bulkVideoData = [];
+
+async function loadBulkVideoEditor(){
+  const {data} = await sb.from('sessions').select('id,title,topic_id,video_url').order('topic_id').order('order_index');
+  bulkVideoData = data || [];
+  renderBulkVideoTable();
+}
+
+function renderBulkVideoTable(){
+  const el = document.getElementById('bulk-video-table');
+  if(!el) return;
+  if(!bulkVideoData.length){ el.innerHTML='<div style="font-size:0.8rem;color:rgba(201,146,42,0.3);font-style:italic;">Loading...</div>'; return; }
+
+  const topicNames = {0:'Foundations',1:'Scripture & History',2:'Sacraments',3:'Theotokos & Saints',4:'Church Building',5:'Worship & Prayer',6:'Church Year',7:'Living the Faith',8:'Eschatology',9:'Grand Finale',10:'Conclusion'};
+
+  let html = `<table style="width:100%;border-collapse:collapse;font-size:0.75rem;">
+    <thead>
+      <tr style="border-bottom:1px solid rgba(201,146,42,0.2);">
+        <th style="text-align:left;padding:0.4rem 0.5rem;font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.12em;color:rgba(201,146,42,0.5);text-transform:uppercase;width:60px;">ID</th>
+        <th style="text-align:left;padding:0.4rem 0.5rem;font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.12em;color:rgba(201,146,42,0.5);text-transform:uppercase;">Session</th>
+        <th style="text-align:left;padding:0.4rem 0.5rem;font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.12em;color:rgba(201,146,42,0.5);text-transform:uppercase;min-width:200px;">YouTube URL</th>
+      </tr>
+    </thead>
+    <tbody>`;
+
+  let lastTopic = null;
+  bulkVideoData.forEach(s => {
+    if(s.topic_id !== lastTopic){
+      lastTopic = s.topic_id;
+      html += `<tr><td colspan="3" style="padding:0.5rem 0.5rem 0.25rem;font-family:'Cinzel',serif;font-size:0.62rem;color:rgba(201,146,42,0.55);text-transform:uppercase;letter-spacing:0.15em;border-top:1px solid rgba(201,146,42,0.1);">${topicNames[s.topic_id]||'Topic '+s.topic_id}</td></tr>`;
+    }
+    const hasUrl = s.video_url && s.video_url.length > 0;
+    html += `<tr style="border-bottom:1px solid rgba(201,146,42,0.06);">
+      <td style="padding:0.4rem 0.5rem;color:rgba(201,146,42,0.4);font-family:'Cinzel',serif;">${s.id}</td>
+      <td style="padding:0.4rem 0.5rem;color:rgba(244,232,193,${hasUrl?'0.7':'0.45'});">${s.title}</td>
+      <td style="padding:0.3rem 0.5rem;">
+        <input type="text" 
+          id="vid-${s.id}" 
+          value="${s.video_url||''}" 
+          placeholder="https://youtube.com/watch?v=..."
+          style="width:100%;padding:0.3rem 0.5rem;background:rgba(244,232,193,${hasUrl?'0.08':'0.04'});
+          border:1px solid rgba(201,146,42,${hasUrl?'0.3':'0.15'});border-radius:5px;
+          font-family:'Crimson Text',serif;font-size:0.78rem;color:rgba(244,232,193,0.8);outline:none;">
+      </td>
+    </tr>`;
+  });
+
+  html += '</tbody></table>';
+  el.innerHTML = html;
+}
+
+async function saveBulkVideos(){
+  const fb = document.getElementById('bulk-video-feedback');
+  fb.textContent = 'Saving...';
+  fb.className = 'feedback';
+
+  const updates = [];
+  bulkVideoData.forEach(s => {
+    const input = document.getElementById(`vid-${s.id}`);
+    if(!input) return;
+    const newUrl = input.value.trim();
+    if(newUrl !== (s.video_url||'').trim()){
+      updates.push({id: s.id, video_url: newUrl||null});
+    }
+  });
+
+  if(!updates.length){
+    fb.textContent = 'No changes to save.';
+    fb.className = 'feedback';
+    return;
+  }
+
+  let errors = 0;
+  await Promise.all(updates.map(async u => {
+    const {error} = await sb.from('sessions').update({video_url:u.video_url}).eq('id',u.id);
+    if(error) errors++;
+    else {
+      const s = bulkVideoData.find(s=>s.id===u.id);
+      if(s) s.video_url = u.video_url;
+    }
+  }));
+
+  if(errors){
+    fb.textContent = `Saved with ${errors} error(s). Check console.`;
+    fb.className = 'feedback err';
+  } else {
+    fb.textContent = `✦ ${updates.length} session${updates.length!==1?'s':''} updated successfully!`;
+    fb.className = 'feedback ok';
+    renderBulkVideoTable(); // Re-render to show updated state
+  }
+}
+</script>
+
+<script>
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('sw.js').catch(()=>{});
+  });
+}
+
+// ══════════════════════════════════════════════════════════════
+// FAMILIES MANAGEMENT
+// ══════════════════════════════════════════════════════════════
+let allFamilies = [];
+let allFamilyProfiles = [];
+
+async function loadFamiliesPanel(){
+  const [famRes, profRes] = await Promise.all([
+    sb.from('families').select('*').order('created_at', {ascending:false}),
+    sb.from('profiles').select('id,name,role,family_id,username,coins,lifetime_coins,sessions_attended,last_sign_in_at').neq('role','superuser'),
+  ]);
+  allFamilies = famRes.data || [];
+  allFamilyProfiles = profRes.data || [];
+  renderFamiliesList(allFamilies);
+}
+
+function filterFamilies(){
+  const search = document.getElementById('families-search').value.toLowerCase();
+  const status = document.getElementById('families-status-filter').value;
+  let filtered = allFamilies;
+  if(status !== 'all') filtered = filtered.filter(f=>f.status===status);
+  if(search) filtered = filtered.filter(f=>
+    f.name.toLowerCase().includes(search) ||
+    f.parent_email.toLowerCase().includes(search) ||
+    (f.parish||'').toLowerCase().includes(search)
+  );
+  renderFamiliesList(filtered);
+}
+
+function renderFamiliesList(families){
+  const el = document.getElementById('families-list');
+  const detail = document.getElementById('family-detail');
+  if(!el) return;
+  el.style.display = 'block';
+  detail.style.display = 'none';
+
+  if(!families.length){
+    el.innerHTML='<div style="font-size:0.8rem;color:rgba(201,146,42,0.3);font-style:italic;padding:1rem 0;">No families found.</div>';
+    return;
+  }
+
+  el.innerHTML = '';
+  families.forEach(fam => {
+    const children = allFamilyProfiles.filter(p=>p.family_id===fam.id && p.role==='explorer');
+    const parents  = allFamilyProfiles.filter(p=>p.family_id===fam.id && p.role==='parent');
+    const totalCoins = children.reduce((sum,c)=>(sum+(c.coins||0)),0);
+    const joined = new Date(fam.created_at).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+
+    const statusColor = fam.status==='approved'?'rgba(22,163,74,0.7)':fam.status==='pending'?'rgba(255,215,0,0.6)':'rgba(220,38,38,0.6)';
+
+    const row = document.createElement('div');
+    row.style.cssText='display:flex;align-items:center;gap:0.75rem;padding:0.875rem;background:rgba(244,232,193,0.03);border:1px solid rgba(201,146,42,0.12);border-radius:10px;margin-bottom:0.4rem;cursor:pointer;transition:all 0.2s;';
+    row.onmouseenter = ()=>row.style.background='rgba(201,146,42,0.05)';
+    row.onmouseleave = ()=>row.style.background='rgba(244,232,193,0.03)';
+    row.onclick = ()=>openFamilyDetail(fam.id);
+    row.innerHTML=`
+      <div style="flex:1;min-width:0;">
+        <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.15rem;">
+          <span style="font-family:'Cinzel',serif;font-size:0.8rem;color:rgba(244,232,193,0.8);">${fam.name}</span>
+          <span style="font-family:'Cinzel',serif;font-size:0.58rem;color:${statusColor};border:1px solid ${statusColor};border-radius:10px;padding:0.1rem 0.4rem;">${fam.status}</span>
+        </div>
+        <div style="font-size:0.72rem;color:rgba(201,146,42,0.4);">${fam.parent_email}${fam.parish?' · '+fam.parish:''}</div>
+        <div style="font-size:0.68rem;color:rgba(201,146,42,0.3);margin-top:0.1rem;">Joined ${joined} · ${children.length} child${children.length!==1?'ren':''} · $${parseFloat(fam.coin_rate||0.02).toFixed(2)}/coin</div>
+      </div>
+      <div style="text-align:right;flex-shrink:0;">
+        <div style="font-family:'Cinzel Decorative',serif;font-size:1rem;color:rgba(255,215,0,0.7);">${totalCoins.toLocaleString()}</div>
+        <div style="font-family:'Cinzel',serif;font-size:0.58rem;color:rgba(201,146,42,0.3);">coins</div>
+      </div>
+      <div style="color:rgba(201,146,42,0.3);font-size:0.875rem;">›</div>`;
+    el.appendChild(row);
+  });
+}
+
+function openFamilyDetail(familyId){
+  const fam = allFamilies.find(f=>f.id===familyId);
+  if(!fam) return;
+  const children = allFamilyProfiles.filter(p=>p.family_id===familyId && p.role==='explorer');
+  const parents  = allFamilyProfiles.filter(p=>p.family_id===familyId && p.role==='parent');
+
+  document.getElementById('family-detail-name').textContent = fam.name;
+  document.getElementById('families-list').style.display = 'none';
+  document.getElementById('family-detail').style.display = 'block';
+
+  const content = document.getElementById('family-detail-content');
+  const joined = new Date(fam.created_at).toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
+  const rate = parseFloat(fam.coin_rate||0.02);
+
+  let childRows = children.map(c=>`
+    <div style="display:flex;align-items:center;gap:0.75rem;padding:0.625rem 0;border-bottom:1px solid rgba(201,146,42,0.08);">
+      <span style="font-size:1rem;">✦</span>
+      <div style="flex:1;">
+        <div style="font-family:'Cinzel',serif;font-size:0.75rem;color:rgba(244,232,193,0.7);">${c.name} <span style="color:rgba(201,146,42,0.4);font-size:0.65rem;">@${c.username||'no username'}</span></div>
+        <div style="font-size:0.68rem;color:rgba(201,146,42,0.35);">${(c.sessions_attended||0)} sessions · ${(c.coins||0).toLocaleString()} coins · $${((c.lifetime_coins||0)*rate).toFixed(2)} lifetime</div>
+      </div>
+    </div>`).join('');
+
+  const statusOptions = ['approved','pending','suspended'].map(s=>
+    `<option value="${s}"${fam.status===s?' selected':''}>${s}</option>`
+  ).join('');
+
+  content.innerHTML=`
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-bottom:1.25rem;">
+      <div style="background:rgba(244,232,193,0.03);border:1px solid rgba(201,146,42,0.12);border-radius:10px;padding:0.75rem;text-align:center;">
+        <div style="font-family:'Cinzel Decorative',serif;font-size:1.3rem;color:rgba(255,215,0,0.7);">${children.length}</div>
+        <div style="font-family:'Cinzel',serif;font-size:0.6rem;color:rgba(201,146,42,0.4);">Children</div>
+      </div>
+      <div style="background:rgba(244,232,193,0.03);border:1px solid rgba(201,146,42,0.12);border-radius:10px;padding:0.75rem;text-align:center;">
+        <div style="font-family:'Cinzel Decorative',serif;font-size:1.3rem;color:rgba(255,215,0,0.7);">$${rate.toFixed(2)}</div>
+        <div style="font-family:'Cinzel',serif;font-size:0.6rem;color:rgba(201,146,42,0.4);">Coin Rate</div>
+      </div>
+    </div>
+
+    <div style="margin-bottom:1rem;">
+      <div style="font-family:'Cinzel',serif;font-size:0.65rem;letter-spacing:0.15em;color:rgba(201,146,42,0.5);text-transform:uppercase;margin-bottom:0.5rem;">Family Info</div>
+      <div style="font-size:0.78rem;color:rgba(244,232,193,0.5);line-height:1.8;">
+        <div>${fam.parent_email}</div>
+        ${fam.parish?`<div>${fam.parish}</div>`:''}
+        <div>Joined: ${joined}</div>
+      </div>
+    </div>
+
+    <div style="margin-bottom:1rem;">
+      <div style="font-family:'Cinzel',serif;font-size:0.65rem;letter-spacing:0.15em;color:rgba(201,146,42,0.5);text-transform:uppercase;margin-bottom:0.5rem;">Explorers</div>
+      ${childRows || '<div style="font-size:0.78rem;color:rgba(201,146,42,0.3);font-style:italic;">No children yet</div>'}
+    </div>
+
+    <div style="margin-bottom:1rem;">
+      <div style="font-family:'Cinzel',serif;font-size:0.65rem;letter-spacing:0.15em;color:rgba(201,146,42,0.5);text-transform:uppercase;margin-bottom:0.5rem;">Account Status</div>
+      <div style="display:flex;gap:0.5rem;align-items:center;">
+        <select id="fam-status-${fam.id}" class="form-input" style="width:160px;">
+          ${statusOptions}
+        </select>
+        <button class="btn btn-gold" onclick="updateFamilyStatus('${fam.id}')">Update</button>
+      </div>
+      <div id="fam-status-feedback-${fam.id}" style="font-family:'Cinzel',serif;font-size:0.68rem;margin-top:0.4rem;min-height:1rem;"></div>
+    </div>`;
+}
+
+function closeFamilyDetail(){
+  document.getElementById('family-detail').style.display = 'none';
+  document.getElementById('families-list').style.display = 'block';
+}
+
+async function updateFamilyStatus(familyId){
+  const newStatus = document.getElementById(`fam-status-${familyId}`).value;
+  const fb = document.getElementById(`fam-status-feedback-${familyId}`);
+  const {error} = await sb.from('families').update({status:newStatus}).eq('id',familyId);
+  if(error){
+    fb.textContent='Error: '+error.message;fb.style.color='rgba(252,165,165,0.7)';
+  } else {
+    const fam = allFamilies.find(f=>f.id===familyId);
+    if(fam) fam.status=newStatus;
+    fb.textContent='✦ Status updated';fb.style.color='rgba(134,239,172,0.8)';
+  }
+}
+
+// ── ANNOUNCEMENT SYSTEM ───────────────────────────────────────
+async function loadCurrentAnnouncement(){
+  const {data} = await sb.from('app_settings').select('value').eq('key','announcement').single();
+  const el = document.getElementById('current-announcement-display');
+  const textarea = document.getElementById('announcement-text');
+  if(data?.value && el){
+    el.innerHTML=`<div style="background:rgba(201,146,42,0.08);border:1px solid rgba(201,146,42,0.2);border-radius:8px;padding:0.75rem;font-size:0.8rem;color:rgba(244,232,193,0.6);">
+      <div style="font-family:'Cinzel',serif;font-size:0.6rem;color:rgba(201,146,42,0.5);text-transform:uppercase;margin-bottom:0.3rem;">Current announcement:</div>
+      ${data.value}
+    </div>`;
+    if(textarea) textarea.value = data.value;
+  }
+}
+
+async function saveAnnouncement(){
+  const text = document.getElementById('announcement-text').value.trim();
+  const fb = document.getElementById('announcement-feedback');
+  await sb.from('app_settings').upsert({key:'announcement',value:text});
+  fb.textContent = text ? '✦ Announcement posted to all families!' : '✦ Announcement cleared.';
+  fb.className = 'feedback ok';
+  loadCurrentAnnouncement();
+}
+
+async function clearAnnouncement(){
+  document.getElementById('announcement-text').value = '';
+  await saveAnnouncement();
+}
+
+// ── BULK VIDEO EDITOR ─────────────────────────────────────────
+let bulkVideoData = [];
+
+async function loadBulkVideoEditor(){
+  const {data} = await sb.from('sessions').select('id,title,topic_id,video_url').order('topic_id').order('order_index');
+  bulkVideoData = data || [];
+  renderBulkVideoTable();
+}
+
+function renderBulkVideoTable(){
+  const el = document.getElementById('bulk-video-table');
+  if(!el) return;
+  if(!bulkVideoData.length){ el.innerHTML='<div style="font-size:0.8rem;color:rgba(201,146,42,0.3);font-style:italic;">Loading...</div>'; return; }
+
+  const topicNames = {0:'Foundations',1:'Scripture & History',2:'Sacraments',3:'Theotokos & Saints',4:'Church Building',5:'Worship & Prayer',6:'Church Year',7:'Living the Faith',8:'Eschatology',9:'Grand Finale',10:'Conclusion'};
+
+  let html = `<table style="width:100%;border-collapse:collapse;font-size:0.75rem;">
+    <thead>
+      <tr style="border-bottom:1px solid rgba(201,146,42,0.2);">
+        <th style="text-align:left;padding:0.4rem 0.5rem;font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.12em;color:rgba(201,146,42,0.5);text-transform:uppercase;width:60px;">ID</th>
+        <th style="text-align:left;padding:0.4rem 0.5rem;font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.12em;color:rgba(201,146,42,0.5);text-transform:uppercase;">Session</th>
+        <th style="text-align:left;padding:0.4rem 0.5rem;font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.12em;color:rgba(201,146,42,0.5);text-transform:uppercase;min-width:200px;">YouTube URL</th>
+      </tr>
+    </thead>
+    <tbody>`;
+
+  let lastTopic = null;
+  bulkVideoData.forEach(s => {
+    if(s.topic_id !== lastTopic){
+      lastTopic = s.topic_id;
+      html += `<tr><td colspan="3" style="padding:0.5rem 0.5rem 0.25rem;font-family:'Cinzel',serif;font-size:0.62rem;color:rgba(201,146,42,0.55);text-transform:uppercase;letter-spacing:0.15em;border-top:1px solid rgba(201,146,42,0.1);">${topicNames[s.topic_id]||'Topic '+s.topic_id}</td></tr>`;
+    }
+    const hasUrl = s.video_url && s.video_url.length > 0;
+    html += `<tr style="border-bottom:1px solid rgba(201,146,42,0.06);">
+      <td style="padding:0.4rem 0.5rem;color:rgba(201,146,42,0.4);font-family:'Cinzel',serif;">${s.id}</td>
+      <td style="padding:0.4rem 0.5rem;color:rgba(244,232,193,${hasUrl?'0.7':'0.45'});">${s.title}</td>
+      <td style="padding:0.3rem 0.5rem;">
+        <input type="text" 
+          id="vid-${s.id}" 
+          value="${s.video_url||''}" 
+          placeholder="https://youtube.com/watch?v=..."
+          style="width:100%;padding:0.3rem 0.5rem;background:rgba(244,232,193,${hasUrl?'0.08':'0.04'});
+          border:1px solid rgba(201,146,42,${hasUrl?'0.3':'0.15'});border-radius:5px;
+          font-family:'Crimson Text',serif;font-size:0.78rem;color:rgba(244,232,193,0.8);outline:none;">
+      </td>
+    </tr>`;
+  });
+
+  html += '</tbody></table>';
+  el.innerHTML = html;
+}
+
+async function saveBulkVideos(){
+  const fb = document.getElementById('bulk-video-feedback');
+  fb.textContent = 'Saving...';
+  fb.className = 'feedback';
+
+  const updates = [];
+  bulkVideoData.forEach(s => {
+    const input = document.getElementById(`vid-${s.id}`);
+    if(!input) return;
+    const newUrl = input.value.trim();
+    if(newUrl !== (s.video_url||'').trim()){
+      updates.push({id: s.id, video_url: newUrl||null});
+    }
+  });
+
+  if(!updates.length){
+    fb.textContent = 'No changes to save.';
+    fb.className = 'feedback';
+    return;
+  }
+
+  let errors = 0;
+  await Promise.all(updates.map(async u => {
+    const {error} = await sb.from('sessions').update({video_url:u.video_url}).eq('id',u.id);
+    if(error) errors++;
+    else {
+      const s = bulkVideoData.find(s=>s.id===u.id);
+      if(s) s.video_url = u.video_url;
+    }
+  }));
+
+  if(errors){
+    fb.textContent = `Saved with ${errors} error(s). Check console.`;
+    fb.className = 'feedback err';
+  } else {
+    fb.textContent = `✦ ${updates.length} session${updates.length!==1?'s':''} updated successfully!`;
+    fb.className = 'feedback ok';
+    renderBulkVideoTable(); // Re-render to show updated state
+  }
 }
 </script>
 </body>

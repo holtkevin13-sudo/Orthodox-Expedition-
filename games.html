@@ -332,12 +332,13 @@ async function loadAll(userId){
 function renderExpeditionGames(){
   const grid = document.getElementById('expedition-grid');
   grid.innerHTML='';
+  const isAdmin = new URLSearchParams(window.location.search).get('admin')==='1';
   // Skip Byzantine Blitz — it's the featured game
   const games = EXPEDITION_GAMES.filter(g=>g.id!=='byzantine-blitz');
   games.forEach(g=>{
     const card = document.createElement('a');
     card.className='game-card available';
-    card.href=g.url;
+    card.href=isAdmin ? g.url+'?admin=1' : g.url;
     card.innerHTML=`
       <div class="game-icon">${g.icon}</div>
       <div class="game-title">${g.title}</div>
@@ -351,11 +352,12 @@ function renderExpeditionGames(){
 function renderSessionGames(){
   const grid = document.getElementById('session-grid');
   grid.innerHTML='';
+  const isAdmin = new URLSearchParams(window.location.search).get('admin')==='1';
   SESSION_GAMES.forEach(g=>{
-    const unlocked = availableTopics.includes(g.topicId);
+    const unlocked = availableTopics.includes(g.topicId)||isAdmin;
     const card = document.createElement('div');
     card.className=`game-card session-game${unlocked?' available':' locked'}`;
-    if(unlocked) card.onclick=()=>window.location.href=g.url;
+    if(unlocked) card.onclick=()=>window.location.href=(isAdmin?g.url+'?admin=1':g.url);
 
     card.innerHTML=`
       ${!unlocked?'<span class="game-lock">🔒</span>':''}
@@ -370,6 +372,35 @@ function renderSessionGames(){
     grid.appendChild(card);
   });
 }
+
+
+  // Fix featured card link for admin view
+  const isAdminView = new URLSearchParams(window.location.search).get('admin')==='1';
+  if(isAdminView){
+    const featured = document.querySelector('.featured-card');
+    if(featured) featured.href = featured.href + '?admin=1';
+    // Also unlock all session games for admin
+  }
+// ── ADMIN NAV FIX ─────────────────────────────────────────────
+// When browsing as admin, preserve ?admin=1 across all nav links
+(function(){
+  if(new URLSearchParams(window.location.search).get('admin')==='1'){
+    document.querySelectorAll('.nav-item').forEach(a=>{
+      if(a.href && !a.href.includes('?admin=1') && !a.href.includes('index.html')){
+        a.href = a.href + '?admin=1';
+      }
+    });
+    // Also update any "back" or internal links
+    document.querySelectorAll('a[href]').forEach(a=>{
+      const href=a.getAttribute('href');
+      if(href && !href.startsWith('#') && !href.startsWith('http') &&
+         !href.includes('?admin=1') && !href.includes('index.html') &&
+         !href.includes('games/')){
+        a.setAttribute('href', href + '?admin=1');
+      }
+    });
+  }
+})();
 </script>
 </body>
 </html>

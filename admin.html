@@ -317,6 +317,7 @@ body::before{
     </div>
     <div class="top-bar-right">
       <span class="admin-name" id="admin-name-display"></span>
+      <button class="logout-btn" onclick="openExplorerView()">Explorer View</button>
       <button class="logout-btn" onclick="doLogout()">Sign Out</button>
     </div>
   </div>
@@ -332,6 +333,18 @@ body::before{
 
   <!-- ── DASHBOARD ── -->
   <div class="admin-panel show" id="panel-dashboard">
+
+    <!-- Explorer View Links -->
+    <div class="section">
+      <div class="section-title">Explorer View</div>
+      <p style="font-size:0.8rem;color:rgba(201,146,42,0.4);font-style:italic;margin-bottom:0.875rem;">Open any explorer page to see what Nolan sees. These open in a new tab.</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;">
+        <button class="btn btn-ghost btn-full" onclick="window.open('home.html?admin=1','_blank')">✦ Home</button>
+        <button class="btn btn-ghost btn-full" onclick="window.open('missions.html?admin=1','_blank')">☩ Missions</button>
+        <button class="btn btn-ghost btn-full" onclick="window.open('curriculum.html?admin=1','_blank')">⊕ Topics</button>
+        <button class="btn btn-ghost btn-full" onclick="window.open('bazaar.html?admin=1','_blank')">◈ Bazaar</button>
+      </div>
+    </div>
 
     <!-- Explorer Stats -->
     <div class="section">
@@ -644,6 +657,10 @@ function toast(msg, isError=false){
 async function doLogout(){
   await sb.auth.signOut();
   window.location.href='index.html';
+}
+
+function openExplorerView(){
+  window.open('home.html?admin=1','_blank');
 }
 
 // ── LOAD ALL ──────────────────────────────────────────────────

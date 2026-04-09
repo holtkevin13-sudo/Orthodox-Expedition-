@@ -81,12 +81,18 @@ let allFamilies = [];
 let allFamilyProfiles = [];
 
 async function loadFamiliesPanel(){
-  const [famRes, profRes] = await Promise.all([
-    sb.from('families').select('*').order('created_at', {ascending:false}),
-    sb.from('profiles').select('id,name,role,family_id,username,coins,lifetime_coins,sessions_attended,last_sign_in_at').neq('role','superuser'),
-  ]);
-  allFamilies = famRes.data || [];
-  allFamilyProfiles = profRes.data || [];
+  const {data:famData, error:famErr} = await sb.from('families').select('*').order('created_at', {ascending:false});
+  if(famErr){ console.error('Families load error:', famErr); return; }
+  allFamilies = famData || [];
+
+  // Fetch all profiles with family_id set
+  const {data:profData, error:profErr} = await sb.from('profiles')
+    .select('id,name,role,family_id,username,coins,lifetime_coins,sessions_attended')
+    .not('family_id', 'is', null);
+  if(profErr){ console.error('Profiles load error:', profErr); }
+  allFamilyProfiles = profData || [];
+
+  console.log('Families:', allFamilies.length, 'Profiles:', allFamilyProfiles.length);
   renderFamiliesList(allFamilies);
 }
 
@@ -1922,12 +1928,18 @@ let allFamilies = [];
 let allFamilyProfiles = [];
 
 async function loadFamiliesPanel(){
-  const [famRes, profRes] = await Promise.all([
-    sb.from('families').select('*').order('created_at', {ascending:false}),
-    sb.from('profiles').select('id,name,role,family_id,username,coins,lifetime_coins,sessions_attended,last_sign_in_at').neq('role','superuser'),
-  ]);
-  allFamilies = famRes.data || [];
-  allFamilyProfiles = profRes.data || [];
+  const {data:famData, error:famErr} = await sb.from('families').select('*').order('created_at', {ascending:false});
+  if(famErr){ console.error('Families load error:', famErr); return; }
+  allFamilies = famData || [];
+
+  // Fetch all profiles with family_id set
+  const {data:profData, error:profErr} = await sb.from('profiles')
+    .select('id,name,role,family_id,username,coins,lifetime_coins,sessions_attended')
+    .not('family_id', 'is', null);
+  if(profErr){ console.error('Profiles load error:', profErr); }
+  allFamilyProfiles = profData || [];
+
+  console.log('Families:', allFamilies.length, 'Profiles:', allFamilyProfiles.length);
   renderFamiliesList(allFamilies);
 }
 
@@ -2207,12 +2219,18 @@ let allFamilies = [];
 let allFamilyProfiles = [];
 
 async function loadFamiliesPanel(){
-  const [famRes, profRes] = await Promise.all([
-    sb.from('families').select('*').order('created_at', {ascending:false}),
-    sb.from('profiles').select('id,name,role,family_id,username,coins,lifetime_coins,sessions_attended,last_sign_in_at').neq('role','superuser'),
-  ]);
-  allFamilies = famRes.data || [];
-  allFamilyProfiles = profRes.data || [];
+  const {data:famData, error:famErr} = await sb.from('families').select('*').order('created_at', {ascending:false});
+  if(famErr){ console.error('Families load error:', famErr); return; }
+  allFamilies = famData || [];
+
+  // Fetch all profiles with family_id set
+  const {data:profData, error:profErr} = await sb.from('profiles')
+    .select('id,name,role,family_id,username,coins,lifetime_coins,sessions_attended')
+    .not('family_id', 'is', null);
+  if(profErr){ console.error('Profiles load error:', profErr); }
+  allFamilyProfiles = profData || [];
+
+  console.log('Families:', allFamilies.length, 'Profiles:', allFamilyProfiles.length);
   renderFamiliesList(allFamilies);
 }
 

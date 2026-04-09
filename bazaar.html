@@ -87,6 +87,33 @@ body::before{
 .wishlist-chip.affordable{border-color:rgba(255,215,0,0.4);color:var(--gold-light);background:rgba(201,146,42,0.12);}
 .wishlist-empty{font-size:0.78rem;color:rgba(201,146,42,0.3);font-style:italic;}
 
+
+/* ── TIER TABS ─────────────────────────────────────────────── */
+.tier-tabs{
+  display:flex;gap:0.35rem;
+  margin-bottom:1.25rem;
+  overflow-x:auto;-webkit-overflow-scrolling:touch;
+  padding-bottom:2px;
+}
+.tier-tabs::-webkit-scrollbar{display:none;}
+.tier-tab{
+  flex:0 0 auto;
+  padding:0.4rem 0.875rem;min-height:36px;
+  background:rgba(244,232,193,0.04);
+  border:1.5px solid rgba(201,146,42,0.18);
+  border-radius:20px;
+  font-family:'Cinzel',serif;font-size:0.62rem;
+  letter-spacing:0.08em;color:rgba(201,146,42,0.45);
+  cursor:pointer;transition:all 0.2s;
+  display:flex;align-items:center;gap:0.3rem;
+  white-space:nowrap;background:none;
+}
+.tier-tab:hover{border-color:rgba(201,146,42,0.4);color:rgba(201,146,42,0.7);}
+.tier-tab.active{
+  background:rgba(201,146,42,0.12);
+  border-color:rgba(201,146,42,0.5);
+  color:var(--gold-light);
+}
 /* ── TIER SECTION ──────────────────────────────────────────── */
 .tier-section{margin-bottom:1.5rem;}
 .tier-header{
@@ -327,6 +354,16 @@ body::before{
     <div id="wishlist-content"></div>
   </div>
 
+
+  <!-- TIER TABS -->
+  <div class="tier-tabs" id="tier-tabs">
+    <button class="tier-tab active" onclick="scrollToTier('all', this)">✦ All</button>
+    <button class="tier-tab" onclick="scrollToTier('tier-0', this)">🥉 Common</button>
+    <button class="tier-tab" onclick="scrollToTier('tier-1', this)">🥈 Rare</button>
+    <button class="tier-tab" onclick="scrollToTier('tier-2', this)">🥇 Legendary</button>
+    <button class="tier-tab" onclick="scrollToTier('tier-3', this)">💎 Epic</button>
+  </div>
+
   <!-- PRIZE TIERS -->
   <div id="prize-tiers"></div>
 
@@ -446,6 +483,7 @@ function renderTiers(){
     section.style.animationDelay=`${idx*0.08+0.15}s`;
 
     section.innerHTML=`
+      <div class="tier-anchor" id="tier-anchor-${tier.id}"></div>
       <div class="tier-header">
         <span class="tier-badge">${tier.badge}</span>
         <span class="tier-title">${tier.label}</span>
@@ -641,6 +679,46 @@ function coinRain(amount){
     },i*80);
   }
 }
+
+// ── TIER TAB SCROLL ───────────────────────────────────────────
+function scrollToTier(tierId, tabEl){
+  // Update active tab
+  document.querySelectorAll('.tier-tab').forEach(t=>t.classList.remove('active'));
+  tabEl.classList.add('active');
+
+  if(tierId==='all'){
+    window.scrollTo({top:0,behavior:'smooth'});
+    return;
+  }
+
+  // Find the tier section anchor and scroll to it
+  const anchor=document.getElementById('tier-anchor-'+tierId.replace('tier-',''));
+  if(anchor){
+    const offset=anchor.getBoundingClientRect().top+window.scrollY-80;
+    window.scrollTo({top:offset,behavior:'smooth'});
+  }
+}
+
+// ── ADMIN NAV FIX ─────────────────────────────────────────────
+// When browsing as admin, preserve ?admin=1 across all nav links
+(function(){
+  if(new URLSearchParams(window.location.search).get('admin')==='1'){
+    document.querySelectorAll('.nav-item').forEach(a=>{
+      if(a.href && !a.href.includes('?admin=1') && !a.href.includes('index.html')){
+        a.href = a.href + '?admin=1';
+      }
+    });
+    // Also update any "back" or internal links
+    document.querySelectorAll('a[href]').forEach(a=>{
+      const href=a.getAttribute('href');
+      if(href && !href.startsWith('#') && !href.startsWith('http') &&
+         !href.includes('?admin=1') && !href.includes('index.html') &&
+         !href.includes('games/')){
+        a.setAttribute('href', href + '?admin=1');
+      }
+    });
+  }
+})();
 </script>
 </body>
 </html>

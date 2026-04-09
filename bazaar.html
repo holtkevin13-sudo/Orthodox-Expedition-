@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Bazaar — The Orthodox Expedition</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{
+  --gold:#c9922a;--gold-light:#f0c96e;--gold-bright:#ffd700;
+  --parchment:#f4e8c1;--parchment-dark:#e8d5a0;
+  --ink:#1a0f00;
+  --burgundy:#6b1a1a;--byzantine:#2c1654;--byzantine-light:#4a2a7a;
+  --green:#16a34a;--green-light:#22c55e;
+  --bg:#0e0800;--nav-h:72px;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{min-height:100%;overflow-x:hidden;}
+body{
+  font-family:'Crimson Text',serif;
+  background-color:var(--bg);
+  background-image:
+    radial-gradient(ellipse at 50% 0%,rgba(107,26,26,0.45) 0%,transparent 55%),
+    radial-gradient(ellipse at 100% 100%,rgba(44,22,84,0.3) 0%,transparent 50%);
+  min-height:100vh;
+}
+body::before{
+  content:'';position:fixed;inset:0;
+  background-image:
+    linear-gradient(rgba(201,146,42,0.022) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(201,146,42,0.022) 1px,transparent 1px);
+  background-size:44px 44px;pointer-events:none;z-index:0;
+}
+
+/* ── COIN RAIN ─────────────────────────────────────────────── */
+#coin-rain{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999;overflow:hidden;}
+.coin-p{position:absolute;top:-60px;font-size:1.5rem;animation:coinFall linear forwards;}
+@keyframes coinFall{0%{transform:translateY(0) rotate(0deg);opacity:1;}85%{opacity:1;}100%{transform:translateY(110vh) rotate(540deg) scale(0.4);opacity:0;}}
+
+/* ── LOADING ───────────────────────────────────────────────── */
+#loading{position:fixed;inset:0;z-index:400;display:flex;align-items:center;justify-content:center;background:var(--bg);}
+.loading-mark{font-family:'Cinzel',serif;font-size:2rem;color:rgba(201,146,42,0.4);animation:pulse 1.5s ease-in-out infinite;}
+@keyframes pulse{0%,100%{opacity:0.3;}50%{opacity:0.8;}}
+
+/* ── APP ───────────────────────────────────────────────────── */
+#app{display:none;position:relative;z-index:1;}
+.page{max-width:480px;margin:0 auto;padding:1.25rem 1rem calc(var(--nav-h) + 1.5rem);}
+
+/* ── HEADER ────────────────────────────────────────────────── */
+.app-header{text-align:center;padding:1.25rem 1rem 1rem;border-bottom:1px solid rgba(201,146,42,0.18);margin-bottom:1.25rem;}
+.app-name{font-family:'Cinzel Decorative',serif;font-size:clamp(0.9rem,3.2vw,1.1rem);color:var(--gold-light);letter-spacing:0.06em;text-shadow:0 0 20px rgba(201,146,42,0.35);}
+.app-divider{color:rgba(201,146,42,0.35);letter-spacing:0.6rem;font-size:0.65rem;margin-top:0.3rem;}
+
+/* ── COIN STRIP ────────────────────────────────────────────── */
+.coin-strip{
+  display:flex;align-items:center;justify-content:space-between;
+  background:linear-gradient(135deg,rgba(44,22,84,0.9) 0%,rgba(107,26,26,0.9) 100%);
+  border:1px solid rgba(201,146,42,0.3);
+  border-radius:14px;padding:0.875rem 1.25rem;
+  margin-bottom:1.25rem;
+}
+.coin-strip-left{font-family:'Cinzel',serif;font-size:0.65rem;letter-spacing:0.15em;color:rgba(201,146,42,0.55);text-transform:uppercase;}
+.coin-strip-val{font-family:'Cinzel Decorative',serif;font-size:1.8rem;color:var(--gold-bright);text-shadow:0 0 16px rgba(255,215,0,0.5);line-height:1;transition:all 0.3s;}
+.coin-strip-right{text-align:right;}
+.coin-strip-sub{font-family:'Cinzel',serif;font-size:0.6rem;color:rgba(201,146,42,0.4);}
+.coin-strip-sub-val{font-family:'Cinzel',serif;font-size:0.78rem;color:rgba(201,146,42,0.55);margin-top:0.1rem;}
+
+/* ── WISHLIST STRIP ────────────────────────────────────────── */
+.wishlist-strip{
+  background:rgba(244,232,193,0.03);
+  border:1px solid rgba(201,146,42,0.18);
+  border-radius:12px;padding:0.75rem 1rem;
+  margin-bottom:1.25rem;
+}
+.wishlist-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:0.5rem;}
+.wishlist-title{font-family:'Cinzel',serif;font-size:0.65rem;letter-spacing:0.18em;color:rgba(201,146,42,0.5);text-transform:uppercase;}
+.wishlist-scroll{display:flex;gap:0.5rem;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:2px;}
+.wishlist-scroll::-webkit-scrollbar{display:none;}
+.wishlist-chip{
+  flex:0 0 auto;display:flex;align-items:center;gap:0.35rem;
+  background:rgba(201,146,42,0.08);border:1px solid rgba(201,146,42,0.2);
+  border-radius:20px;padding:0.3rem 0.75rem;
+  font-family:'Cinzel',serif;font-size:0.62rem;color:rgba(201,146,42,0.6);
+  white-space:nowrap;
+}
+.wishlist-chip.affordable{border-color:rgba(255,215,0,0.4);color:var(--gold-light);background:rgba(201,146,42,0.12);}
+.wishlist-empty{font-size:0.78rem;color:rgba(201,146,42,0.3);font-style:italic;}
+
+/* ── TIER SECTION ──────────────────────────────────────────── */
+.tier-section{margin-bottom:1.5rem;}
+.tier-header{
+  display:flex;align-items:center;gap:0.625rem;
+  margin-bottom:0.75rem;
+}
+.tier-badge{
+  font-size:1.1rem;line-height:1;
+}
+.tier-title{font-family:'Cinzel',serif;font-size:0.72rem;letter-spacing:0.15em;color:rgba(201,146,42,0.55);text-transform:uppercase;}
+.tier-range{font-family:'Cinzel',serif;font-size:0.6rem;color:rgba(201,146,42,0.3);margin-left:auto;}
+
+/* ── PRIZE GRID ────────────────────────────────────────────── */
+.prize-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.625rem;}
+
+/* ── PRIZE CARD ────────────────────────────────────────────── */
+.prize-card{
+  background:rgba(244,232,193,0.03);
+  border:1px solid rgba(201,146,42,0.18);
+  border-radius:14px;padding:0.875rem 0.75rem;
+  display:flex;flex-direction:column;align-items:center;
+  text-align:center;gap:0.4rem;
+  transition:all 0.25s;position:relative;overflow:hidden;
+}
+.prize-card.affordable{
+  border-color:rgba(201,146,42,0.35);
+  background:rgba(201,146,42,0.05);
+  cursor:pointer;
+}
+.prize-card.affordable:active{transform:scale(0.97);}
+.prize-card.unaffordable{
+  opacity:0.45;cursor:not-allowed;
+}
+.prize-card.wishlisted{
+  border-color:rgba(201,146,42,0.4);
+  box-shadow:0 0 0 2px rgba(201,146,42,0.08);
+}
+.prize-card.redeemed-recently{
+  border-color:rgba(22,163,74,0.4);
+  background:rgba(22,163,74,0.06);
+}
+
+.prize-emoji{font-size:2rem;line-height:1;margin-bottom:0.1rem;}
+.prize-name{font-family:'Cinzel',serif;font-size:0.7rem;color:rgba(244,232,193,0.75);line-height:1.3;font-weight:600;}
+.prize-cost{
+  font-family:'Cinzel Decorative',serif;font-size:0.82rem;
+  color:var(--gold-bright);text-shadow:0 0 8px rgba(255,215,0,0.3);
+}
+.prize-card.unaffordable .prize-cost{color:rgba(201,146,42,0.4);}
+.prize-need{font-family:'Cinzel',serif;font-size:0.58rem;color:rgba(201,146,42,0.3);}
+
+/* Prize action buttons */
+.prize-actions{display:flex;gap:0.3rem;width:100%;margin-top:0.2rem;}
+.prize-btn{
+  flex:1;padding:0.35rem 0.25rem;min-height:34px;border:none;border-radius:7px;
+  font-family:'Cinzel',serif;font-size:0.6rem;cursor:pointer;
+  transition:all 0.2s;letter-spacing:0.04em;
+}
+.prize-btn-redeem{
+  background:linear-gradient(135deg,var(--gold) 0%,var(--gold-bright) 100%);
+  color:var(--ink);font-weight:700;
+}
+.prize-btn-redeem:active{transform:scale(0.96);}
+.prize-btn-wish{
+  background:rgba(201,146,42,0.1);border:1px solid rgba(201,146,42,0.2);
+  color:rgba(201,146,42,0.6);
+}
+.prize-btn-wish.wished{background:rgba(201,146,42,0.18);color:rgba(201,146,42,0.8);}
+.prize-btn-wish:active{transform:scale(0.96);}
+
+/* Lock overlay for unaffordable */
+.prize-lock{
+  position:absolute;top:0.4rem;right:0.4rem;
+  font-size:0.7rem;color:rgba(201,146,42,0.25);
+}
+
+/* ── REDEEM MODAL ──────────────────────────────────────────── */
+#redeem-modal{
+  position:fixed;inset:0;z-index:800;
+  display:flex;align-items:flex-end;justify-content:center;
+  background:rgba(8,4,0,0.8);
+  opacity:0;pointer-events:none;transition:opacity 0.25s;
+  padding:1rem;
+}
+#redeem-modal.show{opacity:1;pointer-events:all;}
+.redeem-sheet{
+  width:100%;max-width:400px;
+  background:linear-gradient(160deg,rgba(44,22,84,0.98) 0%,rgba(18,8,40,0.99) 50%,rgba(107,26,26,0.98) 100%);
+  border:1px solid rgba(201,146,42,0.4);border-radius:20px 20px 16px 16px;
+  padding:1.75rem 1.5rem 1.5rem;
+  transform:translateY(40px);transition:transform 0.35s cubic-bezier(0.34,1.2,0.64,1);
+  text-align:center;
+}
+#redeem-modal.show .redeem-sheet{transform:translateY(0);}
+.redeem-emoji{font-size:3rem;margin-bottom:0.5rem;display:block;}
+.redeem-title{font-family:'Cinzel Decorative',serif;font-size:1.1rem;color:var(--gold-light);margin-bottom:0.25rem;}
+.redeem-cost{font-family:'Cinzel',serif;font-size:0.8rem;color:rgba(201,146,42,0.6);margin-bottom:1rem;}
+.redeem-msg{font-size:0.85rem;color:rgba(244,232,193,0.5);line-height:1.5;margin-bottom:1.25rem;font-style:italic;}
+.redeem-btns{display:flex;gap:0.5rem;}
+.redeem-confirm{
+  flex:1;padding:0.875rem;min-height:50px;
+  background:linear-gradient(135deg,var(--gold) 0%,var(--gold-bright) 100%);
+  border:none;border-radius:11px;
+  font-family:'Cinzel',serif;font-size:0.82rem;letter-spacing:0.06em;
+  color:var(--ink);font-weight:700;cursor:pointer;transition:all 0.2s;
+}
+.redeem-confirm:active{transform:scale(0.97);}
+.redeem-cancel{
+  padding:0.875rem 1.25rem;min-height:50px;
+  background:transparent;border:1px solid rgba(201,146,42,0.2);
+  border-radius:11px;font-family:'Cinzel',serif;font-size:0.78rem;
+  color:rgba(201,146,42,0.5);cursor:pointer;transition:all 0.2s;
+}
+
+/* ── SUCCESS FLASH ─────────────────────────────────────────── */
+#success-flash{
+  position:fixed;inset:0;z-index:900;
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(8,4,0,0.88);padding:1.5rem;
+  opacity:0;pointer-events:none;transition:opacity 0.3s;
+}
+#success-flash.show{opacity:1;pointer-events:all;}
+.success-box{
+  width:100%;max-width:340px;
+  background:linear-gradient(160deg,rgba(22,163,74,0.15),rgba(44,22,84,0.95));
+  border:2px solid rgba(22,163,74,0.5);
+  border-radius:20px;padding:2rem 1.5rem;text-align:center;
+  animation:popIn 0.4s cubic-bezier(0.34,1.56,0.64,1);
+  box-shadow:0 0 40px rgba(22,163,74,0.2);
+}
+@keyframes popIn{from{transform:scale(0.7);}to{transform:scale(1);}}
+.success-emoji{font-size:3rem;display:block;margin-bottom:0.75rem;}
+.success-title{font-family:'Cinzel Decorative',serif;font-size:1.1rem;color:rgba(134,239,172,0.9);margin-bottom:0.35rem;}
+.success-msg{font-size:0.82rem;color:rgba(244,232,193,0.5);line-height:1.5;font-style:italic;margin-bottom:1.25rem;}
+.success-close{
+  padding:0.625rem 2rem;background:rgba(22,163,74,0.2);
+  border:1px solid rgba(22,163,74,0.4);border-radius:10px;
+  font-family:'Cinzel',serif;font-size:0.75rem;color:rgba(134,239,172,0.8);
+  cursor:pointer;min-height:44px;
+}
+
+/* ── REDEMPTION HISTORY ────────────────────────────────────── */
+.history-section{margin-bottom:1.5rem;}
+.history-title{font-family:'Cinzel',serif;font-size:0.65rem;letter-spacing:0.2em;color:rgba(201,146,42,0.4);text-transform:uppercase;margin-bottom:0.625rem;}
+.history-item{
+  display:flex;align-items:center;gap:0.625rem;
+  padding:0.5rem 0;border-bottom:1px solid rgba(201,146,42,0.08);
+  font-size:0.8rem;
+}
+.history-item:last-child{border-bottom:none;}
+.history-emoji{font-size:1.2rem;flex-shrink:0;}
+.history-name{color:rgba(244,232,193,0.55);flex:1;}
+.history-cost{font-family:'Cinzel',serif;font-size:0.68rem;color:rgba(201,146,42,0.4);}
+.history-date{font-family:'Cinzel',serif;font-size:0.6rem;color:rgba(201,146,42,0.25);}
+
+/* ── BOTTOM NAV ────────────────────────────────────────────── */
+.bottom-nav{
+  position:fixed;bottom:0;left:0;right:0;height:var(--nav-h);
+  background:rgba(8,4,0,0.97);border-top:1px solid rgba(201,146,42,0.18);
+  display:flex;align-items:stretch;backdrop-filter:blur(16px);z-index:200;
+  padding-bottom:env(safe-area-inset-bottom);
+}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0.2rem;cursor:pointer;border:none;background:none;padding:0.5rem 0.25rem;position:relative;transition:all 0.2s;text-decoration:none;}
+.nav-item:active{background:rgba(201,146,42,0.06);}
+.nav-mark{font-size:1rem;line-height:1;color:rgba(201,146,42,0.25);transition:all 0.25s;}
+.nav-label{font-family:'Cinzel',serif;font-size:0.56rem;letter-spacing:0.1em;text-transform:uppercase;color:rgba(201,146,42,0.3);transition:all 0.25s;}
+.nav-item.active .nav-mark{color:var(--gold-bright);text-shadow:0 0 12px rgba(255,215,0,0.6);}
+.nav-item.active .nav-label{color:var(--gold-light);}
+.nav-item.active::before{content:'';position:absolute;top:0;left:20%;right:20%;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent);border-radius:0 0 2px 2px;}
+.nav-dot{position:absolute;top:0.4rem;right:calc(50% - 18px);width:7px;height:7px;border-radius:50%;background:#ef4444;border:1.5px solid rgba(8,4,0,0.9);display:none;}
+.nav-dot.show{display:block;}
+
+/* ── ANIMATIONS ────────────────────────────────────────────── */
+.fade-up{opacity:0;transform:translateY(12px);animation:fadeUp 0.4s ease forwards;}
+@keyframes fadeUp{to{opacity:1;transform:translateY(0);}}
+.fade-up:nth-child(1){animation-delay:0.04s;}
+.fade-up:nth-child(2){animation-delay:0.1s;}
+.fade-up:nth-child(3){animation-delay:0.16s;}
+.fade-up:nth-child(4){animation-delay:0.22s;}
+.fade-up:nth-child(5){animation-delay:0.28s;}
+</style>
+</head>
+<body>
+
+<div id="coin-rain"></div>
+<div id="loading"><div class="loading-mark">☩</div></div>
+
+<!-- REDEEM MODAL -->
+<div id="redeem-modal">
+  <div class="redeem-sheet">
+    <span class="redeem-emoji" id="modal-emoji">🎁</span>
+    <div class="redeem-title" id="modal-title">Prize Name</div>
+    <div class="redeem-cost" id="modal-cost">1,000 coins</div>
+    <div class="redeem-msg">Your parents will see this redemption and make it happen. Coins will be deducted from your balance right away.</div>
+    <div class="redeem-btns">
+      <button class="redeem-cancel" onclick="closeModal()">Cancel</button>
+      <button class="redeem-confirm" onclick="confirmRedeem()">Redeem Now ✦</button>
+    </div>
+  </div>
+</div>
+
+<!-- SUCCESS FLASH -->
+<div id="success-flash">
+  <div class="success-box">
+    <span class="success-emoji" id="success-emoji">🎉</span>
+    <div class="success-title" id="success-title">Redeemed!</div>
+    <div class="success-msg" id="success-msg">Your parents have been notified. Get ready!</div>
+    <button class="success-close" onclick="closeSuccess()">Continue the Expedition ✦</button>
+  </div>
+</div>
+
+<div id="app">
+<div class="page">
+
+  <!-- HEADER -->
+  <header class="app-header">
+    <div class="app-name">The Orthodox Expedition</div>
+    <div class="app-divider">✦ ☩ ✦</div>
+  </header>
+
+  <!-- COIN STRIP -->
+  <div class="coin-strip fade-up">
+    <div class="coin-strip-left">
+      <div style="margin-bottom:0.15rem;">Saint Coins</div>
+      <div class="coin-strip-val" id="coin-val">0</div>
+    </div>
+    <div class="coin-strip-right">
+      <div class="coin-strip-sub">Lifetime Earned</div>
+      <div class="coin-strip-sub-val" id="lifetime-val">0</div>
+    </div>
+  </div>
+
+  <!-- WISHLIST -->
+  <div class="wishlist-strip fade-up">
+    <div class="wishlist-header">
+      <span class="wishlist-title">◈ My Wishlist</span>
+    </div>
+    <div id="wishlist-content"></div>
+  </div>
+
+  <!-- PRIZE TIERS -->
+  <div id="prize-tiers"></div>
+
+  <!-- REDEMPTION HISTORY -->
+  <div class="history-section fade-up" id="history-section" style="display:none;">
+    <div class="history-title">Recent Redemptions</div>
+    <div id="history-list"></div>
+  </div>
+
+</div>
+</div>
+
+<!-- BOTTOM NAV -->
+<nav class="bottom-nav" id="bottom-nav" style="display:none;">
+  <a class="nav-item" href="home.html"><span class="nav-mark">✦</span><span class="nav-label">Home</span></a>
+  <a class="nav-item" href="missions.html"><span class="nav-mark">☩</span><span class="nav-label">Missions</span></a>
+  <a class="nav-item" href="curriculum.html"><span class="nav-mark">⊕</span><span class="nav-label">Topics</span></a>
+  <a class="nav-item active" href="bazaar.html"><span class="nav-mark">◈</span><span class="nav-label">Bazaar</span><span class="nav-dot" id="bazaar-dot"></span></a>
+  <a class="nav-item" href="games.html"><span class="nav-mark">⚔</span><span class="nav-label">Games</span></a>
+</nav>
+
+<script>
+const SUPABASE_URL = 'https://ksfnsryfmkafwirzgjoe.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtzZm5zcnlmbWthZndpcnpnam9lIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2ODM4MTcsImV4cCI6MjA5MTI1OTgxN30.mHQty44WBnjQY8BJ8KbPk_pp-yTcOaifGxCZPUO4xpY';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ── STATE ─────────────────────────────────────────────────────
+let profile = null;
+let allPrizes = [];
+let wishlistIds = [];
+let selectedPrize = null;
+
+const TIERS = [
+  {id:0, label:'Common Finds',       badge:'🥉', range:'300–500 coins'},
+  {id:1, label:'Rare Artifacts',     badge:'🥈', range:'1,000–1,500 coins'},
+  {id:2, label:'Legendary Treasures',badge:'🥇', range:'2,500–3,000 coins'},
+  {id:3, label:'Epic Discoveries',   badge:'💎', range:'5,000–6,000 coins'},
+];
+
+// ── AUTH ──────────────────────────────────────────────────────
+(async()=>{
+  try {
+    const timer = new Promise(r => setTimeout(() => r(null), 4000));
+    const res   = await Promise.race([sb.auth.getSession(), timer]);
+    const session = res?.data?.session ?? null;
+    if(!session){ window.location.href='index.html'; return; }
+    const {data:prof} = await sb.from('profiles').select('role').eq('id',session.user.id).single();
+    const isAdminView = new URLSearchParams(window.location.search).get('admin')==='1';
+    if(prof&&prof.role==='admin'&&!isAdminView){ window.location.href='admin.html'; return; }
+    await loadAll(session.user.id);
+    document.getElementById('loading').style.display='none';
+    document.getElementById('app').style.display='block';
+    document.getElementById('bottom-nav').style.display='flex';
+  } catch(e) {
+    console.error('Bazaar auth error:', e);
+    window.location.href='index.html';
+  }
+})();
+
+// ── LOAD ──────────────────────────────────────────────────────
+async function loadAll(userId){
+  const [profRes, prizesRes, wishRes, redRes] = await Promise.all([
+    sb.from('profiles').select('*').eq('id',userId).single(),
+    sb.from('prizes').select('*').eq('is_active',true).order('tier').order('cost'),
+    sb.from('wishlist').select('prize_id').eq('explorer_id',userId),
+    sb.from('redemptions').select('*').eq('explorer_id',userId).order('redeemed_at',{ascending:false}).limit(5),
+  ]);
+  profile     = profRes.data;
+  allPrizes   = prizesRes.data || [];
+  wishlistIds = (wishRes.data||[]).map(w=>w.prize_id);
+
+  updateCoinStrip();
+  renderWishlist();
+  renderTiers();
+  renderHistory(redRes.data||[]);
+  checkBazaarDot();
+}
+
+// ── COIN STRIP ────────────────────────────────────────────────
+function updateCoinStrip(){
+  document.getElementById('coin-val').textContent     = (profile.coins||0).toLocaleString();
+  document.getElementById('lifetime-val').textContent = (profile.lifetime_coins||0).toLocaleString();
+}
+
+// ── WISHLIST ──────────────────────────────────────────────────
+function renderWishlist(){
+  const el = document.getElementById('wishlist-content');
+  const wishPrizes = allPrizes.filter(p=>wishlistIds.includes(p.id));
+  if(!wishPrizes.length){
+    el.innerHTML='<div class="wishlist-empty">Tap ◈ on any prize to add it to your wishlist.</div>';
+    return;
+  }
+  el.innerHTML='';
+  const scroll = document.createElement('div');
+  scroll.className='wishlist-scroll';
+  wishPrizes.forEach(p=>{
+    const affordable = profile.coins >= p.cost;
+    const chip = document.createElement('div');
+    chip.className=`wishlist-chip${affordable?' affordable':''}`;
+    chip.innerHTML=`${p.emoji} ${p.name}${affordable?' ✦':''}`;
+    scroll.appendChild(chip);
+  });
+  el.appendChild(scroll);
+}
+
+// ── TIERS ─────────────────────────────────────────────────────
+function renderTiers(){
+  const container = document.getElementById('prize-tiers');
+  container.innerHTML='';
+
+  TIERS.forEach((tier,idx)=>{
+    const prizes = allPrizes.filter(p=>p.tier===tier.id);
+    if(!prizes.length) return;
+
+    const section = document.createElement('div');
+    section.className=`tier-section fade-up`;
+    section.style.animationDelay=`${idx*0.08+0.15}s`;
+
+    section.innerHTML=`
+      <div class="tier-header">
+        <span class="tier-badge">${tier.badge}</span>
+        <span class="tier-title">${tier.label}</span>
+        <span class="tier-range">${tier.range}</span>
+      </div>
+      <div class="prize-grid" id="tier-grid-${tier.id}"></div>`;
+
+    container.appendChild(section);
+
+    const grid = section.querySelector(`#tier-grid-${tier.id}`);
+    prizes.forEach(p=>grid.appendChild(buildPrizeCard(p)));
+  });
+}
+
+function buildPrizeCard(prize){
+  const affordable   = profile.coins >= prize.cost;
+  const wishlisted   = wishlistIds.includes(prize.id);
+  const needMore     = prize.cost - profile.coins;
+
+  const card = document.createElement('div');
+  card.className=`prize-card${affordable?' affordable':' unaffordable'}${wishlisted?' wishlisted':''}`;
+  card.id=`prize-${prize.id}`;
+
+  let actionsHtml = '';
+  if(affordable){
+    actionsHtml=`
+      <div class="prize-actions">
+        <button class="prize-btn prize-btn-redeem" onclick="openModal('${prize.id}')">Redeem</button>
+        <button class="prize-btn prize-btn-wish${wishlisted?' wished':''}" onclick="toggleWish(event,'${prize.id}')">${wishlisted?'◈':'◇'}</button>
+      </div>`;
+  } else {
+    actionsHtml=`
+      <div class="prize-need">Need ${needMore.toLocaleString()} more</div>
+      <div class="prize-actions">
+        <button class="prize-btn prize-btn-wish${wishlisted?' wished':''}" onclick="toggleWish(event,'${prize.id}')" style="flex:1">${wishlisted?'◈ Wishlisted':'◇ Wishlist'}</button>
+      </div>`;
+  }
+
+  card.innerHTML=`
+    ${!affordable?'<span class="prize-lock">🔒</span>':''}
+    <div class="prize-emoji">${prize.emoji}</div>
+    <div class="prize-name">${prize.name}</div>
+    <div class="prize-cost">${prize.cost.toLocaleString()}</div>
+    ${actionsHtml}`;
+
+  return card;
+}
+
+// ── WISHLIST TOGGLE ───────────────────────────────────────────
+async function toggleWish(e, prizeId){
+  e.stopPropagation();
+  if(!profile) return;
+
+  if(wishlistIds.includes(prizeId)){
+    await sb.from('wishlist').delete()
+      .eq('explorer_id',profile.id).eq('prize_id',prizeId);
+    wishlistIds = wishlistIds.filter(id=>id!==prizeId);
+  } else {
+    await sb.from('wishlist').insert({
+      explorer_id:profile.id,
+      prize_id:prizeId,
+      added_at:new Date().toISOString(),
+    });
+    wishlistIds.push(prizeId);
+  }
+  renderWishlist();
+  renderTiers();
+}
+
+// ── REDEEM MODAL ──────────────────────────────────────────────
+function openModal(prizeId){
+  selectedPrize = allPrizes.find(p=>p.id===prizeId);
+  if(!selectedPrize||profile.coins<selectedPrize.cost) return;
+  document.getElementById('modal-emoji').textContent  = selectedPrize.emoji;
+  document.getElementById('modal-title').textContent  = selectedPrize.name;
+  document.getElementById('modal-cost').textContent   = `${selectedPrize.cost.toLocaleString()} coins`;
+  document.getElementById('redeem-modal').classList.add('show');
+}
+
+function closeModal(){
+  document.getElementById('redeem-modal').classList.remove('show');
+  selectedPrize = null;
+}
+
+async function confirmRedeem(){
+  if(!selectedPrize||!profile) return;
+  if(profile.coins < selectedPrize.cost){
+    closeModal();
+    return;
+  }
+
+  const btn = document.querySelector('.redeem-confirm');
+  btn.disabled=true;
+  btn.textContent='Redeeming...';
+
+  const newCoins = profile.coins - selectedPrize.cost;
+
+  // Deduct coins and log
+  await Promise.all([
+    sb.from('profiles').update({coins:newCoins}).eq('id',profile.id),
+    sb.from('redemptions').insert({
+      explorer_id: profile.id,
+      prize_id:    selectedPrize.id,
+      prize_name:  selectedPrize.name,
+      coins_spent: selectedPrize.cost,
+      redeemed_at: new Date().toISOString(),
+    }),
+    sb.from('activity_log').insert({
+      explorer_id: profile.id,
+      amount:      -selectedPrize.cost,
+      reason:      `Bazaar redemption: ${selectedPrize.name}`,
+      created_at:  new Date().toISOString(),
+    }),
+  ]);
+
+  profile.coins = newCoins;
+  const redeemedPrize = {...selectedPrize};
+
+  closeModal();
+  updateCoinStrip();
+  renderTiers();
+
+  // Show success flash
+  document.getElementById('success-emoji').textContent = redeemedPrize.emoji;
+  document.getElementById('success-title').textContent = `${redeemedPrize.name} Redeemed!`;
+  document.getElementById('success-msg').textContent   =
+    `${redeemedPrize.cost.toLocaleString()} coins spent. Your parents have been notified and will make it happen!`;
+  document.getElementById('success-flash').classList.add('show');
+
+  coinRain(50);
+
+  // Reload history
+  const {data:red} = await sb.from('redemptions').select('*')
+    .eq('explorer_id',profile.id).order('redeemed_at',{ascending:false}).limit(5);
+  renderHistory(red||[]);
+  btn.disabled=false;
+  btn.textContent='Redeem Now ✦';
+}
+
+function closeSuccess(){
+  document.getElementById('success-flash').classList.remove('show');
+}
+
+// ── HISTORY ───────────────────────────────────────────────────
+function renderHistory(redemptions){
+  const section = document.getElementById('history-section');
+  const list    = document.getElementById('history-list');
+  if(!redemptions.length){ section.style.display='none'; return; }
+  section.style.display='block';
+  list.innerHTML='';
+  redemptions.forEach(r=>{
+    const prize = allPrizes.find(p=>p.id===r.prize_id);
+    const emoji = prize?prize.emoji:'🎁';
+    const d = new Date(r.redeemed_at).toLocaleDateString('en-US',{month:'short',day:'numeric'});
+    const item=document.createElement('div');
+    item.className='history-item';
+    item.innerHTML=`
+      <span class="history-emoji">${emoji}</span>
+      <span class="history-name">${r.prize_name}</span>
+      <span class="history-cost">-${r.coins_spent.toLocaleString()}</span>
+      <span class="history-date">${d}</span>`;
+    list.appendChild(item);
+  });
+}
+
+// ── BAZAAR DOT ────────────────────────────────────────────────
+function checkBazaarDot(){
+  const dot = document.getElementById('bazaar-dot');
+  if(!dot) return;
+  const canAfford = wishlistIds.some(id=>{
+    const p=allPrizes.find(p=>p.id===id);
+    return p&&profile.coins>=p.cost;
+  });
+  if(canAfford) dot.classList.add('show');
+}
+
+// ── COIN RAIN ─────────────────────────────────────────────────
+function coinRain(amount){
+  const n=Math.min(10,Math.floor(amount/5)+3);
+  const c=document.getElementById('coin-rain');
+  const symbols=['✦','◈','☩','⊕'];
+  const colors=['#ffd700','#f0c96e','#c9922a'];
+  for(let i=0;i<n;i++){
+    setTimeout(()=>{
+      const el=document.createElement('div');
+      el.className='coin-p';
+      el.textContent=symbols[Math.floor(Math.random()*symbols.length)];
+      el.style.left=Math.random()*92+'vw';
+      el.style.animationDuration=(1.2+Math.random()*1.8)+'s';
+      el.style.color=colors[Math.floor(Math.random()*colors.length)];
+      c.appendChild(el);
+      setTimeout(()=>el.remove(),3500);
+    },i*80);
+  }
+}
+</script>
+</body>
+</html>

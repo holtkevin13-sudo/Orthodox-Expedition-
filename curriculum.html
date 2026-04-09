@@ -2,6 +2,12 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#c9922a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Expedition">
+
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Topics — The Orthodox Expedition</title>
@@ -414,7 +420,16 @@ body::before{
 
   <!-- HEADER -->
   <header class="app-header">
-    <div class="app-name">The Orthodox Expedition</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;width:100%;">
+      <div class="app-name">The Orthodox Expedition</div>
+      <a href="journal.html" target="_blank"
+         style="display:flex;align-items:center;gap:0.3rem;padding:0.3rem 0.625rem;
+         background:rgba(201,146,42,0.07);border:1px solid rgba(201,146,42,0.18);
+         border-radius:14px;text-decoration:none;flex-shrink:0;">
+        <span style="font-size:0.8rem;">✏️</span>
+        <span style="font-family:'Cinzel',serif;font-size:0.56rem;letter-spacing:0.1em;color:rgba(201,146,42,0.5);text-transform:uppercase;">Journal</span>
+      </a>
+    </div>
     <div class="app-divider">✦ ☩ ✦</div>
   </header>
 
@@ -943,6 +958,14 @@ function showAdminBar(){
     });
   }
 })();
+</script>
+
+<script>
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('sw.js').catch(()=>{});
+  });
+}
 </script>
 </body>
 </html>

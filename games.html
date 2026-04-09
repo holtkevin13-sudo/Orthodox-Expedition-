@@ -9,16 +9,14 @@
   <meta name="apple-mobile-web-app-title" content="Expedition">
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Games — The Orthodox Expedition</title>
+<title>Training Grounds — The Orthodox Expedition</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{
   --gold:#c9922a;--gold-light:#f0c96e;--gold-bright:#ffd700;
-  --parchment:#f4e8c1;--parchment-dark:#e8d5a0;
-  --ink:#1a0f00;
-  --burgundy:#6b1a1a;--byzantine:#2c1654;--byzantine-light:#4a2a7a;
-  --green:#16a34a;--green-light:#22c55e;
+  --parchment:#f4e8c1;--ink:#1a0f00;
+  --byzantine:#2c1654;--byzantine-light:#4a2a7a;
   --bg:#0e0800;--nav-h:72px;
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
@@ -38,88 +36,39 @@ body::before{
     linear-gradient(90deg,rgba(201,146,42,0.022) 1px,transparent 1px);
   background-size:44px 44px;pointer-events:none;z-index:0;
 }
-
-/* ── LOADING ───────────────────────────────────────────────── */
 #loading{position:fixed;inset:0;z-index:400;display:flex;align-items:center;justify-content:center;background:var(--bg);}
 .loading-mark{font-family:'Cinzel',serif;font-size:2rem;color:rgba(201,146,42,0.4);animation:pulse 1.5s ease-in-out infinite;}
 @keyframes pulse{0%,100%{opacity:0.3;}50%{opacity:0.8;}}
-
-/* ── APP ───────────────────────────────────────────────────── */
 #app{display:none;position:relative;z-index:1;}
 .page{max-width:480px;margin:0 auto;padding:1.25rem 1rem calc(var(--nav-h) + 1.5rem);}
-
-/* ── HEADER ────────────────────────────────────────────────── */
 .app-header{text-align:center;padding:1.25rem 1rem 1rem;border-bottom:1px solid rgba(201,146,42,0.18);margin-bottom:1.25rem;}
 .app-name{font-family:'Cinzel Decorative',serif;font-size:clamp(0.9rem,3.2vw,1.1rem);color:var(--gold-light);letter-spacing:0.06em;text-shadow:0 0 20px rgba(201,146,42,0.35);}
 .app-divider{color:rgba(201,146,42,0.35);letter-spacing:0.6rem;font-size:0.65rem;margin-top:0.3rem;}
-
-/* ── FEATURED GAME ─────────────────────────────────────────── */
-.featured-card{
-  position:relative;border-radius:18px;overflow:hidden;
-  margin-bottom:1.5rem;cursor:pointer;
-  border:1px solid rgba(201,146,42,0.4);
-  background:linear-gradient(145deg,rgba(44,22,84,0.97) 0%,rgba(18,8,40,0.99) 50%,rgba(107,26,26,0.97) 100%);
-  box-shadow:0 12px 40px rgba(0,0,0,0.5),0 0 20px rgba(201,146,42,0.08);
-  transition:all 0.2s;
-  text-decoration:none;display:block;
-}
-.featured-card:active{transform:scale(0.99);}
-.featured-glow{
-  position:absolute;inset:0;
-  background:radial-gradient(circle at 30% 40%,rgba(201,146,42,0.12) 0%,transparent 60%);
-  pointer-events:none;
-}
-.featured-deco{position:absolute;font-size:6rem;color:rgba(201,146,42,0.06);line-height:1;pointer-events:none;}
-.featured-deco-tl{top:-1rem;left:-0.5rem;}
-.featured-deco-br{bottom:-1rem;right:-0.5rem;}
-.featured-inner{padding:1.5rem 1.25rem;position:relative;z-index:1;}
-.featured-eyebrow{font-family:'Cinzel',serif;font-size:0.58rem;letter-spacing:0.25em;color:rgba(201,146,42,0.5);text-transform:uppercase;margin-bottom:0.5rem;}
-.featured-icon{font-size:2.5rem;margin-bottom:0.5rem;display:block;}
-.featured-title{font-family:'Cinzel Decorative',serif;font-size:clamp(1rem,4vw,1.3rem);color:var(--gold-light);line-height:1.3;margin-bottom:0.35rem;}
-.featured-desc{font-size:0.82rem;color:rgba(244,232,193,0.45);font-style:italic;line-height:1.5;margin-bottom:0.875rem;}
-.featured-play{display:inline-flex;align-items:center;gap:0.4rem;background:linear-gradient(135deg,var(--gold),var(--gold-bright));color:var(--ink);border-radius:8px;padding:0.5rem 1.25rem;font-family:'Cinzel',serif;font-size:0.75rem;letter-spacing:0.08em;font-weight:700;}
-
-/* ── SECTION HEADER ────────────────────────────────────────── */
-.games-section{margin-bottom:1.5rem;}
-.games-section-header{display:flex;align-items:center;gap:0.625rem;margin-bottom:0.875rem;padding-bottom:0.5rem;border-bottom:1px solid rgba(201,146,42,0.12);}
-.games-section-icon{font-size:1rem;color:rgba(201,146,42,0.5);}
-.games-section-title{font-family:'Cinzel',serif;font-size:0.72rem;letter-spacing:0.18em;color:rgba(201,146,42,0.5);text-transform:uppercase;}
-.games-section-badge{font-family:'Cinzel',serif;font-size:0.6rem;background:rgba(201,146,42,0.1);color:rgba(201,146,42,0.55);border:1px solid rgba(201,146,42,0.2);border-radius:20px;padding:0.1rem 0.5rem;margin-left:auto;}
-
-/* ── GAME GRID ─────────────────────────────────────────────── */
-.game-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.625rem;}
-
-/* ── GAME CARD ─────────────────────────────────────────────── */
+.section-eyebrow{font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.2em;text-transform:uppercase;color:rgba(201,146,42,0.4);margin-bottom:0.75rem;margin-top:0.25rem;}
+.games-grid{display:flex;flex-direction:column;gap:0.625rem;margin-bottom:1.5rem;}
 .game-card{
-  background:rgba(244,232,193,0.03);
-  border:1px solid rgba(201,146,42,0.18);
-  border-radius:14px;padding:1rem 0.875rem;
-  display:flex;flex-direction:column;align-items:center;
-  text-align:center;gap:0.3rem;
-  text-decoration:none;
-  transition:all 0.2s;position:relative;overflow:hidden;
+  display:flex;align-items:center;gap:0.875rem;
+  background:rgba(44,22,84,0.2);
+  border:1px solid rgba(124,58,237,0.18);
+  border-radius:12px;padding:0.875rem 1rem;
+  text-decoration:none;transition:all 0.2s;cursor:pointer;
 }
-.game-card.available{cursor:pointer;}
-.game-card.available:hover{border-color:rgba(201,146,42,0.35);background:rgba(201,146,42,0.05);}
-.game-card.available:active{transform:scale(0.97);}
-.game-card.locked{opacity:0.45;cursor:not-allowed;}
-.game-card.session-game{border-color:rgba(124,58,237,0.2);}
-.game-card.session-game.available{border-color:rgba(124,58,237,0.35);}
-.game-icon{font-size:2rem;line-height:1;margin-bottom:0.1rem;}
-.game-title{font-family:'Cinzel',serif;font-size:0.72rem;color:rgba(244,232,193,0.75);line-height:1.3;font-weight:600;}
-.game-card.locked .game-title{color:rgba(244,232,193,0.4);}
-.game-desc{font-size:0.68rem;color:rgba(201,146,42,0.4);font-style:italic;line-height:1.3;}
-.game-topic{font-family:'Cinzel',serif;font-size:0.58rem;color:rgba(167,139,250,0.6);margin-top:0.15rem;}
-.game-coin-badge{display:flex;align-items:center;gap:0.2rem;background:rgba(201,146,42,0.1);border:1px solid rgba(201,146,42,0.2);border-radius:20px;padding:0.15rem 0.5rem;font-family:'Cinzel',serif;font-size:0.58rem;color:rgba(201,146,42,0.6);margin-top:0.1rem;}
-.game-lock{position:absolute;top:0.4rem;right:0.4rem;font-size:0.75rem;color:rgba(201,146,42,0.25);}
-.game-lock-label{font-family:'Cinzel',serif;font-size:0.55rem;color:rgba(201,146,42,0.3);line-height:1.3;margin-top:0.1rem;}
-.game-play-btn{width:100%;margin-top:0.3rem;padding:0.35rem;min-height:32px;background:linear-gradient(135deg,var(--gold) 0%,var(--gold-bright) 100%);border:none;border-radius:7px;font-family:'Cinzel',serif;font-size:0.62rem;color:var(--ink);font-weight:700;cursor:pointer;pointer-events:none;}
-.game-card.session-game .game-play-btn{background:linear-gradient(135deg,var(--byzantine),var(--byzantine-light));color:rgba(244,232,193,0.9);}
-
-/* ── PRIZE NEED ────────────────────────────────────────────── */
-.prize-need{font-family:'Cinzel',serif;font-size:0.58rem;color:rgba(201,146,42,0.3);}
-
-/* ── BOTTOM NAV ────────────────────────────────────────────── */
+.game-card:active{background:rgba(44,22,84,0.35);border-color:rgba(124,58,237,0.4);transform:scale(0.98);}
+.game-icon{
+  font-size:1.4rem;flex-shrink:0;
+  width:44px;height:44px;display:flex;align-items:center;justify-content:center;
+  background:rgba(44,22,84,0.3);border-radius:10px;border:1px solid rgba(124,58,237,0.15);
+}
+.game-info{flex:1;min-width:0;}
+.game-title{font-family:'Cinzel',serif;font-size:0.8rem;color:rgba(200,180,255,0.9);font-weight:600;line-height:1.3;margin-bottom:0.2rem;}
+.game-desc{font-size:0.75rem;color:rgba(167,139,250,0.45);font-style:italic;line-height:1.4;}
+.game-arrow{color:rgba(167,139,250,0.3);font-size:0.9rem;flex-shrink:0;}
+.game-topic{
+  font-family:'Cinzel',serif;font-size:0.52rem;letter-spacing:0.08em;text-transform:uppercase;
+  color:rgba(201,146,42,0.45);background:rgba(201,146,42,0.07);
+  border:1px solid rgba(201,146,42,0.15);border-radius:10px;
+  padding:0.15rem 0.5rem;display:inline-block;margin-top:0.25rem;
+}
 .bottom-nav{
   position:fixed;bottom:0;left:0;right:0;height:var(--nav-h);
   background:rgba(8,4,0,0.97);border-top:1px solid rgba(201,146,42,0.18);
@@ -133,13 +82,24 @@ body::before{
 .nav-item.active .nav-mark{color:var(--gold-bright);text-shadow:0 0 12px rgba(255,215,0,0.6);}
 .nav-item.active .nav-label{color:var(--gold-light);}
 .nav-item.active::before{content:'';position:absolute;top:0;left:20%;right:20%;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent);border-radius:0 0 2px 2px;}
-
-/* ── ANIMATIONS ────────────────────────────────────────────── */
-.fade-up{opacity:0;transform:translateY(12px);animation:fadeUp 0.4s ease forwards;}
+.nav-dot{position:absolute;top:0.4rem;right:calc(50% - 18px);width:7px;height:7px;border-radius:50%;background:#ef4444;border:1.5px solid rgba(8,4,0,0.9);display:none;}
+.nav-dot.show{display:block;}
+.fade-up{opacity:0;transform:translateY(12px);animation:fadeUp 0.35s ease forwards;}
 @keyframes fadeUp{to{opacity:1;transform:translateY(0);}}
-.fade-up:nth-child(1){animation-delay:0.04s;}
-.fade-up:nth-child(2){animation-delay:0.1s;}
-.fade-up:nth-child(3){animation-delay:0.16s;}
+.fade-up:nth-child(1){animation-delay:0.03s;}
+.fade-up:nth-child(2){animation-delay:0.06s;}
+.fade-up:nth-child(3){animation-delay:0.09s;}
+.fade-up:nth-child(4){animation-delay:0.12s;}
+.fade-up:nth-child(5){animation-delay:0.15s;}
+.fade-up:nth-child(6){animation-delay:0.18s;}
+.fade-up:nth-child(7){animation-delay:0.21s;}
+.fade-up:nth-child(8){animation-delay:0.24s;}
+.fade-up:nth-child(9){animation-delay:0.27s;}
+.fade-up:nth-child(10){animation-delay:0.30s;}
+.fade-up:nth-child(11){animation-delay:0.33s;}
+.fade-up:nth-child(12){animation-delay:0.36s;}
+.fade-up:nth-child(13){animation-delay:0.39s;}
+.fade-up:nth-child(14){animation-delay:0.42s;}
 </style>
 </head>
 <body>
@@ -149,50 +109,161 @@ body::before{
 <div id="app">
 <div class="page">
 
-  <!-- HEADER -->
   <header class="app-header">
     <div class="app-name">The Orthodox Expedition</div>
     <div class="app-divider">✦ ☩ ✦</div>
   </header>
 
-  <!-- FEATURED GAME -->
-  <a class="featured-card fade-up" id="featured-card" href="games/byzantine-blitz.html">
-    <div class="featured-glow"></div>
-    <div class="featured-deco featured-deco-tl">✦</div>
-    <div class="featured-deco featured-deco-br">✦</div>
-    <div class="featured-inner">
-      <div class="featured-eyebrow">⚔ Featured Expedition Game</div>
-      <span class="featured-icon">⚡</span>
-      <div class="featured-title">Byzantine Blitz</div>
-      <div class="featured-desc">60 seconds. True or false. How many can you get right? Test your Orthodox knowledge at full speed.</div>
-      <div class="featured-play">Play Now ›</div>
-    </div>
-  </a>
+  <div class="section-eyebrow">⚔ Training Grounds — 14 Games</div>
 
-  <!-- EXPEDITION GAMES -->
-  <div class="games-section fade-up">
-    <div class="games-section-header">
-      <span class="games-section-icon">✦</span>
-      <span class="games-section-title">Expedition Games</span>
-      <span class="games-section-badge">Always Available</span>
-    </div>
-    <div class="game-grid" id="expedition-grid"></div>
-  </div>
+  <div class="games-grid">
 
-  <!-- SESSION GAMES -->
-  <div class="games-section fade-up">
-    <div class="games-section-header">
-      <span class="games-section-icon">⊕</span>
-      <span class="games-section-title">Session Games</span>
-      <span class="games-section-badge">10 / 20 Coins</span>
-    </div>
-    <div class="game-grid" id="session-grid"></div>
+    <a class="game-card fade-up" href="games/creed-builder.html">
+      <div class="game-icon">☩</div>
+      <div class="game-info">
+        <div class="game-title">Creed Builder</div>
+        <div class="game-desc">Reconstruct the Nicene Creed line by line from memory</div>
+        <span class="game-topic">Foundations</span>
+      </div>
+      <span class="game-arrow">›</span>
+    </a>
+
+    <a class="game-card fade-up" href="games/creed-catcher.html">
+      <div class="game-icon">✦</div>
+      <div class="game-info">
+        <div class="game-title">Creed Catcher</div>
+        <div class="game-desc">Catch the correct words of the Creed as they fall</div>
+        <span class="game-topic">Foundations</span>
+      </div>
+      <span class="game-arrow">›</span>
+    </a>
+
+    <a class="game-card fade-up" href="games/council-timeline.html">
+      <div class="game-icon">⊕</div>
+      <div class="game-info">
+        <div class="game-title">Council Timeline</div>
+        <div class="game-desc">Place the 7 Ecumenical Councils in the correct order</div>
+        <span class="game-topic">Church History</span>
+      </div>
+      <span class="game-arrow">›</span>
+    </a>
+
+    <a class="game-card fade-up" href="games/heresy-hunter.html">
+      <div class="game-icon">⚔</div>
+      <div class="game-info">
+        <div class="game-title">Heresy Hunter</div>
+        <div class="game-desc">Identify the heresies condemned by the Councils</div>
+        <span class="game-topic">Church History</span>
+      </div>
+      <span class="game-arrow">›</span>
+    </a>
+
+    <a class="game-card fade-up" href="games/apostle-journeys.html">
+      <div class="game-icon">☦</div>
+      <div class="game-info">
+        <div class="game-title">Apostle Journeys</div>
+        <div class="game-desc">Trace the missionary routes of the Holy Apostles</div>
+        <span class="game-topic">Church History</span>
+      </div>
+      <span class="game-arrow">›</span>
+    </a>
+
+    <a class="game-card fade-up" href="games/sacrament-match.html">
+      <div class="game-icon">◈</div>
+      <div class="game-info">
+        <div class="game-title">Sacrament Match</div>
+        <div class="game-desc">Match each sacrament to its visible sign and grace</div>
+        <span class="game-topic">The Sacraments</span>
+      </div>
+      <span class="game-arrow">›</span>
+    </a>
+
+    <a class="game-card fade-up" href="games/icon-gallery.html">
+      <div class="game-icon">🖼</div>
+      <div class="game-info">
+        <div class="game-title">Icon Gallery</div>
+        <div class="game-desc">Identify icons and the saints or feasts they depict</div>
+        <span class="game-topic">Saints &amp; Icons</span>
+      </div>
+      <span class="game-arrow">›</span>
+    </a>
+
+    <a class="game-card fade-up" href="games/liturgy-sequence.html">
+      <div class="game-icon">☩</div>
+      <div class="game-info">
+        <div class="game-title">Liturgy Sequence</div>
+        <div class="game-desc">Put the parts of the Divine Liturgy in the correct order</div>
+        <span class="game-topic">Worship &amp; Prayer</span>
+      </div>
+      <span class="game-arrow">›</span>
+    </a>
+
+    <a class="game-card fade-up" href="games/byzantine-blitz.html">
+      <div class="game-icon">⚡</div>
+      <div class="game-info">
+        <div class="game-title">Byzantine Blitz</div>
+        <div class="game-desc">Fast-fire Orthodox trivia — how many can you answer?</div>
+        <span class="game-topic">All Topics</span>
+      </div>
+      <span class="game-arrow">›</span>
+    </a>
+
+    <a class="game-card fade-up" href="games/feast-calendar.html">
+      <div class="game-icon">📅</div>
+      <div class="game-info">
+        <div class="game-title">Feast Calendar</div>
+        <div class="game-desc">Match the 12 Great Feasts to their correct dates</div>
+        <span class="game-topic">Church Year</span>
+      </div>
+      <span class="game-arrow">›</span>
+    </a>
+
+    <a class="game-card fade-up" href="games/feast-or-fast.html">
+      <div class="game-icon">🕯</div>
+      <div class="game-info">
+        <div class="game-title">Feast or Fast</div>
+        <div class="game-desc">Identify whether each day is a feast, a fast, or both</div>
+        <span class="game-topic">Church Year</span>
+      </div>
+      <span class="game-arrow">›</span>
+    </a>
+
+    <a class="game-card fade-up" href="games/fasting-rules.html">
+      <div class="game-icon">🌿</div>
+      <div class="game-info">
+        <div class="game-title">Fasting Rules</div>
+        <div class="game-desc">Learn the Orthodox fasting calendar and its seasons</div>
+        <span class="game-topic">Church Year</span>
+      </div>
+      <span class="game-arrow">›</span>
+    </a>
+
+    <a class="game-card fade-up" href="games/virtue-passion.html">
+      <div class="game-icon">⚖</div>
+      <div class="game-info">
+        <div class="game-title">Virtue &amp; Passion</div>
+        <div class="game-desc">Match each passion to its opposing virtue</div>
+        <span class="game-topic">The Inner Life</span>
+      </div>
+      <span class="game-arrow">›</span>
+    </a>
+
+    <a class="game-card fade-up" href="games/saint-seeker.html">
+      <div class="game-icon">✦</div>
+      <div class="game-info">
+        <div class="game-title">Saint Seeker</div>
+        <div class="game-desc">Find saints from clues about their life and feast day</div>
+        <span class="game-topic">All Topics</span>
+      </div>
+      <span class="game-arrow">›</span>
+    </a>
+
   </div>
 
 </div>
 </div>
 
-<!-- BOTTOM NAV — Home · Missions · Topics · Scripture · Journal -->
+<!-- BOTTOM NAV -->
 <nav class="bottom-nav" id="bottom-nav" style="display:none;">
   <a class="nav-item" href="home.html">
     <span class="nav-mark">✦</span>
@@ -201,7 +272,7 @@ body::before{
   <a class="nav-item" href="missions.html">
     <span class="nav-mark">☩</span>
     <span class="nav-label">Missions</span>
-    <span class="nav-dot" id="missions-dot" style="position:absolute;top:0.4rem;right:calc(50% - 18px);width:7px;height:7px;border-radius:50%;background:#ef4444;border:1.5px solid rgba(8,4,0,0.9);display:none;"></span>
+    <span class="nav-dot" id="missions-dot"></span>
   </a>
   <a class="nav-item" href="curriculum.html">
     <span class="nav-mark">⊕</span>
@@ -222,148 +293,43 @@ const SUPABASE_URL = 'https://ksfnsryfmkafwirzgjoe.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtzZm5zcnlmbWthZndpcnpnam9lIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2ODM4MTcsImV4cCI6MjA5MTI1OTgxN30.mHQty44WBnjQY8BJ8KbPk_pp-yTcOaifGxCZPUO4xpY';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// ── GAME DEFINITIONS ──────────────────────────────────────────
-const EXPEDITION_GAMES = [
-  {id:'byzantine-blitz',   title:'Byzantine Blitz',   icon:'⚡', desc:'60 seconds of true or false — go!',            url:'games/byzantine-blitz.html'},
-  {id:'saint-seeker',      title:'Saint Seeker',       icon:'⭐', desc:'Read the clue, name the saint.',               url:'games/saint-seeker.html'},
-  {id:'icon-gallery',      title:'Icon Gallery',       icon:'🎨', desc:'See the icon, choose the correct name.',        url:'games/icon-gallery.html'},
-  {id:'creed-catcher',     title:'Creed Catcher',      icon:'☩',  desc:'Catch the falling words and build the Creed.', url:'games/creed-catcher.html'},
-  {id:'feast-or-fast',     title:'Feast or Fast?',     icon:'📅', desc:'Is this day a feast or a fast? Tap fast!',      url:'games/feast-or-fast.html'},
-  {id:'heresy-hunter',     title:'Heresy Hunter',      icon:'⚔',  desc:'A heresy appears — which council struck it?',  url:'games/heresy-hunter.html'},
-];
-
-const SESSION_GAMES = [
-  {id:'liturgy-sequence',  title:'Liturgy Sequence',   icon:'🕯️', desc:'Arrange the Liturgy parts in order.',          url:'games/liturgy-sequence.html',  topicId:5, topicLabel:'Topic 5'},
-  {id:'council-timeline',  title:'Council Timeline',   icon:'🏛️', desc:'Place the 7 Councils on the right year.',      url:'games/council-timeline.html',  topicId:1, topicLabel:'Topic 1'},
-  {id:'sacrament-match',   title:'Sacrament Match',    icon:'🕊️', desc:'Match each sacrament to its visible sign.',    url:'games/sacrament-match.html',   topicId:2, topicLabel:'Topic 2'},
-  {id:'apostle-journeys',  title:'Apostle Journeys',   icon:'🗺️', desc:'Match each Apostle to where they served.',     url:'games/apostle-journeys.html',  topicId:1, topicLabel:'Topic 1'},
-  {id:'creed-builder',     title:'Creed Builder',      icon:'📜', desc:'Put the Nicene Creed in the right order.',     url:'games/creed-builder.html',     topicId:0, topicLabel:'Topic 0'},
-  {id:'feast-calendar',    title:'Feast Calendar',     icon:'🌟', desc:'Place the 12 Great Feasts in the right month.',url:'games/feast-calendar.html',    topicId:6, topicLabel:'Topic 6'},
-  {id:'fasting-rules',     title:'Fasting Rules',      icon:'🌿', desc:'True or false — allowed on a fast day?',      url:'games/fasting-rules.html',     topicId:6, topicLabel:'Topic 6'},
-  {id:'virtue-passion',    title:'Virtue vs Passion',  icon:'⚖️', desc:'Match each passion to its opposing virtue.',   url:'games/virtue-passion.html',    topicId:7, topicLabel:'Topic 7'},
-];
-
-// ── STATE ─────────────────────────────────────────────────────
-let profile = null;
-let availableTopics = [];
-
-// ── AUTH ──────────────────────────────────────────────────────
 (async()=>{
   try {
-    const isAdminView = new URLSearchParams(window.location.search).get('admin')==='1';
-
-    const timer = new Promise(r => setTimeout(()=>r(null), 4000));
+    const timer = new Promise(r => setTimeout(() => r(null), 4000));
     const res   = await Promise.race([sb.auth.getSession(), timer]);
     const session = res?.data?.session ?? null;
     if(!session){ window.location.href='index.html'; return; }
-
     const {data:prof} = await sb.from('profiles').select('role').eq('id',session.user.id).single();
-    if((prof&&['superuser','admin','parent'].includes(prof.role))&&!isAdminView){
-      window.location.href = prof.role==='parent'?'parent.html':'admin.html';
-      return;
+    const isAdminView = new URLSearchParams(window.location.search).get('admin')==='1';
+    if(prof&&['superuser','admin','parent'].includes(prof.role)&&!isAdminView){
+      window.location.href = prof.role==='parent'?'parent.html':'admin.html'; return;
     }
-
-    await loadAll(session.user.id);
-
-    // Fix featured card for admin view — done after DOM is ready
-    if(isAdminView){
-      const featured = document.getElementById('featured-card');
-      if(featured && !featured.href.includes('?admin=1')){
-        featured.href = featured.href + '?admin=1';
-      }
-    }
-
     document.getElementById('loading').style.display='none';
     document.getElementById('app').style.display='block';
     document.getElementById('bottom-nav').style.display='flex';
-
   } catch(e){
-    console.error('Games auth error:',e);
+    console.error('Games error:', e);
     window.location.href='index.html';
   }
 })();
 
-// ── LOAD ──────────────────────────────────────────────────────
-async function loadAll(userId){
-  const [profRes, masteryRes] = await Promise.all([
-    sb.from('profiles').select('*').eq('id',userId).single(),
-    sb.from('topic_mastery').select('topic_id,status').eq('explorer_id',userId),
-  ]);
-  profile = profRes.data;
-
-  const mastery = masteryRes.data || [];
-  availableTopics = mastery
-    .filter(m=>m.status==='available'||m.status==='pending'||m.status==='complete')
-    .map(m=>parseInt(m.topic_id));
-
-  renderExpeditionGames();
-  renderSessionGames();
-}
-
-// ── EXPEDITION GAMES ──────────────────────────────────────────
-function renderExpeditionGames(){
-  const grid = document.getElementById('expedition-grid');
-  grid.innerHTML='';
-  const isAdmin = new URLSearchParams(window.location.search).get('admin')==='1';
-  // Skip Byzantine Blitz — featured above
-  const games = EXPEDITION_GAMES.filter(g=>g.id!=='byzantine-blitz');
-  games.forEach(g=>{
-    const url = isAdmin && !g.url.includes('?admin=1') ? g.url+'?admin=1' : g.url;
-    const card = document.createElement('a');
-    card.className='game-card available';
-    card.href = url;
-    card.innerHTML=`
-      <div class="game-icon">${g.icon}</div>
-      <div class="game-title">${g.title}</div>
-      <div class="game-desc">${g.desc}</div>
-      <div class="game-play-btn">Play ›</div>`;
-    grid.appendChild(card);
-  });
-}
-
-// ── SESSION GAMES ─────────────────────────────────────────────
-function renderSessionGames(){
-  const grid = document.getElementById('session-grid');
-  grid.innerHTML='';
-  const isAdmin = new URLSearchParams(window.location.search).get('admin')==='1';
-  SESSION_GAMES.forEach(g=>{
-    const unlocked = availableTopics.includes(g.topicId) || isAdmin;
-    const url = isAdmin && !g.url.includes('?admin=1') ? g.url+'?admin=1' : g.url;
-    const card = document.createElement('div');
-    card.className=`game-card session-game${unlocked?' available':' locked'}`;
-    if(unlocked) card.onclick=()=>{ window.location.href=url; };
-    card.innerHTML=`
-      ${!unlocked?'<span class="game-lock">🔒</span>':''}
-      <div class="game-icon">${g.icon}</div>
-      <div class="game-title">${g.title}</div>
-      <div class="game-desc">${g.desc}</div>
-      ${unlocked
-        ? `<div class="game-coin-badge">⚔ 10 play · 20 win</div>
-           <div class="game-play-btn">Play ›</div>`
-        : `<div class="game-lock-label">Unlocks with ${g.topicLabel}</div>`
-      }`;
-    grid.appendChild(card);
-  });
-}
-
-// ── ADMIN NAV FIX ─────────────────────────────────────────────
 (function(){
   if(new URLSearchParams(window.location.search).get('admin')==='1'){
-    document.querySelectorAll('.nav-item').forEach(a=>{
-      if(a.href && !a.href.includes('?admin=1') && !a.href.includes('index.html')){
-        a.href = a.href + '?admin=1';
-      }
-    });
     document.querySelectorAll('a[href]').forEach(a=>{
       const href=a.getAttribute('href');
-      if(href && !href.startsWith('#') && !href.startsWith('http') &&
-         !href.includes('?admin=1') && !href.includes('index.html') &&
+      if(href&&!href.startsWith('#')&&!href.startsWith('http')&&
+         !href.includes('?admin=1')&&!href.includes('index.html')&&
          !href.includes('games/')){
-        a.setAttribute('href', href + '?admin=1');
+        a.setAttribute('href',href+'?admin=1');
       }
     });
   }
 })();
+</script>
+<script>
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{ navigator.serviceWorker.register('sw.js').catch(()=>{}); });
+}
 </script>
 </body>
 </html>

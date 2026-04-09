@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Heresy Hunter — Orthodox Expedition</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --gold:#c9922a;--gold-light:#f0c96e;--gold-bright:#ffd700;
+  --parchment:#f4e8c1;
+  --burgundy:#6b1a1a;--byzantine:#2c1654;
+  --green:#16a34a;--green-light:#22c55e;
+  --red:#dc2626;--red-light:#ef4444;
+  --bg:#0e0800;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{min-height:100%;overflow-x:hidden;}
+body{
+  font-family:'Crimson Text',serif;
+  background:var(--bg);
+  background-image:radial-gradient(ellipse at 50% 0%,rgba(107,26,26,0.5) 0%,transparent 55%),radial-gradient(ellipse at 100% 100%,rgba(44,22,84,0.35) 0%,transparent 50%);
+  min-height:100vh;padding:1.25rem 1rem 2rem;
+}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(201,146,42,0.02) 1px,transparent 1px),linear-gradient(90deg,rgba(201,146,42,0.02) 1px,transparent 1px);background-size:44px 44px;pointer-events:none;}
+
+.back-btn{background:none;border:1px solid rgba(201,146,42,0.2);border-radius:8px;padding:0.4rem 0.875rem;font-family:'Cinzel',serif;font-size:0.65rem;color:rgba(201,146,42,0.45);cursor:pointer;min-height:40px;margin-bottom:1.25rem;display:inline-block;}
+
+.screen{display:none;max-width:440px;margin:0 auto;text-align:center;}
+.screen.show{display:block;}
+
+/* START */
+.game-icon{font-size:3rem;margin-bottom:0.5rem;}
+.game-title{font-family:'Cinzel Decorative',serif;font-size:clamp(1.2rem,4.5vw,1.6rem);color:var(--gold-light);text-shadow:0 0 20px rgba(201,146,42,0.4);margin-bottom:0.25rem;}
+.game-sub{font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.2em;color:rgba(201,146,42,0.4);text-transform:uppercase;margin-bottom:1rem;}
+.game-desc{font-size:0.85rem;color:rgba(244,232,193,0.4);font-style:italic;line-height:1.6;margin-bottom:1.5rem;max-width:320px;margin-left:auto;margin-right:auto;}
+.start-btn{padding:1rem 2.5rem;min-height:56px;background:linear-gradient(135deg,var(--gold),var(--gold-bright));border:none;border-radius:14px;font-family:'Cinzel',serif;font-size:0.9rem;letter-spacing:0.1em;color:var(--bg);font-weight:700;cursor:pointer;box-shadow:0 4px 20px rgba(255,215,0,0.25);}
+.start-btn:active{transform:scale(0.97);}
+.high-score-lbl{font-family:'Cinzel',serif;font-size:0.68rem;color:rgba(201,146,42,0.3);margin-top:1rem;}
+
+/* GAME */
+.game-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:0.875rem;}
+.round-lbl{font-family:'Cinzel',serif;font-size:0.68rem;color:rgba(201,146,42,0.4);letter-spacing:0.1em;}
+.score-row{font-family:'Cinzel Decorative',serif;font-size:1.4rem;color:var(--gold-bright);text-shadow:0 0 10px rgba(255,215,0,0.3);}
+.score-sub{font-family:'Cinzel',serif;font-size:0.55rem;color:rgba(201,146,42,0.35);letter-spacing:0.1em;text-transform:uppercase;}
+
+/* Heresy card */
+.heresy-card{
+  background:linear-gradient(160deg,rgba(107,26,26,0.6),rgba(44,22,84,0.8));
+  border:2px solid rgba(220,38,38,0.35);border-radius:18px;
+  padding:1.5rem 1.25rem;margin-bottom:1.25rem;
+  position:relative;overflow:hidden;
+  transition:all 0.25s;
+}
+.heresy-card.correct{border-color:rgba(22,163,74,0.7);animation:flashGreen 0.5s ease;}
+.heresy-card.wrong{border-color:rgba(220,38,38,0.7);animation:shakeCard 0.4s ease;}
+@keyframes flashGreen{0%,100%{box-shadow:none;}50%{box-shadow:0 0 24px rgba(22,163,74,0.5);}}
+@keyframes shakeCard{0%,100%{transform:translateX(0);}25%{transform:translateX(-8px);}75%{transform:translateX(8px);}}
+
+.heresy-eyebrow{font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.2em;color:rgba(220,38,38,0.6);text-transform:uppercase;margin-bottom:0.5rem;}
+.heresy-name{font-family:'Cinzel Decorative',serif;font-size:clamp(1rem,4vw,1.3rem);color:#fca5a5;text-shadow:0 0 12px rgba(220,38,38,0.3);margin-bottom:0.5rem;line-height:1.3;}
+.heresy-desc{font-size:0.82rem;color:rgba(244,232,193,0.45);font-style:italic;line-height:1.5;}
+.feedback-overlay{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  font-size:3rem;opacity:0;transition:opacity 0.2s;pointer-events:none;
+}
+.feedback-overlay.show{opacity:1;}
+
+/* Council options */
+.council-options{display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-bottom:0.75rem;}
+.council-opt{
+  padding:0.75rem 0.5rem;min-height:56px;
+  background:rgba(44,22,84,0.25);
+  border:1.5px solid rgba(124,58,237,0.25);
+  border-radius:11px;font-family:'Cinzel',serif;font-size:0.7rem;
+  color:rgba(167,139,250,0.8);cursor:pointer;transition:all 0.15s;
+  text-align:center;line-height:1.3;
+}
+.council-opt:hover:not(:disabled){background:rgba(44,22,84,0.45);border-color:rgba(124,58,237,0.5);}
+.council-opt:active:not(:disabled){transform:scale(0.96);}
+.council-opt:disabled{cursor:not-allowed;}
+.council-opt.correct-opt{background:rgba(22,163,74,0.15);border-color:rgba(22,163,74,0.6);color:rgba(134,239,172,0.9);}
+.council-opt.wrong-opt{background:rgba(220,38,38,0.1);border-color:rgba(220,38,38,0.4);color:rgba(252,165,165,0.7);}
+
+.feedback-text{font-family:'Cinzel',serif;font-size:0.72rem;min-height:1.3rem;text-align:center;}
+.feedback-text.correct-text{color:rgba(134,239,172,0.8);}
+.feedback-text.wrong-text{color:rgba(252,165,165,0.7);}
+
+/* END */
+.end-ring{width:110px;height:110px;border-radius:50%;background:linear-gradient(135deg,rgba(44,22,84,0.9),rgba(107,26,26,0.9));border:3px solid var(--gold);display:flex;flex-direction:column;align-items:center;justify-content:center;margin:0 auto 1rem;box-shadow:0 0 30px rgba(201,146,42,0.25);}
+.end-score{font-family:'Cinzel Decorative',serif;font-size:1.8rem;color:var(--gold-bright);line-height:1;}
+.end-lbl{font-family:'Cinzel',serif;font-size:0.55rem;color:rgba(201,146,42,0.5);letter-spacing:0.1em;}
+.end-title{font-family:'Cinzel Decorative',serif;font-size:1.1rem;color:var(--gold-light);margin-bottom:0.35rem;}
+.end-msg{font-size:0.82rem;color:rgba(244,232,193,0.4);font-style:italic;margin-bottom:1.5rem;line-height:1.5;max-width:300px;margin-left:auto;margin-right:auto;}
+.new-record{font-family:'Cinzel',serif;font-size:0.78rem;color:var(--gold-bright);margin-bottom:1rem;animation:glow 1s ease-in-out infinite alternate;}
+@keyframes glow{from{text-shadow:none;}to{text-shadow:0 0 12px rgba(255,215,0,0.6);}}
+.end-btns{display:flex;gap:0.5rem;justify-content:center;}
+.play-again-btn{padding:0.75rem 1.75rem;min-height:48px;background:linear-gradient(135deg,var(--gold),var(--gold-bright));border:none;border-radius:11px;font-family:'Cinzel',serif;font-size:0.78rem;color:var(--bg);font-weight:700;cursor:pointer;}
+.back-games-btn{padding:0.75rem 1.25rem;min-height:48px;background:transparent;border:1px solid rgba(201,146,42,0.25);border-radius:11px;font-family:'Cinzel',serif;font-size:0.72rem;color:rgba(201,146,42,0.5);cursor:pointer;}
+</style>
+</head>
+<body>
+<button class="back-btn" onclick="window.location.href='../games.html'">← Games</button>
+
+<!-- START -->
+<div class="screen show" id="screen-start">
+  <div class="game-icon">⚔</div>
+  <div class="game-title">Heresy Hunter</div>
+  <div class="game-sub">Expedition Game</div>
+  <div class="game-desc">A heresy appears. Four councils stand ready. Which council struck it down? Hunt the heresy before it spreads!</div>
+  <button class="start-btn" onclick="startGame()">Hunt the Heresy ⚔</button>
+  <div class="high-score-lbl" id="high-score-lbl"></div>
+</div>
+
+<!-- GAME -->
+<div class="screen" id="screen-game">
+  <div class="game-top">
+    <div>
+      <div class="round-lbl" id="round-lbl">Round 1 of 10</div>
+    </div>
+    <div style="text-align:right;">
+      <div class="score-row" id="score-val">0</div>
+      <div class="score-sub">correct</div>
+    </div>
+  </div>
+
+  <div class="heresy-card" id="heresy-card">
+    <div class="heresy-eyebrow">The Heresy</div>
+    <div class="heresy-name" id="heresy-name">Loading...</div>
+    <div class="heresy-desc" id="heresy-desc"></div>
+    <div class="feedback-overlay" id="feedback-overlay"></div>
+  </div>
+
+  <div class="council-options" id="council-options"></div>
+  <div class="feedback-text" id="feedback-text"></div>
+</div>
+
+<!-- END -->
+<div class="screen" id="screen-end" style="text-align:center;">
+  <div class="end-ring">
+    <div class="end-score" id="end-score">0</div>
+    <div class="end-lbl">/ 10</div>
+  </div>
+  <div class="new-record" id="new-record" style="display:none;">✦ New High Score! ✦</div>
+  <div class="end-title" id="end-title">Well done!</div>
+  <div class="end-msg" id="end-msg"></div>
+  <div class="end-btns">
+    <button class="play-again-btn" onclick="startGame()">Hunt Again ⚔</button>
+    <button class="back-games-btn" onclick="window.location.href='../games.html'">Games</button>
+  </div>
+</div>
+
+<script>
+const ALL_QUESTIONS = [
+  // Arianism
+  {heresy:'Arianism',desc:'The belief that Jesus is NOT truly God — He was created by the Father and is therefore lesser.',council:'Council of Nicea (325)',wrong:['Council of Ephesus (431)','Council of Chalcedon (451)','2nd Council of Nicea (787)']},
+  {heresy:'Arianism (Again)',desc:'Arius was condemned again — the Holy Spirit was also declared fully God.',council:'1st Council of Constantinople (381)',wrong:['Council of Nicea (325)','Council of Ephesus (431)','Council of Chalcedon (451)']},
+  // Nestorianism
+  {heresy:'Nestorianism',desc:'The belief that Jesus had two completely separate persons — a divine person and a human person.',council:'Council of Ephesus (431)',wrong:['Council of Nicea (325)','1st Council of Constantinople (381)','Council of Chalcedon (451)']},
+  {heresy:'Nestorianism (Final)',desc:'Nestorianism condemned a second time — Christ is ONE person, not two.',council:'2nd Council of Constantinople (553)',wrong:['Council of Ephesus (431)','3rd Council of Constantinople (680)','2nd Council of Nicea (787)']},
+  // Monophysitism
+  {heresy:'Monophysitism',desc:'The belief that Christ has only ONE nature — the divine — not two natures.',council:'Council of Chalcedon (451)',wrong:['Council of Nicea (325)','Council of Ephesus (431)','1st Council of Constantinople (381)']},
+  {heresy:'Monophysitism (Again)',desc:'Condemned again — Christ has BOTH a full human and full divine nature.',council:'2nd Council of Constantinople (553)',wrong:['Council of Chalcedon (451)','3rd Council of Constantinople (680)','2nd Council of Nicea (787)']},
+  // Monothelitism
+  {heresy:'Monothelitism',desc:'The belief that Christ had only ONE will — the divine — not two wills.',council:'3rd Council of Constantinople (680)',wrong:['Council of Chalcedon (451)','2nd Council of Constantinople (553)','2nd Council of Nicea (787)']},
+  // Iconoclasm
+  {heresy:'Iconoclasm',desc:'The movement to destroy all icons and ban their veneration in the Church.',council:'2nd Council of Nicea (787)',wrong:['Council of Nicea (325)','3rd Council of Constantinople (680)','1st Council of Constantinople (381)']},
+  // Extra questions
+  {heresy:'The Filioque Heresy',desc:'Adding words to the Creed saying the Holy Spirit proceeds from the Father AND the Son.',council:'Council of Ephesus (431)',wrong:['Council of Nicea (325)','2nd Council of Nicea (787)','Council of Chalcedon (451)'],note:'Ephesus banned changes to the Creed'},
+  {heresy:'Denying Mary is Theotokos',desc:'Refusing to call Mary the "God-bearer" — claiming she was only the mother of the man Jesus.',council:'Council of Ephesus (431)',wrong:['Council of Nicea (325)','Council of Chalcedon (451)','3rd Council of Constantinople (680)']},
+  {heresy:'Two Wills of Christ Denied',desc:'Claiming Christ surrendered His human will completely to His divine will — only one will remains.',council:'3rd Council of Constantinople (680)',wrong:['Council of Chalcedon (451)','2nd Council of Constantinople (553)','2nd Council of Nicea (787)']},
+  {heresy:'Origen\'s Teachings',desc:'Certain beliefs of Origen — including pre-existence of souls — were condemned.',council:'2nd Council of Constantinople (553)',wrong:['Council of Nicea (325)','Council of Ephesus (431)','2nd Council of Nicea (787)']},
+];
+
+const TOTAL_ROUNDS = 10;
+let score=0, round=0, answered=false;
+let shuffled=[];
+let highScore=parseInt(localStorage.getItem('hh-high')||'0');
+
+function shuffle(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function showScreen(id){['screen-start','screen-game','screen-end'].forEach(s=>document.getElementById(s).classList.toggle('show',s===id));}
+
+function startGame(){
+  score=0;round=0;answered=false;
+  shuffled=shuffle(ALL_QUESTIONS).slice(0,TOTAL_ROUNDS);
+  document.getElementById('score-val').textContent='0';
+  loadRound();
+  showScreen('screen-game');
+  document.getElementById('high-score-lbl').textContent=highScore>0?`Best: ${highScore}/${TOTAL_ROUNDS}`:'';
+}
+
+function loadRound(){
+  if(round>=TOTAL_ROUNDS){endGame();return;}
+  const q=shuffled[round];
+  answered=false;
+  document.getElementById('round-lbl').textContent=`Round ${round+1} of ${TOTAL_ROUNDS}`;
+  document.getElementById('heresy-name').textContent=q.heresy;
+  document.getElementById('heresy-desc').textContent=q.note?`${q.desc}\n(Hint: ${q.note})`:q.desc;
+  document.getElementById('heresy-card').className='heresy-card';
+  document.getElementById('feedback-overlay').className='feedback-overlay';
+  document.getElementById('feedback-overlay').textContent='';
+  document.getElementById('feedback-text').textContent='';
+  document.getElementById('feedback-text').className='feedback-text';
+  buildOptions(q);
+}
+
+function buildOptions(q){
+  const opts=shuffle([q.council,...q.wrong]);
+  const container=document.getElementById('council-options');
+  container.innerHTML='';
+  opts.forEach(opt=>{
+    const btn=document.createElement('button');
+    btn.className='council-opt';
+    btn.textContent=opt;
+    btn.onclick=()=>answer(opt===q.council,opt,q.council);
+    container.appendChild(btn);
+  });
+}
+
+function answer(correct, chosen, rightAnswer){
+  if(answered) return;
+  answered=true;
+  const card=document.getElementById('heresy-card');
+  const overlay=document.getElementById('feedback-overlay');
+  const fbText=document.getElementById('feedback-text');
+
+  // Color all options
+  document.querySelectorAll('.council-opt').forEach(btn=>{
+    btn.disabled=true;
+    if(btn.textContent===rightAnswer) btn.classList.add('correct-opt');
+    else if(btn.textContent===chosen&&!correct) btn.classList.add('wrong-opt');
+  });
+
+  if(correct){
+    score++;
+    card.classList.add('correct');
+    overlay.textContent='✦';overlay.classList.add('show');
+    fbText.textContent='Correct! That heresy is condemned.';
+    fbText.className='feedback-text correct-text';
+    document.getElementById('score-val').textContent=score;
+  } else {
+    card.classList.add('wrong');
+    overlay.textContent='✗';overlay.classList.add('show');
+    fbText.textContent=`Not quite — it was ${rightAnswer}`;
+    fbText.className='feedback-text wrong-text';
+  }
+
+  round++;
+  setTimeout(loadRound, 1600);
+}
+
+function endGame(){
+  const isRecord=score>highScore;
+  if(isRecord){highScore=score;localStorage.setItem('hh-high',score);}
+  document.getElementById('end-score').textContent=score;
+  document.getElementById('new-record').style.display=isRecord?'block':'none';
+
+  let title='',msg='';
+  if(score>=9){title='Heresy Hunter!';msg=`${score}/10 — The Church Fathers would be proud of you!`;}
+  else if(score>=7){title='Council Expert!';msg=`${score}/10 — Excellent! You know your heresies well.`;}
+  else if(score>=5){title='Good Defender!';msg=`${score}/10 — Keep studying the Councils in Topic 1.`;}
+  else{title='Keep Training!';msg='The heresies are tricky! Review Session 1.4 and hunt again.';}
+
+  document.getElementById('end-title').textContent=title;
+  document.getElementById('end-msg').textContent=msg;
+  showScreen('screen-end');
+}
+
+document.getElementById('high-score-lbl').textContent=highScore>0?`Best: ${highScore}/${TOTAL_ROUNDS}`:'';
+</script>
+</body>
+</html>

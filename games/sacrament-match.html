@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Sacrament Match — Orthodox Expedition</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="game-utils.js"></script>
+<style>
+:root{
+  --gold:#c9922a;--gold-light:#f0c96e;--gold-bright:#ffd700;
+  --parchment:#f4e8c1;
+  --burgundy:#6b1a1a;--byzantine:#2c1654;--byzantine-light:#4a2a7a;
+  --green:#16a34a;--green-light:#22c55e;
+  --red:#dc2626;
+  --bg:#0e0800;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{min-height:100%;overflow-x:hidden;}
+body{
+  font-family:'Crimson Text',serif;
+  background:var(--bg);
+  background-image:radial-gradient(ellipse at 50% 0%,rgba(107,26,26,0.5) 0%,transparent 55%),radial-gradient(ellipse at 100% 100%,rgba(44,22,84,0.35) 0%,transparent 50%);
+  min-height:100vh;padding:1.25rem 1rem 2rem;
+}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(201,146,42,0.02) 1px,transparent 1px),linear-gradient(90deg,rgba(201,146,42,0.02) 1px,transparent 1px);background-size:44px 44px;pointer-events:none;}
+#coin-rain{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999;overflow:hidden;}
+@keyframes coinFall{0%{transform:translateY(0) rotate(0deg);opacity:1;}85%{opacity:1;}100%{transform:translateY(110vh) rotate(540deg) scale(0.4);opacity:0;}}
+
+.back-btn{background:none;border:1px solid rgba(201,146,42,0.2);border-radius:8px;padding:0.4rem 0.875rem;font-family:'Cinzel',serif;font-size:0.65rem;color:rgba(201,146,42,0.45);cursor:pointer;min-height:40px;margin-bottom:1.25rem;display:inline-block;}
+
+.screen{display:none;max-width:440px;margin:0 auto;text-align:center;}
+.screen.show{display:block;}
+
+/* START */
+.game-icon{font-size:3rem;margin-bottom:0.5rem;}
+.game-title{font-family:'Cinzel Decorative',serif;font-size:clamp(1.1rem,4vw,1.4rem);color:var(--gold-light);text-shadow:0 0 20px rgba(201,146,42,0.4);margin-bottom:0.25rem;}
+.game-sub{font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.2em;color:rgba(201,146,42,0.4);text-transform:uppercase;margin-bottom:1rem;}
+.game-desc{font-size:0.85rem;color:rgba(244,232,193,0.4);font-style:italic;line-height:1.6;margin-bottom:1rem;max-width:320px;margin-left:auto;margin-right:auto;}
+.coin-info{display:inline-flex;align-items:center;gap:0.5rem;background:rgba(201,146,42,0.08);border:1px solid rgba(201,146,42,0.2);border-radius:20px;padding:0.4rem 1rem;font-family:'Cinzel',serif;font-size:0.7rem;color:rgba(201,146,42,0.6);margin-bottom:1.5rem;}
+.start-btn{padding:0.9rem 2.5rem;min-height:52px;background:linear-gradient(135deg,var(--gold),var(--gold-bright));border:none;border-radius:13px;font-family:'Cinzel',serif;font-size:0.85rem;letter-spacing:0.1em;color:var(--bg);font-weight:700;cursor:pointer;}
+
+/* GAME */
+.progress-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:0.875rem;}
+.progress-lbl{font-family:'Cinzel',serif;font-size:0.65rem;color:rgba(201,146,42,0.4);letter-spacing:0.1em;}
+.score-num{font-family:'Cinzel Decorative',serif;font-size:1.4rem;color:var(--gold-bright);text-shadow:0 0 10px rgba(255,215,0,0.3);}
+.progress-bar-wrap{width:100%;height:5px;background:rgba(255,255,255,0.05);border-radius:3px;overflow:hidden;margin-bottom:1.25rem;}
+.progress-bar{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--gold),var(--gold-bright));transition:width 0.4s ease;}
+
+/* Two-column matching layout */
+.match-instruction{font-family:'Cinzel',serif;font-size:0.62rem;letter-spacing:0.12em;color:rgba(201,146,42,0.4);text-transform:uppercase;text-align:center;margin-bottom:1rem;}
+
+.match-area{display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-bottom:0.875rem;align-items:start;}
+.match-col-header{font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.18em;color:rgba(201,146,42,0.4);text-transform:uppercase;text-align:center;margin-bottom:0.4rem;}
+
+.sacrament-list{display:flex;flex-direction:column;gap:0.4rem;}
+.sacrament-card{
+  background:rgba(44,22,84,0.3);border:1.5px solid rgba(124,58,237,0.3);
+  border-radius:10px;padding:0.625rem 0.5rem;
+  font-family:'Cinzel',serif;font-size:0.68rem;color:rgba(167,139,250,0.85);
+  cursor:pointer;transition:all 0.2s;text-align:center;min-height:44px;
+  display:flex;align-items:center;justify-content:center;line-height:1.3;
+}
+.sacrament-card:hover{background:rgba(44,22,84,0.5);border-color:rgba(124,58,237,0.55);}
+.sacrament-card.selected{background:rgba(201,146,42,0.15);border-color:var(--gold);color:var(--gold-light);}
+.sacrament-card.matched{opacity:0.35;pointer-events:none;}
+.sacrament-card.correct-match{background:rgba(22,163,74,0.12);border-color:rgba(22,163,74,0.5);color:rgba(134,239,172,0.85);}
+.sacrament-card.wrong-match{background:rgba(220,38,38,0.1);border-color:rgba(220,38,38,0.4);color:rgba(252,165,165,0.7);animation:shake 0.3s ease;}
+@keyframes shake{0%,100%{transform:translateX(0);}25%{transform:translateX(-5px);}75%{transform:translateX(5px);}}
+
+.sign-list{display:flex;flex-direction:column;gap:0.4rem;}
+.sign-card{
+  background:rgba(107,26,26,0.2);border:1.5px solid rgba(201,146,42,0.2);
+  border-radius:10px;padding:0.625rem 0.5rem;
+  font-family:'Crimson Text',serif;font-size:0.8rem;color:rgba(244,232,193,0.6);
+  cursor:pointer;transition:all 0.2s;text-align:center;min-height:44px;
+  display:flex;align-items:center;justify-content:center;line-height:1.3;font-style:italic;
+}
+.sign-card:hover{background:rgba(107,26,26,0.35);border-color:rgba(201,146,42,0.4);}
+.sign-card.selected{background:rgba(201,146,42,0.1);border-color:var(--gold);}
+.sign-card.matched{opacity:0.35;pointer-events:none;}
+.sign-card.correct-match{background:rgba(22,163,74,0.1);border-color:rgba(22,163,74,0.45);color:rgba(134,239,172,0.8);}
+.sign-card.wrong-match{animation:shake 0.3s ease;}
+
+.match-feedback{font-family:'Cinzel',serif;font-size:0.72rem;text-align:center;min-height:1.3rem;margin-bottom:0.5rem;}
+.match-feedback.correct-fb{color:rgba(134,239,172,0.8);}
+.match-feedback.wrong-fb{color:rgba(252,165,165,0.7);}
+
+/* END */
+.result-ring{width:110px;height:110px;border-radius:50%;background:linear-gradient(135deg,rgba(44,22,84,0.9),rgba(107,26,26,0.9));border:3px solid var(--gold);display:flex;flex-direction:column;align-items:center;justify-content:center;margin:0 auto 1rem;box-shadow:0 0 30px rgba(201,146,42,0.25);}
+.result-pct{font-family:'Cinzel Decorative',serif;font-size:1.8rem;color:var(--gold-bright);line-height:1;}
+.result-lbl{font-family:'Cinzel',serif;font-size:0.55rem;color:rgba(201,146,42,0.5);letter-spacing:0.1em;}
+.result-title{font-family:'Cinzel Decorative',serif;font-size:1.1rem;color:var(--gold-light);margin-bottom:0.35rem;}
+.result-msg{font-size:0.82rem;color:rgba(244,232,193,0.4);font-style:italic;margin-bottom:0.5rem;line-height:1.5;}
+.coin-award{font-family:'Cinzel',serif;font-size:0.85rem;color:var(--gold-bright);margin-bottom:1.25rem;text-shadow:0 0 10px rgba(255,215,0,0.3);}
+.end-btns{display:flex;gap:0.5rem;justify-content:center;}
+.play-again-btn{padding:0.75rem 1.75rem;min-height:48px;background:linear-gradient(135deg,var(--gold),var(--gold-bright));border:none;border-radius:11px;font-family:'Cinzel',serif;font-size:0.78rem;color:var(--bg);font-weight:700;cursor:pointer;}
+.back-games-btn{padding:0.75rem 1.25rem;min-height:48px;background:transparent;border:1px solid rgba(201,146,42,0.25);border-radius:11px;font-family:'Cinzel',serif;font-size:0.72rem;color:rgba(201,146,42,0.5);cursor:pointer;}
+</style>
+</head>
+<body>
+<div id="coin-rain"></div>
+<button class="back-btn" onclick="window.location.href='../games.html'">← Games</button>
+
+<!-- START -->
+<div class="screen show" id="screen-start">
+  <div class="game-icon">🕊️</div>
+  <div class="game-title">Sacrament Match</div>
+  <div class="game-sub">Session Game · Topic 2</div>
+  <div class="game-desc">Each of the 7 Sacraments has a visible sign through which God conveys His invisible grace. Can you match them all correctly?</div>
+  <div class="coin-info">⚔ 10 coins for playing · 20 for winning</div>
+  <button class="start-btn" onclick="startGame()">Begin Matching ›</button>
+</div>
+
+<!-- GAME -->
+<div class="screen" id="screen-game">
+  <div class="progress-row">
+    <div class="progress-lbl" id="progress-lbl">0 of 7 matched</div>
+    <div class="score-num" id="score-num">0</div>
+  </div>
+  <div class="progress-bar-wrap"><div class="progress-bar" id="progress-bar" style="width:0%"></div></div>
+
+  <div class="match-instruction">Tap a Sacrament, then tap its Visible Sign</div>
+
+  <div class="match-area">
+    <div>
+      <div class="match-col-header">The Sacrament</div>
+      <div class="sacrament-list" id="sacrament-list"></div>
+    </div>
+    <div>
+      <div class="match-col-header">The Visible Sign</div>
+      <div class="sign-list" id="sign-list"></div>
+    </div>
+  </div>
+
+  <div class="match-feedback" id="match-feedback"></div>
+</div>
+
+<!-- END -->
+<div class="screen" id="screen-end" style="text-align:center;">
+  <div class="result-ring">
+    <div class="result-pct" id="result-pct">0%</div>
+    <div class="result-lbl">correct</div>
+  </div>
+  <div class="result-title" id="result-title">Well done!</div>
+  <div class="result-msg" id="result-msg"></div>
+  <div class="coin-award" id="coin-award"></div>
+  <div class="end-btns">
+    <button class="play-again-btn" onclick="startGame()">Play Again</button>
+    <button class="back-games-btn" onclick="window.location.href='../games.html'">Games</button>
+  </div>
+</div>
+
+<script>
+const GAME_ID = 'sacrament-match';
+
+const SACRAMENTS = [
+  {id:'baptism',    name:'Holy Baptism',    sign:'Three immersions in water',              grace:'Cleansing of sin — death and resurrection with Christ'},
+  {id:'chrismation',name:'Chrismation',     sign:'Anointing with Holy Chrism oil',         grace:'Sealed with the gift of the Holy Spirit'},
+  {id:'eucharist',  name:'Holy Eucharist',  sign:'Blessed bread and wine',                 grace:'The real Body and Blood of Christ — communion with God'},
+  {id:'confession', name:'Holy Confession', sign:'Prayer of absolution by a priest',       grace:'Forgiveness of sins committed after Baptism'},
+  {id:'orders',     name:'Holy Orders',     sign:'Laying on of hands by a bishop',         grace:'Grace to shepherd the Church as deacon, priest, or bishop'},
+  {id:'matrimony',  name:'Holy Matrimony',  sign:'Crowning of bride and groom',            grace:'God\'s blessing on love — Christ in the center of marriage'},
+  {id:'unction',    name:'Holy Unction',    sign:'Anointing with blessed oil',             grace:'Healing of body and soul through the power of the Holy Spirit'},
+];
+
+let selectedSacrament = null;
+let matches = {}; // sacramentId -> signId
+let score = 0;
+let wrongAttempts = 0;
+
+function shuffle(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function showScreen(id){['screen-start','screen-game','screen-end'].forEach(s=>document.getElementById(s).classList.toggle('show',s===id));}
+
+function startGame(){
+  selectedSacrament=null;matches={};score=0;wrongAttempts=0;
+  document.getElementById('score-num').textContent='0';
+  document.getElementById('match-feedback').textContent='';
+  document.getElementById('match-feedback').className='match-feedback';
+  updateProgress();
+  renderCards();
+  showScreen('screen-game');
+}
+
+function updateProgress(){
+  const matched=Object.keys(matches).length;
+  const pct=(matched/SACRAMENTS.length)*100;
+  document.getElementById('progress-lbl').textContent=`${matched} of ${SACRAMENTS.length} matched`;
+  document.getElementById('progress-bar').style.width=pct+'%';
+  document.getElementById('score-num').textContent=score;
+}
+
+function renderCards(){
+  // Shuffle signs independently
+  const shuffledSacraments=shuffle([...SACRAMENTS]);
+  const shuffledSigns=shuffle([...SACRAMENTS]);
+
+  const sacList=document.getElementById('sacrament-list');
+  const signList=document.getElementById('sign-list');
+  sacList.innerHTML='';signList.innerHTML='';
+
+  shuffledSacraments.forEach(s=>{
+    const card=document.createElement('div');
+    const isMatched=!!matches[s.id];
+    card.className=`sacrament-card${isMatched?' matched correct-match':''}`;
+    card.id=`sac-${s.id}`;
+    card.dataset.id=s.id;
+    card.textContent=s.name;
+    if(!isMatched) card.onclick=()=>selectSacrament(s.id);
+    sacList.appendChild(card);
+  });
+
+  shuffledSigns.forEach(s=>{
+    const card=document.createElement('div');
+    const isMatched=Object.values(matches).includes(s.id);
+    card.className=`sign-card${isMatched?' matched correct-match':''}`;
+    card.id=`sign-${s.id}`;
+    card.dataset.id=s.id;
+    card.textContent=s.sign;
+    if(!isMatched) card.onclick=()=>selectSign(s.id);
+    signList.appendChild(card);
+  });
+}
+
+function selectSacrament(id){
+  // Deselect previous
+  document.querySelectorAll('.sacrament-card').forEach(c=>c.classList.remove('selected'));
+  if(selectedSacrament===id){
+    selectedSacrament=null;
+    return;
+  }
+  selectedSacrament=id;
+  const card=document.getElementById(`sac-${id}`);
+  if(card) card.classList.add('selected');
+  document.getElementById('match-feedback').textContent='Now tap the matching visible sign →';
+  document.getElementById('match-feedback').className='match-feedback';
+}
+
+function selectSign(signId){
+  if(!selectedSacrament) return;
+
+  const isCorrect=selectedSacrament===signId;
+  const sacCard=document.getElementById(`sac-${selectedSacrament}`);
+  const signCard=document.getElementById(`sign-${signId}`);
+  const fb=document.getElementById('match-feedback');
+
+  if(isCorrect){
+    score++;
+    matches[selectedSacrament]=signId;
+    if(sacCard){sacCard.classList.remove('selected');sacCard.classList.add('correct-match','matched');sacCard.onclick=null;}
+    if(signCard){signCard.classList.add('correct-match','matched');signCard.onclick=null;}
+    const sacrament=SACRAMENTS.find(s=>s.id===signId);
+    fb.textContent=`✦ Correct! ${sacrament?.grace||''}`;
+    fb.className='match-feedback correct-fb';
+    selectedSacrament=null;
+    updateProgress();
+    if(Object.keys(matches).length===SACRAMENTS.length){
+      setTimeout(()=>endGame(),800);
+    }
+  } else {
+    wrongAttempts++;
+    if(sacCard) sacCard.classList.add('wrong-match');
+    if(signCard) signCard.classList.add('wrong-match');
+    const rightSacrament=SACRAMENTS.find(s=>s.id===signId);
+    fb.textContent=`✗ Not quite — try another sign for this sacrament.`;
+    fb.className='match-feedback wrong-fb';
+    setTimeout(()=>{
+      if(sacCard) sacCard.classList.remove('wrong-match');
+      if(signCard) signCard.classList.remove('wrong-match');
+      fb.textContent='';fb.className='match-feedback';
+    },700);
+  }
+}
+
+async function endGame(){
+  const totalPossible=SACRAMENTS.length;
+  const correct=score;
+  const pct=Math.round((correct/totalPossible)*100);
+  const won=wrongAttempts<=2; // Win if 2 or fewer wrong attempts
+
+  showScreen('screen-end');
+  document.getElementById('result-pct').textContent=pct+'%';
+
+  let title='',msg='';
+  if(wrongAttempts===0){title='Perfect Match!';msg='All 7 Sacraments matched on the first try. You truly know the holy mysteries!';}
+  else if(won){title='Excellent!';msg=`All matched with only ${wrongAttempts} mistake${wrongAttempts===1?'':'s'}. The sacraments are written on your heart!`;}
+  else if(pct===100){title='All Matched!';msg=`You found all the matches! Keep practicing to get it right on the first try.`;}
+  else{title='Good Try!';msg='Review the sacraments in Topic 2 and come back for another round!';}
+
+  document.getElementById('result-title').textContent=title;
+  document.getElementById('result-msg').textContent=msg;
+
+  const result=await GameUtils.awardCoins(GAME_ID,won,'Sacrament Match');
+  if(result.alreadyPlayed){
+    document.getElementById('coin-award').textContent='Already played today — come back tomorrow!';
+  } else if(result.awarded>0){
+    document.getElementById('coin-award').textContent=`+${result.awarded} coins earned!${won?' (Win bonus!)':''}`;
+    GameUtils.coinRain('coin-rain',result.awarded);
+  }
+}
+
+// Init
+(async()=>{
+  const prof=await GameUtils.init();
+  if(!prof) return;
+})();
+</script>
+</body>
+</html>

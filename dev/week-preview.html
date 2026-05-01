@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Week.html Shell Preview — All States</title>
+<style>
+  body{
+    margin:0;
+    padding:0;
+    background:#0e0800;
+    font-family:'Cinzel',serif;
+    color:#f4e8c1;
+  }
+  .label{
+    text-align:center;
+    background:#6b1a1a;
+    color:#ffd700;
+    font-family:'Cinzel Decorative',serif;
+    font-size:1.1rem;
+    padding:0.75rem;
+    letter-spacing:0.15em;
+    border-top:3px solid #c9922a;
+    border-bottom:1px solid rgba(201,146,42,0.3);
+  }
+  .label .sub{
+    display:block;
+    font-family:'Crimson Text',serif;
+    font-size:0.75rem;
+    font-style:italic;
+    color:rgba(244,232,193,0.7);
+    margin-top:0.25rem;
+    letter-spacing:0.05em;
+  }
+  iframe{
+    width:100%;
+    height:100vh;
+    border:none;
+    display:block;
+  }
+  .controls{
+    position:fixed;
+    top:0.5rem;
+    right:0.5rem;
+    background:rgba(14,8,0,0.9);
+    border:1px solid rgba(201,146,42,0.3);
+    border-radius:8px;
+    padding:0.5rem;
+    z-index:1000;
+    font-size:0.7rem;
+  }
+  .controls a{
+    display:block;
+    color:#f0c96e;
+    text-decoration:none;
+    padding:0.25rem 0.5rem;
+    margin:0.125rem 0;
+  }
+  .controls a:hover{background:rgba(201,146,42,0.15);}
+</style>
+</head>
+<body>
+
+<div class="controls">
+  <a href="#pre">Pre-Launch</a>
+  <a href="#topic00">Topic 00 (Mon)</a>
+  <a href="#day1">Year 1 — Day 1</a>
+  <a href="#day2">Year 1 — Day 2</a>
+  <a href="#day3">Year 1 — Day 3</a>
+  <a href="#sunday">Sunday</a>
+  <a href="#saturday">Saturday</a>
+  <a href="#between">Between Sessions</a>
+  <a href="#pause">Pause Card</a>
+</div>
+
+<div class="label" id="pre">Pre-Launch
+  <span class="sub">Date: 2026-05-01 (before May 18 launch)</span>
+</div>
+<iframe src="week-preview-frame.html?date=2026-05-01"></iframe>
+
+<div class="label" id="topic00">Topic 00 — Lighter Model (Mon-Fri all read 'topic00_open')
+  <span class="sub">Date: 2026-05-18 (Monday, launch day)</span>
+</div>
+<iframe src="week-preview-frame.html?date=2026-05-18"></iframe>
+
+<div class="label" id="day1">Year 1 — Day 1 (Monday Teaching)
+  <span class="sub">Date: 2026-09-07 (Monday of Week 2 — 'The Theotokos — Her Birth & Ours')</span>
+</div>
+<iframe src="week-preview-frame.html?date=2026-09-07"></iframe>
+
+<div class="label" id="day2">Year 1 — Day 2 (Wednesday Independent)
+  <span class="sub">Date: 2026-09-09 (Wednesday)</span>
+</div>
+<iframe src="week-preview-frame.html?date=2026-09-09"></iframe>
+
+<div class="label" id="day3">Year 1 — Day 3 (Friday Reflection)
+  <span class="sub">Date: 2026-09-11 (Friday)</span>
+</div>
+<iframe src="week-preview-frame.html?date=2026-09-11"></iframe>
+
+<div class="label" id="sunday">Sunday — Lived Apex
+  <span class="sub">Date: 2026-09-13 (Sunday)</span>
+</div>
+<iframe src="week-preview-frame.html?date=2026-09-13"></iframe>
+
+<div class="label" id="saturday">Saturday — Rest
+  <span class="sub">Date: 2026-09-12 (Saturday)</span>
+</div>
+<iframe src="week-preview-frame.html?date=2026-09-12"></iframe>
+
+<div class="label" id="between">Tuesday — Between Sessions
+  <span class="sub">Date: 2026-09-08 (Tuesday)</span>
+</div>
+<iframe src="week-preview-frame.html?date=2026-09-08"></iframe>
+
+<div class="label" id="pause">Twelve Days of Christmas Pause
+  <span class="sub">Date: 2026-12-26 (during pause)</span>
+</div>
+<iframe src="week-preview-frame.html?date=2026-12-26"></iframe>
+
+</body>
+</html>

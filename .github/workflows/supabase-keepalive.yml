@@ -1,9 +1,45 @@
-ROW_COUNT=$(jq 'length' response.json)
-          echo "Rows returned: ${ROW_COUNT}"
+name: Supabase Keep-Alive Ping
 
-          if [ "${ROW_COUNT}" -lt 1 ]; then
-            echo "::error::Reached Supabase but topics returned 0 rows."
+on:
+  schedule:
+    - cron: '0 12 */3 * *'
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Ping Supabase REST endpoint
+        env:
+          SUPABASE_URL: https://ksfnsryfmkafwirzgjoe.supabase.co
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${SUPABASE_ANON_KEY:-}" ]; then
+            echo "::error::SUPABASE_ANON_KEY secret is not set."
             exit 1
           fi
 
-          echo "✅ Supabase keep-alive ping succeeded."
+          echo "Pinging ${SUPABASE_URL}/rest/v1/topics ..."
+
+          HTTP_STATUS=$(curl -sS -o response.json -w "%{http_code}" \
+            -H "apikey: ${SUPABASE_ANON_KEY}" \
+            -H "Authorization: Bearer ${SUPABASE_ANON_KEY}" \
+            "${SUPABASE_URL}/rest/v1/topics?select=id&limit=1")
+
+          echo "HTTP status: ${HTTP_STATUS}"
+          echo "Response body:"
+          cat response.json
+          echo
+
+          if [ "${HTTP_STATUS}" -lt 200 ] || [ "${HTTP_STATUS}" -ge 300 ]; then
+            echo "::error::Supabase ping failed with HTTP ${HTTP_STATUS}."
+            exit 1
+          fi
+
+          ROW_COUNT=$(jq 'length' response.json)
+          echo "Rows returned (anon view, RLS-filtered): ${ROW_COUNT}"
+
+          echo "✅ Supabase keep-alive ping succeeded — DB executed query (HTTP ${HTTP_STATUS})."

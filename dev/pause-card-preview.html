@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pause Card Preview — Orthodox Expedition</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=Caveat:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  body{
+    margin:0;
+    padding:2rem 1rem;
+    background:#0e0800;
+    background-image:radial-gradient(ellipse at 50% 0%,rgba(107,26,26,0.5) 0%,transparent 55%),
+                     radial-gradient(ellipse at 100% 100%,rgba(44,22,84,0.35) 0%,transparent 50%);
+    min-height:100vh;
+    font-family:'Crimson Text',serif;
+    color:#f4e8c1;
+  }
+  h1{
+    font-family:'Cinzel Decorative',serif;
+    text-align:center;
+    color:#f0c96e;
+    margin:0 0 0.25rem 0;
+    font-size:1.6rem;
+  }
+  .sub{
+    text-align:center;
+    font-family:'Cinzel',serif;
+    font-size:0.7rem;
+    letter-spacing:0.2em;
+    color:rgba(201,146,42,0.5);
+    text-transform:uppercase;
+    margin-bottom:2rem;
+  }
+  .label{
+    text-align:center;
+    font-family:'Cinzel',serif;
+    font-size:0.7rem;
+    letter-spacing:0.15em;
+    color:rgba(201,146,42,0.6);
+    text-transform:uppercase;
+    margin-top:2.5rem;
+    margin-bottom:0;
+  }
+</style>
+</head>
+<body>
+
+<h1>Pause Card Preview</h1>
+<div class="sub">Four variants — bright week, twelve days, summer, rest</div>
+
+<div class="label">Bright Week (gold-bright)</div>
+<div id="slot-bright"></div>
+
+<div class="label">The Twelve Days of Christmas (gold)</div>
+<div id="slot-twelve"></div>
+
+<div class="label">Summer Easing (gold-light)</div>
+<div id="slot-summer"></div>
+
+<div class="label">Rest Week (gold)</div>
+<div id="slot-rest"></div>
+
+<script src="../js/pause-card.js"></script>
+<script>
+  document.getElementById('slot-bright').innerHTML = PauseCard.render({
+    day_kind: 'pause',
+    pause_reason: 'bright_week',
+    pause_resumes_on: '2027-05-10',
+  });
+  document.getElementById('slot-twelve').innerHTML = PauseCard.render({
+    day_kind: 'pause',
+    pause_reason: 'twelve_days',
+    pause_resumes_on: '2027-01-07',
+  });
+  document.getElementById('slot-summer').innerHTML = PauseCard.render({
+    day_kind: 'pause',
+    pause_reason: 'summer_easing',
+    pause_resumes_on: '2027-08-30',
+  });
+  document.getElementById('slot-rest').innerHTML = PauseCard.render({
+    day_kind: 'pause',
+    pause_reason: 'rest_week',
+    pause_resumes_on: '2026-11-09',
+  });
+</script>
+
+</body>
+</html>

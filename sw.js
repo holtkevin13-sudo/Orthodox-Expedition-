@@ -1,17 +1,28 @@
-// Orthodox Expedition — Service Worker v3
+// Orthodox Expedition — Service Worker v4
+// v4: adds week.html, prayers.html, day-state, pause-card, prayers, and config JSON
 // Version bump forces cache clear and fresh install
 
-const CACHE_NAME = 'orthodox-expedition-v3';
+const CACHE_NAME = 'orthodox-expedition-v4';
 const STATIC_ASSETS = [
   '/Orthodox-Expedition-/',
   '/Orthodox-Expedition-/index.html',
   '/Orthodox-Expedition-/home.html',
+  '/Orthodox-Expedition-/week.html',
+  '/Orthodox-Expedition-/prayers.html',
   '/Orthodox-Expedition-/missions.html',
   '/Orthodox-Expedition-/curriculum.html',
   '/Orthodox-Expedition-/bazaar.html',
   '/Orthodox-Expedition-/games.html',
+  '/Orthodox-Expedition-/journal.html',
+  '/Orthodox-Expedition-/bible-reader.html',
+  '/Orthodox-Expedition-/parent.html',
   '/Orthodox-Expedition-/favicon.svg',
   '/Orthodox-Expedition-/manifest.json',
+  '/Orthodox-Expedition-/js/day-state.js',
+  '/Orthodox-Expedition-/js/pause-card.js',
+  '/Orthodox-Expedition-/js/prayers.js',
+  '/Orthodox-Expedition-/config/program-spine.json',
+  '/Orthodox-Expedition-/config/daily-prayers.json',
 ];
 
 // Install — cache static assets

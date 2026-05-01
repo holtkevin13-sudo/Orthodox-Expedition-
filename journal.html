@@ -3,993 +3,506 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Field Manual — The Orthodox Expedition</title>
-<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<title>This Week — The Orthodox Expedition</title>
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#c9922a">
-<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400;1,600&family=Caveat:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=Caveat:wght@400;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <style>
 :root{
-  --gold:#c9922a;--gold-light:#f0c96e;--gold-bright:#ffd700;
-  --parchment:#f4e8c1;--parchment-dark:#e8d5a0;--ink:#1a0f00;
-  --leather:#3d1f08;--leather-light:#5c3010;
+  --gold:#c9922a;
+  --gold-light:#f0c96e;
+  --gold-bright:#ffd700;
+  --parchment:#f4e8c1;
+  --ink:#1a0f00;
+  --burgundy:#6b1a1a;
+  --byzantine:#2c1654;
   --bg:#0e0800;
+  --green:#16a34a;
 }
+
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 html,body{min-height:100%;overflow-x:hidden;}
-
-/* ── LOADING ── */
-#loading{position:fixed;inset:0;z-index:400;display:flex;align-items:center;justify-content:center;background:var(--leather);}
-.loading-mark{font-family:'Cinzel',serif;font-size:2rem;color:rgba(244,232,193,0.4);animation:pulse 1.5s ease-in-out infinite;}
-@keyframes pulse{0%,100%{opacity:0.3;}50%{opacity:0.9;}}
-
-/* ── JOURNAL BODY ── */
 body{
   font-family:'Crimson Text',serif;
-  background:var(--leather);
+  background:var(--bg);
   background-image:
-    repeating-linear-gradient(
-      0deg,
-      transparent,
-      transparent 31px,
-      rgba(0,0,0,0.15) 31px,
-      rgba(0,0,0,0.15) 32px
-    );
+    radial-gradient(ellipse at 50% 0%,rgba(107,26,26,0.5) 0%,transparent 55%),
+    radial-gradient(ellipse at 100% 100%,rgba(44,22,84,0.35) 0%,transparent 50%);
   min-height:100vh;
+  color:var(--parchment);
+  padding:1rem 1rem 4rem;
 }
-
-/* ── JOURNAL COVER ── */
-.journal-wrap{
-  max-width:540px;margin:0 auto;
-  min-height:100vh;
-  background:var(--parchment);
-  background-image:
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
-  box-shadow:
-    -4px 0 12px rgba(0,0,0,0.4),
-    4px 0 12px rgba(0,0,0,0.4),
-    inset 4px 0 8px rgba(61,31,8,0.2);
-  position:relative;
-}
-
-/* Left binding */
-.journal-wrap::before{
-  content:'';position:absolute;left:0;top:0;bottom:0;width:18px;
-  background:linear-gradient(90deg,#2a1206,#5c3010 60%,#3d1f08);
-  box-shadow:2px 0 6px rgba(0,0,0,0.4);z-index:10;
-}
-/* Binding rings */
-.binding-rings{
-  position:fixed;left:0;top:0;bottom:0;width:18px;
-  display:flex;flex-direction:column;justify-content:space-evenly;
-  align-items:center;z-index:20;pointer-events:none;
-}
-.ring{
-  width:24px;height:24px;border-radius:50%;
-  background:radial-gradient(circle at 35% 35%,#d4a853,#8b6914 60%,#5a4209);
-  box-shadow:0 2px 4px rgba(0,0,0,0.5),inset 0 1px 2px rgba(255,255,255,0.15);
-}
-
-/* ── HEADER ── */
-.journal-header{
-  background:linear-gradient(180deg,#3d1f08,#5c3010);
-  padding:1.25rem 1.25rem 1.25rem 1.5rem;
-  border-bottom:3px solid #8b6914;
-  position:sticky;top:0;z-index:100;
-}
-.journal-header-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:0.25rem;}
-.journal-title{font-family:'Cinzel Decorative',serif;font-size:1.1rem;color:var(--gold-light);text-shadow:0 0 12px rgba(201,146,42,0.4);}
-.journal-sub{font-family:'Cinzel',serif;font-size:0.58rem;letter-spacing:0.2em;color:rgba(201,146,42,0.5);text-transform:uppercase;}
-.close-btn{padding:0.35rem 0.75rem;background:rgba(201,146,42,0.15);border:1px solid rgba(201,146,42,0.3);border-radius:6px;font-family:'Cinzel',serif;font-size:0.6rem;color:rgba(201,146,42,0.7);cursor:pointer;}
-
-/* ── APP ── */
-#app{display:none;}
-
-/* ── NEW ENTRY SECTION ── */
-.entry-section{padding:1.25rem 1.25rem 1.25rem 1.75rem;}
-
-/* Category selector */
-.category-row{display:flex;gap:0.375rem;flex-wrap:wrap;margin-bottom:0.875rem;}
-.cat-btn{
-  padding:0.3rem 0.625rem;border-radius:12px;font-family:'Cinzel',serif;font-size:0.6rem;
-  letter-spacing:0.08em;cursor:pointer;border:1.5px solid transparent;
-  transition:all 0.2s;background:rgba(61,31,8,0.08);
-  color:rgba(61,31,8,0.6);border-color:rgba(61,31,8,0.2);
-}
-.cat-btn.active{background:var(--leather);color:var(--parchment);border-color:var(--leather);}
-
-/* Tool selector */
-.tools-panel{background:rgba(61,31,8,0.06);border:1px solid rgba(61,31,8,0.12);border-radius:12px;padding:0.875rem;margin-bottom:0.875rem;}
-.tools-section-label{font-family:'Cinzel',serif;font-size:0.58rem;letter-spacing:0.15em;color:rgba(61,31,8,0.45);text-transform:uppercase;margin-bottom:0.4rem;}
-.tool-row{display:flex;gap:0.25rem;flex-wrap:wrap;margin-bottom:0.625rem;}
-.tool-type-row{display:flex;gap:0.375rem;margin-bottom:0.625rem;}
-.tool-type-btn{
-  flex:1;padding:0.4rem 0.5rem;border-radius:8px;
-  font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.06em;
-  cursor:pointer;border:1.5px solid rgba(61,31,8,0.2);
-  background:rgba(61,31,8,0.05);color:rgba(61,31,8,0.55);
-  transition:all 0.2s;text-align:center;
-}
-.tool-type-btn.active{background:var(--leather);color:var(--parchment);border-color:var(--leather);}
-
-/* Color swatches */
-.swatch{
-  width:26px;height:26px;border-radius:50%;cursor:pointer;
-  border:2px solid transparent;transition:all 0.15s;flex-shrink:0;
-}
-.swatch.active{border:2px solid rgba(61,31,8,0.8);transform:scale(1.25);box-shadow:0 0 0 2px rgba(255,255,255,0.6);}
-
-/* Highlighter swatches */
-.highlight-swatch{
-  width:26px;height:14px;border-radius:4px;cursor:pointer;
-  border:2px solid transparent;transition:all 0.15s;flex-shrink:0;
-  opacity:0.6;
-}
-.highlight-swatch.active{border:2px solid rgba(61,31,8,0.6);transform:scale(1.15);opacity:1;}
-.highlight-none{
-  width:26px;height:14px;border-radius:4px;cursor:pointer;
-  border:2px solid rgba(61,31,8,0.3);background:white;
-  font-size:0.55rem;display:flex;align-items:center;justify-content:center;
-  color:rgba(61,31,8,0.5);font-family:'Cinzel',serif;flex-shrink:0;
-}
-.highlight-none.active{border-color:rgba(61,31,8,0.7);}
-
-/* Stamps */
-.stamp-btn{
-  width:30px;height:30px;font-size:1rem;cursor:pointer;
-  border:none;background:none;border-radius:6px;
-  transition:all 0.15s;display:flex;align-items:center;justify-content:center;
-}
-.stamp-btn:hover{background:rgba(61,31,8,0.1);transform:scale(1.2);}
-
-/* Preview strip */
-.preview-strip{
-  height:32px;border-radius:6px;margin-bottom:0.625rem;
-  display:flex;align-items:center;padding:0 0.75rem;
-  background:white;border:1px solid rgba(61,31,8,0.15);
-}
-.preview-text{font-family:'Caveat',cursive;font-size:1.1rem;}
-
-/* Writing area */
-.writing-area{
-  width:100%;min-height:160px;padding:0.875rem;
-  background:rgba(255,255,255,0.6);
-  border:1.5px solid rgba(61,31,8,0.2);border-radius:10px;
-  font-family:'Caveat',cursive;font-size:1.15rem;line-height:1.8;
-  resize:vertical;outline:none;
-  transition:border-color 0.2s;
-  color:inherit;
-}
-.writing-area:focus{border-color:rgba(61,31,8,0.5);background:rgba(255,255,255,0.8);}
-
-/* Stamps preview */
-.stamps-display{font-size:1.3rem;letter-spacing:0.15rem;margin-top:0.4rem;min-height:24px;}
-
-/* Save button */
-.save-btn{
-  width:100%;padding:0.875rem;min-height:52px;margin-top:0.75rem;
-  background:linear-gradient(135deg,var(--leather),var(--leather-light));
-  border:2px solid rgba(201,146,42,0.5);border-radius:12px;
-  font-family:'Cinzel',serif;font-size:0.82rem;letter-spacing:0.1em;
-  color:var(--gold-light);cursor:pointer;
-  box-shadow:0 4px 12px rgba(0,0,0,0.2);transition:all 0.2s;
-}
-.save-btn:hover{box-shadow:0 6px 18px rgba(0,0,0,0.3);}
-.save-btn:active{transform:scale(0.98);}
-.entry-feedback{font-family:'Cinzel',serif;font-size:0.7rem;text-align:center;margin-top:0.5rem;min-height:1rem;color:rgba(61,31,8,0.6);}
-
-/* ── DIVIDER ── */
-.journal-divider{
-  margin:0.5rem 1.75rem;
-  display:flex;align-items:center;gap:0.75rem;
-}
-.divider-line{flex:1;height:1px;background:rgba(61,31,8,0.15);}
-.divider-mark{font-family:'Cinzel',serif;font-size:0.7rem;color:rgba(61,31,8,0.3);letter-spacing:0.2em;}
-
-/* ── PAST ENTRIES ── */
-.entries-section{padding:0 1.25rem 3rem 1.75rem;}
-.entries-header{
-  display:flex;align-items:center;justify-content:space-between;
-  margin-bottom:0.875rem;
-}
-.entries-title{font-family:'Cinzel',serif;font-size:0.65rem;letter-spacing:0.2em;color:rgba(61,31,8,0.5);text-transform:uppercase;}
-.filter-row{display:flex;gap:0.375rem;}
-.filter-btn{
-  padding:0.25rem 0.625rem;border-radius:10px;
-  font-family:'Cinzel',serif;font-size:0.58rem;
-  cursor:pointer;border:1px solid rgba(61,31,8,0.2);
-  background:transparent;color:rgba(61,31,8,0.45);
-  transition:all 0.15s;
-}
-.filter-btn.active{background:rgba(61,31,8,0.1);color:rgba(61,31,8,0.7);}
-
-/* Individual entry */
-.journal-entry{
-  background:rgba(255,255,255,0.45);
-  border:1px solid rgba(61,31,8,0.12);
-  border-radius:10px;padding:0.875rem;
-  margin-bottom:0.75rem;position:relative;
-  box-shadow:0 2px 6px rgba(0,0,0,0.06);
-}
-.journal-entry::before{
-  content:'';position:absolute;left:0;top:0;bottom:0;width:4px;
-  border-radius:10px 0 0 10px;
-}
-.entry-meta{display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem;}
-.entry-cat-badge{
-  font-family:'Cinzel',serif;font-size:0.56rem;letter-spacing:0.1em;
-  padding:0.15rem 0.5rem;border-radius:8px;
-  background:rgba(61,31,8,0.08);color:rgba(61,31,8,0.55);
-  border:1px solid rgba(61,31,8,0.12);text-transform:uppercase;
-}
-.entry-date{font-family:'Cinzel',serif;font-size:0.58rem;color:rgba(61,31,8,0.35);margin-left:auto;}
-.entry-text{font-family:'Caveat',cursive;font-size:1.05rem;line-height:1.7;white-space:pre-wrap;word-break:break-word;}
-.entry-stamps{font-size:1.1rem;letter-spacing:0.1rem;margin-top:0.35rem;}
-.entry-delete{
-  position:absolute;top:0.5rem;right:0.625rem;
-  background:none;border:none;color:rgba(61,31,8,0.2);
-  font-size:0.875rem;cursor:pointer;padding:0.2rem;
-  transition:color 0.15s;
-}
-.entry-delete:hover{color:rgba(180,30,30,0.5);}
-.empty-journal{
-  text-align:center;padding:3rem 1rem;
-  font-family:'Cinzel',serif;font-size:0.72rem;letter-spacing:0.15em;
-  color:rgba(61,31,8,0.3);text-transform:uppercase;
-}
-.empty-journal-icon{font-size:2.5rem;margin-bottom:0.75rem;opacity:0.3;}
-
-/* ══════════════════════════════════════════════════════════
-   LEATHER COVER — FIELD MANUAL OPENING ANIMATION
-   ══════════════════════════════════════════════════════════ */
-
-#journal-cover {
-  position:fixed;inset:0;z-index:600;
-  display:none;flex-direction:column;
-  align-items:center;justify-content:center;
-  background:
-    radial-gradient(ellipse at 30% 20%,#4a2010 0%,#2a1005 50%,#1a0a02 100%);
-  overflow:hidden;
-}
-#journal-cover.active { display:flex; }
-
-/* Leather texture — subtle noise pattern */
-#journal-cover::before {
-  content:'';position:absolute;inset:0;
-  background-image:
-    repeating-linear-gradient(
-      45deg,
-      rgba(255,255,255,0.012) 0px,
-      rgba(255,255,255,0.012) 1px,
-      transparent 1px,
-      transparent 8px
-    ),
-    repeating-linear-gradient(
-      -45deg,
-      rgba(0,0,0,0.04) 0px,
-      rgba(0,0,0,0.04) 1px,
-      transparent 1px,
-      transparent 8px
-    );
-  pointer-events:none;
-}
-
-/* Worn edge vignette */
-#journal-cover::after {
-  content:'';position:absolute;inset:0;
-  background:radial-gradient(ellipse at 50% 50%,transparent 50%,rgba(0,0,0,0.55) 100%);
-  pointer-events:none;
-}
-
-/* Corner ornaments */
-.cover-corner-mark {
-  position:absolute;font-size:1rem;color:rgba(201,146,42,0.25);
-  font-family:'Cinzel',serif;line-height:1;
-}
-.cover-corner-mark.tl{top:1.25rem;left:1.5rem;}
-.cover-corner-mark.tr{top:1.25rem;right:1.5rem;}
-.cover-corner-mark.bl{bottom:1.25rem;left:1.5rem;}
-.cover-corner-mark.br{bottom:1.25rem;right:1.5rem;}
-
-/* Border frame */
-.cover-frame {
-  position:absolute;
-  inset:0.875rem;
-  border:1px solid rgba(201,146,42,0.15);
-  border-radius:3px;
-  pointer-events:none;
-}
-.cover-frame::before {
-  content:'';position:absolute;inset:6px;
-  border:1px solid rgba(201,146,42,0.08);
-  border-radius:2px;
-}
-
-/* The spine line */
-.cover-spine {
-  position:absolute;left:0;top:0;bottom:0;width:22px;
-  background:linear-gradient(90deg,#1a0802,#3d1f08 70%,#2a1005);
-  border-right:1px solid rgba(201,146,42,0.12);
-}
-
-/* Cover content */
-.cover-body {
-  position:relative;z-index:1;
-  text-align:center;padding:0 2.5rem;
-  max-width:340px;width:100%;
-}
-
-/* Embossed cross */
-.cover-emboss-cross {
-  font-family:'Cinzel',serif;font-size:2.5rem;
-  color:rgba(201,146,42,0.25);
-  text-shadow:
-    0 1px 0 rgba(255,200,80,0.12),
-    0 -1px 0 rgba(0,0,0,0.4);
-  margin-bottom:1rem;
-  letter-spacing:0.5rem;
-}
-
-/* Embossed title */
-.cover-title-main {
-  font-family:'Cinzel Decorative',serif;
-  font-size:clamp(1.1rem,5vw,1.5rem);
-  color:rgba(201,146,42,0.45);
-  text-shadow:
-    0 1px 0 rgba(255,200,80,0.1),
-    0 -1px 0 rgba(0,0,0,0.5),
-    0 0 20px rgba(201,146,42,0.08);
-  letter-spacing:0.05em;
-  line-height:1.3;
-  margin-bottom:0.35rem;
-}
-.cover-title-sub {
-  font-family:'Cinzel',serif;
-  font-size:0.6rem;
-  letter-spacing:0.25em;
-  text-transform:uppercase;
-  color:rgba(201,146,42,0.22);
-  margin-bottom:1.25rem;
-}
-
-.cover-rule-line {
-  width:50%;height:1px;margin:0 auto 1.25rem;
-  background:linear-gradient(90deg,transparent,rgba(201,146,42,0.2),transparent);
-}
-
-/* Explorer info */
-.cover-explorer-label {
-  font-family:'Cinzel',serif;font-size:0.5rem;
-  letter-spacing:0.22em;text-transform:uppercase;
-  color:rgba(201,146,42,0.2);margin-bottom:0.35rem;
-}
-.cover-explorer-name {
-  font-family:'Cinzel',serif;font-size:clamp(0.95rem,4vw,1.15rem);
-  color:rgba(201,146,42,0.38);letter-spacing:0.08em;
-  text-shadow:0 1px 0 rgba(0,0,0,0.4);
-  margin-bottom:0.5rem;
-}
-.cover-rank-line {
-  font-family:'Cinzel',serif;font-size:0.55rem;
-  letter-spacing:0.16em;text-transform:uppercase;
-  color:rgba(201,146,42,0.18);margin-bottom:1.5rem;
-}
-.cover-bottom-mark {
-  font-size:0.65rem;letter-spacing:0.5rem;
-  color:rgba(201,146,42,0.14);font-family:'Cinzel',serif;
-}
-
-/* Opening animation — cover lifts up */
-#journal-cover.opening {
-  animation:coverLift 1s cubic-bezier(0.4,0,0.2,1) forwards;
-}
-@keyframes coverLift {
-  0%   { transform:translateY(0); opacity:1; }
-  70%  { transform:translateY(-80%); opacity:0.7; }
-  100% { transform:translateY(-100%); opacity:0; }
-}
-
-/* ── ENHANCED ENTRY DISPLAY ─────────────────────────────────── */
-/* Ruled writing area */
-.writing-area {
-  background-image:
-    linear-gradient(rgba(61,31,8,0.07) 1px, transparent 1px) !important;
-  background-size: 100% 2rem !important;
-  background-attachment: local !important;
-  padding-left: 3rem !important;
-  border-left: 3px solid rgba(180,30,30,0.15) !important;
-  font-family:'Caveat',cursive !important;
-  font-size:1.1rem !important;
-  line-height:2rem !important;
-}
-
-/* Enhanced entry cards */
-.journal-entry {
-  position:relative;
-  background:rgba(255,252,240,0.85);
-  border-radius:2px;
-  padding:1rem 1rem 1rem 3rem;
-  margin-bottom:1rem;
-  border:none !important;
-  border-left:none !important;
-  box-shadow:
-    0 2px 8px rgba(0,0,0,0.08),
-    0 1px 2px rgba(0,0,0,0.05),
-    -2px 0 0 0 var(--entry-accent, #5c3010),
-    2px 0 4px rgba(0,0,0,0.06);
-  /* Ruled lines on entry cards */
-  background-image:
-    linear-gradient(rgba(61,31,8,0.055) 1px, transparent 1px);
-  background-size: 100% 1.75rem;
-}
-/* Red margin line */
-.journal-entry::before {
+body::before{
   content:'';
-  position:absolute;left:2.25rem;top:0;bottom:0;
-  width:1.5px;
-  background:rgba(180,30,30,0.18);
-}
-/* Category accent line */
-.journal-entry::after {
-  content:'';
-  position:absolute;left:0;top:0;bottom:0;
-  width:4px;
-  background:var(--entry-accent, #5c3010);
-  border-radius:2px 0 0 2px;
+  position:fixed;
+  inset:0;
+  background-image:
+    linear-gradient(rgba(201,146,42,0.02) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(201,146,42,0.02) 1px,transparent 1px);
+  background-size:44px 44px;
+  pointer-events:none;
+  z-index:0;
 }
 
+.container{
+  max-width:680px;
+  margin:0 auto;
+  position:relative;
+  z-index:1;
+}
+
+/* HEADER */
+.header{text-align:center;padding:1.5rem 0 1rem;border-bottom:1px solid rgba(201,146,42,0.15);margin-bottom:2rem;}
+.greeting{font-family:'Cinzel',serif;font-size:0.7rem;letter-spacing:0.25em;color:rgba(201,146,42,0.5);text-transform:uppercase;margin-bottom:0.4rem;}
+.day-name{font-family:'Cinzel Decorative',serif;font-size:clamp(1.4rem,5vw,1.9rem);color:var(--gold-light);text-shadow:0 0 18px rgba(201,146,42,0.35);margin-bottom:0.15rem;}
+.full-date{font-family:'Crimson Text',serif;font-style:italic;font-size:0.95rem;color:rgba(244,232,193,0.55);margin-bottom:0.75rem;}
+.liturgical-context{font-family:'Caveat',cursive;font-size:1.05rem;color:rgba(201,146,42,0.7);margin-bottom:1rem;min-height:1.3em;}
+.session-title{font-family:'Cinzel Decorative',serif;font-size:clamp(1rem,3.5vw,1.25rem);color:var(--parchment);margin-bottom:0.25rem;padding:0 1rem;}
+.session-week{font-family:'Cinzel',serif;font-size:0.65rem;letter-spacing:0.2em;color:rgba(201,146,42,0.4);text-transform:uppercase;}
+
+/* DAY TABS */
+.day-tabs{display:flex;justify-content:center;gap:0.4rem;margin-bottom:2rem;flex-wrap:wrap;}
+.day-tab{padding:0.5rem 1rem;min-width:110px;min-height:48px;background:rgba(44,22,84,0.18);border:1px solid rgba(201,146,42,0.18);border-radius:10px;font-family:'Cinzel',serif;font-size:0.7rem;letter-spacing:0.1em;color:rgba(201,146,42,0.5);text-transform:uppercase;cursor:default;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.3;}
+.day-tab .day-label{font-size:0.62rem;color:rgba(201,146,42,0.35);}
+.day-tab.active{background:rgba(107,26,26,0.35);border-color:rgba(255,215,0,0.4);color:var(--gold-bright);box-shadow:0 0 16px rgba(255,215,0,0.15);}
+.day-tab.active .day-label{color:rgba(255,215,0,0.6);}
+
+/* MAIN FRAME */
+.main-frame{background:linear-gradient(160deg,rgba(244,232,193,0.04),rgba(244,232,193,0.01));border:1.5px solid rgba(201,146,42,0.18);border-radius:16px;padding:2rem 1.5rem;margin-bottom:1.5rem;}
+.day-heading{font-family:'Cinzel Decorative',serif;font-size:1.3rem;color:var(--gold-light);margin-bottom:0.25rem;text-align:center;}
+.day-subheading{font-family:'Cinzel',serif;font-size:0.65rem;letter-spacing:0.2em;color:rgba(201,146,42,0.5);text-transform:uppercase;margin-bottom:1.5rem;text-align:center;}
+
+/* ARTIFACT SLOTS */
+.artifact-slot{margin-bottom:1.25rem;padding:1.25rem;background:rgba(14,8,0,0.4);border:1px solid rgba(201,146,42,0.12);border-radius:10px;position:relative;}
+.artifact-slot.placeholder::before{content:'AWAITING CONTENT';position:absolute;top:0.5rem;right:0.75rem;font-family:'Cinzel',serif;font-size:0.55rem;letter-spacing:0.2em;color:rgba(201,146,42,0.25);}
+.artifact-icon{font-size:1.5rem;color:var(--gold);margin-bottom:0.4rem;}
+.artifact-title{font-family:'Cinzel Decorative',serif;font-size:1.05rem;color:var(--gold-light);margin-bottom:0.25rem;}
+.artifact-blurb{font-size:0.88rem;color:rgba(244,232,193,0.55);line-height:1.5;font-style:italic;}
+
+/* COMPLETE BUTTON */
+.complete-btn{display:block;width:100%;padding:0.875rem;margin-top:1rem;background:linear-gradient(135deg,var(--gold),var(--gold-bright));border:none;border-radius:12px;font-family:'Cinzel',serif;font-size:0.8rem;letter-spacing:0.15em;color:var(--bg);font-weight:700;cursor:pointer;text-transform:uppercase;min-height:52px;opacity:0.4;cursor:not-allowed;}
+.complete-btn[data-ready="true"]{opacity:1;cursor:pointer;box-shadow:0 4px 18px rgba(255,215,0,0.2);}
+
+/* SIDEBAR */
+.sidebar{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:2rem;}
+@media(max-width:520px){.sidebar{grid-template-columns:1fr;}}
+.side-card{padding:1.25rem;background:rgba(44,22,84,0.12);border:1px solid rgba(201,146,42,0.12);border-radius:12px;}
+.side-eyebrow{font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.2em;color:rgba(201,146,42,0.5);text-transform:uppercase;margin-bottom:0.5rem;}
+.side-content{font-size:0.9rem;color:rgba(244,232,193,0.65);line-height:1.5;}
+.side-content em{color:rgba(201,146,42,0.6);font-style:italic;}
+
+/* PRAYER PANEL */
+.prayer-panel{margin-bottom:1.5rem;padding:1.25rem 1.5rem;background:rgba(44,22,84,0.18);border:1px solid rgba(201,146,42,0.18);border-radius:12px;}
+.prayer-panel-eyebrow{font-family:'Cinzel',serif;font-size:0.7rem;letter-spacing:0.2em;color:rgba(201,146,42,0.55);text-transform:uppercase;margin-bottom:0.875rem;text-align:center;}
+.prayer-panel-row{display:flex;gap:0.875rem;flex-wrap:wrap;}
+.prayer-link{display:flex;align-items:center;gap:0.6rem;flex:1;min-width:200px;padding:0.875rem 1rem;background:rgba(14,8,0,0.4);border:1px solid rgba(201,146,42,0.18);border-radius:10px;text-decoration:none;font-family:'Cinzel',serif;font-size:0.78rem;letter-spacing:0.05em;color:rgba(244,232,193,0.7);min-height:48px;transition:all 0.15s;}
+.prayer-link:hover{border-color:rgba(201,146,42,0.4);color:var(--gold-light);}
+.prayer-link.done{background:rgba(22,163,74,0.1);border-color:rgba(22,163,74,0.3);color:rgba(134,239,172,0.85);}
+.prayer-link .prayer-mark{font-size:1.3rem;color:rgba(201,146,42,0.6);}
+.prayer-link.done .prayer-mark{color:rgba(134,239,172,0.9);}
+.prayer-panel-streak{margin-top:0.875rem;padding-top:0.875rem;border-top:1px solid rgba(201,146,42,0.12);font-family:'Caveat',cursive;font-size:1.05rem;color:rgba(201,146,42,0.7);text-align:center;}
+
+/* BOTTOM NAV */
+.bottom-nav{display:flex;justify-content:center;gap:1rem;padding-top:1.5rem;border-top:1px solid rgba(201,146,42,0.15);flex-wrap:wrap;}
+.bottom-nav a{font-family:'Cinzel',serif;font-size:0.7rem;letter-spacing:0.15em;color:rgba(201,146,42,0.55);text-decoration:none;text-transform:uppercase;padding:0.5rem 0.875rem;min-height:40px;display:inline-flex;align-items:center;border:1px solid rgba(201,146,42,0.15);border-radius:8px;}
+.bottom-nav a:hover{color:var(--gold-light);border-color:rgba(201,146,42,0.35);}
+
+/* PRE-LAUNCH */
+.pre-launch{text-align:center;padding:3rem 1.5rem;max-width:480px;margin:2rem auto;}
+.pre-launch .icon{font-size:3rem;color:var(--gold);text-shadow:0 0 20px rgba(255,215,0,0.4);margin-bottom:1rem;}
+.pre-launch h2{font-family:'Cinzel Decorative',serif;font-size:1.7rem;color:var(--gold-light);margin-bottom:0.5rem;}
+.pre-launch .when{font-family:'Cinzel',serif;font-size:0.95rem;color:var(--gold-bright);letter-spacing:0.1em;margin:1rem 0;}
+.pre-launch p{color:rgba(244,232,193,0.65);line-height:1.6;font-style:italic;margin-bottom:1rem;}
+
+/* CALM FRAMES (Sun/Sat/between) */
+.calm-frame{text-align:center;padding:2.5rem 1.5rem;background:linear-gradient(160deg,rgba(244,232,193,0.04),rgba(244,232,193,0.01));border:1.5px solid rgba(201,146,42,0.15);border-radius:16px;margin-bottom:1.5rem;}
+.calm-icon{font-size:2.5rem;color:var(--gold);margin-bottom:0.75rem;text-shadow:0 0 20px rgba(201,146,42,0.3);}
+.calm-title{font-family:'Cinzel Decorative',serif;font-size:1.4rem;color:var(--gold-light);margin-bottom:0.5rem;}
+.calm-text{font-size:1rem;color:rgba(244,232,193,0.7);line-height:1.6;max-width:420px;margin:0 auto;}
+.calm-quote{font-family:'Caveat',cursive;font-size:1.15rem;color:rgba(201,146,42,0.7);margin-top:1.25rem;font-style:italic;}
+
+/* SAINT BANNER */
+.saint-banner{display:flex;align-items:center;gap:1rem;padding:1rem 1.25rem;background:rgba(107,26,26,0.18);border:1px solid rgba(201,146,42,0.2);border-radius:12px;margin-bottom:1.5rem;}
+.saint-banner .saint-icon{width:54px;height:54px;border-radius:50%;background:rgba(44,22,84,0.5);border:2px solid rgba(201,146,42,0.3);display:flex;align-items:center;justify-content:center;font-size:1.5rem;color:rgba(201,146,42,0.5);flex-shrink:0;overflow:hidden;}
+.saint-banner .saint-icon img{width:100%;height:100%;object-fit:cover;border-radius:50%;}
+.saint-banner .saint-text{flex:1;}
+.saint-banner .saint-eyebrow{font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.2em;color:rgba(201,146,42,0.5);text-transform:uppercase;margin-bottom:0.15rem;}
+.saint-banner .saint-name{font-family:'Cinzel Decorative',serif;font-size:1.05rem;color:var(--gold-light);}
+.saint-banner .saint-feast{font-family:'Cinzel',serif;font-size:0.65rem;letter-spacing:0.1em;color:rgba(201,146,42,0.5);text-transform:uppercase;margin-top:0.2rem;}
+
+/* LESSON BODY */
+.lesson-body{font-size:1.02rem;line-height:1.75;color:rgba(244,232,193,0.92);margin-top:0.6rem;}
+.lesson-body p{margin-bottom:1rem;}
+.lesson-body p:last-child{margin-bottom:0;}
+
+/* DISCUSSION QUESTIONS */
+.discussion-questions{list-style:none;counter-reset:dq;margin-top:0.6rem;padding:0;}
+.discussion-questions li{counter-increment:dq;padding:0.875rem 0 0.875rem 2.5rem;position:relative;font-size:1rem;line-height:1.65;color:rgba(244,232,193,0.85);border-bottom:1px solid rgba(201,146,42,0.1);}
+.discussion-questions li:last-child{border-bottom:none;}
+.discussion-questions li::before{content:counter(dq);position:absolute;left:0;top:0.7rem;width:1.6rem;height:1.6rem;background:rgba(107,26,26,0.45);border:1px solid rgba(201,146,42,0.4);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-size:0.75rem;color:var(--gold-light);}
+
+/* READING / EXTERNAL LINKS */
+.reading-link{display:inline-block;font-family:'Cinzel',serif;font-size:0.75rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--gold-light);text-decoration:none;padding:0.5rem 0.875rem;border:1px solid rgba(201,146,42,0.3);border-radius:8px;margin-top:0.4rem;transition:all 0.15s;}
+.reading-link:hover{background:rgba(201,146,42,0.1);border-color:rgba(201,146,42,0.5);}
+
+/* COMPLETE BUTTON ENABLED STATE */
+.complete-btn[data-session-id]{opacity:1;cursor:pointer;box-shadow:0 4px 18px rgba(255,215,0,0.2);}
+.complete-btn[data-complete="true"]{background:rgba(22,163,74,0.2);color:rgba(134,239,172,0.9);box-shadow:none;cursor:default;}
 </style>
 </head>
+
 <body>
-
-<!-- FIELD MANUAL LEATHER COVER -->
-<div id="journal-cover">
-  <div class="cover-spine"></div>
-  <div class="cover-frame"></div>
-  <div class="cover-corner-mark tl">✦</div>
-  <div class="cover-corner-mark tr">✦</div>
-  <div class="cover-corner-mark bl">✦</div>
-  <div class="cover-corner-mark br">✦</div>
-  <div class="cover-body">
-    <div class="cover-emboss-cross">☩</div>
-    <div class="cover-title-main">Field Manual</div>
-    <div class="cover-title-sub">The Orthodox Expedition</div>
-    <div class="cover-rule-line"></div>
-    <div class="cover-explorer-label">Explorer</div>
-    <div class="cover-explorer-name" id="cover-explorer-name">—</div>
-    <div class="cover-rank-line" id="cover-rank-line">Novice Explorer</div>
-    <div class="cover-bottom-mark">✦ ☩ ✦</div>
-  </div>
+<div class="container">
+  <div id="page-root"></div>
 </div>
 
-<div class="binding-rings">
-  <div class="ring"></div>
-  <div class="ring"></div>
-  <div class="ring"></div>
-  <div class="ring"></div>
-  <div class="ring"></div>
-  <div class="ring"></div>
-  <div class="ring"></div>
-</div>
-
-<div id="loading"><div class="loading-mark">☩</div></div>
-
-<div id="app">
-<div class="journal-wrap">
-
-  <!-- HEADER -->
-  <div class="journal-header">
-    <div class="journal-header-top">
-      <div>
-        <div class="journal-title">Field Manual</div>
-        <div class="journal-sub">Orthodox Expedition · <span id="explorer-name">Explorer</span></div>
-      </div>
-      <button class="close-btn" onclick="if(document.referrer && window.history.length>1){window.history.back();}else{window.location.href='home.html';}">✕ Close</button>
-    </div>
-  </div>
-
-  <!-- NEW ENTRY -->
-  <!-- Year 0 — Coming Home banner (shown when arriving from a Topic 00 session prompt) -->
-  <div id="coming-home-banner" style="display:none;margin:1rem 1.25rem 0 1.75rem;padding:1.25rem 1.5rem;background:linear-gradient(160deg,rgba(244,232,193,0.06),rgba(244,232,193,0.02));border:1px solid rgba(201,146,42,0.3);border-radius:14px;text-align:center;">
-    <div style="font-family:'Cinzel',serif;font-size:0.65rem;letter-spacing:0.25em;color:rgba(201,146,42,0.65);text-transform:uppercase;margin-bottom:0.4rem;">Year 0 — Coming Home</div>
-    <div style="font-family:'Cinzel Decorative',serif;font-size:1.05rem;color:#6b1a1a;margin-bottom:0.4rem;" id="coming-home-session-title">The Expedition Begins</div>
-    <div id="coming-home-prompt" style="font-family:'Crimson Text',serif;font-style:italic;font-size:0.95rem;color:rgba(61,31,8,0.85);line-height:1.55;max-width:480px;margin:0 auto;"></div>
-  </div>
-  <div class="entry-section">
-
-    <!-- Category -->
-    <div class="tools-section-label" style="margin-bottom:0.4rem;">Entry Type</div>
-    <div class="category-row" id="category-row"></div>
-
-    <!-- Tools Panel -->
-    <div class="tools-panel">
-
-      <!-- Tool Type -->
-      <div class="tools-section-label">Writing Tool</div>
-      <div class="tool-type-row" id="tool-type-row"></div>
-
-      <!-- Colors -->
-      <div class="tools-section-label" id="color-label">Color</div>
-      <div class="tool-row" id="color-row"></div>
-
-      <!-- Highlighter -->
-      <div class="tools-section-label" style="margin-top:0.4rem;">Highlighter</div>
-      <div class="tool-row" id="highlight-row"></div>
-
-      <!-- Preview -->
-      <div class="preview-strip" id="preview-strip">
-        <span class="preview-text" id="preview-text">The way, the truth, and the life...</span>
-      </div>
-
-      <!-- Stamps -->
-      <div class="tools-section-label">Stamps</div>
-      <div class="tool-row" id="stamp-row"></div>
-      <div class="stamps-display" id="stamps-display"></div>
-
-    </div>
-
-    <!-- Writing Area -->
-    <textarea class="writing-area" id="entry-text" placeholder="Write your field notes here...&#10;&#10;What did you discover today? What questions came to mind? What did you pray about?" oninput="updatePreview()"></textarea>
-
-    <button class="save-btn" onclick="saveEntry()">✦ Log This Entry in the Field Manual ✦</button>
-    <div class="entry-feedback" id="entry-feedback"></div>
-
-  </div>
-
-  <!-- DIVIDER -->
-  <div class="journal-divider">
-    <div class="divider-line"></div>
-    <div class="divider-mark">✦ Past Entries ✦</div>
-    <div class="divider-line"></div>
-  </div>
-
-  <!-- PAST ENTRIES -->
-  <div class="entries-section">
-    <div class="entries-header">
-      <div class="entries-title">Your Journal</div>
-      <div class="filter-row">
-        <button class="filter-btn active" onclick="filterEntries('all',this)">All</button>
-        <button class="filter-btn" onclick="filterEntries('discovery',this)">Discoveries</button>
-        <button class="filter-btn" onclick="filterEntries('prayer_journal',this)">Prayers</button>
-      </div>
-    </div>
-    <div id="entries-list"></div>
-  </div>
-
-</div><!-- /journal-wrap -->
-</div><!-- /app -->
-
+<script src="js/day-state.js"></script>
+<script src="js/pause-card.js"></script>
+<script src="js/prayers.js"></script>
+<script src="js/session-loader.js"></script>
 <script>
-const SUPABASE_URL = 'https://ksfnsryfmkafwirzgjoe.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtzZm5zcnlmbWthZndpcnpnam9lIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2ODM4MTcsImV4cCI6MjA5MTI1OTgxN30.mHQty44WBnjQY8BJ8KbPk_pp-yTcOaifGxCZPUO4xpY';
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-// ── STATE ─────────────────────────────────────────────────────
-let profile     = null;
-let allEntries  = [];
-let currentFilter = 'all';
-
-let selectedCategory  = 'field_note';
-let selectedToolType  = 'pen';
-let selectedColor     = '#1a0f00';
-let selectedHighlight = null;
-let selectedStamps    = [];
-
-// ── CATEGORIES ────────────────────────────────────────────────
-const CATEGORIES = [
-  {id:'field_note',    label:'📜 Field Note',     color:'#5c3010'},
-  {id:'discovery',     label:'✦ Discovery',       color:'#8b6914'},
-  {id:'prayer_journal',label:'☩ Prayer',          color:'#2c1654'},
-  {id:'session_notes', label:'⊕ Session Notes',   color:'#1a4a2a'},
-  {id:'expedition_log',label:'🗺 Expedition Log',  color:'#1a3060'},
-  {id:'question',      label:'❓ Question',        color:'#6b1a1a'},
-  {id:'revelation',    label:'💡 Revelation',      color:'#4a3000'},
-];
-
-// ── TOOLS ─────────────────────────────────────────────────────
-const TOOL_TYPES = [
-  {id:'pen',     label:'🖊 Pen'},
-  {id:'marker',  label:'🖍 Marker'},
-  {id:'pencil',  label:'✏️ Pencil'},
-  {id:'crayon',  label:'🖍 Crayon'},
-];
-
-const COLORS = {
-  pen: [
-    {color:'#1a0f00',label:'Ink Black'},
-    {color:'#0a2a6e',label:'Ink Blue'},
-    {color:'#7a0a0a',label:'Ink Red'},
-    {color:'#0a4a1a',label:'Ink Green'},
-    {color:'#3a0a5a',label:'Ink Purple'},
-    {color:'#4a2a00',label:'Ink Brown'},
-  ],
-  marker: [
-    {color:'#e03030',label:'Red'},
-    {color:'#e07820',label:'Orange'},
-    {color:'#b8a000',label:'Yellow'},
-    {color:'#1a8a3a',label:'Green'},
-    {color:'#1a4aaa',label:'Blue'},
-    {color:'#6a1aaa',label:'Purple'},
-    {color:'#d03090',label:'Pink'},
-    {color:'#5a2a00',label:'Brown'},
-    {color:'#202020',label:'Black'},
-  ],
-  pencil: [
-    {color:'#c03030',label:'Red'},
-    {color:'#c07040',label:'Orange'},
-    {color:'#a09020',label:'Yellow'},
-    {color:'#308040',label:'Green'},
-    {color:'#304090',label:'Blue'},
-    {color:'#602090',label:'Purple'},
-    {color:'#c04080',label:'Pink'},
-    {color:'#804030',label:'Brown'},
-    {color:'#308080',label:'Teal'},
-    {color:'#207060',label:'Forest'},
-    {color:'#3a3a3a',label:'Graphite'},
-    {color:'#704020',label:'Sienna'},
-  ],
-  crayon: [
-    {color:'#e05050',label:'Red'},
-    {color:'#e08030',label:'Orange'},
-    {color:'#e0c030',label:'Yellow'},
-    {color:'#40b050',label:'Green'},
-    {color:'#4070d0',label:'Blue'},
-    {color:'#8040c0',label:'Purple'},
-    {color:'#e060a0',label:'Pink'},
-    {color:'#8B4513',label:'Brown'},
-  ],
-};
-
-const HIGHLIGHTS = [
-  {color:'rgba(255,240,0,0.45)',  label:'Yellow'},
-  {color:'rgba(100,240,100,0.4)', label:'Green'},
-  {color:'rgba(255,130,200,0.4)', label:'Pink'},
-  {color:'rgba(100,180,255,0.4)', label:'Blue'},
-  {color:'rgba(255,170,60,0.45)', label:'Orange'},
-];
-
-const STAMPS = ['☩','✦','⊕','◈','⚔','🗺','📜','🏺','🔍','⭐','❓','💡','✝','🕊','🏛','🌿','📖','🦅','⚓','🌟'];
-
-// ── AUTH ──────────────────────────────────────────────────────
-(async()=>{
+(async function main(){
+  // ── LOAD THE PROGRAM SPINE ────────────────────────
+  let spine;
   try {
-    const timer = new Promise(r=>setTimeout(()=>r(null),4000));
-    const res   = await Promise.race([sb.auth.getSession(),timer]);
-    const session = res?.data?.session??null;
-    if(!session){ window.location.href='index.html'; return; }
-
-    const {data:prof} = await sb.from('profiles').select('*').eq('id',session.user.id).single();
-    if(!prof){ window.location.href='index.html'; return; }
-
-    profile = prof;
-    document.getElementById('explorer-name').textContent = prof.name || 'Explorer';
-
-    // Populate cover
-    const coverName = document.getElementById('cover-explorer-name');
-    if(coverName) coverName.textContent = prof.name || 'Explorer';
-
-    buildUI();
-    await loadEntries();
-
-    document.getElementById('loading').style.display='none';
-    document.getElementById('app').style.display='block';
-
-    // Show leather cover animation — once per session
-    const coverSeen = sessionStorage.getItem('journal-cover-seen');
-    if(!coverSeen){
-      sessionStorage.setItem('journal-cover-seen','1');
-      const coverEl = document.getElementById('journal-cover');
-      if(coverEl){
-        coverEl.classList.add('active');
-        // Hold, then lift cover away
-        setTimeout(()=>{
-          coverEl.classList.add('opening');
-          setTimeout(()=>{ coverEl.style.display='none'; }, 950);
-        }, 1800);
-      }
-    }
-  } catch(e){
-    console.error(e);
-    window.location.href='index.html';
-  }
-})();
-
-// ── BUILD UI ──────────────────────────────────────────────────
-function buildUI(){
-  // Categories
-  const catRow = document.getElementById('category-row');
-  CATEGORIES.forEach(cat=>{
-    const btn = document.createElement('button');
-    btn.className = 'cat-btn' + (cat.id===selectedCategory?' active':'');
-    btn.textContent = cat.label;
-    btn.dataset.id = cat.id;
-    btn.onclick = ()=>{
-      selectedCategory = cat.id;
-      document.querySelectorAll('.cat-btn').forEach(b=>b.classList.remove('active'));
-      btn.classList.add('active');
-    };
-    catRow.appendChild(btn);
-  });
-
-  // Tool types
-  const typeRow = document.getElementById('tool-type-row');
-  TOOL_TYPES.forEach(t=>{
-    const btn = document.createElement('button');
-    btn.className = 'tool-type-btn' + (t.id===selectedToolType?' active':'');
-    btn.textContent = t.label;
-    btn.onclick = ()=>{
-      selectedToolType = t.id;
-      document.querySelectorAll('.tool-type-btn').forEach(b=>b.classList.remove('active'));
-      btn.classList.add('active');
-      // Reset to first color of this tool
-      selectedColor = COLORS[t.id][0].color;
-      buildColorRow();
-      updatePreview();
-    };
-    typeRow.appendChild(btn);
-  });
-
-  buildColorRow();
-  buildHighlightRow();
-  buildStampRow();
-  updatePreview();
-
-  // ── Session-prompt arrival (from week.html link) ─────────────
-  // When the user arrives at journal.html?session=00.X&prompt=session,
-  // surface the "Year 0 — Coming Home" pastoral banner with the
-  // session's journal_prompt and title pulled from Supabase.
-  applySessionPrompt();
-}
-
-async function applySessionPrompt(){
-  try {
-    const params = new URLSearchParams(window.location.search);
-    const sessionId = params.get('session');
-    const promptMode = params.get('prompt');
-    if (!sessionId || promptMode !== 'session') return;
-
-    // Only show the Year 0 banner for Topic 00 sessions (IDs starting with '00.').
-    // Year 1+ sessions will use a different framing in a later pass.
-    if (!sessionId.startsWith('00.')) return;
-
-    const banner = document.getElementById('coming-home-banner');
-    const titleEl = document.getElementById('coming-home-session-title');
-    const promptEl = document.getElementById('coming-home-prompt');
-    if (!banner || !titleEl || !promptEl) return;
-
-    // Show the banner with default copy immediately so it appears while we fetch
-    banner.style.display = 'block';
-
-    // Fetch the session's title and journal_prompt
-    const { data: sess, error } = await sb
-      .from('sessions')
-      .select('title, journal_prompt, status')
-      .eq('id', sessionId)
-      .maybeSingle();
-
-    if (error || !sess) return;
-
-    if (sess.title) titleEl.textContent = sess.title;
-    if (sess.journal_prompt && sess.status === 'published') {
-      promptEl.textContent = sess.journal_prompt;
-      // Also update the textarea placeholder so the prompt is visible
-      const ta = document.getElementById('entry-text');
-      if (ta && !ta.value) {
-        ta.placeholder = sess.journal_prompt + '\n\n— Begin your entry below —';
-      }
-    } else {
-      promptEl.textContent = 'Write your first reflection on this week\'s lesson.';
-    }
+    const res = await fetch('config/program-spine.json');
+    spine = await res.json();
   } catch (e) {
-    // Silent fail — the journal still works without the banner
-    console.warn('Session-prompt overlay failed:', e);
-  }
-
-function buildColorRow(){
-  const row = document.getElementById('color-row');
-  row.innerHTML = '';
-  const colors = COLORS[selectedToolType] || COLORS.pen;
-  colors.forEach(c=>{
-    const sw = document.createElement('div');
-    sw.className = 'swatch' + (c.color===selectedColor?' active':'');
-    sw.style.background = c.color;
-    sw.title = c.label;
-    sw.onclick = ()=>{
-      selectedColor = c.color;
-      document.querySelectorAll('.swatch').forEach(s=>s.classList.remove('active'));
-      sw.classList.add('active');
-      updatePreview();
-    };
-    row.appendChild(sw);
-  });
-}
-
-function buildHighlightRow(){
-  const row = document.getElementById('highlight-row');
-  row.innerHTML = '';
-
-  // None option
-  const none = document.createElement('div');
-  none.className = 'highlight-none' + (!selectedHighlight?' active':'');
-  none.textContent = '∅';
-  none.title = 'No highlight';
-  none.onclick = ()=>{
-    selectedHighlight = null;
-    document.querySelectorAll('.highlight-swatch,.highlight-none').forEach(s=>s.classList.remove('active'));
-    none.classList.add('active');
-    updatePreview();
-  };
-  row.appendChild(none);
-
-  HIGHLIGHTS.forEach(h=>{
-    const sw = document.createElement('div');
-    sw.className = 'highlight-swatch' + (h.color===selectedHighlight?' active':'');
-    sw.style.background = h.color;
-    sw.title = h.label;
-    sw.onclick = ()=>{
-      selectedHighlight = h.color;
-      document.querySelectorAll('.highlight-swatch,.highlight-none').forEach(s=>s.classList.remove('active'));
-      sw.classList.add('active');
-      updatePreview();
-    };
-    row.appendChild(sw);
-  });
-}
-
-function buildStampRow(){
-  const row = document.getElementById('stamp-row');
-  STAMPS.forEach(s=>{
-    const btn = document.createElement('button');
-    btn.className = 'stamp-btn';
-    btn.textContent = s;
-    btn.onclick = ()=>{
-      selectedStamps.push(s);
-      document.getElementById('stamps-display').textContent = selectedStamps.join(' ');
-    };
-    row.appendChild(btn);
-  });
-}
-
-function updatePreview(){
-  const preview = document.getElementById('preview-text');
-  const strip   = document.getElementById('preview-strip');
-  const text    = document.getElementById('entry-text').value.slice(0,40) || 'The way, the truth, and the life...';
-
-  // Apply tool style
-  let fontStyle = 'normal';
-  let fontWeight = '400';
-  let fontSize = '1.1rem';
-  let letterSpacing = 'normal';
-
-  if(selectedToolType==='marker'){
-    fontWeight='700'; fontSize='1.15rem';
-  } else if(selectedToolType==='pencil'){
-    fontStyle='italic'; fontSize='1rem';
-  } else if(selectedToolType==='crayon'){
-    fontWeight='700'; fontSize='1.2rem'; letterSpacing='0.02em';
-  }
-
-  preview.style.color = selectedColor;
-  preview.style.fontWeight = fontWeight;
-  preview.style.fontStyle = fontStyle;
-  preview.style.fontSize = fontSize;
-  preview.style.letterSpacing = letterSpacing;
-  preview.style.background = selectedHighlight || 'transparent';
-  preview.textContent = text;
-
-  // Apply same to writing area
-  const ta = document.getElementById('entry-text');
-  ta.style.color = selectedColor;
-  ta.style.fontWeight = fontWeight;
-  ta.style.fontStyle = fontStyle;
-  ta.style.fontSize = fontSize;
-  ta.style.background = selectedHighlight
-    ? selectedHighlight.replace('0.4','0.12').replace('0.45','0.12')
-    : 'rgba(255,255,255,0.6)';
-}
-
-// ── SAVE ENTRY ────────────────────────────────────────────────
-async function saveEntry(){
-  const text = document.getElementById('entry-text').value.trim();
-  const fb   = document.getElementById('entry-feedback');
-  if(!text){ fb.textContent='Write something first!'; return; }
-  if(!profile){ fb.textContent='Not logged in.'; return; }
-
-  fb.textContent = 'Saving...';
-
-  const {error} = await sb.from('field_journal').insert({
-    explorer_id: profile.id,
-    category:    selectedCategory,
-    entry_text:  text,
-    tool_type:   selectedToolType,
-    tool_color:  selectedColor,
-    highlight:   selectedHighlight || null,
-    stamps:      selectedStamps.length ? selectedStamps.join('') : null,
-  });
-
-  if(error){
-    fb.textContent = 'Error saving: ' + error.message;
-    console.error(error);
+    document.getElementById('page-root').innerHTML =
+      '<div class="calm-frame"><div class="calm-title">Could not load the Expedition.</div>' +
+      '<div class="calm-text">Please check your connection and try again.</div></div>';
     return;
   }
 
-  fb.textContent = '✦ Entry logged in the field journal!';
-  document.getElementById('entry-text').value = '';
-  selectedStamps = [];
-  document.getElementById('stamps-display').textContent = '';
-  await loadEntries();
-  setTimeout(()=>{ fb.textContent=''; }, 3000);
-}
+  // ── COMPUTE TODAY'S STATE ─────────────────────────
+  const state = DayState.compute(new Date(), spine);
 
-// ── LOAD ENTRIES ──────────────────────────────────────────────
-async function loadEntries(){
-  if(!profile) return;
-  const {data,error} = await sb.from('field_journal')
-    .select('*')
-    .eq('explorer_id', profile.id)
-    .order('created_at',{ascending:false});
-  if(error){ console.error(error); return; }
-  allEntries = data || [];
-  renderEntries();
-}
+  // ── SUPABASE + PROFILE (for prayers + future content) ──
+  const SUPABASE_URL = 'https://ksfnsryfmkafwirzgjoe.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtzZm5zcnlmbWthZndpcnpnam9lIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2ODM4MTcsImV4cCI6MjA5MTI1OTgxN30.mHQty44WBnjQY8BJ8KbPk_pp-yTcOaifGxCZPUO4xpY';
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  let profileId = null;
+  try {
+    const timer = new Promise(r => setTimeout(() => r(null), 4000));
+    const res = await Promise.race([sb.auth.getSession(), timer]);
+    profileId = res?.data?.session?.user?.id || null;
+  } catch (e) { /* not fatal */ }
 
-function filterEntries(cat, btn){
-  currentFilter = cat;
-  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  renderEntries();
-}
-
-function renderEntries(){
-  const el = document.getElementById('entries-list');
-  let entries = allEntries;
-  if(currentFilter !== 'all') entries = entries.filter(e=>e.category===currentFilter);
-
-  if(!entries.length){
-    const msg = currentFilter==='all'
-      ? 'Your field journal awaits. Write your first entry above!'
-      : 'No entries in this category yet.';
-    el.innerHTML=`<div class="empty-journal"><div class="empty-journal-icon">📜</div>${msg}</div>`;
-    return;
+  // ── INIT PRAYERS + FETCH STATUS ────────────────────
+  await Prayers.init(sb, profileId);
+  let prayerStatus = { morning: false, evening: false, streak: 0 };
+  if (profileId) {
+    try {
+      const [todayStatus, streak] = await Promise.all([
+        Prayers.getTodayStatus(),
+        Prayers.getStreak(),
+      ]);
+      prayerStatus = { ...todayStatus, streak };
+    } catch (e) {
+      console.warn('Prayer status not available (Chat 2 migration may be pending).', e);
+    }
   }
 
-  el.innerHTML = '';
-  entries.forEach(entry=>{
-    const cat = CATEGORIES.find(c=>c.id===entry.category) || CATEGORIES[0];
-    const d   = new Date(entry.created_at);
-    const dateStr = d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'});
+  // ── LOAD CURRENT SESSION CONTENT ───────────────────
+  // Fetches session row + saint of the week + the explorer's progress.
+  // Skipped during pre_launch (no current session) and pause states.
+  let sessionData = { session: null, saint: null, progress: null, renderable: false };
+  if (state.current_session_id) {
+    try {
+      sessionData = await SessionLoader.load(
+        sb,
+        profileId,
+        state.current_session_id,
+        state.session_week_number
+      );
+    } catch (e) {
+      console.warn('Session load failed; rendering placeholders.', e);
+    }
+  }
 
-    // Rebuild text styling
-    let fontWeight='400',fontStyle='normal',fontSize='1.05rem';
-    if(entry.tool_type==='marker'){fontWeight='700';fontSize='1.1rem';}
-    else if(entry.tool_type==='pencil'){fontStyle='italic';fontSize='0.98rem';}
-    else if(entry.tool_type==='crayon'){fontWeight='700';fontSize='1.1rem';}
+  // ── HELPERS ───────────────────────────────────────
+  const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const todayLong = () => { const t = new Date(); return `${DAYS[t.getDay()]}, ${MONTHS[t.getMonth()]} ${t.getDate()}, ${t.getFullYear()}`; };
+  const shortDay = () => DAYS[new Date().getDay()];
+  function findSession(id){ if(!id) return null; for(const p of spine.phases){ const w = p.weeks.find(x=>x.session_id===id); if(w) return {phase:p,week:w}; } return null; }
+  function formatLongDate(s){ if(!s) return ''; const [y,m,d] = s.split('-').map(Number); const x = new Date(y,m-1,d); return `${DAYS[x.getDay()]}, ${MONTHS[x.getMonth()]} ${x.getDate()}, ${x.getFullYear()}`; }
+  function daysUntil(s){ if(!s) return 0; const [y,m,d] = s.split('-').map(Number); const t = new Date(y,m-1,d); const n = new Date(); n.setHours(0,0,0,0); return Math.max(0, Math.ceil((t-n)/86400000)); }
+  function esc(s){ if(s==null)return''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+  function formatLessonText(text){ if(!text) return ''; const paragraphs = String(text).split(/\n\s*\n/); return paragraphs.map(p => `<p>${esc(p).replace(/\n/g,'<br>')}</p>`).join(''); }
 
-    const textStyle=`color:${entry.tool_color};font-weight:${fontWeight};font-style:${fontStyle};font-size:${fontSize};${entry.highlight?'background:'+entry.highlight+';padding:0 2px;border-radius:2px;':''}`;
+  // ── ROUTING ───────────────────────────────────────
+  const root = document.getElementById('page-root');
+  const prayerPanel = Prayers.renderPanel(state, prayerStatus);
 
-    const div = document.createElement('div');
-    div.className = 'journal-entry';
-    div.style.setProperty('--entry-accent', cat.color);
-    div.style.borderLeftColor = cat.color;
-    div.innerHTML=`
-      <div class="entry-meta">
-        <span class="entry-cat-badge" style="color:${cat.color};border-color:${cat.color}30;">${cat.label}</span>
-        <span class="entry-date">${dateStr}</span>
+  if (state.day_kind === 'pre_launch') {
+    root.innerHTML = renderPreLaunch(state) + prayerPanel + renderBottomNav();
+  } else if (state.day_kind === 'pause') {
+    root.innerHTML = PauseCard.render(state) + prayerPanel + renderBottomNav();
+  } else if (state.day_kind === 'sunday') {
+    root.innerHTML = renderHeader(state) + renderSunday() + prayerPanel + renderSaintBanner() + renderBottomNav();
+  } else if (state.day_kind === 'saturday') {
+    root.innerHTML = renderHeader(state) + renderSaturday() + prayerPanel + renderSaintBanner() + renderBottomNav();
+  } else if (state.day_kind === 'between_sessions') {
+    root.innerHTML = renderHeader(state) + renderBetweenSessions() + prayerPanel + renderSaintBanner() + renderBottomNav();
+  } else if (state.is_topic_00) {
+    root.innerHTML = renderHeader(state) + renderTopic00View() + prayerPanel + renderSaintBanner() + renderBottomNav();
+  } else if (['day1','day2','day3'].includes(state.day_kind)) {
+    root.innerHTML = renderHeader(state) + renderDayTabs(state) + renderThreeDayView(state) + prayerPanel + renderSidebar() + renderSaintBanner() + renderBottomNav();
+  } else {
+    root.innerHTML = renderHeader(state) + renderUnknown() + prayerPanel + renderBottomNav();
+  }
+
+  // ── RENDER FUNCTIONS ──────────────────────────────
+  function renderPreLaunch(s){
+    const launchDate = formatLongDate(s.next_session_starts_on);
+    const days = daysUntil(s.next_session_starts_on);
+    return `<div class="pre-launch"><div class="icon">☩</div><h2>The Expedition Begins</h2><p>Welcome, Nolan. The Orthodox Expedition has not yet begun. Soon you will walk through the open door of the Church and begin to learn what is happening inside.</p><div class="when">${launchDate}</div><p style="font-family:'Caveat',cursive;font-size:1.2rem;color:rgba(201,146,42,0.7);">${days > 0 ? `${days} day${days === 1 ? '' : 's'} until we begin` : 'We begin today.'}</p></div>`;
+  }
+  function renderHeader(s){
+    const session = findSession(s.current_session_id);
+    return `<div class="header"><div class="greeting">Today</div><div class="day-name">${shortDay()}</div><div class="full-date">${todayLong()}</div><div class="liturgical-context"></div>${session ? `<div class="session-title">${session.week.title || 'Awaiting Session Title'}</div><div class="session-week">Week ${s.session_week_number} of ${session.phase.weeks.length} · ${session.phase.name.replace(/^[^—]+—\s*/, '')}</div>` : ''}</div>`;
+  }
+  function renderDayTabs(s){
+    const d = s.day_kind;
+    return `<div class="day-tabs" role="tablist" aria-label="Days of this week's session"><div class="day-tab ${d==='day1'?'active':''}"><span class="day-label">Monday</span>Day 1 · Teach</div><div class="day-tab ${d==='day2'?'active':''}"><span class="day-label">Wednesday</span>Day 2 · Work</div><div class="day-tab ${d==='day3'?'active':''}"><span class="day-label">Friday</span>Day 3 · Reflect</div></div>`;
+  }
+  function renderThreeDayView(s){
+    if(s.day_kind === 'day1') return `<div class="main-frame"><div class="day-heading">Day 1 — The Teaching Day</div><div class="day-subheading">Today with your father</div><div class="artifact-slot placeholder" data-slot="lesson"><div class="artifact-icon">📖</div><div class="artifact-title">The Lesson</div><div class="artifact-blurb">Your father will teach this lesson to you. Read along and join in the discussion as he goes.</div></div><div class="artifact-slot placeholder" data-slot="parent_companion_link"><div class="artifact-icon">✦</div><div class="artifact-title">For Your Father</div><div class="artifact-blurb">A companion guide is ready for him with the discussion questions and teaching notes.</div></div><div class="artifact-slot placeholder" data-slot="opening_journal"><div class="artifact-icon">✎</div><div class="artifact-title">Your Opening Reflection</div><div class="artifact-blurb">After the teaching, write a short entry in your Field Manual about what struck you.</div></div><button class="complete-btn" data-action="complete-day-1">Mark Day 1 Complete</button></div>`;
+    if(s.day_kind === 'day2') return `<div class="main-frame"><div class="day-heading">Day 2 — The Independent Day</div><div class="day-subheading">Today on your own</div><div class="artifact-slot placeholder" data-slot="personal_reading"><div class="artifact-icon">☩</div><div class="artifact-title">The Personal Reading</div><div class="artifact-blurb">Read this week's Scripture passage in your Holy Scriptures reader.</div></div><div class="artifact-slot placeholder" data-slot="workbook"><div class="artifact-icon">✎</div><div class="artifact-title">The Workbook</div><div class="artifact-blurb">Work through this week's exercises. You can do them on the tablet or print them.</div></div><div class="artifact-slot placeholder" data-slot="quiz1"><div class="artifact-icon">◈</div><div class="artifact-title">Quick Check</div><div class="artifact-blurb">A short check for understanding — five questions or so.</div></div><div class="artifact-slot placeholder" data-slot="session_game"><div class="artifact-icon">⚔</div><div class="artifact-title">The Session Game</div><div class="artifact-blurb">If a game is ready for this lesson, you'll find it here.</div></div><button class="complete-btn" data-action="complete-day-2">Mark Day 2 Complete</button></div>`;
+    if(s.day_kind === 'day3') return `<div class="main-frame"><div class="day-heading">Day 3 — The Reflection Day</div><div class="day-subheading">What did this week mean?</div><div class="artifact-slot placeholder" data-slot="field_manual_entry"><div class="artifact-icon">📓</div><div class="artifact-title">Field Manual Entry</div><div class="artifact-blurb">Write your full reflection on this week's lesson in your Field Manual.</div></div><div class="artifact-slot placeholder" data-slot="session_test"><div class="artifact-icon">◈</div><div class="artifact-title">The Session Test</div><div class="artifact-blurb">A longer set of questions covering the whole week. Some will be marked for your father to read.</div></div><div class="artifact-slot placeholder" data-slot="memorization"><div class="artifact-icon">✦</div><div class="artifact-title">Memorization Practice</div><div class="artifact-blurb">Practice what you are learning by heart. When you're ready, ask your father to listen.</div></div><button class="complete-btn" data-action="complete-day-3">Complete the Week</button></div>`;
+    return '';
+  }
+  function renderTopic00View(){
+    const sess = sessionData.session;
+    const renderState = SessionLoader.renderState(sess);
+
+    // Coming soon — session row exists but content is not yet published
+    if (renderState === 'coming_soon') {
+      return `
+        <div class="main-frame">
+          <div class="day-heading">${esc(sess?.title || 'This Week')}</div>
+          <div class="day-subheading">Coming soon</div>
+          <div class="artifact-slot" style="text-align:center;padding:2rem 1.5rem;">
+            <div class="artifact-icon">☩</div>
+            <div class="artifact-title">This week's lesson is being prepared</div>
+            <div class="artifact-blurb">${esc(sess?.scope_summary || 'Check back soon — this week\'s content will appear here when it\'s ready.')}</div>
+          </div>
+        </div>
+      `;
+    }
+
+    // Missing — no row at all (shouldn't happen if spine is loaded, but degrade)
+    if (renderState === 'missing') {
+      return `
+        <div class="main-frame">
+          <div class="day-heading">This Week's Lesson</div>
+          <div class="day-subheading">Take it gently — read, reflect, write</div>
+          <div class="artifact-slot placeholder">
+            <div class="artifact-icon">📖</div>
+            <div class="artifact-title">Awaiting this week's content</div>
+            <div class="artifact-blurb">The lesson for this week will appear here when it is ready.</div>
+          </div>
+        </div>
+      `;
+    }
+
+    // Renderable — pull the real fields from the session row
+    // Topic 00 light model uses: lesson_text, journal_prompt,
+    // discussion_q1/2/3, reading_*, sunday_liturgy_pointer, liturgical_connection.
+    // It does NOT use personal_activity / family_activity (NULL by design).
+
+    const lessonHtml = sess.lesson_text
+      ? `<div class="lesson-body">${formatLessonText(sess.lesson_text)}</div>`
+      : '<p style="font-style:italic;color:rgba(244,232,193,0.55);">(lesson text not yet written)</p>';
+
+    const discussionItems = [sess.discussion_q1, sess.discussion_q2, sess.discussion_q3]
+      .filter(q => q && q.trim().length > 0);
+    const discussionHtml = discussionItems.length
+      ? `<ol class="discussion-questions">${discussionItems.map(q => `<li>${esc(q)}</li>`).join('')}</ol>`
+      : '';
+
+    const readingHtml = (sess.reading_reference || sess.reading_url)
+      ? `
+        <div class="artifact-slot" data-slot="personal_reading">
+          <div class="artifact-icon">☩</div>
+          <div class="artifact-title">A Reading from the Scriptures</div>
+          ${sess.reading_reference ? `<div style="font-family:'Cinzel Decorative',serif;color:var(--gold-light);font-size:1rem;margin-bottom:0.4rem;">${esc(sess.reading_reference)}</div>` : ''}
+          ${sess.reading_note ? `<div class="artifact-blurb" style="margin-bottom:0.8rem;">${esc(sess.reading_note)}</div>` : ''}
+          ${sess.reading_url ? `<a href="${esc(sess.reading_url)}" class="reading-link">Open in the Holy Scriptures →</a>` : ''}
+        </div>` : '';
+
+    const journalHtml = sess.journal_prompt
+      ? `
+        <div class="artifact-slot" data-slot="field_manual_entry">
+          <div class="artifact-icon">✎</div>
+          <div class="artifact-title">A Field Manual Entry</div>
+          <div class="artifact-blurb" style="font-style:normal;color:rgba(244,232,193,0.85);font-size:1rem;line-height:1.6;margin-bottom:0.8rem;">${esc(sess.journal_prompt)}</div>
+          <a href="journal.html?session=${esc(sess.id)}&prompt=session" class="reading-link">Open Field Manual →</a>
+        </div>` : '';
+
+    const liturgicalHtml = sess.liturgical_connection
+      ? `
+        <div class="artifact-slot" data-slot="liturgical_connection">
+          <div class="artifact-icon">⛪</div>
+          <div class="artifact-title">At Liturgy This Sunday</div>
+          <div class="artifact-blurb" style="font-style:normal;color:rgba(244,232,193,0.85);">${esc(sess.liturgical_connection)}</div>
+        </div>` : '';
+
+    const sundayPointerHtml = sess.sunday_liturgy_pointer
+      ? `
+        <div class="artifact-slot" data-slot="sunday_watch_for" style="background:rgba(107,26,26,0.15);">
+          <div class="artifact-icon">☩</div>
+          <div class="artifact-title">What to Watch For at Liturgy</div>
+          <div class="artifact-blurb" style="font-style:normal;color:rgba(244,232,193,0.85);">${esc(sess.sunday_liturgy_pointer)}</div>
+        </div>` : '';
+
+    // For the parent (and admin/superuser), surface a link to the Companion page
+    // The page itself enforces role gating; the link here is best-effort UX.
+    const parentLinkHtml = `
+      <div class="artifact-slot parent-link-slot" data-slot="parent_companion_link" style="background:rgba(44,22,84,0.2);">
+        <div class="artifact-icon">✦</div>
+        <div class="artifact-title">For Your Father</div>
+        <div class="artifact-blurb">A teaching guide is available with discussion questions and notes for this lesson.</div>
+        <a href="parent-companion.html?session=${esc(sess.id)}" class="reading-link">Open the Parent's Companion →</a>
+      </div>`;
+
+    // Day completion status from session_progress.
+    // PRIMARY: completed_at — set by Chat 2's DB trigger when day_3_completed_at
+    // is populated for a light-model (Topic 00) session.
+    // FALLBACK: day_3_completed_at — used while the trigger is not yet installed.
+    // Both checks resolve to "complete" for Topic 00; either signal is sufficient.
+    // This fallback can be removed once Chat 2 ships the completed_at trigger.
+    const isComplete = sessionData.progress?.completed_at != null
+                    || sessionData.progress?.day_3_completed_at != null;
+
+    return `
+      <div class="main-frame">
+        <div class="day-heading">${esc(sess.title)}</div>
+        <div class="day-subheading">This week's lesson</div>
+
+        <div class="artifact-slot" data-slot="lesson">
+          <div class="artifact-icon">📖</div>
+          <div class="artifact-title">The Lesson</div>
+          ${lessonHtml}
+        </div>
+
+        ${discussionHtml ? `
+        <div class="artifact-slot" data-slot="discussion_questions">
+          <div class="artifact-icon">✦</div>
+          <div class="artifact-title">To Talk About With Your Father</div>
+          ${discussionHtml}
+        </div>` : ''}
+
+        ${readingHtml}
+        ${journalHtml}
+        ${liturgicalHtml}
+        ${sundayPointerHtml}
+        ${parentLinkHtml}
+
+        <button class="complete-btn" data-action="complete-week" data-session-id="${esc(sess.id)}" ${isComplete ? 'data-complete="true"' : ''}>
+          ${isComplete ? '✓ This Week is Complete' : 'Mark This Week Complete'}
+        </button>
       </div>
-      <div class="entry-text" style="${textStyle}">${entry.entry_text}</div>
-      ${entry.stamps?`<div class="entry-stamps">${entry.stamps}</div>`:''}
-      <button class="entry-delete" onclick="deleteEntry('${entry.id}')" title="Delete entry">✕</button>`;
-    el.appendChild(div);
-  });
-}
+    `;
+  }
+  function renderSunday(){
+    return `<div class="calm-frame"><div class="calm-icon">☩</div><div class="calm-title">This Sunday at Liturgy</div><div class="calm-text">Today is Sunday — the lived heart of the week. Go to Liturgy with your family.</div><div class="artifact-slot placeholder" data-slot="sunday_watch_for" style="margin-top:1.5rem;text-align:left;"><div class="artifact-icon">✦</div><div class="artifact-title">What to Watch For</div><div class="artifact-blurb">When this week's session is loaded, the one thing to listen for at Liturgy will be here.</div></div><div class="calm-quote">"Behold, I make all things new."</div></div>`;
+  }
+  function renderSaturday(){
+    return `<div class="calm-frame"><div class="calm-icon">◈</div><div class="calm-title">Today is Saturday</div><div class="calm-text">Saturday is for rest. The Expedition does not ask anything of you today. Pray your morning and evening prayers, and prepare your heart for Liturgy tomorrow.</div><div class="calm-quote">"There remains a Sabbath rest for the people of God."</div></div>`;
+  }
+  function renderBetweenSessions(){
+    return `<div class="calm-frame"><div class="calm-icon">✦</div><div class="calm-title">A Quiet Day</div><div class="calm-text">No new work today. The next teaching day is coming. You can revisit your Field Manual, practice your memorization, or read a saint's life.</div></div>`;
+  }
+  function renderUnknown(){
+    return `<div class="calm-frame"><div class="calm-icon">☩</div><div class="calm-title">The Expedition is Complete</div><div class="calm-text">Three years have passed. You have walked the path. Glory to God.</div></div>`;
+  }
+  function renderSidebar(){
+    return `<div class="sidebar"><div class="side-card"><div class="side-eyebrow">Earlier This Week</div><div class="side-content" data-slot="pending_work"><em>(Once you start completing days, anything not yet finished will appear here.)</em></div></div><div class="side-card"><div class="side-eyebrow">Coming Up</div><div class="side-content" data-slot="coming_up"><em>This Sunday's Liturgy.</em></div></div></div>`;
+  }
+  function renderSaintBanner(){
+    const saint = sessionData.saint;
+    if (!saint) {
+      // No saint row yet — render placeholder
+      return `<div class="saint-banner" data-slot="saint_of_week"><div class="saint-icon">☩</div><div class="saint-text"><div class="saint-eyebrow">This Week's Saint</div><div class="saint-name">— Awaiting Saint of the Week —</div></div></div>`;
+    }
+    const feastLine = saint.feast_day
+      ? `<div class="saint-feast">Feast: ${esc(saint.feast_day)}</div>`
+      : '';
+    const iconImg = saint.icon_url
+      ? `<img src="${esc(saint.icon_url)}" alt="${esc(saint.saint_name || '')}" />`
+      : '☩';
+    return `
+      <div class="saint-banner" data-slot="saint_of_week">
+        <div class="saint-icon">${iconImg}</div>
+        <div class="saint-text">
+          <div class="saint-eyebrow">This Week's Saint</div>
+          <div class="saint-name">${esc(saint.saint_name || '— Saint not yet named —')}</div>
+          ${feastLine}
+        </div>
+      </div>`;
+  }
+  function renderBottomNav(){
+    return `<div class="bottom-nav"><a href="journal.html">Field Manual</a><a href="bible-reader.html">Holy Scriptures</a><a href="games.html">Games</a><a href="index.html?signout=1">Sign Out</a></div>`;
+  }
 
-// ── DELETE ENTRY ──────────────────────────────────────────────
-async function deleteEntry(id){
-  if(!confirm('Remove this entry from your journal?')) return;
-  await sb.from('field_journal').delete().eq('id',id);
-  await loadEntries();
-}
+  // ── DAY-COMPLETION BUTTON (Topic 00 light model) ──
+  // Per Chat 1 Decision 2: Topic 00 single-button completion writes
+  // ONLY to day_3_completed_at. Days 1 and 2 stay NULL. Chat 2 will
+  // enforce this at the DB level via a CHECK or trigger keyed on
+  // weekly_model='light'; until then, the app layer is the contract.
+  // The DB trigger sets completed_at when day_3_completed_at is populated
+  // for a Topic 00 session (light model doesn't require day_1 / day_2).
+  document.addEventListener('click', async (e) => {
+    const btn = e.target.closest('.complete-btn[data-session-id]');
+    if (!btn) return;
+    if (btn.getAttribute('data-complete') === 'true') return;
+    e.preventDefault();
+
+    const sessionId = btn.dataset.sessionId;
+    if (!sessionId || !profileId) {
+      console.warn('[completion] Missing sessionId or profileId; cannot record.');
+      return;
+    }
+
+    const original = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Recording...';
+
+    try {
+      const { error } = await sb
+        .from('session_progress')
+        .upsert(
+          {
+            profile_id: profileId,
+            session_id: sessionId,
+            day_3_completed_at: new Date().toISOString(),
+          },
+          { onConflict: 'profile_id,session_id' }
+        );
+
+      if (error) throw error;
+
+      btn.setAttribute('data-complete', 'true');
+      btn.textContent = '✓ This Week is Complete';
+      btn.disabled = true;
+      console.log('[completion] Wrote day_3_completed_at for session', sessionId);
+    } catch (err) {
+      console.error('[completion] Write failed:', err);
+      btn.disabled = false;
+      btn.textContent = original;
+      // Show a small inline error briefly
+      const msg = document.createElement('div');
+      msg.textContent = 'Could not save just now — please try again.';
+      msg.style.cssText = 'margin-top:0.5rem;font-family:Cinzel,serif;font-size:0.7rem;letter-spacing:0.1em;color:rgba(244,180,180,0.85);text-align:center;text-transform:uppercase;';
+      btn.parentElement.appendChild(msg);
+      setTimeout(() => msg.remove(), 4000);
+    }
+  });
+})();
 </script>
 
 <script>

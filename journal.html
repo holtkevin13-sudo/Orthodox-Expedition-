@@ -490,6 +490,12 @@ body{
   </div>
 
   <!-- NEW ENTRY -->
+  <!-- Year 0 — Coming Home banner (shown when arriving from a Topic 00 session prompt) -->
+  <div id="coming-home-banner" style="display:none;margin:1rem 1.25rem 0 1.75rem;padding:1.25rem 1.5rem;background:linear-gradient(160deg,rgba(244,232,193,0.06),rgba(244,232,193,0.02));border:1px solid rgba(201,146,42,0.3);border-radius:14px;text-align:center;">
+    <div style="font-family:'Cinzel',serif;font-size:0.65rem;letter-spacing:0.25em;color:rgba(201,146,42,0.65);text-transform:uppercase;margin-bottom:0.4rem;">Year 0 — Coming Home</div>
+    <div style="font-family:'Cinzel Decorative',serif;font-size:1.05rem;color:#6b1a1a;margin-bottom:0.4rem;" id="coming-home-session-title">The Expedition Begins</div>
+    <div id="coming-home-prompt" style="font-family:'Crimson Text',serif;font-style:italic;font-size:0.95rem;color:rgba(61,31,8,0.85);line-height:1.55;max-width:480px;margin:0 auto;"></div>
+  </div>
   <div class="entry-section">
 
     <!-- Category -->
@@ -728,7 +734,57 @@ function buildUI(){
   buildHighlightRow();
   buildStampRow();
   updatePreview();
+
+  // ── Session-prompt arrival (from week.html link) ─────────────
+  // When the user arrives at journal.html?session=00.X&prompt=session,
+  // surface the "Year 0 — Coming Home" pastoral banner with the
+  // session's journal_prompt and title pulled from Supabase.
+  applySessionPrompt();
 }
+
+async function applySessionPrompt(){
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const sessionId = params.get('session');
+    const promptMode = params.get('prompt');
+    if (!sessionId || promptMode !== 'session') return;
+
+    // Only show the Year 0 banner for Topic 00 sessions (IDs starting with '00.').
+    // Year 1+ sessions will use a different framing in a later pass.
+    if (!sessionId.startsWith('00.')) return;
+
+    const banner = document.getElementById('coming-home-banner');
+    const titleEl = document.getElementById('coming-home-session-title');
+    const promptEl = document.getElementById('coming-home-prompt');
+    if (!banner || !titleEl || !promptEl) return;
+
+    // Show the banner with default copy immediately so it appears while we fetch
+    banner.style.display = 'block';
+
+    // Fetch the session's title and journal_prompt
+    const { data: sess, error } = await sb
+      .from('sessions')
+      .select('title, journal_prompt, status')
+      .eq('id', sessionId)
+      .maybeSingle();
+
+    if (error || !sess) return;
+
+    if (sess.title) titleEl.textContent = sess.title;
+    if (sess.journal_prompt && sess.status === 'published') {
+      promptEl.textContent = sess.journal_prompt;
+      // Also update the textarea placeholder so the prompt is visible
+      const ta = document.getElementById('entry-text');
+      if (ta && !ta.value) {
+        ta.placeholder = sess.journal_prompt + '\n\n— Begin your entry below —';
+      }
+    } else {
+      promptEl.textContent = 'Write your first reflection on this week\'s lesson.';
+    }
+  } catch (e) {
+    // Silent fail — the journal still works without the banner
+    console.warn('Session-prompt overlay failed:', e);
+  }
 
 function buildColorRow(){
   const row = document.getElementById('color-row');

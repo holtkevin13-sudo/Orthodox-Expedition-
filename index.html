@@ -191,7 +191,7 @@ async function routeByRole(userId){
   if(profile.role==='superuser') { window.location.href='admin.html'; return; }
   if(profile.role==='admin')     { window.location.href='admin.html'; return; }
   if(profile.role==='parent')    { window.location.href='parent.html'; return; }
-  window.location.href='home.html'; // explorer
+  window.location.href='week.html'; // explorer — new weekly dashboard (Pass 6)
 }
 
 async function checkSession(){

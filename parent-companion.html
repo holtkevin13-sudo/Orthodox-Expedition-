@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Parent's Companion — The Orthodox Expedition</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=Caveat:wght@400;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+:root{
+  --gold:#c9922a;
+  --gold-light:#f0c96e;
+  --gold-bright:#ffd700;
+  --parchment:#f4e8c1;
+  --ink:#1a0f00;
+  --burgundy:#6b1a1a;
+  --byzantine:#2c1654;
+  --bg:#0e0800;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{min-height:100%;}
+body{
+  font-family:'Crimson Text',serif;
+  background:var(--bg);
+  background-image:radial-gradient(ellipse at 50% 0%,rgba(107,26,26,0.5) 0%,transparent 55%),
+                   radial-gradient(ellipse at 100% 100%,rgba(44,22,84,0.35) 0%,transparent 50%);
+  min-height:100vh;
+  color:var(--parchment);
+  padding:1.5rem 1rem 4rem;
+}
+body::before{
+  content:'';
+  position:fixed;
+  inset:0;
+  background-image:linear-gradient(rgba(201,146,42,0.02) 1px,transparent 1px),
+                   linear-gradient(90deg,rgba(201,146,42,0.02) 1px,transparent 1px);
+  background-size:44px 44px;
+  pointer-events:none;
+  z-index:0;
+}
+
+.container{
+  max-width:760px;
+  margin:0 auto;
+  position:relative;
+  z-index:1;
+}
+
+.top-bar{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:2rem;
+  padding-bottom:1rem;
+  border-bottom:1px solid rgba(201,146,42,0.15);
+}
+.top-bar a{
+  font-family:'Cinzel',serif;
+  font-size:0.7rem;
+  letter-spacing:0.15em;
+  color:rgba(201,146,42,0.6);
+  text-decoration:none;
+  text-transform:uppercase;
+  padding:0.5rem 0.875rem;
+  border:1px solid rgba(201,146,42,0.2);
+  border-radius:8px;
+}
+.top-bar a:hover{color:var(--gold-light);}
+.print-btn{
+  font-family:'Cinzel',serif;
+  font-size:0.7rem;
+  letter-spacing:0.15em;
+  color:rgba(201,146,42,0.6);
+  background:transparent;
+  border:1px solid rgba(201,146,42,0.2);
+  border-radius:8px;
+  padding:0.5rem 0.875rem;
+  text-transform:uppercase;
+  cursor:pointer;
+}
+.print-btn:hover{color:var(--gold-light);}
+
+.header{
+  text-align:center;
+  margin-bottom:2rem;
+  padding-bottom:1.5rem;
+  border-bottom:1px solid rgba(201,146,42,0.15);
+}
+.eyebrow{
+  font-family:'Cinzel',serif;
+  font-size:0.7rem;
+  letter-spacing:0.25em;
+  color:rgba(201,146,42,0.55);
+  text-transform:uppercase;
+  margin-bottom:0.4rem;
+}
+.title{
+  font-family:'Cinzel Decorative',serif;
+  font-size:clamp(1.4rem,4.5vw,1.9rem);
+  color:var(--gold-light);
+  text-shadow:0 0 18px rgba(201,146,42,0.3);
+  margin-bottom:0.4rem;
+  font-weight:400;
+}
+.session-meta{
+  font-family:'Crimson Text',serif;
+  font-style:italic;
+  color:rgba(244,232,193,0.65);
+  font-size:0.95rem;
+}
+
+.section{
+  margin-bottom:2rem;
+  padding:1.5rem 1.75rem;
+  background:linear-gradient(160deg,rgba(244,232,193,0.04),rgba(244,232,193,0.01));
+  border:1px solid rgba(201,146,42,0.18);
+  border-radius:14px;
+}
+.section h2{
+  font-family:'Cinzel',serif;
+  font-size:0.85rem;
+  letter-spacing:0.18em;
+  color:var(--gold);
+  text-transform:uppercase;
+  margin-bottom:1rem;
+  font-weight:600;
+}
+
+.parent-note{
+  font-size:1.05rem;
+  line-height:1.75;
+  color:rgba(244,232,193,0.92);
+  white-space:pre-wrap;
+}
+.parent-note p{margin-bottom:1rem;}
+.parent-note p:last-child{margin-bottom:0;}
+
+.discussion-list{
+  list-style:none;
+  counter-reset:dq;
+}
+.discussion-list li{
+  counter-increment:dq;
+  margin-bottom:1.25rem;
+  padding-left:2.5rem;
+  position:relative;
+  font-size:1.05rem;
+  line-height:1.65;
+  color:rgba(244,232,193,0.85);
+}
+.discussion-list li::before{
+  content:counter(dq);
+  position:absolute;
+  left:0;
+  top:0;
+  width:1.75rem;
+  height:1.75rem;
+  background:rgba(107,26,26,0.4);
+  border:1px solid rgba(201,146,42,0.4);
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-family:'Cinzel',serif;
+  font-size:0.8rem;
+  color:var(--gold-light);
+}
+
+.key-concepts-list{
+  list-style:none;
+  display:flex;
+  flex-wrap:wrap;
+  gap:0.5rem;
+}
+.key-concepts-list li{
+  padding:0.4rem 0.85rem;
+  background:rgba(44,22,84,0.25);
+  border:1px solid rgba(201,146,42,0.25);
+  border-radius:999px;
+  font-family:'Cinzel',serif;
+  font-size:0.75rem;
+  letter-spacing:0.05em;
+  color:rgba(244,232,193,0.85);
+}
+
+.loading,.unauthorized,.error{
+  text-align:center;
+  padding:4rem 2rem;
+  font-family:'Cinzel',serif;
+  font-size:0.85rem;
+  letter-spacing:0.12em;
+  color:rgba(201,146,42,0.6);
+  text-transform:uppercase;
+}
+.unauthorized .icon, .error .icon{
+  font-size:2.5rem;
+  color:var(--gold);
+  margin-bottom:1rem;
+  text-transform:none;
+}
+.unauthorized .msg, .error .msg{
+  margin-top:0.75rem;
+  font-family:'Crimson Text',serif;
+  font-style:italic;
+  text-transform:none;
+  color:rgba(244,232,193,0.75);
+  letter-spacing:normal;
+  font-size:1rem;
+  max-width:480px;
+  margin-left:auto;
+  margin-right:auto;
+  line-height:1.6;
+}
+
+@media print {
+  body { background: white; color: #1a0f00; }
+  body::before { display: none; }
+  .top-bar { display: none; }
+  .section { background: white; border-color: #c9922a; page-break-inside: avoid; }
+  .parent-note, .discussion-list li, .session-meta { color: #1a0f00; }
+  .title { color: #6b1a1a; text-shadow: none; }
+  .eyebrow, .section h2 { color: #6b1a1a; }
+  .key-concepts-list li { background: white; color: #1a0f00; }
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+  <div id="root"><div class="loading">Opening the parent's companion...</div></div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://ksfnsryfmkafwirzgjoe.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtzZm5zcnlmbWthZndpcnpnam9lIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2ODM4MTcsImV4cCI6MjA5MTI1OTgxN30.mHQty44WBnjQY8BJ8KbPk_pp-yTcOaifGxCZPUO4xpY';
+
+(async function main() {
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  const root = document.getElementById('root');
+
+  // ── AUTH + ROLE GATING ─────────────────────────────
+  const { data: sessionData } = await sb.auth.getSession();
+  const session = sessionData?.session;
+  if (!session) {
+    root.innerHTML = `
+      <div class="unauthorized">
+        <div class="icon">☩</div>
+        Sign in required
+        <div class="msg">Please sign in to view the Parent's Companion.</div>
+        <p style="margin-top:1.5rem;"><a href="index.html" style="color:var(--gold-light);">Sign In</a></p>
+      </div>`;
+    return;
+  }
+
+  // Check role — parent or admin/superuser only
+  const { data: profile, error: profileErr } = await sb
+    .from('profiles')
+    .select('id, role, full_name')
+    .eq('id', session.user.id)
+    .maybeSingle();
+
+  if (profileErr || !profile) {
+    root.innerHTML = `<div class="error"><div class="icon">⚠</div>Could not load your profile<div class="msg">Please try again or contact support.</div></div>`;
+    return;
+  }
+
+  const allowedRoles = ['parent', 'admin', 'superuser'];
+  if (!allowedRoles.includes(profile.role)) {
+    root.innerHTML = `
+      <div class="unauthorized">
+        <div class="icon">☩</div>
+        This page is for parents
+        <div class="msg">The Parent's Companion is the catechist's guide to teaching this week's lesson. Your weekly view is the place where your own work lives.</div>
+        <p style="margin-top:1.5rem;"><a href="week.html" style="color:var(--gold-light);">Return to your week</a></p>
+      </div>`;
+    return;
+  }
+
+  // ── DETERMINE WHICH SESSION TO SHOW ────────────────
+  // Priority: ?session=ID URL parameter → today's session via day-state
+  const params = new URLSearchParams(window.location.search);
+  let sessionId = params.get('session');
+
+  if (!sessionId) {
+    // Fallback: load the spine and ask day-state what today's session is
+    try {
+      const spineRes = await fetch('config/program-spine.json');
+      const spine = await spineRes.json();
+      // Lazy-load DayState
+      await new Promise((resolve, reject) => {
+        const s = document.createElement('script');
+        s.src = 'js/day-state.js';
+        s.onload = resolve; s.onerror = reject;
+        document.head.appendChild(s);
+      });
+      const state = DayState.compute(new Date(), spine);
+      sessionId = state.current_session_id;
+    } catch (e) { /* fall through to error below */ }
+  }
+
+  if (!sessionId) {
+    root.innerHTML = `<div class="error"><div class="icon">☩</div>No session selected<div class="msg">No session is currently active.</div></div>`;
+    return;
+  }
+
+  // ── LOAD SESSION ROW ───────────────────────────────
+  const { data: sess, error: sessErr } = await sb
+    .from('sessions')
+    .select('id, status, title, description, parent_note, key_concepts, discussion_q1, discussion_q2, discussion_q3, liturgical_anchor, program_year, week_number')
+    .eq('id', sessionId)
+    .maybeSingle();
+
+  if (sessErr || !sess) {
+    root.innerHTML = `<div class="error"><div class="icon">⚠</div>Could not load this session<div class="msg">${sessErr ? sessErr.message : 'Session not found.'}</div></div>`;
+    return;
+  }
+
+  if (sess.status !== 'published') {
+    root.innerHTML = `
+      <div class="container">
+        <div class="top-bar">
+          <a href="week.html">← Back</a>
+        </div>
+        <div class="header">
+          <div class="eyebrow">Parent's Companion</div>
+          <div class="title">${esc(sess.title || sessionId)}</div>
+        </div>
+        <div class="section">
+          <h2>Coming Soon</h2>
+          <p style="font-style:italic;color:rgba(244,232,193,0.7);line-height:1.6;">
+            This week's content is still being prepared. The Parent's Companion will be available here once the lesson is finalized.
+          </p>
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  // ── RENDER ─────────────────────────────────────────
+  const yearLabel = (sess.program_year === 0) ? 'Topic 00 — Coming Home'
+                   : `Year ${sess.program_year}`;
+  const weekLabel = (sess.week_number != null) ? `Week ${sess.week_number}` : '';
+  const liturgical = sess.liturgical_anchor ? ` · ${esc(sess.liturgical_anchor)}` : '';
+
+  const parentNoteHtml = formatParentNote(sess.parent_note);
+
+  const keyConceptsHtml = (Array.isArray(sess.key_concepts) && sess.key_concepts.length)
+    ? `<ul class="key-concepts-list">${sess.key_concepts.map(k => `<li>${esc(k)}</li>`).join('')}</ul>`
+    : '<p style="font-style:italic;color:rgba(244,232,193,0.55);">(no key concepts listed)</p>';
+
+  const discussionItems = [sess.discussion_q1, sess.discussion_q2, sess.discussion_q3]
+    .filter(q => q && q.trim().length > 0);
+  const discussionHtml = discussionItems.length
+    ? `<ol class="discussion-list">${discussionItems.map(q => `<li>${esc(q)}</li>`).join('')}</ol>`
+    : '<p style="font-style:italic;color:rgba(244,232,193,0.55);">(no discussion questions)</p>';
+
+  root.innerHTML = `
+    <div class="top-bar">
+      <a href="week.html">← Back to the week</a>
+      <button class="print-btn" onclick="window.print()">🖨 Print</button>
+    </div>
+
+    <div class="header">
+      <div class="eyebrow">Parent's Companion</div>
+      <div class="title">${esc(sess.title)}</div>
+      <div class="session-meta">
+        ${esc(yearLabel)}${weekLabel ? ' · ' + esc(weekLabel) : ''}${liturgical}
+      </div>
+    </div>
+
+    ${sess.description ? `
+    <div class="section">
+      <h2>Session Frame</h2>
+      <div class="parent-note">${esc(sess.description)}</div>
+    </div>` : ''}
+
+    <div class="section">
+      <h2>Key Concepts</h2>
+      ${keyConceptsHtml}
+    </div>
+
+    <div class="section">
+      <h2>Teaching Guide</h2>
+      <div class="parent-note">${parentNoteHtml}</div>
+    </div>
+
+    <div class="section">
+      <h2>Discussion Questions</h2>
+      ${discussionHtml}
+    </div>
+  `;
+
+  // ── HELPERS ────────────────────────────────────────
+  function esc(s) {
+    if (s == null) return '';
+    return String(s)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  function formatParentNote(text) {
+    if (!text) return '<p style="font-style:italic;color:rgba(244,232,193,0.55);">(parent note not yet written)</p>';
+    // Split on double newlines into paragraphs; preserve single linebreaks within.
+    const paragraphs = String(text).split(/\n\s*\n/);
+    return paragraphs.map(p => `<p>${esc(p).replace(/\n/g, '<br>')}</p>`).join('');
+  }
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>This Week — The Orthodox Expedition</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=Caveat:wght@400;600&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --gold:#c9922a;
+  --gold-light:#f0c96e;
+  --gold-bright:#ffd700;
+  --parchment:#f4e8c1;
+  --ink:#1a0f00;
+  --burgundy:#6b1a1a;
+  --byzantine:#2c1654;
+  --bg:#0e0800;
+  --green:#16a34a;
+}
+
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{min-height:100%;overflow-x:hidden;}
+body{
+  font-family:'Crimson Text',serif;
+  background:var(--bg);
+  background-image:
+    radial-gradient(ellipse at 50% 0%,rgba(107,26,26,0.5) 0%,transparent 55%),
+    radial-gradient(ellipse at 100% 100%,rgba(44,22,84,0.35) 0%,transparent 50%);
+  min-height:100vh;
+  color:var(--parchment);
+  padding:1rem 1rem 4rem;
+}
+body::before{
+  content:'';
+  position:fixed;
+  inset:0;
+  background-image:
+    linear-gradient(rgba(201,146,42,0.02) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(201,146,42,0.02) 1px,transparent 1px);
+  background-size:44px 44px;
+  pointer-events:none;
+  z-index:0;
+}
+
+.container{
+  max-width:680px;
+  margin:0 auto;
+  position:relative;
+  z-index:1;
+}
+
+/* ── HEADER ───────────────────────────────────────── */
+.header{
+  text-align:center;
+  padding:1.5rem 0 1rem;
+  border-bottom:1px solid rgba(201,146,42,0.15);
+  margin-bottom:2rem;
+}
+.greeting{
+  font-family:'Cinzel',serif;
+  font-size:0.7rem;
+  letter-spacing:0.25em;
+  color:rgba(201,146,42,0.5);
+  text-transform:uppercase;
+  margin-bottom:0.4rem;
+}
+.day-name{
+  font-family:'Cinzel Decorative',serif;
+  font-size:clamp(1.4rem,5vw,1.9rem);
+  color:var(--gold-light);
+  text-shadow:0 0 18px rgba(201,146,42,0.35);
+  margin-bottom:0.15rem;
+}
+.full-date{
+  font-family:'Crimson Text',serif;
+  font-style:italic;
+  font-size:0.95rem;
+  color:rgba(244,232,193,0.55);
+  margin-bottom:0.75rem;
+}
+.liturgical-context{
+  font-family:'Caveat',cursive;
+  font-size:1.05rem;
+  color:rgba(201,146,42,0.7);
+  margin-bottom:1rem;
+  min-height:1.3em;
+}
+.session-title{
+  font-family:'Cinzel Decorative',serif;
+  font-size:clamp(1rem,3.5vw,1.25rem);
+  color:var(--parchment);
+  margin-bottom:0.25rem;
+  padding:0 1rem;
+}
+.session-week{
+  font-family:'Cinzel',serif;
+  font-size:0.65rem;
+  letter-spacing:0.2em;
+  color:rgba(201,146,42,0.4);
+  text-transform:uppercase;
+}
+
+/* ── DAY TABS ─────────────────────────────────────── */
+.day-tabs{
+  display:flex;
+  justify-content:center;
+  gap:0.4rem;
+  margin-bottom:2rem;
+  flex-wrap:wrap;
+}
+.day-tab{
+  padding:0.5rem 1rem;
+  min-width:110px;
+  min-height:48px;
+  background:rgba(44,22,84,0.18);
+  border:1px solid rgba(201,146,42,0.18);
+  border-radius:10px;
+  font-family:'Cinzel',serif;
+  font-size:0.7rem;
+  letter-spacing:0.1em;
+  color:rgba(201,146,42,0.5);
+  text-transform:uppercase;
+  cursor:default;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  line-height:1.3;
+}
+.day-tab .day-label{font-size:0.62rem;color:rgba(201,146,42,0.35);}
+.day-tab.active{
+  background:rgba(107,26,26,0.35);
+  border-color:rgba(255,215,0,0.4);
+  color:var(--gold-bright);
+  box-shadow:0 0 16px rgba(255,215,0,0.15);
+}
+.day-tab.active .day-label{color:rgba(255,215,0,0.6);}
+.day-tab.complete{
+  background:rgba(22,163,74,0.12);
+  border-color:rgba(22,163,74,0.35);
+  color:rgba(134,239,172,0.7);
+}
+
+/* ── MAIN CONTENT FRAME ───────────────────────────── */
+.main-frame{
+  background:linear-gradient(160deg,rgba(244,232,193,0.04),rgba(244,232,193,0.01));
+  border:1.5px solid rgba(201,146,42,0.18);
+  border-radius:16px;
+  padding:2rem 1.5rem;
+  margin-bottom:1.5rem;
+}
+.day-heading{
+  font-family:'Cinzel Decorative',serif;
+  font-size:1.3rem;
+  color:var(--gold-light);
+  margin-bottom:0.25rem;
+  text-align:center;
+}
+.day-subheading{
+  font-family:'Cinzel',serif;
+  font-size:0.65rem;
+  letter-spacing:0.2em;
+  color:rgba(201,146,42,0.5);
+  text-transform:uppercase;
+  margin-bottom:1.5rem;
+  text-align:center;
+}
+
+/* ── ARTIFACT SLOTS ───────────────────────────────── */
+.artifact-slot{
+  margin-bottom:1.25rem;
+  padding:1.25rem;
+  background:rgba(14,8,0,0.4);
+  border:1px solid rgba(201,146,42,0.12);
+  border-radius:10px;
+  position:relative;
+}
+.artifact-slot.placeholder::before{
+  content:'AWAITING CONTENT';
+  position:absolute;
+  top:0.5rem;
+  right:0.75rem;
+  font-family:'Cinzel',serif;
+  font-size:0.55rem;
+  letter-spacing:0.2em;
+  color:rgba(201,146,42,0.25);
+}
+.artifact-icon{
+  font-size:1.5rem;
+  color:var(--gold);
+  margin-bottom:0.4rem;
+}
+.artifact-title{
+  font-family:'Cinzel Decorative',serif;
+  font-size:1.05rem;
+  color:var(--gold-light);
+  margin-bottom:0.25rem;
+}
+.artifact-blurb{
+  font-size:0.88rem;
+  color:rgba(244,232,193,0.55);
+  line-height:1.5;
+  font-style:italic;
+}
+
+/* ── DAY COMPLETE BUTTON ──────────────────────────── */
+.complete-btn{
+  display:block;
+  width:100%;
+  padding:0.875rem;
+  margin-top:1rem;
+  background:linear-gradient(135deg,var(--gold),var(--gold-bright));
+  border:none;
+  border-radius:12px;
+  font-family:'Cinzel',serif;
+  font-size:0.8rem;
+  letter-spacing:0.15em;
+  color:var(--bg);
+  font-weight:700;
+  cursor:pointer;
+  text-transform:uppercase;
+  min-height:52px;
+  opacity:0.4;
+  cursor:not-allowed;
+}
+.complete-btn[data-ready="true"]{
+  opacity:1;
+  cursor:pointer;
+  box-shadow:0 4px 18px rgba(255,215,0,0.2);
+}
+
+/* ── SIDEBAR (PENDING + COMING) ───────────────────── */
+.sidebar{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:1rem;
+  margin-bottom:2rem;
+}
+@media(max-width:520px){
+  .sidebar{grid-template-columns:1fr;}
+}
+.side-card{
+  padding:1.25rem;
+  background:rgba(44,22,84,0.12);
+  border:1px solid rgba(201,146,42,0.12);
+  border-radius:12px;
+}
+.side-eyebrow{
+  font-family:'Cinzel',serif;
+  font-size:0.6rem;
+  letter-spacing:0.2em;
+  color:rgba(201,146,42,0.5);
+  text-transform:uppercase;
+  margin-bottom:0.5rem;
+}
+.side-content{
+  font-size:0.9rem;
+  color:rgba(244,232,193,0.65);
+  line-height:1.5;
+}
+.side-content em{color:rgba(201,146,42,0.6);font-style:italic;}
+
+/* ── BOTTOM NAV ───────────────────────────────────── */
+.bottom-nav{
+  display:flex;
+  justify-content:center;
+  gap:1rem;
+  padding-top:1.5rem;
+  border-top:1px solid rgba(201,146,42,0.15);
+  flex-wrap:wrap;
+}
+.bottom-nav a{
+  font-family:'Cinzel',serif;
+  font-size:0.7rem;
+  letter-spacing:0.15em;
+  color:rgba(201,146,42,0.55);
+  text-decoration:none;
+  text-transform:uppercase;
+  padding:0.5rem 0.875rem;
+  min-height:40px;
+  display:inline-flex;
+  align-items:center;
+  border:1px solid rgba(201,146,42,0.15);
+  border-radius:8px;
+}
+.bottom-nav a:hover{color:var(--gold-light);border-color:rgba(201,146,42,0.35);}
+
+/* ── PRE-LAUNCH CARD ──────────────────────────────── */
+.pre-launch{
+  text-align:center;
+  padding:3rem 1.5rem;
+  max-width:480px;
+  margin:2rem auto;
+}
+.pre-launch .icon{
+  font-size:3rem;
+  color:var(--gold);
+  text-shadow:0 0 20px rgba(255,215,0,0.4);
+  margin-bottom:1rem;
+}
+.pre-launch h2{
+  font-family:'Cinzel Decorative',serif;
+  font-size:1.7rem;
+  color:var(--gold-light);
+  margin-bottom:0.5rem;
+}
+.pre-launch .when{
+  font-family:'Cinzel',serif;
+  font-size:0.95rem;
+  color:var(--gold-bright);
+  letter-spacing:0.1em;
+  margin:1rem 0;
+}
+.pre-launch p{
+  color:rgba(244,232,193,0.65);
+  line-height:1.6;
+  font-style:italic;
+  margin-bottom:1rem;
+}
+
+/* ── SUNDAY/SATURDAY/BETWEEN — CALMER FRAMES ──────── */
+.calm-frame{
+  text-align:center;
+  padding:2.5rem 1.5rem;
+  background:linear-gradient(160deg,rgba(244,232,193,0.04),rgba(244,232,193,0.01));
+  border:1.5px solid rgba(201,146,42,0.15);
+  border-radius:16px;
+  margin-bottom:1.5rem;
+}
+.calm-icon{
+  font-size:2.5rem;
+  color:var(--gold);
+  margin-bottom:0.75rem;
+  text-shadow:0 0 20px rgba(201,146,42,0.3);
+}
+.calm-title{
+  font-family:'Cinzel Decorative',serif;
+  font-size:1.4rem;
+  color:var(--gold-light);
+  margin-bottom:0.5rem;
+}
+.calm-text{
+  font-size:1rem;
+  color:rgba(244,232,193,0.7);
+  line-height:1.6;
+  max-width:420px;
+  margin:0 auto;
+}
+.calm-quote{
+  font-family:'Caveat',cursive;
+  font-size:1.15rem;
+  color:rgba(201,146,42,0.7);
+  margin-top:1.25rem;
+  font-style:italic;
+}
+
+/* ── SAINT OF THE WEEK PLACEHOLDER ────────────────── */
+.saint-banner{
+  display:flex;
+  align-items:center;
+  gap:1rem;
+  padding:1rem 1.25rem;
+  background:rgba(107,26,26,0.18);
+  border:1px solid rgba(201,146,42,0.2);
+  border-radius:12px;
+  margin-bottom:1.5rem;
+}
+.saint-banner .saint-icon{
+  width:54px;
+  height:54px;
+  border-radius:50%;
+  background:rgba(44,22,84,0.5);
+  border:2px solid rgba(201,146,42,0.3);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:1.5rem;
+  color:rgba(201,146,42,0.5);
+  flex-shrink:0;
+}
+.saint-banner .saint-text{flex:1;}
+.saint-banner .saint-eyebrow{
+  font-family:'Cinzel',serif;
+  font-size:0.6rem;
+  letter-spacing:0.2em;
+  color:rgba(201,146,42,0.5);
+  text-transform:uppercase;
+  margin-bottom:0.15rem;
+}
+.saint-banner .saint-name{
+  font-family:'Cinzel Decorative',serif;
+  font-size:1.05rem;
+  color:var(--gold-light);
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+  <div id="page-root"></div>
+</div>
+
+<script src="js/day-state.js"></script>
+<script src="js/pause-card.js"></script>
+<script>
+(async function main(){
+  // ── LOAD THE PROGRAM SPINE ────────────────────────
+  let spine;
+  try {
+    const res = await fetch('config/program-spine.json');
+    spine = await res.json();
+  } catch (e) {
+    document.getElementById('page-root').innerHTML =
+      '<div class="calm-frame"><div class="calm-title">Could not load the Expedition.</div>' +
+      '<div class="calm-text">Please check your connection and try again.</div></div>';
+    return;
+  }
+
+  // ── COMPUTE TODAY'S STATE ─────────────────────────
+  const state = DayState.compute(new Date(), spine);
+  console.log('Day state:', state);
+
+  // ── DATE / DAY HELPERS ────────────────────────────
+  const MONTHS = ['January','February','March','April','May','June',
+                  'July','August','September','October','November','December'];
+  const DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+
+  function todayLong() {
+    const t = new Date();
+    return `${DAYS[t.getDay()]}, ${MONTHS[t.getMonth()]} ${t.getDate()}, ${t.getFullYear()}`;
+  }
+  function shortDay() {
+    return DAYS[new Date().getDay()];
+  }
+
+  function findSession(sessionId) {
+    if (!sessionId) return null;
+    for (const phase of spine.phases) {
+      const w = phase.weeks.find(x => x.session_id === sessionId);
+      if (w) return { phase, week: w };
+    }
+    return null;
+  }
+
+  // ── ROUTING ───────────────────────────────────────
+  const root = document.getElementById('page-root');
+
+  if (state.day_kind === 'pre_launch') {
+    root.innerHTML = renderPreLaunch(state);
+  } else if (state.day_kind === 'pause') {
+    root.innerHTML = PauseCard.render(state) + renderBottomNav();
+  } else if (state.day_kind === 'sunday') {
+    root.innerHTML = renderHeader(state) + renderSunday(state) + renderSaintBanner() + renderBottomNav();
+  } else if (state.day_kind === 'saturday') {
+    root.innerHTML = renderHeader(state) + renderSaturday(state) + renderSaintBanner() + renderBottomNav();
+  } else if (state.day_kind === 'between_sessions') {
+    root.innerHTML = renderHeader(state) + renderBetweenSessions(state) + renderSaintBanner() + renderBottomNav();
+  } else if (state.is_topic_00) {
+    root.innerHTML = renderHeader(state) + renderTopic00View(state) + renderSaintBanner() + renderBottomNav();
+  } else if (state.day_kind === 'day1' || state.day_kind === 'day2' || state.day_kind === 'day3') {
+    root.innerHTML = renderHeader(state) + renderDayTabs(state) + renderThreeDayView(state) + renderSidebar(state) + renderSaintBanner() + renderBottomNav();
+  } else if (state.day_kind === 'between_sessions') {
+    root.innerHTML = renderHeader(state) + renderBetweenSessions(state) + renderBottomNav();
+  } else {
+    // post_program or unknown — fall through gracefully
+    root.innerHTML = renderHeader(state) + renderUnknown(state) + renderBottomNav();
+  }
+
+  // ── RENDER FUNCTIONS ──────────────────────────────
+
+  function renderPreLaunch(s) {
+    const launchDate = formatLongDate(s.next_session_starts_on);
+    const days = daysUntil(s.next_session_starts_on);
+    return `
+      <div class="pre-launch">
+        <div class="icon">☩</div>
+        <h2>The Expedition Begins</h2>
+        <p>Welcome, Nolan. The Orthodox Expedition has not yet begun. Soon you will walk through the open door of the Church and begin to learn what is happening inside.</p>
+        <div class="when">${launchDate}</div>
+        <p style="font-family:'Caveat',cursive;font-size:1.2rem;color:rgba(201,146,42,0.7);">
+          ${days > 0 ? `${days} day${days === 1 ? '' : 's'} until we begin` : 'We begin today.'}
+        </p>
+      </div>
+      ${renderBottomNav()}
+    `;
+  }
+
+  function renderHeader(s) {
+    const session = findSession(s.current_session_id);
+    return `
+      <div class="header">
+        <div class="greeting">Today</div>
+        <div class="day-name">${shortDay()}</div>
+        <div class="full-date">${todayLong()}</div>
+        <div class="liturgical-context">
+          <!-- LITURGICAL_CONTEXT_SLOT — populated when Chat 5's calendar JSON lands -->
+        </div>
+        ${session ? `
+          <div class="session-title">${session.week.title || 'Awaiting Session Title'}</div>
+          <div class="session-week">Week ${s.session_week_number} of ${session.phase.weeks.length} · ${session.phase.name.replace(/^[^—]+—\s*/, '')}</div>
+        ` : ''}
+      </div>
+    `;
+  }
+
+  function renderDayTabs(s) {
+    const day = s.day_kind;
+    return `
+      <div class="day-tabs" role="tablist" aria-label="Days of this week's session">
+        <div class="day-tab ${day === 'day1' ? 'active' : ''}">
+          <span class="day-label">Monday</span>Day 1 · Teach
+        </div>
+        <div class="day-tab ${day === 'day2' ? 'active' : ''}">
+          <span class="day-label">Wednesday</span>Day 2 · Work
+        </div>
+        <div class="day-tab ${day === 'day3' ? 'active' : ''}">
+          <span class="day-label">Friday</span>Day 3 · Reflect
+        </div>
+      </div>
+    `;
+  }
+
+  function renderThreeDayView(s) {
+    if (s.day_kind === 'day1') {
+      return `
+        <div class="main-frame">
+          <div class="day-heading">Day 1 — The Teaching Day</div>
+          <div class="day-subheading">Today with your father</div>
+          <div class="artifact-slot placeholder" data-slot="lesson">
+            <div class="artifact-icon">📖</div>
+            <div class="artifact-title">The Lesson</div>
+            <div class="artifact-blurb">Your father will teach this lesson to you. Read along and join in the discussion as he goes.</div>
+          </div>
+          <div class="artifact-slot placeholder" data-slot="parent_companion_link">
+            <div class="artifact-icon">✦</div>
+            <div class="artifact-title">For Your Father</div>
+            <div class="artifact-blurb">A companion guide is ready for him with the discussion questions and teaching notes.</div>
+          </div>
+          <div class="artifact-slot placeholder" data-slot="opening_journal">
+            <div class="artifact-icon">✎</div>
+            <div class="artifact-title">Your Opening Reflection</div>
+            <div class="artifact-blurb">After the teaching, write a short entry in your Field Manual about what struck you.</div>
+          </div>
+          <button class="complete-btn" data-action="complete-day-1">Mark Day 1 Complete</button>
+        </div>
+      `;
+    }
+    if (s.day_kind === 'day2') {
+      return `
+        <div class="main-frame">
+          <div class="day-heading">Day 2 — The Independent Day</div>
+          <div class="day-subheading">Today on your own</div>
+          <div class="artifact-slot placeholder" data-slot="personal_reading">
+            <div class="artifact-icon">☩</div>
+            <div class="artifact-title">The Personal Reading</div>
+            <div class="artifact-blurb">Read this week's Scripture passage in your Holy Scriptures reader.</div>
+          </div>
+          <div class="artifact-slot placeholder" data-slot="workbook">
+            <div class="artifact-icon">✎</div>
+            <div class="artifact-title">The Workbook</div>
+            <div class="artifact-blurb">Work through this week's exercises. You can do them on the tablet or print them.</div>
+          </div>
+          <div class="artifact-slot placeholder" data-slot="quiz1">
+            <div class="artifact-icon">◈</div>
+            <div class="artifact-title">Quick Check</div>
+            <div class="artifact-blurb">A short check for understanding — five questions or so.</div>
+          </div>
+          <div class="artifact-slot placeholder" data-slot="session_game">
+            <div class="artifact-icon">⚔</div>
+            <div class="artifact-title">The Session Game</div>
+            <div class="artifact-blurb">If a game is ready for this lesson, you'll find it here.</div>
+          </div>
+          <button class="complete-btn" data-action="complete-day-2">Mark Day 2 Complete</button>
+        </div>
+      `;
+    }
+    if (s.day_kind === 'day3') {
+      return `
+        <div class="main-frame">
+          <div class="day-heading">Day 3 — The Reflection Day</div>
+          <div class="day-subheading">What did this week mean?</div>
+          <div class="artifact-slot placeholder" data-slot="field_manual_entry">
+            <div class="artifact-icon">📓</div>
+            <div class="artifact-title">Field Manual Entry</div>
+            <div class="artifact-blurb">Write your full reflection on this week's lesson in your Field Manual.</div>
+          </div>
+          <div class="artifact-slot placeholder" data-slot="session_test">
+            <div class="artifact-icon">◈</div>
+            <div class="artifact-title">The Session Test</div>
+            <div class="artifact-blurb">A longer set of questions covering the whole week. Some will be marked for your father to read.</div>
+          </div>
+          <div class="artifact-slot placeholder" data-slot="memorization">
+            <div class="artifact-icon">✦</div>
+            <div class="artifact-title">Memorization Practice</div>
+            <div class="artifact-blurb">Practice what you are learning by heart. When you're ready, ask your father to listen.</div>
+          </div>
+          <button class="complete-btn" data-action="complete-day-3">Complete the Week</button>
+        </div>
+      `;
+    }
+    return '';
+  }
+
+  function renderTopic00View(s) {
+    return `
+      <div class="main-frame">
+        <div class="day-heading">This Week's Lesson</div>
+        <div class="day-subheading">Take it gently — read, reflect, write</div>
+        <div class="artifact-slot placeholder" data-slot="lesson">
+          <div class="artifact-icon">📖</div>
+          <div class="artifact-title">The Lesson</div>
+          <div class="artifact-blurb">A short lesson to read this week. Read it once with your father, or on your own — whichever feels right.</div>
+        </div>
+        <div class="artifact-slot placeholder" data-slot="field_manual_entry">
+          <div class="artifact-icon">✎</div>
+          <div class="artifact-title">A Field Manual Entry</div>
+          <div class="artifact-blurb">Write a short entry about what stayed with you from this week's lesson.</div>
+        </div>
+        <div class="artifact-slot placeholder" data-slot="weekly_practice">
+          <div class="artifact-icon">☩</div>
+          <div class="artifact-title">A Practice for the Week</div>
+          <div class="artifact-blurb">A small thing to do every day — like making the Sign of the Cross before meals.</div>
+        </div>
+        <button class="complete-btn" data-action="complete-week">Mark This Week Complete</button>
+      </div>
+    `;
+  }
+
+  function renderSunday(s) {
+    return `
+      <div class="calm-frame">
+        <div class="calm-icon">☩</div>
+        <div class="calm-title">This Sunday at Liturgy</div>
+        <div class="calm-text">
+          Today is Sunday — the lived heart of the week. Go to Liturgy with your family.
+        </div>
+        <div class="artifact-slot placeholder" data-slot="sunday_watch_for" style="margin-top:1.5rem;text-align:left;">
+          <div class="artifact-icon">✦</div>
+          <div class="artifact-title">What to Watch For</div>
+          <div class="artifact-blurb">When this week's session is loaded, the one thing to listen for at Liturgy will be here.</div>
+        </div>
+        <div class="calm-quote">"Behold, I make all things new."</div>
+      </div>
+    `;
+  }
+
+  function renderSaturday(s) {
+    return `
+      <div class="calm-frame">
+        <div class="calm-icon">◈</div>
+        <div class="calm-title">Today is Saturday</div>
+        <div class="calm-text">
+          Saturday is for rest. The Expedition does not ask anything of you today.
+          Pray your morning and evening prayers, and prepare your heart for Liturgy tomorrow.
+        </div>
+        <div class="calm-quote">"There remains a Sabbath rest for the people of God."</div>
+      </div>
+    `;
+  }
+
+  function renderBetweenSessions(s) {
+    return `
+      <div class="calm-frame">
+        <div class="calm-icon">✦</div>
+        <div class="calm-title">A Quiet Day</div>
+        <div class="calm-text">
+          No new work today. The next teaching day is coming.
+          You can revisit your Field Manual, practice your memorization, or read a saint's life.
+        </div>
+      </div>
+    `;
+  }
+
+  function renderUnknown(s) {
+    return `
+      <div class="calm-frame">
+        <div class="calm-icon">☩</div>
+        <div class="calm-title">The Expedition is Complete</div>
+        <div class="calm-text">
+          Three years have passed. You have walked the path. Glory to God.
+        </div>
+      </div>
+    `;
+  }
+
+  function renderSidebar(s) {
+    return `
+      <div class="sidebar">
+        <div class="side-card">
+          <div class="side-eyebrow">Earlier This Week</div>
+          <div class="side-content" data-slot="pending_work">
+            <em>(Once you start completing days, anything not yet finished will appear here.)</em>
+          </div>
+        </div>
+        <div class="side-card">
+          <div class="side-eyebrow">Coming Up</div>
+          <div class="side-content" data-slot="coming_up">
+            <em>This Sunday's Liturgy.</em>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderSaintBanner() {
+    return `
+      <div class="saint-banner" data-slot="saint_of_week">
+        <div class="saint-icon">☩</div>
+        <div class="saint-text">
+          <div class="saint-eyebrow">This Week's Saint</div>
+          <div class="saint-name">— Awaiting Saint of the Week —</div>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderBottomNav() {
+    return `
+      <div class="bottom-nav">
+        <a href="journal.html">Field Manual</a>
+        <a href="bible-reader.html">Holy Scriptures</a>
+        <a href="games.html">Games</a>
+      </div>
+    `;
+  }
+
+  // ── DATE FORMATTING HELPERS (mirror pause-card.js) ──
+  function formatLongDate(dateStr) {
+    if (!dateStr) return '';
+    const [y, m, d] = dateStr.split('-').map(Number);
+    const date = new Date(y, m - 1, d);
+    return `${DAYS[date.getDay()]}, ${MONTHS[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`;
+  }
+  function daysUntil(dateStr) {
+    if (!dateStr) return 0;
+    const [y, m, d] = dateStr.split('-').map(Number);
+    const target = new Date(y, m - 1, d);
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    const diff = target - today;
+    return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
+  }
+})();
+</script>
+</body>
+</html>

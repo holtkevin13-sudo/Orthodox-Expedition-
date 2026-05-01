@@ -443,20 +443,58 @@ body::before{
     return `<div class="bottom-nav"><a href="journal.html">Field Manual</a><a href="bible-reader.html">Holy Scriptures</a><a href="games.html">Games</a><a href="index.html?signout=1">Sign Out</a></div>`;
   }
 
-  // ── DAY-COMPLETION BUTTON STUB ────────────────────
-  // Per orchestrator dispatch: render the button visually but hold the
-  // write logic until Chat 1 confirms Decision 2 (which timestamp columns
-  // a Topic 00 single-button completion should set).
-  document.addEventListener('click', (e) => {
+  // ── DAY-COMPLETION BUTTON (Topic 00 light model) ──
+  // Per Chat 1 Decision 2: Topic 00 single-button completion writes
+  // ONLY to day_3_completed_at. Days 1 and 2 stay NULL. Chat 2 will
+  // enforce this at the DB level via a CHECK or trigger keyed on
+  // weekly_model='light'; until then, the app layer is the contract.
+  // The DB trigger sets completed_at when day_3_completed_at is populated
+  // for a Topic 00 session (light model doesn't require day_1 / day_2).
+  document.addEventListener('click', async (e) => {
     const btn = e.target.closest('.complete-btn[data-session-id]');
     if (!btn) return;
     if (btn.getAttribute('data-complete') === 'true') return;
     e.preventDefault();
+
+    const sessionId = btn.dataset.sessionId;
+    if (!sessionId || !profileId) {
+      console.warn('[completion] Missing sessionId or profileId; cannot record.');
+      return;
+    }
+
+    const original = btn.textContent;
     btn.disabled = true;
-    btn.textContent = '✓ Recorded — awaiting wiring';
-    btn.setAttribute('data-complete', 'true');
-    console.log('[completion-stub] Topic 00 complete clicked for session', btn.dataset.sessionId,
-                '— write logic pending Chat 1 Decision 2.');
+    btn.textContent = 'Recording...';
+
+    try {
+      const { error } = await sb
+        .from('session_progress')
+        .upsert(
+          {
+            profile_id: profileId,
+            session_id: sessionId,
+            day_3_completed_at: new Date().toISOString(),
+          },
+          { onConflict: 'profile_id,session_id' }
+        );
+
+      if (error) throw error;
+
+      btn.setAttribute('data-complete', 'true');
+      btn.textContent = '✓ This Week is Complete';
+      btn.disabled = true;
+      console.log('[completion] Wrote day_3_completed_at for session', sessionId);
+    } catch (err) {
+      console.error('[completion] Write failed:', err);
+      btn.disabled = false;
+      btn.textContent = original;
+      // Show a small inline error briefly
+      const msg = document.createElement('div');
+      msg.textContent = 'Could not save just now — please try again.';
+      msg.style.cssText = 'margin-top:0.5rem;font-family:Cinzel,serif;font-size:0.7rem;letter-spacing:0.1em;color:rgba(244,180,180,0.85);text-align:center;text-transform:uppercase;';
+      btn.parentElement.appendChild(msg);
+      setTimeout(() => msg.remove(), 4000);
+    }
   });
 })();
 </script>

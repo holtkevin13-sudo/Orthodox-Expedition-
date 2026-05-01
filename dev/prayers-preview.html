@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prayers Preview — Orthodox Expedition</title>
+<style>
+body{margin:0;padding:0;background:#0e0800;font-family:'Cinzel',serif;color:#f4e8c1;}
+.label{text-align:center;background:#6b1a1a;color:#ffd700;font-family:'Cinzel Decorative',serif;font-size:1.1rem;padding:0.75rem;letter-spacing:0.15em;border-top:3px solid #c9922a;border-bottom:1px solid rgba(201,146,42,0.3);}
+.label .sub{display:block;font-family:'Crimson Text',serif;font-size:0.75rem;font-style:italic;color:rgba(244,232,193,0.7);margin-top:0.25rem;letter-spacing:0.05em;}
+iframe{width:100%;height:100vh;border:none;display:block;}
+.controls{position:fixed;top:0.5rem;right:0.5rem;background:rgba(14,8,0,0.9);border:1px solid rgba(201,146,42,0.3);border-radius:8px;padding:0.5rem;z-index:1000;font-size:0.7rem;}
+.controls a{display:block;color:#f0c96e;text-decoration:none;padding:0.25rem 0.5rem;margin:0.125rem 0;}
+.controls a:hover{background:rgba(201,146,42,0.15);}
+.panel-section{padding:2rem 1rem;background:radial-gradient(ellipse at 50% 0%,rgba(107,26,26,0.5) 0%,transparent 55%);}
+.panel-grid{max-width:680px;margin:0 auto;display:grid;gap:1.5rem;}
+</style>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=Caveat:wght@400;600&display=swap" rel="stylesheet">
+<style>
+.prayer-panel{padding:1.25rem 1.5rem;background:rgba(44,22,84,0.18);border:1px solid rgba(201,146,42,0.18);border-radius:12px;}
+.prayer-panel-eyebrow{font-family:'Cinzel',serif;font-size:0.7rem;letter-spacing:0.2em;color:rgba(201,146,42,0.55);text-transform:uppercase;margin-bottom:0.875rem;}
+.prayer-panel-row{display:flex;gap:1rem;flex-wrap:wrap;}
+.prayer-link{display:flex;align-items:center;gap:0.6rem;flex:1;min-width:200px;padding:0.875rem 1rem;background:rgba(14,8,0,0.4);border:1px solid rgba(201,146,42,0.18);border-radius:10px;text-decoration:none;font-family:'Cinzel',serif;font-size:0.78rem;letter-spacing:0.05em;color:rgba(244,232,193,0.7);min-height:48px;}
+.prayer-link.done{background:rgba(22,163,74,0.1);border-color:rgba(22,163,74,0.3);color:rgba(134,239,172,0.85);}
+.prayer-link .prayer-mark{font-size:1.3rem;color:rgba(201,146,42,0.6);}
+.prayer-link.done .prayer-mark{color:rgba(134,239,172,0.9);}
+.prayer-panel-streak{margin-top:0.875rem;padding-top:0.875rem;border-top:1px solid rgba(201,146,42,0.12);font-family:'Caveat',cursive;font-size:1.05rem;color:rgba(201,146,42,0.7);text-align:center;}
+</style>
+</head>
+<body>
+
+<div class="controls">
+  <a href="#panels">Panels</a>
+  <a href="#m-pre">Morning · Pre-Chrismation</a>
+  <a href="#m-full">Morning · Full</a>
+  <a href="#e-pre">Evening · Pre-Chrismation</a>
+  <a href="#e-full">Evening · Full</a>
+</div>
+
+<div class="label" id="panels">Panels (small card on week.html)
+  <span class="sub">Three states: 0 streak, 3-day streak, pre-launch</span>
+</div>
+<div class="panel-section">
+  <div class="panel-grid">
+    <div id="panel-zero"></div>
+    <div id="panel-three"></div>
+    <div id="panel-pre"></div>
+  </div>
+</div>
+
+<div class="label" id="m-pre">Morning Prayer · Pre-Chrismation
+  <span class="sub">Simpler set — Trisagion, Lord's Prayer, child's prayer for the day</span>
+</div>
+<iframe src="../prayers.html?time=morning"></iframe>
+
+<div class="label" id="m-full">Morning Prayer · Full (post-Chrismation)
+  <span class="sub">Complete morning rule including Symbol of Faith</span>
+</div>
+<iframe src="prayer-frame.html?time=morning&variant=full"></iframe>
+
+<div class="label" id="e-pre">Evening Prayer · Pre-Chrismation
+  <span class="sub">Simpler set</span>
+</div>
+<iframe src="prayer-frame.html?time=evening&variant=pre_chrismation"></iframe>
+
+<div class="label" id="e-full">Evening Prayer · Full (post-Chrismation)
+  <span class="sub">Complete evening rule including Theotokion</span>
+</div>
+<iframe src="prayer-frame.html?time=evening&variant=full"></iframe>
+
+<script src="../js/day-state.js"></script>
+<script src="../js/prayers.js"></script>
+<script>
+(async function(){
+  await Prayers.init(null, null);
+  document.getElementById('panel-zero').innerHTML = Prayers.renderPanel(
+    { day_kind: 'day1', current_session_id: '1.5' },
+    { morning: false, evening: false, streak: 0 }
+  );
+  document.getElementById('panel-three').innerHTML = Prayers.renderPanel(
+    { day_kind: 'day2', current_session_id: '1.5' },
+    { morning: true, evening: false, streak: 3 }
+  );
+  document.getElementById('panel-pre').innerHTML = Prayers.renderPanel(
+    { day_kind: 'pre_launch' },
+    null
+  );
+})();
+</script>
+</body>
+</html>

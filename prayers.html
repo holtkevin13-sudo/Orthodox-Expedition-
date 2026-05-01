@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Daily Prayer — The Orthodox Expedition</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=Caveat:wght@400;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+:root{
+  --gold:#c9922a;
+  --gold-light:#f0c96e;
+  --gold-bright:#ffd700;
+  --parchment:#f4e8c1;
+  --ink:#1a0f00;
+  --burgundy:#6b1a1a;
+  --byzantine:#2c1654;
+  --bg:#0e0800;
+}
+
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{min-height:100%;overflow-x:hidden;}
+body{
+  font-family:'Crimson Text',serif;
+  background:var(--bg);
+  background-image:
+    radial-gradient(ellipse at 50% 0%,rgba(107,26,26,0.5) 0%,transparent 55%),
+    radial-gradient(ellipse at 100% 100%,rgba(44,22,84,0.35) 0%,transparent 50%);
+  min-height:100vh;
+  color:var(--parchment);
+  padding:1rem 1rem 3rem;
+}
+body::before{
+  content:'';
+  position:fixed;
+  inset:0;
+  background-image:
+    linear-gradient(rgba(201,146,42,0.02) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(201,146,42,0.02) 1px,transparent 1px);
+  background-size:44px 44px;
+  pointer-events:none;
+  z-index:0;
+}
+
+.prayer-container{
+  max-width:600px;
+  margin:0 auto;
+  position:relative;
+  z-index:1;
+  padding:1rem 0;
+}
+
+.prayer-header{
+  text-align:center;
+  padding:1.5rem 0 2rem;
+  border-bottom:1px solid rgba(201,146,42,0.15);
+  margin-bottom:2rem;
+}
+.prayer-eyebrow{
+  font-family:'Cinzel',serif;
+  font-size:0.7rem;
+  letter-spacing:0.25em;
+  color:rgba(201,146,42,0.5);
+  text-transform:uppercase;
+  margin-bottom:0.5rem;
+}
+.prayer-title{
+  font-family:'Cinzel Decorative',serif;
+  font-size:clamp(1.5rem,5vw,2rem);
+  color:var(--gold-light);
+  text-shadow:0 0 20px rgba(201,146,42,0.35);
+  margin-bottom:0.4rem;
+  font-weight:400;
+}
+.prayer-subtitle{
+  font-family:'Caveat',cursive;
+  font-size:1.1rem;
+  color:rgba(201,146,42,0.7);
+  font-style:italic;
+}
+
+/* ── PRAYER BLOCKS ──────────────────────────────────── */
+.prayer-block{
+  margin-bottom:2rem;
+  padding-bottom:1.5rem;
+  border-bottom:1px solid rgba(201,146,42,0.08);
+}
+.prayer-block:last-of-type{border-bottom:none;}
+
+.prayer-name{
+  font-family:'Cinzel',serif;
+  font-size:0.85rem;
+  letter-spacing:0.18em;
+  color:var(--gold);
+  text-transform:uppercase;
+  margin-bottom:0.25rem;
+  font-weight:600;
+  text-align:center;
+}
+.prayer-name-sub{
+  font-family:'Crimson Text',serif;
+  font-style:italic;
+  font-size:0.75rem;
+  color:rgba(201,146,42,0.55);
+  text-align:center;
+  margin-bottom:1rem;
+}
+.prayer-name + .prayer-line{margin-top:1rem;}
+
+.prayer-line{
+  font-size:1.1rem;
+  line-height:1.75;
+  color:rgba(244,232,193,0.9);
+  margin-bottom:0.75rem;
+  text-align:center;
+  max-width:540px;
+  margin-left:auto;
+  margin-right:auto;
+}
+
+/* ── RUBRICS (instructions, not prayer) ─────────────── */
+.rubric{
+  font-family:'Cinzel',serif;
+  font-style:italic;
+  font-size:0.75rem;
+  letter-spacing:0.1em;
+  color:rgba(201,146,42,0.45);
+  text-transform:uppercase;
+  text-align:center;
+  margin:1.5rem 0;
+  padding:0.5rem 0;
+}
+
+/* ── CLOSING ─────────────────────────────────────────── */
+.closing-block{
+  margin-top:2rem;
+  padding-top:1.5rem;
+  border-top:1px solid rgba(201,146,42,0.15);
+  text-align:center;
+}
+.closing-line{
+  font-family:'Caveat',cursive;
+  font-size:1.3rem;
+  color:rgba(201,146,42,0.75);
+  font-style:italic;
+  margin-bottom:0.5rem;
+}
+
+/* ── ACTIONS ─────────────────────────────────────────── */
+.prayer-actions{
+  margin-top:3rem;
+  text-align:center;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:1rem;
+}
+.prayer-done-btn{
+  padding:1rem 2.5rem;
+  min-height:56px;
+  background:linear-gradient(135deg,var(--gold),var(--gold-bright));
+  border:none;
+  border-radius:14px;
+  font-family:'Cinzel',serif;
+  font-size:0.85rem;
+  letter-spacing:0.1em;
+  color:var(--bg);
+  font-weight:700;
+  cursor:pointer;
+  text-transform:uppercase;
+  box-shadow:0 4px 20px rgba(255,215,0,0.25);
+  max-width:340px;
+  width:100%;
+}
+.prayer-done-btn:active{transform:scale(0.97);}
+.prayer-done-btn.completed{
+  background:rgba(22,163,74,0.2);
+  color:rgba(134,239,172,0.85);
+  box-shadow:none;
+  cursor:default;
+}
+.prayer-back{
+  font-family:'Cinzel',serif;
+  font-size:0.7rem;
+  letter-spacing:0.15em;
+  color:rgba(201,146,42,0.5);
+  text-decoration:none;
+  text-transform:uppercase;
+  padding:0.5rem 0.875rem;
+  min-height:40px;
+  display:inline-flex;
+  align-items:center;
+  border:1px solid rgba(201,146,42,0.15);
+  border-radius:8px;
+}
+.prayer-back:hover{color:var(--gold-light);border-color:rgba(201,146,42,0.35);}
+
+/* ── LOADING ─────────────────────────────────────────── */
+.loading{
+  text-align:center;
+  padding:4rem 2rem;
+  font-family:'Cinzel',serif;
+  font-size:0.8rem;
+  letter-spacing:0.15em;
+  color:rgba(201,146,42,0.5);
+  text-transform:uppercase;
+}
+</style>
+</head>
+
+<body>
+<div id="root">
+  <div class="loading">Opening the prayer book...</div>
+</div>
+
+<script src="js/day-state.js"></script>
+<script src="js/prayers.js"></script>
+<script>
+const SUPABASE_URL = 'https://ksfnsryfmkafwirzgjoe.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtzZm5zcnlmbWthZndpcnpnam9lIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2ODM4MTcsImV4cCI6MjA5MTI1OTgxN30.mHQty44WBnjQY8BJ8KbPk_pp-yTcOaifGxCZPUO4xpY';
+
+(async function main(){
+  // Determine which prayer to render.
+  const params = new URLSearchParams(window.location.search);
+  const time = params.get('time') === 'evening' ? 'evening' : 'morning';
+
+  // Load Supabase + profile (with the same 4s timeout pattern the rest of the app uses).
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  let profileId = null;
+  try {
+    const timer = new Promise(r => setTimeout(() => r(null), 4000));
+    const res = await Promise.race([sb.auth.getSession(), timer]);
+    const session = res?.data?.session ?? null;
+    if (session) profileId = session.user.id;
+  } catch (e) {
+    console.warn('Auth check failed; rendering prayers anyway.');
+  }
+
+  // Load the program spine to determine which prayer variant to use.
+  let variant = 'pre_chrismation';
+  try {
+    const spineRes = await fetch('config/program-spine.json');
+    const spine = await spineRes.json();
+    const state = DayState.compute(new Date(), spine);
+    variant = Prayers.variantForState(state);
+  } catch (e) {
+    console.warn('Could not determine variant; defaulting to pre_chrismation.');
+  }
+
+  // Init prayers module + render.
+  await Prayers.init(sb, profileId);
+
+  document.getElementById('root').innerHTML = Prayers.renderPrayer(time, variant);
+
+  // Wire up the "I have prayed" button.
+  const btn = document.getElementById('mark-prayer-done');
+  if (btn && profileId) {
+    btn.addEventListener('click', async () => {
+      btn.disabled = true;
+      btn.textContent = 'Recording...';
+      const result = await Prayers.markComplete(time);
+      if (result.ok) {
+        btn.classList.add('completed');
+        btn.textContent = result.alreadyCompleted
+          ? '✓ Already Recorded Today'
+          : '✓ Glory to God';
+      } else {
+        // Graceful degradation if Chat 2 hasn't run the migration yet.
+        btn.classList.add('completed');
+        btn.textContent = '✓ Glory to God';
+        console.warn('Prayer mark failed; missions table may not yet have prayer rows.', result);
+      }
+    });
+  } else if (btn) {
+    btn.textContent = 'Glory to God';
+    btn.disabled = true;
+  }
+})();
+</script>
+</body>
+</html>

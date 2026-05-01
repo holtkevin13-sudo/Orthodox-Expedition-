@@ -1,0 +1,181 @@
+{
+  "_comment": "Program spine for The Orthodox Expedition. Drives day-state.js. Edit only with orchestrator approval — changes affect everyone's schedule.",
+  "_source_of_truth": "Curriculum Overview (Chat 1, May 2026). Pause dates from the same doc. Rest weeks marked TODO pending Chat 1 specification.",
+
+  "launch_date": "2026-05-18",
+
+  "phases": [
+    {
+      "id": "topic_00",
+      "name": "Topic 00 — Coming Home",
+      "starts_on": "2026-05-18",
+      "ends_on": "2026-08-31",
+      "uses_three_day_model": false,
+      "weeks": [
+        { "week_number": 1,  "session_id": "00.1",  "starts_monday": "2026-05-18", "title": "The Church That Stayed" },
+        { "week_number": 2,  "session_id": "00.2",  "starts_monday": "2026-05-25", "title": "Why We Cross Ourselves & What It Means" },
+        { "week_number": 3,  "session_id": "00.3",  "starts_monday": "2026-06-01", "title": "What Is an Icon?" },
+        { "week_number": 4,  "session_id": "00.4",  "starts_monday": "2026-06-08", "title": "Who Is the Theotokos?" },
+        { "week_number": 5,  "session_id": "00.5",  "starts_monday": "2026-06-15", "title": "What Will Happen at My Chrismation",      "_note": "Chrismation week — actual date TBD; Chat 1 may shift this anchor when date locks" },
+        { "week_number": 6,  "session_id": "00.6",  "starts_monday": "2026-06-22", "title": "The Day I Was Sealed",                      "_note": "Chrismation reflective session — same TBD as 00.5" },
+        { "week_number": 7,  "session_id": "00.7",  "starts_monday": "2026-06-29", "title": "The Holy Eucharist — Christ Truly Present", "_note": "Post-Chrismation; ordering may shift with Chrismation date" },
+        { "week_number": 8,  "session_id": "00.8",  "starts_monday": "2026-07-06", "title": "The Divine Liturgy — A Walk-Through" },
+        { "week_number": 9,  "session_id": "00.9",  "starts_monday": "2026-07-13", "title": "The Apostles' Fast" },
+        { "week_number": 10, "session_id": "00.10", "starts_monday": "2026-07-20", "title": "Sts. Peter and Paul",                       "_note": "Curriculum doc shows June 28–29 anchor; week is the closest one to feast that fits the schedule" },
+        { "week_number": 11, "session_id": "00.11", "starts_monday": "2026-07-27", "title": "Praying at Home — A Beginner's Prayer Rule" },
+        { "week_number": 12, "session_id": "00.12", "starts_monday": "2026-08-03", "title": "The Saints — Friends of God" },
+        { "week_number": 13, "session_id": "00.13", "starts_monday": "2026-08-10", "title": "The Prophet Elias",                          "_note": "Feast is July 20 in GOA; this week sits after for reflection — may be reordered" },
+        { "week_number": 14, "session_id": "00.14", "starts_monday": "2026-08-17", "title": "The Dormition Fast Begins" },
+        { "week_number": 15, "session_id": "00.15", "starts_monday": "2026-08-24", "title": "The Dormition of the Theotokos" }
+      ]
+    },
+
+    {
+      "id": "year_1",
+      "name": "Year 1 — The Encounter",
+      "starts_on": "2026-09-01",
+      "ends_on": "2027-05-16",
+      "uses_three_day_model": true,
+      "weeks": [
+        { "week_number": 1,  "session_id": "1.1",  "starts_monday": "2026-08-31", "title": "The Church New Year & The Wheel of Salvation" },
+        { "week_number": 2,  "session_id": "1.2",  "starts_monday": "2026-09-07", "title": "The Theotokos — Her Birth & Ours" },
+        { "week_number": 3,  "session_id": "1.3",  "starts_monday": "2026-09-14", "title": "The Cross — The Tree of Life" },
+        { "week_number": 4,  "session_id": "1.4",  "starts_monday": "2026-09-21", "title": "What Is Orthodox Christianity?" },
+        { "week_number": 5,  "session_id": "1.5",  "starts_monday": "2026-09-28", "title": "Who Is God? The Holy Trinity" },
+        { "week_number": 6,  "session_id": "1.6",  "starts_monday": "2026-10-05", "title": "God & Creation" },
+        { "week_number": 7,  "session_id": "1.7",  "starts_monday": "2026-10-12", "title": "The Fall & The Promise of Salvation" },
+        { "week_number": 8,  "session_id": "1.8",  "starts_monday": "2026-10-19", "title": "The Incarnation — God Becomes Man" },
+        { "week_number": 9,  "session_id": "1.9",  "starts_monday": "2026-10-26", "title": "The Nicene Creed — Line by Line" },
+        { "week_number": 10, "session_id": "1.10", "starts_monday": "2026-11-02", "title": "What Is the Church?" },
+        { "week_number": 11, "session_id": "1.11", "starts_monday": "2026-11-09", "title": "Inside the Church Building — A Map of Heaven" },
+        { "week_number": 12, "session_id": "1.12", "starts_monday": "2026-11-16", "title": "The Nativity Fast Begins" },
+        { "week_number": 13, "session_id": "1.13", "starts_monday": "2026-11-23", "title": "The Forefathers — Christ's Family Tree" },
+        { "week_number": 14, "session_id": "1.14", "starts_monday": "2026-11-30", "title": "St. Andrew the First-Called" },
+        { "week_number": 15, "session_id": "1.15", "starts_monday": "2026-12-07", "title": "St. Nicholas of Myra" },
+        { "week_number": 16, "session_id": "1.16", "starts_monday": "2026-12-14", "title": "The Holy Fathers — Christ's Promised Lineage" },
+        { "week_number": 17, "session_id": "1.17", "starts_monday": "2026-12-21", "title": "Christmas Eve — God With Us" },
+
+        { "week_number": 18, "session_id": "1.18", "starts_monday": "2027-01-11", "title": "Theophany — God Manifest", "_note": "Resumes after Twelve Days pause" },
+        { "week_number": 19, "session_id": "1.19", "starts_monday": "2027-01-18", "title": "The Iconostasis — The Door to Heaven" },
+        { "week_number": 20, "session_id": "1.20", "starts_monday": "2027-01-25", "title": "Liturgical Objects & Vestments" },
+        { "week_number": 21, "session_id": "1.21", "starts_monday": "2027-02-01", "title": "The Three Hierarchs" },
+        { "week_number": 22, "session_id": "1.22", "starts_monday": "2027-02-08", "title": "Worshipping with Your Whole Body" },
+        { "week_number": 23, "session_id": "1.23", "starts_monday": "2027-02-15", "title": "Icons — Windows to Heaven" },
+        { "week_number": 24, "session_id": "1.24", "starts_monday": "2027-02-22", "title": "The Saints — Friends of God (Year 1 depth)" },
+        { "week_number": 25, "session_id": "1.25", "starts_monday": "2027-03-01", "title": "Holy Relics" },
+
+        { "week_number": 26, "session_id": "1.26", "starts_monday": "2027-03-08", "title": "The Holy Angels" },
+        { "week_number": 27, "session_id": "1.27", "starts_monday": "2027-03-15", "title": "Sin & Repentance — Returning Home" },
+        { "week_number": 28, "session_id": "1.28", "starts_monday": "2027-03-22", "title": "The Last Judgment" },
+        { "week_number": 29, "session_id": "1.29", "starts_monday": "2027-03-29", "title": "Forgiveness — The Door to Lent" },
+        { "week_number": 30, "session_id": "1.30", "starts_monday": "2027-04-05", "title": "The Sunday of Orthodoxy" },
+        { "week_number": 31, "session_id": "1.31", "starts_monday": "2027-04-12", "title": "St. Gregory Palamas & The Uncreated Light" },
+        { "week_number": 32, "session_id": "1.32", "starts_monday": "2027-04-19", "title": "The Veneration of the Cross" },
+
+        { "week_number": 33, "session_id": "1.33", "starts_monday": "2027-04-26", "title": "St. John Climacus & The Ladder of Divine Ascent" },
+        { "week_number": 34, "session_id": "1.34", "starts_monday": "2027-05-03", "title": "Holy Week — Day by Day at SJTD",  "_note": "Pascha 2027 is May 2 (Orthodox); this is Holy Week" },
+        { "week_number": 35, "session_id": "1.35", "starts_monday": "2027-05-10", "title": "PASCHA — The Resurrection",        "_note": "Bright Week pause overlaps the front of this week" },
+
+        { "week_number": 36, "session_id": "1.36", "starts_monday": "2027-05-17", "title": "Year 1 Capstone — The Encounter + Year 1 Pilgrimage" }
+      ]
+    },
+
+    {
+      "id": "year_2",
+      "name": "Year 2 — The Faith",
+      "starts_on": "2027-09-01",
+      "ends_on": "2028-05-15",
+      "uses_three_day_model": true,
+      "_note": "Weeks for Year 2 will be expanded by Chat 1 + Chat 5 once the Year 1 spine is validated. Stub list below covers the launch month so day-state can render. Full 36-week spine populates with the Year 2 brief.",
+      "weeks": [
+        { "week_number": 1, "session_id": "2.1", "starts_monday": "2027-08-30", "title": "The Church New Year (Year 2)" },
+        { "week_number": 2, "session_id": "2.2", "starts_monday": "2027-09-06", "title": "The Theotokos — Mother of God (Year 2 depth)" },
+        { "week_number": 3, "session_id": "2.3", "starts_monday": "2027-09-13", "title": "The Cross — Why Christ Died" }
+      ]
+    },
+
+    {
+      "id": "year_3",
+      "name": "Year 3 — The Life",
+      "starts_on": "2028-09-01",
+      "ends_on": "2029-05-14",
+      "uses_three_day_model": true,
+      "_note": "Stub list — full spine populates with the Year 3 brief.",
+      "weeks": [
+        { "week_number": 1, "session_id": "3.1", "starts_monday": "2028-08-28", "title": "The Church New Year (Year 3)" },
+        { "week_number": 2, "session_id": "3.2", "starts_monday": "2028-09-04", "title": "The Theotokos — Pattern of the Christian Life" }
+      ]
+    }
+  ],
+
+  "pauses": [
+    {
+      "reason": "twelve_days",
+      "starts_on": "2026-12-25",
+      "ends_on": "2027-01-06",
+      "label": "The Twelve Days of Christmas",
+      "phase": "year_1"
+    },
+    {
+      "reason": "bright_week",
+      "starts_on": "2027-05-03",
+      "ends_on": "2027-05-09",
+      "label": "Bright Week",
+      "phase": "year_1"
+    },
+    {
+      "reason": "summer_easing",
+      "starts_on": "2027-05-24",
+      "ends_on": "2027-08-29",
+      "label": "Summer Rest — Year 2 begins September",
+      "phase": "between_years",
+      "_note": "Daily prayer, Saint of the Week, Memorization Tracker remain accessible; no new sessions"
+    },
+
+    {
+      "reason": "twelve_days",
+      "starts_on": "2027-12-25",
+      "ends_on": "2028-01-06",
+      "label": "The Twelve Days of Christmas",
+      "phase": "year_2"
+    },
+    {
+      "reason": "bright_week",
+      "starts_on": "2028-04-17",
+      "ends_on": "2028-04-23",
+      "label": "Bright Week",
+      "phase": "year_2",
+      "_note": "Pascha 2028 = April 16"
+    },
+    {
+      "reason": "summer_easing",
+      "starts_on": "2028-05-22",
+      "ends_on": "2028-08-27",
+      "label": "Summer Rest — Year 3 begins September",
+      "phase": "between_years"
+    },
+
+    {
+      "reason": "twelve_days",
+      "starts_on": "2028-12-25",
+      "ends_on": "2029-01-06",
+      "label": "The Twelve Days of Christmas",
+      "phase": "year_3"
+    },
+    {
+      "reason": "bright_week",
+      "starts_on": "2029-04-09",
+      "ends_on": "2029-04-15",
+      "label": "Bright Week",
+      "phase": "year_3",
+      "_note": "Pascha 2029 = April 8"
+    }
+  ],
+
+  "_todos_for_chat_1": [
+    "Confirm Chrismation week and reorder sessions 00.5–00.7 if needed",
+    "Specify rest-week dates within each Year (currently every 6–8 weeks per the doc, but exact weeks unspecified)",
+    "Confirm Year 2 and Year 3 full week-by-week spine when those briefs land",
+    "Confirm Pascha-week handling — does Bright Week pause overlap Holy Week / Pascha session?"
+  ]
+}

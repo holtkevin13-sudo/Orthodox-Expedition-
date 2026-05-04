@@ -58,7 +58,8 @@ body::before{
 .greeting{font-family:'Cinzel',serif;font-size:0.7rem;letter-spacing:0.25em;color:rgba(201,146,42,0.5);text-transform:uppercase;margin-bottom:0.4rem;}
 .day-name{font-family:'Cinzel Decorative',serif;font-size:clamp(1.4rem,5vw,1.9rem);color:var(--gold-light);text-shadow:0 0 18px rgba(201,146,42,0.35);margin-bottom:0.15rem;}
 .full-date{font-family:'Crimson Text',serif;font-style:italic;font-size:0.95rem;color:rgba(244,232,193,0.55);margin-bottom:0.75rem;}
-.liturgical-context{font-family:'Caveat',cursive;font-size:1.05rem;color:rgba(201,146,42,0.7);margin-bottom:1rem;min-height:1.3em;}
+.liturgical-context{margin-top:0.5rem;margin-bottom:0;text-align:left;}
+.liturgical-context:empty{display:none;}
 .session-title{font-family:'Cinzel Decorative',serif;font-size:clamp(1rem,3.5vw,1.25rem);color:var(--parchment);margin-bottom:0.25rem;padding:0 1rem;}
 .session-week{font-family:'Cinzel',serif;font-size:0.65rem;letter-spacing:0.2em;color:rgba(201,146,42,0.4);text-transform:uppercase;}
 
@@ -162,6 +163,9 @@ body::before{
 <script src="js/pause-card.js"></script>
 <script src="js/prayers.js"></script>
 <script src="js/session-loader.js"></script>
+<script src="js/calendar-loader.js"></script>
+<script src="js/calendar-card.js"></script>
+<script src="js/name-day-banner.js"></script>
 <script>
 (async function main(){
   // ── LOAD THE PROGRAM SPINE ────────────────────────
@@ -222,6 +226,49 @@ body::before{
     }
   }
 
+  // ── LOAD PROFILE (for name-day banner) ─────────────
+  // Reads full_name and patron_saint. patron_saint is a future schema
+  // column — until Chat 2 adds it, the select degrades gracefully and
+  // the name-day banner stays hidden.
+  let profile = null;
+  if (profileId) {
+    try {
+      const tryFull = await sb.from('profiles')
+        .select('id, full_name, patron_saint')
+        .eq('id', profileId)
+        .maybeSingle();
+      if (tryFull.error) {
+        const fallback = await sb.from('profiles')
+          .select('id, full_name')
+          .eq('id', profileId)
+          .maybeSingle();
+        profile = fallback.data || null;
+      } else {
+        profile = tryFull.data || null;
+      }
+    } catch (e) {
+      console.warn('Profile load failed; name-day banner will not render.', e);
+    }
+  }
+
+  // ── LOAD TODAY'S LITURGICAL CALENDAR ROW ───────────
+  // Single query, in-memory cache. Dashboard hides the calendar block
+  // gracefully on out-of-range dates or query errors.
+  let calendarRow = null;
+  try {
+    const { row } = await CalendarLoader.load(sb, CalendarLoader.todayKey());
+    calendarRow = row;
+  } catch (e) {
+    console.warn('Calendar load failed; liturgical-context block will be empty.', e);
+  }
+
+  // ── COMPUTE NAME-DAY BANNER ────────────────────────
+  // Returns empty string when not the explorer's patron's feast day.
+  const nameDayBannerHtml = NameDayBanner.render(new Date(), profile);
+
+  // ── COMPUTE CALENDAR CARD ──────────────────────────
+  const calendarCardHtml = CalendarCard.render(calendarRow);
+
   // ── HELPERS ───────────────────────────────────────
   const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
   const DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
@@ -237,22 +284,28 @@ body::before{
   const root = document.getElementById('page-root');
   const prayerPanel = Prayers.renderPanel(state, prayerStatus);
 
+  // Name-day banner sits above everything for the explorer's patron
+  // feast day. Hidden on pre_launch (Nolan isn't yet using the app
+  // pre-May-18). Visible across all other states — even pause weeks,
+  // because a name day is more important than any pause.
+  const nameDayPrefix = (state.day_kind === 'pre_launch') ? '' : nameDayBannerHtml;
+
   if (state.day_kind === 'pre_launch') {
     root.innerHTML = renderPreLaunch(state) + prayerPanel + renderBottomNav();
   } else if (state.day_kind === 'pause') {
-    root.innerHTML = PauseCard.render(state) + prayerPanel + renderBottomNav();
+    root.innerHTML = nameDayPrefix + PauseCard.render(state) + prayerPanel + renderBottomNav();
   } else if (state.day_kind === 'sunday') {
-    root.innerHTML = renderHeader(state) + renderSunday() + prayerPanel + renderSaintBanner() + renderBottomNav();
+    root.innerHTML = nameDayPrefix + renderHeader(state) + renderSunday() + prayerPanel + renderSaintBanner() + renderBottomNav();
   } else if (state.day_kind === 'saturday') {
-    root.innerHTML = renderHeader(state) + renderSaturday() + prayerPanel + renderSaintBanner() + renderBottomNav();
+    root.innerHTML = nameDayPrefix + renderHeader(state) + renderSaturday() + prayerPanel + renderSaintBanner() + renderBottomNav();
   } else if (state.day_kind === 'between_sessions') {
-    root.innerHTML = renderHeader(state) + renderBetweenSessions() + prayerPanel + renderSaintBanner() + renderBottomNav();
+    root.innerHTML = nameDayPrefix + renderHeader(state) + renderBetweenSessions() + prayerPanel + renderSaintBanner() + renderBottomNav();
   } else if (state.is_topic_00) {
-    root.innerHTML = renderHeader(state) + renderTopic00View() + prayerPanel + renderSaintBanner() + renderBottomNav();
+    root.innerHTML = nameDayPrefix + renderHeader(state) + renderTopic00View() + prayerPanel + renderSaintBanner() + renderBottomNav();
   } else if (['day1','day2','day3'].includes(state.day_kind)) {
-    root.innerHTML = renderHeader(state) + renderDayTabs(state) + renderThreeDayView(state) + prayerPanel + renderSidebar() + renderSaintBanner() + renderBottomNav();
+    root.innerHTML = nameDayPrefix + renderHeader(state) + renderDayTabs(state) + renderThreeDayView(state) + prayerPanel + renderSidebar() + renderSaintBanner() + renderBottomNav();
   } else {
-    root.innerHTML = renderHeader(state) + renderUnknown() + prayerPanel + renderBottomNav();
+    root.innerHTML = nameDayPrefix + renderHeader(state) + renderUnknown() + prayerPanel + renderBottomNav();
   }
 
   // ── RENDER FUNCTIONS ──────────────────────────────
@@ -263,7 +316,7 @@ body::before{
   }
   function renderHeader(s){
     const session = findSession(s.current_session_id);
-    return `<div class="header"><div class="greeting">Today</div><div class="day-name">${shortDay()}</div><div class="full-date">${todayLong()}</div><div class="liturgical-context"></div>${session ? `<div class="session-title">${session.week.title || 'Awaiting Session Title'}</div><div class="session-week">Week ${s.session_week_number} of ${session.phase.weeks.length} · ${session.phase.name.replace(/^[^—]+—\s*/, '')}</div>` : ''}</div>`;
+    return `<div class="header"><div class="greeting">Today</div><div class="day-name">${shortDay()}</div><div class="full-date">${todayLong()}</div><div class="liturgical-context">${calendarCardHtml}</div>${session ? `<div class="session-title">${session.week.title || 'Awaiting Session Title'}</div><div class="session-week">Week ${s.session_week_number} of ${session.phase.weeks.length} · ${session.phase.name.replace(/^[^—]+—\s*/, '')}</div>` : ''}</div>`;
   }
   function renderDayTabs(s){
     const d = s.day_kind;

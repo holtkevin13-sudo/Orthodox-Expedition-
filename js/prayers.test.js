@@ -41,7 +41,7 @@ function assert(label, cond, detail) {
   console.log('\n── INIT ──');
   await Prayers.init(null, null);
   assert('init resolves and prayer JSON loads',
-    Prayers._internals.MORNING_MISSION_KEY === 'morning_prayer');
+    Prayers._internals.MORNING_MISSION_KEY === 'daily_morning_prayer');
 
   console.log('\n── RENDER PRAYER PAGE ──');
   {

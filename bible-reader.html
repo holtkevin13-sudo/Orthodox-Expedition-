@@ -5,7 +5,8 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Holy Scriptures — The Orthodox Expedition</title>
-<link rel="icon" href="cross.png" type="image/png"/>
+<link rel="icon" href="favicon.svg" type="image/svg+xml"/>
+<link rel="manifest" href="manifest.json"/>
 <meta name="theme-color" content="#0A1628"/>
 <meta name="description" content="Read the Holy Scriptures in the Orthodox tradition — Septuagint (LXX) for the Old Testament, King James Version for the New Testament."/>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet"/>
@@ -1927,7 +1928,7 @@ function showReaderError(msg) {
     `<div class="reader-state"><div class="reader-state-cross">&#9766;</div><div class="reader-state-sub">${msg}</div></div>`;
 }
 function authGateHTML(msg) {
-  return `<div class="auth-gate"><div class="auth-gate-text">${msg}</div><a href="account.html" class="auth-gate-btn">Sign In</a></div>`;
+  return `<div class="auth-gate"><div class="auth-gate-text">${msg}</div><a href="index.html" class="auth-gate-btn">Sign In</a></div>`;
 }
 function escapeHtml(s) {
   return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -2010,6 +2011,5 @@ document.addEventListener('DOMContentLoaded', function() {
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <!-- auth-nav.js removed — Expedition uses built-in auth -->
 <!-- Cloudflare Web Analytics --><script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "c60c8b59423c45a8a4773eec3a8d5b6e"}'></script><!-- End Cloudflare Web Analytics -->
-<script src="/analytics-tracker.js"></script>
 </body>
 </html>

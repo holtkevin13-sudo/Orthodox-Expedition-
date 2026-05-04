@@ -26,10 +26,10 @@ const Prayers = (() => {
   let sb = null;              // Supabase client (provided by caller)
   let profileId = null;       // explorer profile id (provided by caller)
 
-  // Mission ids — these will be inserted by Chat 2's migration (see below).
-  // Until then, mission lookups will fail gracefully.
-  const MORNING_MISSION_KEY = 'morning_prayer';
-  const EVENING_MISSION_KEY = 'evening_prayer';
+  // Mission keys — must match the rows seeded in the production DB.
+  // (Kept as constants here so callers can't typo them.)
+  const MORNING_MISSION_KEY = 'daily_morning_prayer';
+  const EVENING_MISSION_KEY = 'daily_evening_prayer';
 
   // ── INIT ─────────────────────────────────────────────────────────
   async function init(supabaseClient, currentProfileId) {
@@ -187,7 +187,7 @@ const Prayers = (() => {
     const { data: existing } = await sb
       .from('mission_completions')
       .select('id')
-      .eq('profile_id', profileId)
+      .eq('explorer_id', profileId)
       .eq('mission_id', missionId)
       .eq('day_key', dayKey)
       .limit(1);
@@ -199,7 +199,7 @@ const Prayers = (() => {
     const { error: iErr } = await sb
       .from('mission_completions')
       .insert([{
-        profile_id: profileId,
+        explorer_id: profileId,
         mission_id: missionId,
         day_key: dayKey,
         completed_at: new Date().toISOString(),
@@ -227,7 +227,7 @@ const Prayers = (() => {
     const { data: completions } = await sb
       .from('mission_completions')
       .select('mission_id')
-      .eq('profile_id', profileId)
+      .eq('explorer_id', profileId)
       .eq('day_key', dayKey)
       .in('mission_id', Object.keys(missionMap));
 
@@ -265,7 +265,7 @@ const Prayers = (() => {
     const { data: completions } = await sb
       .from('mission_completions')
       .select('mission_id, day_key')
-      .eq('profile_id', profileId)
+      .eq('explorer_id', profileId)
       .gte('day_key', cutoffStr)
       .in('mission_id', Object.keys(missionMap));
 

@@ -805,7 +805,7 @@ body{background:var(--bg-page);color:var(--text);}
   <!-- SIDEBAR -->
   <div class="sidebar" id="sidebar">
     <div class="sidebar-header">
-      <div class="sidebar-title">Holy Scripture</div>
+      <div class="sidebar-title">Holy Scriptures</div>
       <input type="text" class="sidebar-search" id="bookSearch" placeholder="Search books…" autocomplete="off"/>
     </div>
     <div class="sidebar-body" id="sidebarBody">
@@ -843,7 +843,7 @@ body{background:var(--bg-page);color:var(--text);}
       <!-- Tool buttons -->
       <button class="tool-btn" id="bookmarksBtn" title="Bookmarks">&#9646; <span>Bookmarks</span></button>
       <button class="tool-btn" id="notesBtn" title="Notes">&#9998; <span>Notes</span></button>
-      <button class="tool-btn" id="journalBtn" title="Journal">&#9997; <span>Journal</span></button>
+      <button class="tool-btn" id="journalBtn" title="Field Manual">&#9997; <span>Field Manual</span></button>
     </div>
 
     <!-- EXPEDITION BANNER (shown when opened from Expedition session) -->
@@ -873,7 +873,7 @@ body{background:var(--bg-page);color:var(--text);}
     <div class="reader-content" id="readerContent">
       <div class="reader-state">
         <div class="reader-state-cross">&#9766;</div>
-        <div class="reader-state-title">Holy Scripture</div>
+        <div class="reader-state-title">Holy Scriptures</div>
         <div class="reader-state-sub">
           Select a book from the sidebar to begin reading.<br/>
           The Old Testament is read in the Septuagint.<br/>
@@ -923,11 +923,11 @@ body{background:var(--bg-page);color:var(--text);}
 <!-- JOURNAL PANEL -->
 <div class="side-panel" id="journalPanel">
   <div class="panel-header">
-    <span class="panel-title">&#9997; Journal</span>
+    <span class="panel-title">&#9997; Field Manual</span>
     <button class="panel-close" onclick="closePanel('journalPanel')">&#x2715;</button>
   </div>
   <div class="panel-body" id="journalPanelBody">
-    <button class="journal-new-btn" onclick="openNewJournalEntry()">+ New Journal Entry</button>
+    <button class="journal-new-btn" onclick="openNewJournalEntry()">+ New Entry</button>
     <div id="journalNewForm" style="display:none;margin-bottom:16px;">
       <textarea class="note-textarea" id="journalTextarea" placeholder="Write your reflection…" style="min-height:120px;"></textarea>
       <div style="display:flex;gap:8px;margin-top:10px;">
@@ -1682,7 +1682,7 @@ function refreshJournalPanel() {
   const entries = JSON.parse(localStorage.getItem('oc_journal') || '[]');
   const list = document.getElementById('journalList');
   if (!entries.length) {
-    list.innerHTML = '<div class="panel-empty">No journal entries yet.</div>';
+    list.innerHTML = '<div class="panel-empty">No entries yet.</div>';
     return;
   }
   list.innerHTML = [...entries].reverse().slice(0, 20).map(e =>

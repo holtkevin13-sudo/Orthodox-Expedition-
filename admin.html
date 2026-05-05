@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="manifest" href="manifest.json">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Admin — The Orthodox Expedition</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
@@ -811,7 +812,7 @@ th{font-size:0.78rem !important;letter-spacing:0.06em !important;font-weight:600
     <button class="admin-tab active" id="atab-dashboard"  onclick="switchTab('dashboard')">Dashboard</button>
     <button class="admin-tab"        id="atab-myfamily"   onclick="switchTab('myfamily')">My Family</button>
     <button class="admin-tab"        id="atab-families"   onclick="switchTab('families')">Families</button>
-    <button class="admin-tab"        id="atab-curriculum" onclick="switchTab('curriculum')">Curriculum</button>
+    <button class="admin-tab"        id="atab-curriculum" onclick="switchTab('curriculum')">Topics</button>
     <button class="admin-tab"        id="atab-missions"   onclick="switchTab('missions')">Missions</button>
     <button class="admin-tab"        id="atab-bazaar"     onclick="switchTab('bazaar')">Bazaar</button>
     <button class="admin-tab"        id="atab-settings"   onclick="switchTab('settings')">Settings</button>
@@ -834,10 +835,10 @@ th{font-size:0.78rem !important;letter-spacing:0.06em !important;font-weight:600
         <button class="btn btn-ghost btn-full" onclick="window.open('home.html?admin=1','_blank')">✦ Home</button>
         <button class="btn btn-ghost btn-full" onclick="window.open('missions.html?admin=1','_blank')">☩ Missions</button>
         <button class="btn btn-ghost btn-full" onclick="window.open('curriculum.html?admin=1','_blank')">⊕ Topics</button>
-        <button class="btn btn-ghost btn-full" onclick="window.open('bible-reader.html?admin=1','_blank')">☦ Scripture</button>
-        <button class="btn btn-ghost btn-full" onclick="window.open('journal.html?admin=1','_blank')">✎ Journal</button>
+        <button class="btn btn-ghost btn-full" onclick="window.open('bible-reader.html?admin=1','_blank')">☦ Holy Scriptures</button>
+        <button class="btn btn-ghost btn-full" onclick="window.open('journal.html?admin=1','_blank')">✎ Field Manual</button>
         <button class="btn btn-ghost btn-full" onclick="window.open('bazaar.html?admin=1','_blank')">◈ Bazaar</button>
-        <button class="btn btn-ghost btn-full" onclick="window.open('games.html?admin=1','_blank')">⚔ Games</button>
+        <button class="btn btn-ghost btn-full" onclick="window.open('games.html?admin=1','_blank')">⚔ Training Grounds</button>
       </div>
     </div>
 
@@ -1537,7 +1538,7 @@ async function renderCurriculum(){
           <textarea class="form-textarea" id="concepts-${s.id}" rows="4">${(s.key_concepts||[]).join('\n')}</textarea>
         </div>
         <div class="form-group">
-          <label class="form-label">Journal Prompt</label>
+          <label class="form-label">Field Manual Prompt</label>
           <textarea class="form-textarea" id="journal-${s.id}" rows="2">${s.journal_prompt||''}</textarea>
         </div>
         <div class="form-group">

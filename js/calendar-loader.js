@@ -42,8 +42,8 @@ const CalendarLoader = (() => {
     try {
       const { data, error } = await sb
         .from('liturgical_calendar')
-        .select('date, liturgical_season, feast_name, feast_rank, fast_status, sunday_name, saint_commemorations, notes')
-        .eq('date', dateString)
+        .select('calendar_date, liturgical_season, feast_name, feast_rank, fast_status, sunday_name, saint_commemorations, notes')
+        .eq('calendar_date', dateString)
         .maybeSingle();
 
       if (error) {

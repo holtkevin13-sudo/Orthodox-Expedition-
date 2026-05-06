@@ -20,10 +20,11 @@ function showAdminBar(){
 }
 
 // ── TODAY CARD ────────────────────────────────────────────────
-function renderTodayCard(mastery, completed, topics, allSessions, missions, missionComps, today){
+function renderTodayCard(mastery, completed, topics, allSessions, missions, missionComps, today, progressRows){
   const container = document.getElementById('today-items');
   if(!container) return;
   container.innerHTML = '';
+  progressRows = progressRows || [];
 
   const items = [];
 
@@ -47,8 +48,10 @@ function renderTodayCard(mastery, completed, topics, allSessions, missions, miss
         text: `${nextSession.id} — ${nextSession.title}`,
         coins: nextSession.coins,
         done: false,
-        link: 'curriculum.html',
+        link: 'week.html',
         isSession: true,
+        sessionId: nextSession.id,
+        dayProgress: progressRows.find(p=>p.session_id===nextSession.id) || null,
       });
     } else if(topicSessions.length > 0){
       // All sessions in topic done — show mastery reminder
@@ -56,8 +59,8 @@ function renderTodayCard(mastery, completed, topics, allSessions, missions, miss
         text: 'Topic complete — present your mastery assignment!',
         coins: 200,
         done: activeMastery.status==='pending',
-        link: 'curriculum.html',
-        isSession: true,
+        link: 'week.html',
+        isSession: false,
       });
     }
   } else if(!activeMastery && allSessions.length > 0){
@@ -68,8 +71,10 @@ function renderTodayCard(mastery, completed, topics, allSessions, missions, miss
         text: `${firstIncomplete.id} — ${firstIncomplete.title}`,
         coins: firstIncomplete.coins,
         done: false,
-        link: 'curriculum.html',
+        link: 'week.html',
         isSession: true,
+        sessionId: firstIncomplete.id,
+        dayProgress: progressRows.find(p=>p.session_id===firstIncomplete.id) || null,
       });
     }
   }
@@ -79,15 +84,53 @@ function renderTodayCard(mastery, completed, topics, allSessions, missions, miss
     return;
   }
 
+  // Today's day-of-week → which dot is "active today" (M=1, W=2, F=3; otherwise 0/none)
+  const dow = new Date().getDay(); // 0=Sun..6=Sat
+  const todayDayN = dow === 1 ? 1 : dow === 3 ? 2 : dow === 5 ? 3 : 0;
+
+  function dotClass(progress, n){
+    if(progress && progress[`day_${n}_completed_at`]) return 'done';
+    if(n === todayDayN) return 'today';
+    return 'future';
+  }
+  function dotMarkup(progress, n, label){
+    const cls = dotClass(progress, n);
+    const glyph = cls === 'done' ? '✓' : '';
+    return `<span class="day-pair">`+
+      `<span class="day-dot ${cls}" aria-label="Day ${n} (${label}) ${cls}">${glyph}</span>`+
+      `<span class="day-dot-label" aria-hidden="true">${label}</span>`+
+      `</span>`;
+  }
+
   items.forEach(item=>{
     const div = document.createElement('a');
     div.href = item.link || '#';
     div.style.textDecoration = 'none';
     div.className = 'today-item' + (item.done?' done':'');
-    div.innerHTML = `
-      <div class="today-check ${item.done?'done':'pending'}">${item.done?'✦':''}</div>
-      <span class="today-text">${item.text}</span>
-      <span class="today-coins">${item.done?'':'+'+ item.coins}</span>`;
+
+    if(item.isSession){
+      div.classList.add('today-session-item');
+      const p = item.dayProgress;
+      const allThree = p && p.day_1_completed_at && p.day_2_completed_at && p.day_3_completed_at;
+      if(allThree) div.classList.add('complete');
+      div.innerHTML = `
+        <div class="today-check ${item.done?'done':'pending'}">${item.done?'✦':'☩'}</div>
+        <div class="today-session-body">
+          <span class="today-text">${item.text}</span>
+          <div class="day-rail-mini" role="group" aria-label="Mon Wed Fri progress for this session">
+            ${dotMarkup(p, 1, 'Mon')}
+            ${dotMarkup(p, 2, 'Wed')}
+            ${dotMarkup(p, 3, 'Fri')}
+          </div>
+        </div>
+        <span class="today-coins">${item.done?'':'+'+ item.coins}</span>
+        <span class="today-session-chevron" aria-hidden="true">›</span>`;
+    } else {
+      div.innerHTML = `
+        <div class="today-check ${item.done?'done':'pending'}">${item.done?'✦':''}</div>
+        <span class="today-text">${item.text}</span>
+        <span class="today-coins">${item.done?'':'+'+ item.coins}</span>`;
+    }
     container.appendChild(div);
   });
 }
@@ -559,6 +602,48 @@ body::before{
 .today-text{font-family:'Cinzel',serif;font-size:0.72rem;color:rgba(244,232,193,0.7);flex:1;line-height:1.3;}
 .today-item.done .today-text{color:rgba(244,232,193,0.35);text-decoration:line-through;}
 .today-coins{font-family:'Cinzel',serif;font-size:0.62rem;color:rgba(201,146,42,0.45);flex-shrink:0;}
+
+/* Session-item enhanced treatment — stacks title + day-rail (Mon/Wed/Fri) */
+.today-item.today-session-item{
+  align-items:flex-start;padding:0.625rem 0.25rem 0.625rem 0;
+  border-radius:8px;transition:background 0.15s ease;cursor:pointer;
+}
+.today-item.today-session-item:hover{background:rgba(255,215,0,0.04);}
+.today-item.today-session-item:active{background:rgba(255,215,0,0.08);}
+.today-item.today-session-item .today-check{margin-top:2px;}
+.today-session-body{flex:1;display:flex;flex-direction:column;gap:0.45rem;min-width:0;}
+.today-item.today-session-item .today-text{
+  font-size:0.78rem;color:rgba(244,232,193,0.95);font-weight:600;line-height:1.3;
+}
+.today-session-chevron{
+  font-family:'Cinzel',serif;font-size:0.85rem;color:rgba(255,215,0,0.55);
+  flex-shrink:0;align-self:center;padding-left:0.25rem;
+}
+.day-rail-mini{
+  display:flex;align-items:center;gap:0.45rem;flex-wrap:wrap;
+}
+.day-rail-mini .day-pair{display:flex;align-items:center;gap:0.25rem;}
+.day-rail-mini .day-dot{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:14px;height:14px;border-radius:50%;
+  font-size:0.55rem;font-weight:700;line-height:1;flex-shrink:0;
+  background:transparent;border:1.5px solid rgba(201,146,42,0.25);
+  color:transparent;
+}
+.day-rail-mini .day-dot.done{
+  background:#ffd700;border-color:#ffd700;color:#0e0800;
+  box-shadow:0 0 6px rgba(255,215,0,0.35);
+}
+.day-rail-mini .day-dot.today{
+  background:rgba(244,232,193,0.92);border-color:rgba(255,215,0,0.55);
+}
+.day-rail-mini .day-dot-label{
+  font-family:'Cinzel',serif;font-size:0.55rem;letter-spacing:0.14em;
+  color:rgba(201,146,42,0.55);text-transform:uppercase;
+}
+.today-item.today-session-item.complete .day-rail-mini .day-dot.future{
+  border-color:rgba(201,146,42,0.18);
+}
 
 /* ── DUAL STREAK ─────────────────────────────────────────────── */
 .dual-streak-row{display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-bottom:0.875rem;}
@@ -1091,7 +1176,7 @@ async function loadData(userId){
     sb.from('badges').select('*').order('order_index'),
     sb.from('badge_progress').select('badge_id').eq('explorer_id',userId),
     sb.from('topic_mastery').select('*').eq('explorer_id',userId).order('topic_id'),
-    sb.from('session_progress').select('session_id').eq('explorer_id',userId),
+    sb.from('session_progress').select('session_id, day_1_completed_at, day_2_completed_at, day_3_completed_at').eq('explorer_id',userId),
     sb.from('topics').select('*').order('order_index'),
     sb.from('missions').select('*').eq('is_active',true).in('type',['daily','weekly']).order('type'),
     sb.from('mission_completions').select('mission_id,day_key,week_key').eq('explorer_id',userId),
@@ -1103,7 +1188,8 @@ async function loadData(userId){
   earnedBadges  = (earnedRes.data||[]).map(b=>b.badge_id);
 
   const mastery       = masteryRes.data || [];
-  const completed     = (sessionsRes.data||[]).map(s=>s.session_id);
+  const progressRows  = sessionsRes.data || [];
+  const completed     = progressRows.map(s=>s.session_id);
   const topics        = topicsRes.data || [];
   const missions      = missionsRes.data || [];
   const missionComps  = missionCompRes.data || [];
@@ -1111,7 +1197,7 @@ async function loadData(userId){
 
   renderAll(mastery, completed, topics);
   checkNotifications(mastery, completed);
-  renderTodayCard(mastery, completed, topics, allSessions, missions, missionComps, today);
+  renderTodayCard(mastery, completed, topics, allSessions, missions, missionComps, today, progressRows);
   renderPrayerStreak(missions, missionComps);
   loadAnnouncement();
 }
@@ -1364,10 +1450,11 @@ function showAdminBar(){
 })();
 
 // ── TODAY CARD ────────────────────────────────────────────────
-function renderTodayCard(mastery, completed, topics, allSessions, missions, missionComps, today){
+function renderTodayCard(mastery, completed, topics, allSessions, missions, missionComps, today, progressRows){
   const container = document.getElementById('today-items');
   if(!container) return;
   container.innerHTML = '';
+  progressRows = progressRows || [];
 
   const items = [];
 
@@ -1391,8 +1478,10 @@ function renderTodayCard(mastery, completed, topics, allSessions, missions, miss
         text: `${nextSession.id} — ${nextSession.title}`,
         coins: nextSession.coins,
         done: false,
-        link: 'curriculum.html',
+        link: 'week.html',
         isSession: true,
+        sessionId: nextSession.id,
+        dayProgress: progressRows.find(p=>p.session_id===nextSession.id) || null,
       });
     } else if(topicSessions.length > 0){
       // All sessions in topic done — show mastery reminder
@@ -1400,8 +1489,8 @@ function renderTodayCard(mastery, completed, topics, allSessions, missions, miss
         text: 'Topic complete — present your mastery assignment!',
         coins: 200,
         done: activeMastery.status==='pending',
-        link: 'curriculum.html',
-        isSession: true,
+        link: 'week.html',
+        isSession: false,
       });
     }
   } else if(!activeMastery && allSessions.length > 0){
@@ -1412,8 +1501,10 @@ function renderTodayCard(mastery, completed, topics, allSessions, missions, miss
         text: `${firstIncomplete.id} — ${firstIncomplete.title}`,
         coins: firstIncomplete.coins,
         done: false,
-        link: 'curriculum.html',
+        link: 'week.html',
         isSession: true,
+        sessionId: firstIncomplete.id,
+        dayProgress: progressRows.find(p=>p.session_id===firstIncomplete.id) || null,
       });
     }
   }
@@ -1423,15 +1514,53 @@ function renderTodayCard(mastery, completed, topics, allSessions, missions, miss
     return;
   }
 
+  // Today's day-of-week → which dot is "active today" (M=1, W=2, F=3; otherwise 0/none)
+  const dow = new Date().getDay(); // 0=Sun..6=Sat
+  const todayDayN = dow === 1 ? 1 : dow === 3 ? 2 : dow === 5 ? 3 : 0;
+
+  function dotClass(progress, n){
+    if(progress && progress[`day_${n}_completed_at`]) return 'done';
+    if(n === todayDayN) return 'today';
+    return 'future';
+  }
+  function dotMarkup(progress, n, label){
+    const cls = dotClass(progress, n);
+    const glyph = cls === 'done' ? '✓' : '';
+    return `<span class="day-pair">`+
+      `<span class="day-dot ${cls}" aria-label="Day ${n} (${label}) ${cls}">${glyph}</span>`+
+      `<span class="day-dot-label" aria-hidden="true">${label}</span>`+
+      `</span>`;
+  }
+
   items.forEach(item=>{
     const div = document.createElement('a');
     div.href = item.link || '#';
     div.style.textDecoration = 'none';
     div.className = 'today-item' + (item.done?' done':'');
-    div.innerHTML = `
-      <div class="today-check ${item.done?'done':'pending'}">${item.done?'✦':''}</div>
-      <span class="today-text">${item.text}</span>
-      <span class="today-coins">${item.done?'':'+'+ item.coins}</span>`;
+
+    if(item.isSession){
+      div.classList.add('today-session-item');
+      const p = item.dayProgress;
+      const allThree = p && p.day_1_completed_at && p.day_2_completed_at && p.day_3_completed_at;
+      if(allThree) div.classList.add('complete');
+      div.innerHTML = `
+        <div class="today-check ${item.done?'done':'pending'}">${item.done?'✦':'☩'}</div>
+        <div class="today-session-body">
+          <span class="today-text">${item.text}</span>
+          <div class="day-rail-mini" role="group" aria-label="Mon Wed Fri progress for this session">
+            ${dotMarkup(p, 1, 'Mon')}
+            ${dotMarkup(p, 2, 'Wed')}
+            ${dotMarkup(p, 3, 'Fri')}
+          </div>
+        </div>
+        <span class="today-coins">${item.done?'':'+'+ item.coins}</span>
+        <span class="today-session-chevron" aria-hidden="true">›</span>`;
+    } else {
+      div.innerHTML = `
+        <div class="today-check ${item.done?'done':'pending'}">${item.done?'✦':''}</div>
+        <span class="today-text">${item.text}</span>
+        <span class="today-coins">${item.done?'':'+'+ item.coins}</span>`;
+    }
     container.appendChild(div);
   });
 }

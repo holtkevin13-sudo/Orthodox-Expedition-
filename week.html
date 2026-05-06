@@ -151,6 +151,75 @@ body::before{
 /* COMPLETE BUTTON ENABLED STATE */
 .complete-btn[data-session-id]{opacity:1;cursor:pointer;box-shadow:0 4px 18px rgba(255,215,0,0.2);}
 .complete-btn[data-complete="true"]{background:rgba(22,163,74,0.2);color:rgba(134,239,172,0.9);box-shadow:none;cursor:default;}
+.complete-btn[data-action="t00-day1"]{opacity:1;cursor:pointer;box-shadow:0 4px 18px rgba(255,215,0,0.2);}
+.complete-btn[data-action="t00-day1"]:disabled{cursor:default;}
+.complete-btn[data-action="t00-day1"][data-complete="true"]{background:rgba(22,163,74,0.2);color:rgba(134,239,172,0.9);box-shadow:none;}
+
+/* ── M/W/F DAY RAIL ─────────────────────────────────────────────────────── */
+/* The day-tabs reused as a 3-dot progress rail. .done shows a check; .active is the live day. */
+.day-rail .day-tab{position:relative;flex:1;max-width:160px;}
+.day-rail .day-tab.done{background:rgba(22,163,74,0.14);border-color:rgba(134,239,172,0.35);color:rgba(134,239,172,0.85);}
+.day-rail .day-tab.done .day-label{color:rgba(134,239,172,0.6);}
+.day-rail .day-mark{position:absolute;top:0.3rem;right:0.55rem;width:1.1rem;height:1.1rem;border-radius:50%;background:rgba(134,239,172,0.85);color:#0e0800;font-size:0.7rem;line-height:1.1rem;text-align:center;font-weight:700;}
+
+/* ── REWARD LINES ───────────────────────────────────────────────────────── */
+.reward-hint{margin-top:0.7rem;font-family:'Cinzel',serif;font-size:0.7rem;letter-spacing:0.18em;text-transform:uppercase;color:rgba(201,146,42,0.55);text-align:center;}
+.reward-line{margin-top:0.9rem;font-family:'Cinzel',serif;font-size:0.78rem;letter-spacing:0.18em;text-transform:uppercase;color:rgba(255,215,0,0.9);text-align:center;text-shadow:0 0 14px rgba(255,215,0,0.25);}
+@keyframes rewardFlash{0%{transform:scale(0.96);opacity:0.4;}45%{transform:scale(1.04);opacity:1;text-shadow:0 0 32px rgba(255,215,0,0.8);}100%{transform:scale(1);opacity:1;text-shadow:0 0 14px rgba(255,215,0,0.25);}}
+.reward-line-flash{animation:rewardFlash 0.9s ease-out;}
+
+/* ── WEDNESDAY: PDF DOWNLOAD BUTTON ─────────────────────────────────────── */
+.pdf-download-btn{display:flex;align-items:center;gap:1rem;width:100%;padding:1rem 1.1rem;background:linear-gradient(135deg,rgba(107,26,26,0.55),rgba(44,22,84,0.45));border:1.5px solid rgba(201,146,42,0.4);border-radius:12px;text-decoration:none;color:var(--parchment);transition:all 0.18s;min-height:64px;}
+.pdf-download-btn:hover{border-color:rgba(255,215,0,0.65);transform:translateY(-1px);box-shadow:0 6px 20px rgba(0,0,0,0.4);}
+.pdf-download-btn .pdf-icon{font-size:1.7rem;flex-shrink:0;color:var(--gold-light);}
+.pdf-download-btn .pdf-text{flex:1;display:flex;flex-direction:column;gap:0.2rem;text-align:left;}
+.pdf-download-btn .pdf-title{font-family:'Cinzel',serif;font-size:0.78rem;letter-spacing:0.14em;color:var(--gold-light);text-transform:uppercase;font-weight:600;}
+.pdf-download-btn .pdf-subtitle{font-family:'Crimson Text',serif;font-size:0.88rem;color:rgba(244,232,193,0.7);font-style:italic;line-height:1.35;}
+.pdf-download-btn .pdf-arrow{font-size:1.3rem;color:rgba(201,146,42,0.6);flex-shrink:0;transition:transform 0.18s;}
+.pdf-download-btn:hover .pdf-arrow{transform:translateY(2px);color:var(--gold-bright);}
+
+/* ── WEDNESDAY: VERIFICATION QUESTION ───────────────────────────────────── */
+.verify-question{margin-top:0.4rem;}
+.verify-question-text{font-family:'Crimson Text',serif;font-size:1.04rem;line-height:1.6;color:rgba(244,232,193,0.95);margin-bottom:0.95rem;}
+.verify-options{display:flex;flex-direction:column;gap:0.55rem;margin-bottom:0.85rem;}
+.verify-option{display:flex;align-items:flex-start;gap:0.7rem;padding:0.75rem 0.9rem;background:rgba(14,8,0,0.5);border:1px solid rgba(201,146,42,0.18);border-radius:10px;cursor:pointer;transition:all 0.15s;min-height:48px;}
+.verify-option:hover{border-color:rgba(201,146,42,0.45);background:rgba(14,8,0,0.7);}
+.verify-option input[type="radio"]{margin-top:0.18rem;flex-shrink:0;cursor:pointer;accent-color:var(--gold-bright);}
+.verify-option input[type="radio"]:disabled{cursor:default;}
+.verify-option-letter{font-family:'Cinzel',serif;font-size:0.78rem;letter-spacing:0.1em;color:var(--gold-light);font-weight:700;width:1.2rem;flex-shrink:0;}
+.verify-option-text{flex:1;font-family:'Crimson Text',serif;font-size:0.98rem;line-height:1.45;color:rgba(244,232,193,0.85);}
+.verify-option:has(input:checked){border-color:rgba(255,215,0,0.55);background:rgba(107,26,26,0.25);}
+.verify-option.already-correct{border-color:rgba(134,239,172,0.45);background:rgba(22,163,74,0.12);}
+.verify-submit-btn{display:block;width:100%;padding:0.75rem;background:linear-gradient(135deg,var(--gold),var(--gold-bright));border:none;border-radius:10px;font-family:'Cinzel',serif;font-size:0.78rem;letter-spacing:0.15em;color:var(--bg);font-weight:700;text-transform:uppercase;cursor:pointer;min-height:48px;}
+.verify-submit-btn:hover{box-shadow:0 4px 16px rgba(255,215,0,0.25);}
+.verify-submit-btn:disabled{opacity:0.6;cursor:default;box-shadow:none;}
+.verify-feedback{margin-top:0.6rem;padding:0.7rem 0.85rem;border-radius:8px;font-family:'Crimson Text',serif;font-size:0.92rem;line-height:1.5;}
+.verify-feedback:empty{display:none;padding:0;}
+.verify-feedback-correct{background:rgba(22,163,74,0.14);border:1px solid rgba(134,239,172,0.35);color:rgba(220,250,220,0.95);}
+.verify-feedback-wrong{background:rgba(107,26,26,0.22);border:1px solid rgba(244,180,180,0.3);color:rgba(255,215,200,0.95);font-style:italic;}
+.verify-feedback-prompt{background:rgba(44,22,84,0.25);border:1px solid rgba(201,146,42,0.35);color:rgba(255,225,170,0.9);font-style:italic;}
+.verify-feedback-locked{margin-top:0.55rem;}
+.verify-confirmed{display:block;width:100%;padding:0.875rem;margin-top:0.4rem;background:rgba(22,163,74,0.18);border:1px solid rgba(134,239,172,0.35);border-radius:10px;text-align:center;font-family:'Cinzel',serif;font-size:0.78rem;letter-spacing:0.18em;color:rgba(134,239,172,0.95);text-transform:uppercase;font-weight:600;}
+
+/* ── FRIDAY: QUIZ LAUNCHER ──────────────────────────────────────────────── */
+.quiz-launcher-slot{background:rgba(14,8,0,0.5);border:1.5px solid rgba(201,146,42,0.25);}
+.quiz-meta{display:grid;grid-template-columns:repeat(2,1fr);gap:0.55rem 0.9rem;margin:0.85rem 0 1rem;padding:0.85rem 1rem;background:rgba(44,22,84,0.18);border:1px solid rgba(201,146,42,0.15);border-radius:10px;}
+.quiz-meta-item{display:flex;flex-direction:column;gap:0.15rem;}
+.quiz-meta-label{font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.16em;text-transform:uppercase;color:rgba(201,146,42,0.55);}
+.quiz-meta-value{font-family:'Cinzel Decorative',serif;font-size:0.95rem;color:var(--gold-light);}
+.quiz-launcher-btn{display:block;width:100%;padding:1rem;background:linear-gradient(135deg,var(--burgundy),#8b2222);border:1.5px solid rgba(255,215,0,0.45);border-radius:12px;font-family:'Cinzel',serif;font-size:0.85rem;letter-spacing:0.18em;color:var(--gold-bright);text-decoration:none;text-align:center;text-transform:uppercase;font-weight:700;min-height:54px;display:flex;align-items:center;justify-content:center;transition:all 0.18s;box-shadow:0 4px 16px rgba(107,26,26,0.45);}
+.quiz-launcher-btn:hover{transform:translateY(-1px);box-shadow:0 6px 22px rgba(255,215,0,0.25);border-color:rgba(255,215,0,0.7);}
+.quiz-launcher-btn.done{background:rgba(22,163,74,0.18);border-color:rgba(134,239,172,0.35);color:rgba(134,239,172,0.95);box-shadow:none;}
+
+/* ── WEEK COMPLETE BANNER (Friday after all 3 days done) ────────────────── */
+.week-complete-banner{display:flex;align-items:center;gap:1.1rem;margin-top:1.3rem;padding:1.2rem 1.4rem;background:linear-gradient(135deg,rgba(255,215,0,0.1),rgba(107,26,26,0.18));border:1px solid rgba(255,215,0,0.3);border-radius:12px;}
+.week-complete-icon{font-size:2rem;color:var(--gold-bright);text-shadow:0 0 24px rgba(255,215,0,0.5);flex-shrink:0;}
+.week-complete-text{flex:1;}
+.week-complete-title{font-family:'Cinzel Decorative',serif;font-size:1.15rem;color:var(--gold-light);margin-bottom:0.2rem;}
+.week-complete-sub{font-family:'Crimson Text',serif;font-size:0.95rem;color:rgba(244,232,193,0.7);font-style:italic;}
+
+/* ── ARTIFACT NOTE & MISC ───────────────────────────────────────────────── */
+.artifact-note{margin-top:0.4rem;font-size:0.78rem;color:rgba(201,146,42,0.55);font-style:italic;}
 </style>
 </head>
 
@@ -166,6 +235,7 @@ body::before{
 <script src="js/calendar-loader.js"></script>
 <script src="js/calendar-card.js"></script>
 <script src="js/name-day-banner.js"></script>
+<script src="js/topic-00-day.js"></script>
 <script>
 (async function main(){
   // ── LOAD THE PROGRAM SPINE ────────────────────────
@@ -223,6 +293,19 @@ body::before{
       );
     } catch (e) {
       console.warn('Session load failed; rendering placeholders.', e);
+    }
+  }
+
+  // ── LOAD TOPIC 00 M/W/F EXTRAS ─────────────────────
+  // Topic 00 sessions need the handout row (PDF + verification questions +
+  // reflection prompt) and the Friday quiz row (for the Day 3 launcher).
+  // Other topics will follow this pattern in future lanes.
+  let topic00Ctx = { handout: null, fridayQuiz: null };
+  if (state.is_topic_00 && state.current_session_id && window.Topic00Day) {
+    try {
+      topic00Ctx = await Topic00Day.load(sb, state.current_session_id);
+    } catch (e) {
+      console.warn('Topic 00 extras load failed; will render with placeholders.', e);
     }
   }
 
@@ -298,10 +381,46 @@ body::before{
     root.innerHTML = nameDayPrefix + renderHeader(state) + renderSunday() + prayerPanel + renderSaintBanner() + renderBottomNav();
   } else if (state.day_kind === 'saturday') {
     root.innerHTML = nameDayPrefix + renderHeader(state) + renderSaturday() + prayerPanel + renderSaintBanner() + renderBottomNav();
+  } else if (state.is_topic_00 && window.Topic00Day) {
+    // Topic 00 — Monday/Wednesday/Friday cadence (Wave 2 Lane 2 build)
+    // Mon/Wed/Fri render through Topic00Day. Tue/Thu render the rest-day
+    // calm-frame WITH the M/W/F day rail above so Nolan keeps a sense of
+    // where he is in the week.
+    const renderState = SessionLoader.renderState(sessionData?.session);
+    if (renderState === 'coming_soon') {
+      const sess = sessionData.session;
+      root.innerHTML = nameDayPrefix + renderHeader(state) + `
+        <div class="main-frame">
+          <div class="day-heading">${esc(sess?.title || 'This Week')}</div>
+          <div class="day-subheading">Coming soon</div>
+          <div class="artifact-slot" style="text-align:center;padding:2rem 1.5rem;">
+            <div class="artifact-icon">☩</div>
+            <div class="artifact-title">This week's lesson is being prepared</div>
+            <div class="artifact-blurb">${esc(sess?.scope_summary || 'Check back soon — this week\'s content will appear here when it\'s ready.')}</div>
+          </div>
+        </div>
+      ` + prayerPanel + renderSaintBanner() + renderBottomNav();
+    } else if (renderState === 'missing') {
+      root.innerHTML = nameDayPrefix + renderHeader(state) + `
+        <div class="main-frame">
+          <div class="day-heading">This Week's Lesson</div>
+          <div class="day-subheading">Take it gently — read, reflect, write</div>
+          <div class="artifact-slot placeholder">
+            <div class="artifact-icon">📖</div>
+            <div class="artifact-title">Awaiting this week's content</div>
+            <div class="artifact-blurb">The lesson for this week will appear here when it is ready.</div>
+          </div>
+        </div>
+      ` + prayerPanel + renderSaintBanner() + renderBottomNav();
+    } else {
+      // Renderable — branch on day_kind for M/W/F treatment
+      const dayRail = Topic00Day.renderDayRail(state, sessionData?.progress);
+      const main = Topic00Day.render(state, sessionData, topic00Ctx);
+      root.innerHTML = nameDayPrefix + renderHeader(state) + dayRail + main + prayerPanel + renderSaintBanner() + renderBottomNav();
+      Topic00Day.attachHandlers(sb, profileId, sessionData, topic00Ctx);
+    }
   } else if (state.day_kind === 'between_sessions') {
     root.innerHTML = nameDayPrefix + renderHeader(state) + renderBetweenSessions() + prayerPanel + renderSaintBanner() + renderBottomNav();
-  } else if (state.is_topic_00) {
-    root.innerHTML = nameDayPrefix + renderHeader(state) + renderTopic00View() + prayerPanel + renderSaintBanner() + renderBottomNav();
   } else if (['day1','day2','day3'].includes(state.day_kind)) {
     root.innerHTML = nameDayPrefix + renderHeader(state) + renderDayTabs(state) + renderThreeDayView(state) + prayerPanel + renderSidebar() + renderSaintBanner() + renderBottomNav();
   } else {
@@ -328,133 +447,13 @@ body::before{
     if(s.day_kind === 'day3') return `<div class="main-frame"><div class="day-heading">Day 3 — The Reflection Day</div><div class="day-subheading">What did this week mean?</div><div class="artifact-slot placeholder" data-slot="field_manual_entry"><div class="artifact-icon">📓</div><div class="artifact-title">Field Manual Entry</div><div class="artifact-blurb">Write your full reflection on this week's lesson in your Field Manual.</div></div><div class="artifact-slot placeholder" data-slot="session_test"><div class="artifact-icon">◈</div><div class="artifact-title">The Session Test</div><div class="artifact-blurb">A longer set of questions covering the whole week. Some will be marked for your father to read.</div></div><div class="artifact-slot placeholder" data-slot="memorization"><div class="artifact-icon">✦</div><div class="artifact-title">Memorization Practice</div><div class="artifact-blurb">Practice what you are learning by heart. When you're ready, ask your father to listen.</div></div><button class="complete-btn" data-action="complete-day-3">Complete the Week</button></div>`;
     return '';
   }
-  function renderTopic00View(){
-    const sess = sessionData.session;
-    const renderState = SessionLoader.renderState(sess);
+  // ── renderTopic00View REMOVED (Wave 2 Lane 2) ─────────────────────────
+  // Topic 00 now uses the M/W/F cadence rendered by js/topic-00-day.js
+  // (window.Topic00Day). The previous "light-model" single-button writer
+  // wrote to session_progress with the wrong column name (profile_id, when
+  // the schema uses explorer_id) and only stamped day_3_completed_at; both
+  // problems are fixed in the new module.
 
-    // Coming soon — session row exists but content is not yet published
-    if (renderState === 'coming_soon') {
-      return `
-        <div class="main-frame">
-          <div class="day-heading">${esc(sess?.title || 'This Week')}</div>
-          <div class="day-subheading">Coming soon</div>
-          <div class="artifact-slot" style="text-align:center;padding:2rem 1.5rem;">
-            <div class="artifact-icon">☩</div>
-            <div class="artifact-title">This week's lesson is being prepared</div>
-            <div class="artifact-blurb">${esc(sess?.scope_summary || 'Check back soon — this week\'s content will appear here when it\'s ready.')}</div>
-          </div>
-        </div>
-      `;
-    }
-
-    // Missing — no row at all (shouldn't happen if spine is loaded, but degrade)
-    if (renderState === 'missing') {
-      return `
-        <div class="main-frame">
-          <div class="day-heading">This Week's Lesson</div>
-          <div class="day-subheading">Take it gently — read, reflect, write</div>
-          <div class="artifact-slot placeholder">
-            <div class="artifact-icon">📖</div>
-            <div class="artifact-title">Awaiting this week's content</div>
-            <div class="artifact-blurb">The lesson for this week will appear here when it is ready.</div>
-          </div>
-        </div>
-      `;
-    }
-
-    // Renderable — pull the real fields from the session row
-    // Topic 00 light model uses: lesson_text, journal_prompt,
-    // discussion_q1/2/3, reading_*, sunday_liturgy_pointer, liturgical_connection.
-    // It does NOT use personal_activity / family_activity (NULL by design).
-
-    const lessonHtml = sess.lesson_text
-      ? `<div class="lesson-body">${formatLessonText(sess.lesson_text)}</div>`
-      : '<p style="font-style:italic;color:rgba(244,232,193,0.55);">(lesson text not yet written)</p>';
-
-    const discussionItems = [sess.discussion_q1, sess.discussion_q2, sess.discussion_q3]
-      .filter(q => q && q.trim().length > 0);
-    const discussionHtml = discussionItems.length
-      ? `<ol class="discussion-questions">${discussionItems.map(q => `<li>${esc(q)}</li>`).join('')}</ol>`
-      : '';
-
-    const readingHtml = (sess.reading_reference || sess.reading_url)
-      ? `
-        <div class="artifact-slot" data-slot="personal_reading">
-          <div class="artifact-icon">☩</div>
-          <div class="artifact-title">A Reading from the Scriptures</div>
-          ${sess.reading_reference ? `<div style="font-family:'Cinzel Decorative',serif;color:var(--gold-light);font-size:1rem;margin-bottom:0.4rem;">${esc(sess.reading_reference)}</div>` : ''}
-          ${sess.reading_note ? `<div class="artifact-blurb" style="margin-bottom:0.8rem;">${esc(sess.reading_note)}</div>` : ''}
-          ${sess.reading_url ? `<a href="${esc(sess.reading_url)}" class="reading-link">Open in the Holy Scriptures →</a>` : ''}
-        </div>` : '';
-
-    const journalHtml = sess.journal_prompt
-      ? `
-        <div class="artifact-slot" data-slot="field_manual_entry">
-          <div class="artifact-icon">✎</div>
-          <div class="artifact-title">A Field Manual Entry</div>
-          <div class="artifact-blurb" style="font-style:normal;color:rgba(244,232,193,0.85);font-size:1rem;line-height:1.6;margin-bottom:0.8rem;">${esc(sess.journal_prompt)}</div>
-          <a href="journal.html?session=${esc(sess.id)}&prompt=session" class="reading-link">Open Field Manual →</a>
-        </div>` : '';
-
-    const liturgicalHtml = sess.liturgical_connection
-      ? `
-        <div class="artifact-slot" data-slot="liturgical_connection">
-          <div class="artifact-icon">⛪</div>
-          <div class="artifact-title">At Liturgy This Sunday</div>
-          <div class="artifact-blurb" style="font-style:normal;color:rgba(244,232,193,0.85);">${esc(sess.liturgical_connection)}</div>
-        </div>` : '';
-
-    const sundayPointerHtml = sess.sunday_liturgy_pointer
-      ? `
-        <div class="artifact-slot" data-slot="sunday_watch_for" style="background:rgba(107,26,26,0.15);">
-          <div class="artifact-icon">☩</div>
-          <div class="artifact-title">What to Watch For at Liturgy</div>
-          <div class="artifact-blurb" style="font-style:normal;color:rgba(244,232,193,0.85);">${esc(sess.sunday_liturgy_pointer)}</div>
-        </div>` : '';
-
-    // For the parent (and admin/superuser), surface a link to the Companion page
-    // The page itself enforces role gating; the link here is best-effort UX.
-    const parentLinkHtml = `
-      <div class="artifact-slot parent-link-slot" data-slot="parent_companion_link" style="background:rgba(44,22,84,0.2);">
-        <div class="artifact-icon">✦</div>
-        <div class="artifact-title">For Your Father</div>
-        <div class="artifact-blurb">A teaching guide is available with discussion questions and notes for this lesson.</div>
-        <a href="parent-companion.html?session=${esc(sess.id)}" class="reading-link">Open the Parent's Companion →</a>
-      </div>`;
-
-    // Day completion status from session_progress
-    const isComplete = sessionData.progress?.completed_at != null;
-
-    return `
-      <div class="main-frame">
-        <div class="day-heading">${esc(sess.title)}</div>
-        <div class="day-subheading">This week's lesson</div>
-
-        <div class="artifact-slot" data-slot="lesson">
-          <div class="artifact-icon">📖</div>
-          <div class="artifact-title">The Lesson</div>
-          ${lessonHtml}
-        </div>
-
-        ${discussionHtml ? `
-        <div class="artifact-slot" data-slot="discussion_questions">
-          <div class="artifact-icon">✦</div>
-          <div class="artifact-title">To Talk About With Your Father</div>
-          ${discussionHtml}
-        </div>` : ''}
-
-        ${readingHtml}
-        ${journalHtml}
-        ${liturgicalHtml}
-        ${sundayPointerHtml}
-        ${parentLinkHtml}
-
-        <button class="complete-btn" data-action="complete-week" data-session-id="${esc(sess.id)}" ${isComplete ? 'data-complete="true"' : ''}>
-          ${isComplete ? '✓ This Week is Complete' : 'Mark This Week Complete'}
-        </button>
-      </div>
-    `;
-  }
   function renderSunday(){
     return `<div class="calm-frame"><div class="calm-icon">☩</div><div class="calm-title">This Sunday at Liturgy</div><div class="calm-text">Today is Sunday — the lived heart of the week. Go to Liturgy with your family.</div><div class="artifact-slot placeholder" data-slot="sunday_watch_for" style="margin-top:1.5rem;text-align:left;"><div class="artifact-icon">✦</div><div class="artifact-title">What to Watch For</div><div class="artifact-blurb">When this week's session is loaded, the one thing to listen for at Liturgy will be here.</div></div><div class="calm-quote">"Behold, I make all things new."</div></div>`;
   }
@@ -496,59 +495,12 @@ body::before{
     return `<div class="bottom-nav"><a href="journal.html">Field Manual</a><a href="bible-reader.html">Holy Scriptures</a><a href="games.html">Training Grounds</a><a href="index.html?signout=1">Sign Out</a></div>`;
   }
 
-  // ── DAY-COMPLETION BUTTON (Topic 00 light model) ──
-  // Per Chat 1 Decision 2: Topic 00 single-button completion writes
-  // ONLY to day_3_completed_at. Days 1 and 2 stay NULL. Chat 2 will
-  // enforce this at the DB level via a CHECK or trigger keyed on
-  // weekly_model='light'; until then, the app layer is the contract.
-  // The DB trigger sets completed_at when day_3_completed_at is populated
-  // for a Topic 00 session (light model doesn't require day_1 / day_2).
-  document.addEventListener('click', async (e) => {
-    const btn = e.target.closest('.complete-btn[data-session-id]');
-    if (!btn) return;
-    if (btn.getAttribute('data-complete') === 'true') return;
-    e.preventDefault();
-
-    const sessionId = btn.dataset.sessionId;
-    if (!sessionId || !profileId) {
-      console.warn('[completion] Missing sessionId or profileId; cannot record.');
-      return;
-    }
-
-    const original = btn.textContent;
-    btn.disabled = true;
-    btn.textContent = 'Recording...';
-
-    try {
-      const { error } = await sb
-        .from('session_progress')
-        .upsert(
-          {
-            profile_id: profileId,
-            session_id: sessionId,
-            day_3_completed_at: new Date().toISOString(),
-          },
-          { onConflict: 'profile_id,session_id' }
-        );
-
-      if (error) throw error;
-
-      btn.setAttribute('data-complete', 'true');
-      btn.textContent = '✓ This Week is Complete';
-      btn.disabled = true;
-      console.log('[completion] Wrote day_3_completed_at for session', sessionId);
-    } catch (err) {
-      console.error('[completion] Write failed:', err);
-      btn.disabled = false;
-      btn.textContent = original;
-      // Show a small inline error briefly
-      const msg = document.createElement('div');
-      msg.textContent = 'Could not save just now — please try again.';
-      msg.style.cssText = 'margin-top:0.5rem;font-family:Cinzel,serif;font-size:0.7rem;letter-spacing:0.1em;color:rgba(244,180,180,0.85);text-align:center;text-transform:uppercase;';
-      btn.parentElement.appendChild(msg);
-      setTimeout(() => msg.remove(), 4000);
-    }
-  });
+  // ── DAY-COMPLETION HANDLERS (Wave 2 Lane 2) ────────────────────────────
+  // M/W/F handlers are wired up by Topic00Day.attachHandlers() above when
+  // Topic 00 routing fires. The previous "light-model" single-button writer
+  // was removed (it used the wrong column name profile_id, when the actual
+  // schema column is explorer_id, and only stamped day_3 — both fixed in
+  // the new module).
 })();
 </script>
 

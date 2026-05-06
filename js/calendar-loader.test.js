@@ -17,7 +17,7 @@ function makeFakeSb(responses, callsLog) {
       let dateFilter = null;
       return {
         select() { return this; },
-        eq(field, value) { if (field === 'date') dateFilter = value; return this; },
+        eq(field, value) { if (field === 'calendar_date') dateFilter = value; return this; },
         async maybeSingle() {
           if (callsLog) callsLog.push(dateFilter);
           if (responses[dateFilter]) return responses[dateFilter];
@@ -50,7 +50,7 @@ function makeFakeSb(responses, callsLog) {
     CalendarLoader._cache.clear();
     const sb = makeFakeSb({
       '2026-05-18': { data: {
-        date: '2026-05-18',
+        calendar_date: '2026-05-18',
         liturgical_season: 'Pentecost',
         feast_name: null,
         feast_rank: null,
@@ -61,7 +61,7 @@ function makeFakeSb(responses, callsLog) {
       }, error: null },
     });
     const r = await CalendarLoader.load(sb, '2026-05-18');
-    assert('row loaded', r.row && r.row.date === '2026-05-18');
+    assert('row loaded', r.row && r.row.calendar_date === '2026-05-18');
     assert('liturgical_season passed through', r.row.liturgical_season === 'Pentecost');
     assert('saint_commemorations is array', Array.isArray(r.row.saint_commemorations));
     assert('no error on happy path', r.error === null);
@@ -72,7 +72,7 @@ function makeFakeSb(responses, callsLog) {
     CalendarLoader._cache.clear();
     const calls = [];
     const sb = makeFakeSb({
-      '2026-05-18': { data: { date: '2026-05-18', liturgical_season: 'Pentecost' }, error: null },
+      '2026-05-18': { data: { calendar_date: '2026-05-18', liturgical_season: 'Pentecost' }, error: null },
     }, calls);
     await CalendarLoader.load(sb, '2026-05-18');
     await CalendarLoader.load(sb, '2026-05-18');

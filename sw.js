@@ -1,4 +1,5 @@
-// Orthodox Expedition — Service Worker v4
+// Orthodox Expedition — Service Worker v5
+// v5: adds topic-00-day.js for Lane 2 M/W/F rendering UI
 // v4: adds week.html, prayers.html, day-state, pause-card, prayers, and config JSON
 // Version bump forces cache clear and fresh install
 
@@ -21,6 +22,7 @@ const STATIC_ASSETS = [
   '/Orthodox-Expedition-/js/day-state.js',
   '/Orthodox-Expedition-/js/pause-card.js',
   '/Orthodox-Expedition-/js/prayers.js',
+  '/Orthodox-Expedition-/js/topic-00-day.js',
   '/Orthodox-Expedition-/config/program-spine.json',
   '/Orthodox-Expedition-/config/daily-prayers.json',
 ];

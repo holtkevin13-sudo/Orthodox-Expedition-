@@ -258,7 +258,7 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
   // Check role — parent or admin/superuser only
   const { data: profile, error: profileErr } = await sb
     .from('profiles')
-    .select('id, role, full_name')
+    .select('id, role, name')
     .eq('id', session.user.id)
     .maybeSingle();
 

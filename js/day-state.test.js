@@ -51,24 +51,24 @@ test('months before launch', '2026-01-01', {
   phase: 'pre_launch',
 });
 
-console.log('\n── TOPIC 00 (lighter model — no day tabs) ──');
+console.log('\n── TOPIC 00 (M/W/F three-day model — same cadence as Year 1+) ──');
 test('launch day, Monday May 18', '2026-05-18', {
-  day_kind: 'topic00_open',
+  day_kind: 'day1',
   phase: 'topic_00',
   current_session_id: '00.1',
   session_week_number: 1,
   is_topic_00: true,
-  uses_three_day_model: false,
+  uses_three_day_model: true,
   is_study_day: true,
 });
 test('Topic 00 Wednesday', '2026-05-20', {
-  day_kind: 'topic00_open',
+  day_kind: 'day2',
   phase: 'topic_00',
   current_session_id: '00.1',
   is_study_day: true,
 });
 test('Topic 00 Friday', '2026-05-22', {
-  day_kind: 'topic00_open',
+  day_kind: 'day3',
   phase: 'topic_00',
   current_session_id: '00.1',
 });
@@ -85,7 +85,7 @@ test('Topic 00 Saturday', '2026-05-23', {
   is_study_day: false,
 });
 test('Topic 00 last week (Aug 24)', '2026-08-24', {
-  day_kind: 'topic00_open',
+  day_kind: 'day1',
   phase: 'topic_00',
   current_session_id: '00.15',
   session_week_number: 15,
@@ -170,7 +170,7 @@ test('Summer easing 2027', '2027-07-15', {
 
 console.log('\n── PHASE TRANSITION ──');
 test('Last Topic 00 day (Aug 31)', '2026-08-31', {
-  day_kind: 'topic00_open',
+  day_kind: 'day1',
   phase: 'topic_00',
   current_session_id: '00.15',
 });

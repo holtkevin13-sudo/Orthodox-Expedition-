@@ -36,12 +36,12 @@ assert('Aug 9 → "08-09"',
 console.log('\n── firstName ──');
 const fn = NameDayBanner._internals.firstName;
 assert('null profile → "you"', fn(null) === 'you');
-assert('no full_name → "you"', fn({}) === 'you');
-assert('empty full_name → "you"', fn({ full_name: '' }) === 'you');
-assert('whitespace-only full_name → "you"', fn({ full_name: '   ' }) === 'you');
-assert('"Nolan Holt" → "Nolan"', fn({ full_name: 'Nolan Holt' }) === 'Nolan');
-assert('"Nolan" → "Nolan"', fn({ full_name: 'Nolan' }) === 'Nolan');
-assert('"  Nolan  Holt  " → "Nolan"', fn({ full_name: '  Nolan  Holt  ' }) === 'Nolan');
+assert('no name → "you"', fn({}) === 'you');
+assert('empty name → "you"', fn({ name: '' }) === 'you');
+assert('whitespace-only name → "you"', fn({ name: '   ' }) === 'you');
+assert('"Nolan Holt" → "Nolan"', fn({ name: 'Nolan Holt' }) === 'Nolan');
+assert('"Nolan" → "Nolan"', fn({ name: 'Nolan' }) === 'Nolan');
+assert('"  Nolan  Holt  " → "Nolan"', fn({ name: '  Nolan  Holt  ' }) === 'Nolan');
 
 console.log('\n── render: returns empty when not applicable ──');
 {
@@ -51,16 +51,16 @@ console.log('\n── render: returns empty when not applicable ──');
     NameDayBanner.render(aug9, null) === '');
   // profile without patron
   assert('profile with no patron_saint returns empty',
-    NameDayBanner.render(aug9, { full_name: 'Nolan' }) === '');
+    NameDayBanner.render(aug9, { name: 'Nolan' }) === '');
   // profile with non-matching patron
   assert('profile with St. Nicholas returns empty',
-    NameDayBanner.render(aug9, { patron_saint: 'St. Nicholas', full_name: 'Nolan' }) === '');
+    NameDayBanner.render(aug9, { patron_saint: 'St. Nicholas', name: 'Nolan' }) === '');
 }
 
 console.log('\n── render: empty when wrong date ──');
 {
   const sep15 = new Date(2026, 8, 15);
-  const html = NameDayBanner.render(sep15, { patron_saint: 'St. Herman', full_name: 'Nolan' });
+  const html = NameDayBanner.render(sep15, { patron_saint: 'St. Herman', name: 'Nolan' });
   assert('Sept 15 with St. Herman patron returns empty', html === '');
 }
 
@@ -69,7 +69,7 @@ console.log('\n── render: full Aug 9 happy path ──');
   const aug9 = new Date(2026, 7, 9);
   const html = NameDayBanner.render(aug9, {
     patron_saint: 'St. Herman of Alaska',
-    full_name: 'Nolan Holt',
+    name: 'Nolan Holt',
   });
   assert('happy path renders something', html.length > 0);
   assert('contains "Happy name day, Nolan"',
@@ -93,7 +93,7 @@ console.log('\n── render: name fallback ──');
   const aug9 = new Date(2026, 7, 9);
   const html = NameDayBanner.render(aug9, {
     patron_saint: 'St. Herman',
-    // no full_name
+    // no name
   });
   assert('"Happy name day, you" when no name', html.includes('Happy name day, you'));
 }
@@ -103,7 +103,7 @@ console.log('\n── render: alias matching works in render path ──');
   const aug9 = new Date(2026, 7, 9);
   const variants = ['Saint Herman', 'Herman of Alaska', 'st herman of alaska'];
   for (const v of variants) {
-    const html = NameDayBanner.render(aug9, { patron_saint: v, full_name: 'Nolan' });
+    const html = NameDayBanner.render(aug9, { patron_saint: v, name: 'Nolan' });
     assert(`"${v}" still renders banner`, html.includes('Happy name day'));
   }
 }
@@ -113,7 +113,7 @@ console.log('\n── render: HTML escaping in name ──');
   const aug9 = new Date(2026, 7, 9);
   const html = NameDayBanner.render(aug9, {
     patron_saint: 'St. Herman',
-    full_name: '<script>alert(1)</script>',
+    name: '<script>alert(1)</script>',
   });
   assert('script tag escaped in name',
     html.includes('&lt;script&gt;') && !html.includes('<script>alert(1)'));

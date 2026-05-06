@@ -10,7 +10,7 @@
       "name": "Topic 00 — Coming Home",
       "starts_on": "2026-05-18",
       "ends_on": "2026-08-31",
-      "uses_three_day_model": false,
+      "uses_three_day_model": true,
       "weeks": [
         { "week_number": 1,  "session_id": "00.1",  "starts_monday": "2026-05-18", "title": "The Church That Stayed" },
         { "week_number": 2,  "session_id": "00.2",  "starts_monday": "2026-05-25", "title": "Why We Cross Ourselves & What It Means" },

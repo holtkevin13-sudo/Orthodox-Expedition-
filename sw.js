@@ -1,9 +1,10 @@
-// Orthodox Expedition — Service Worker v5
+// Orthodox Expedition — Service Worker v6
+// v6: adds Lane 3 assessment UI — assess.html, quiz-results.html, js/quiz-runner.js
 // v5: adds topic-00-day.js for Lane 2 M/W/F rendering UI
 // v4: adds week.html, prayers.html, day-state, pause-card, prayers, and config JSON
 // Version bump forces cache clear and fresh install
 
-const CACHE_NAME = 'orthodox-expedition-v5';
+const CACHE_NAME = 'orthodox-expedition-v6';
 const STATIC_ASSETS = [
   '/Orthodox-Expedition-/',
   '/Orthodox-Expedition-/index.html',
@@ -17,12 +18,15 @@ const STATIC_ASSETS = [
   '/Orthodox-Expedition-/journal.html',
   '/Orthodox-Expedition-/bible-reader.html',
   '/Orthodox-Expedition-/parent.html',
+  '/Orthodox-Expedition-/assess.html',
+  '/Orthodox-Expedition-/quiz-results.html',
   '/Orthodox-Expedition-/favicon.svg',
   '/Orthodox-Expedition-/manifest.json',
   '/Orthodox-Expedition-/js/day-state.js',
   '/Orthodox-Expedition-/js/pause-card.js',
   '/Orthodox-Expedition-/js/prayers.js',
   '/Orthodox-Expedition-/js/topic-00-day.js',
+  '/Orthodox-Expedition-/js/quiz-runner.js',
   '/Orthodox-Expedition-/config/program-spine.json',
   '/Orthodox-Expedition-/config/daily-prayers.json',
 ];

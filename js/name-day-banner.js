@@ -19,7 +19,7 @@
  *
  * Inputs:
  *   today   — Date object (uses local wall-clock month/day)
- *   profile — { patron_saint: string | null, full_name: string | null }
+ *   profile — { patron_saint: string | null, name: string | null }
  *
  * Returns the banner HTML string, or empty string if today is not
  * the explorer's patron's feast day. Caller drops it in.
@@ -87,11 +87,11 @@ const NameDayBanner = (() => {
   }
 
   // ── FIRST NAME HELPER ───────────────────────────────────────────
-  // Pull the first name from full_name. Falls back to "you" — never
+  // Pull the first name from profile.name. Falls back to "you" — never
   // a generic "explorer" or pseudonym.
   function firstName(profile) {
-    if (!profile || !profile.full_name) return 'you';
-    const trimmed = String(profile.full_name).trim();
+    if (!profile || !profile.name) return 'you';
+    const trimmed = String(profile.name).trim();
     if (!trimmed) return 'you';
     return trimmed.split(/\s+/)[0];
   }

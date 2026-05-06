@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiz Performance — The Orthodox Expedition</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<!--
+  Quiz Performance — parent/admin view of an explorer's quiz attempts.
+
+  Design choice: light parchment theme matching admin.html's surface aesthetic
+  (heavy daytime data work). The dark explorer surfaces use Byzantine Gold on
+  near-black; this admin-side surface uses near-black ink on cream parchment.
+
+  Access: requires logged-in user with role IN ('admin','parent','superuser').
+  Explorer scope: defaults to all explorers in the family. The list reads
+  through quiz_attempts → quiz_questions → session_quizzes joined to
+  sessions for titles. RLS allows family-scoped reads on quiz_attempts.
+
+  Standalone page: no surgery on admin.html or parent.html. Kevin can wire a
+  link in later via the snippet shown in the Lane 3 completion summary.
+-->
+
+<style>
+:root{
+  --bg:#ede0bc;
+  --bg-2:#f5ecd7;
+  --ink:#1c0f00;
+  --ink-soft:#3a2a17;
+  --gold:#8b6a1e;
+  --gold-bright:#c9922a;
+  --burgundy:#6b1a1a;
+  --byzantine:#2c1654;
+  --green:#16a34a;
+  --green-soft:#dcf2e1;
+  --red:#b91c1c;
+  --red-soft:#f7e0e0;
+  --rule:rgba(28,15,0,0.18);
+  --rule-soft:rgba(28,15,0,0.1);
+}
+
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{min-height:100%;}
+body{
+  font-family:'Crimson Text',serif;
+  background:var(--bg);
+  color:var(--ink);
+  min-height:100vh;
+  padding:1.25rem 1rem 4rem;
+  font-size:16px;
+}
+.results-container{
+  max-width:780px;
+  margin:0 auto;
+}
+
+/* ── Header ──────────────────────────────────────── */
+.r-header{
+  text-align:center;
+  padding:1.5rem 0 1.25rem;
+  border-bottom:1px solid var(--rule);
+  margin-bottom:1.75rem;
+}
+.r-eyebrow{
+  font-family:'Cinzel',serif;
+  font-size:0.72rem;
+  letter-spacing:0.25em;
+  color:var(--gold);
+  text-transform:uppercase;
+  margin-bottom:0.45rem;
+}
+.r-title{
+  font-family:'Cinzel Decorative',serif;
+  font-size:clamp(1.5rem,4.5vw,1.95rem);
+  color:var(--ink);
+  margin-bottom:0.4rem;
+  font-weight:400;
+}
+.r-sub{
+  font-size:0.98rem;
+  color:var(--ink-soft);
+  font-style:italic;
+}
+.r-back-row{
+  display:flex;
+  gap:0.5rem;
+  flex-wrap:wrap;
+  justify-content:center;
+  margin-bottom:1rem;
+}
+.r-link{
+  font-family:'Cinzel',serif;
+  font-size:0.72rem;
+  letter-spacing:0.15em;
+  color:var(--ink-soft);
+  text-decoration:none;
+  text-transform:uppercase;
+  padding:0.5rem 0.875rem;
+  min-height:40px;
+  display:inline-flex;
+  align-items:center;
+  border:1px solid var(--rule);
+  border-radius:8px;
+  background:var(--bg-2);
+}
+.r-link:hover{color:var(--ink);border-color:var(--ink-soft);}
+
+/* ── Explorer picker ─────────────────────────────── */
+.explorer-picker{
+  margin-bottom:1.5rem;
+  text-align:center;
+}
+.explorer-picker label{
+  font-family:'Cinzel',serif;
+  font-size:0.72rem;
+  letter-spacing:0.15em;
+  color:var(--gold);
+  text-transform:uppercase;
+  margin-right:0.6rem;
+}
+.explorer-select{
+  font-family:'Crimson Text',serif;
+  font-size:1rem;
+  padding:0.6rem 0.875rem;
+  background:var(--bg-2);
+  border:1px solid var(--rule);
+  border-radius:8px;
+  color:var(--ink);
+  min-height:44px;
+  min-width:200px;
+}
+
+/* ── Summary cards ───────────────────────────────── */
+.summary-row{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+  gap:0.75rem;
+  margin-bottom:2rem;
+}
+.summary-card{
+  padding:1rem 1rem;
+  background:var(--bg-2);
+  border:1px solid var(--rule);
+  border-radius:10px;
+  text-align:center;
+}
+.summary-eyebrow{
+  font-family:'Cinzel',serif;
+  font-size:0.62rem;
+  letter-spacing:0.18em;
+  color:var(--gold);
+  text-transform:uppercase;
+  margin-bottom:0.4rem;
+}
+.summary-value{
+  font-family:'Cinzel Decorative',serif;
+  font-size:1.35rem;
+  color:var(--ink);
+  font-weight:400;
+}
+.summary-meta{
+  font-size:0.85rem;
+  color:var(--ink-soft);
+  margin-top:0.2rem;
+  font-style:italic;
+}
+
+/* ── Quiz list ───────────────────────────────────── */
+.section-title{
+  font-family:'Cinzel',serif;
+  font-size:0.78rem;
+  letter-spacing:0.2em;
+  color:var(--gold);
+  text-transform:uppercase;
+  margin:2rem 0 0.75rem;
+  font-weight:600;
+}
+
+.quiz-row{
+  background:var(--bg-2);
+  border:1px solid var(--rule);
+  border-radius:10px;
+  padding:1rem 1.1rem;
+  margin-bottom:0.6rem;
+}
+.quiz-row-head{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:baseline;
+  gap:0.5rem 0.875rem;
+  margin-bottom:0.4rem;
+}
+.qr-title{
+  font-family:'Cinzel',serif;
+  font-size:0.95rem;
+  font-weight:600;
+  color:var(--ink);
+  letter-spacing:0.02em;
+  flex:1;
+  min-width:200px;
+}
+.qr-tag{
+  font-family:'Cinzel',serif;
+  font-size:0.62rem;
+  letter-spacing:0.16em;
+  text-transform:uppercase;
+  padding:0.18rem 0.45rem;
+  border-radius:5px;
+  background:rgba(44,22,84,0.08);
+  color:var(--byzantine);
+  border:1px solid rgba(44,22,84,0.2);
+}
+.qr-tag.tag-monthly{background:rgba(107,26,26,0.08);color:var(--burgundy);border-color:rgba(107,26,26,0.25);}
+.qr-tag.tag-friday{background:rgba(28,15,0,0.06);color:var(--ink-soft);border-color:rgba(28,15,0,0.18);}
+.qr-when{
+  font-size:0.8rem;
+  color:var(--ink-soft);
+  font-style:italic;
+}
+.qr-stats{
+  display:flex;
+  flex-wrap:wrap;
+  gap:0.6rem 1.25rem;
+  font-size:0.92rem;
+  color:var(--ink);
+  align-items:center;
+}
+.qr-stat{display:flex;gap:0.3rem;align-items:baseline;}
+.qr-stat-label{font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.15em;color:var(--gold);text-transform:uppercase;}
+.qr-stat-value{font-weight:600;color:var(--ink);}
+.qr-stat-value.ok{color:var(--green);}
+.qr-stat-value.partial{color:var(--gold-bright);}
+.qr-stat-value.zero{color:var(--ink-soft);}
+
+.qr-empty{
+  text-align:center;
+  padding:2.5rem 1rem;
+  color:var(--ink-soft);
+  font-style:italic;
+}
+
+/* ── Loading / errors ────────────────────────────── */
+.loading{
+  text-align:center;
+  padding:3rem 1rem;
+  font-family:'Cinzel',serif;
+  font-size:0.78rem;
+  letter-spacing:0.15em;
+  color:var(--ink-soft);
+  text-transform:uppercase;
+}
+.no-access{
+  text-align:center;
+  padding:2.5rem 1rem;
+  background:var(--bg-2);
+  border:1px solid var(--rule);
+  border-radius:10px;
+  color:var(--ink);
+}
+.no-access h2{
+  font-family:'Cinzel Decorative',serif;
+  font-size:1.3rem;
+  color:var(--ink);
+  margin-bottom:0.5rem;
+}
+.no-access p{
+  font-size:0.98rem;
+  color:var(--ink-soft);
+  line-height:1.55;
+  max-width:480px;
+  margin:0 auto;
+}
+
+/* ── Helper: small dot rule between fields ───────── */
+.dot-sep{color:var(--rule);margin:0 0.4rem;}
+</style>
+</head>
+
+<body>
+<div class="results-container" id="page-root">
+  <div class="loading">Loading quiz performance...</div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://ksfnsryfmkafwirzgjoe.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtzZm5zcnlmbWthZndpcnpnam9lIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2ODM4MTcsImV4cCI6MjA5MTI1OTgxN30.mHQty44WBnjQY8BJ8KbPk_pp-yTcOaifGxCZPUO4xpY';
+
+// ── small utilities ────────────────────────────────────────────────────
+function esc(s) {
+  if (s == null) return '';
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+function formatDate(iso) {
+  if (!iso) return '';
+  try {
+    const d = new Date(iso);
+    return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+  } catch (e) { return ''; }
+}
+
+// ── render: header + back row ──────────────────────────────────────────
+function renderHeader(role) {
+  const home = (role === 'admin' || role === 'superuser') ? 'admin.html' : 'parent.html';
+  return `
+    <div class="r-header">
+      <div class="r-back-row">
+        <a class="r-link" href="${home}">← ${role === 'parent' ? 'Parent home' : 'Admin home'}</a>
+        <a class="r-link" href="home.html">Explorer home</a>
+      </div>
+      <div class="r-eyebrow">Quiz Performance</div>
+      <h1 class="r-title">Friday Quizzes &amp; Monthly Tests</h1>
+      <div class="r-sub">A look at how the week-closing quizzes are going.</div>
+    </div>
+  `;
+}
+
+function renderNoAccess(msg) {
+  return `
+    ${renderHeader('parent')}
+    <div class="no-access">
+      <h2>${esc(msg || 'You don\\'t have access to this view')}</h2>
+      <p>This page is for parents and administrators. If you're a parent and reaching this in error, please sign in with your parent account.</p>
+    </div>
+  `;
+}
+
+function renderLoading() {
+  return `${renderHeader('parent')}<div class="loading">Loading quiz performance...</div>`;
+}
+
+// ── render: explorer picker ────────────────────────────────────────────
+function renderPicker(explorers, selectedId) {
+  if (!explorers || explorers.length === 0) {
+    return `<div class="qr-empty">No explorers found in this family yet.</div>`;
+  }
+  if (explorers.length === 1) return ''; // skip picker if only one explorer
+  const opts = explorers.map((e) =>
+    `<option value="${esc(e.id)}" ${e.id === selectedId ? 'selected' : ''}>${esc(e.name || e.username || 'Explorer')}</option>`
+  ).join('');
+  return `
+    <div class="explorer-picker">
+      <label for="explorer-select">Showing</label>
+      <select class="explorer-select" id="explorer-select">${opts}</select>
+    </div>
+  `;
+}
+
+// ── render: summary cards ──────────────────────────────────────────────
+function renderSummary(rolledQuizzes) {
+  const totalQuizzes = rolledQuizzes.length;
+  const completed = rolledQuizzes.filter((r) => r.complete).length;
+  const totalCoins = rolledQuizzes.reduce((s, r) => s + (r.totalCoins || 0), 0);
+  const perfectFirstTry = rolledQuizzes.filter((r) => r.complete && r.correctAfter === r.questionCount && (r.coinsFromRetake || 0) === 0).length;
+  return `
+    <div class="summary-row">
+      <div class="summary-card"><div class="summary-eyebrow">Quizzes Started</div><div class="summary-value">${totalQuizzes}</div></div>
+      <div class="summary-card"><div class="summary-eyebrow">Completed</div><div class="summary-value">${completed}</div><div class="summary-meta">${totalQuizzes ? Math.round(100 * completed / totalQuizzes) + '%' : '—'}</div></div>
+      <div class="summary-card"><div class="summary-eyebrow">Perfect on First Try</div><div class="summary-value">${perfectFirstTry}</div></div>
+      <div class="summary-card"><div class="summary-eyebrow">Coins Earned</div><div class="summary-value">${totalCoins}</div></div>
+    </div>
+  `;
+}
+
+// ── render: quiz rows ──────────────────────────────────────────────────
+function renderQuizList(rolledQuizzes) {
+  if (!rolledQuizzes.length) {
+    return `<div class="qr-empty">No quiz attempts yet. Once a Friday quiz is taken, it will appear here.</div>`;
+  }
+  return rolledQuizzes.map(renderQuizRow).join('');
+}
+
+function renderQuizRow(r) {
+  const tagClass = r.quizType === 'monthly_test' ? 'tag-monthly' : 'tag-friday';
+  const tagLabel = r.quizType === 'monthly_test' ? 'Monthly Test' : 'Friday Quiz';
+  const lastAt = formatDate(r.lastAttemptAt);
+
+  // Score formatting
+  const firstScore = `${r.correctOnFirst} of ${r.questionCount}`;
+  const firstCls = (r.correctOnFirst === r.questionCount) ? 'ok'
+                  : (r.correctOnFirst > 0) ? 'partial'
+                  : 'zero';
+
+  let retakeBlock = '';
+  if (r.hasRetakeRows) {
+    const retakeFixed = r.correctAfter - r.correctOnFirst;
+    const retakeCls = retakeFixed > 0 ? 'partial' : 'zero';
+    retakeBlock = `
+      <div class="qr-stat">
+        <span class="qr-stat-label">Retake</span>
+        <span class="qr-stat-value ${retakeCls}">+${retakeFixed} fixed</span>
+      </div>`;
+  }
+
+  const finalCls = (r.correctAfter === r.questionCount) ? 'ok'
+                  : (r.correctAfter > 0) ? 'partial'
+                  : 'zero';
+
+  return `
+    <div class="quiz-row">
+      <div class="quiz-row-head">
+        <span class="qr-title">${esc(r.title || (r.sessionId + ' ' + tagLabel))}</span>
+        <span class="qr-tag ${tagClass}">${tagLabel}</span>
+        <span class="qr-when">${lastAt ? 'last attempt ' + lastAt : ''}</span>
+      </div>
+      <div class="qr-stats">
+        <div class="qr-stat">
+          <span class="qr-stat-label">First try</span>
+          <span class="qr-stat-value ${firstCls}">${firstScore}</span>
+        </div>
+        ${retakeBlock}
+        <div class="qr-stat">
+          <span class="qr-stat-label">Final</span>
+          <span class="qr-stat-value ${finalCls}">${r.correctAfter} of ${r.questionCount}</span>
+        </div>
+        <div class="qr-stat">
+          <span class="qr-stat-label">Coins earned</span>
+          <span class="qr-stat-value">${r.totalCoins}</span>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// ── data: load explorers (family-scoped via RLS) ───────────────────────
+async function loadExplorers(sb, viewerProfile) {
+  // Admin/superuser sees all explorers; parent sees their family's explorers.
+  // RLS on profiles enforces, but we filter explicitly so the picker is accurate.
+  if (viewerProfile.role === 'admin' || viewerProfile.role === 'superuser') {
+    const { data, error } = await sb
+      .from('profiles')
+      .select('id, name, username, role, family_id')
+      .eq('role', 'explorer')
+      .order('name', { ascending: true });
+    if (error) throw error;
+    return data || [];
+  }
+  // parent
+  if (!viewerProfile.family_id) return [];
+  const { data, error } = await sb
+    .from('profiles')
+    .select('id, name, username, role, family_id')
+    .eq('role', 'explorer')
+    .eq('family_id', viewerProfile.family_id)
+    .order('name', { ascending: true });
+  if (error) throw error;
+  return data || [];
+}
+
+// ── data: load attempts and roll up by quiz ────────────────────────────
+async function loadRolledQuizzes(sb, explorerId) {
+  // Pull all attempts for this explorer, plus joined question/quiz/session info
+  // for naming. Use a single round-trip with PostgREST embedding.
+  const { data: attempts, error } = await sb
+    .from('quiz_attempts')
+    .select(`
+      id, attempt_number, selected_index, is_correct, coins_awarded, attempted_at,
+      question_id,
+      quiz_questions (
+        id,
+        quiz_id,
+        session_quizzes (
+          id, session_id, quiz_type, title, sessions ( id, title )
+        )
+      )
+    `)
+    .eq('explorer_id', explorerId);
+  if (error) throw error;
+
+  // Group by quiz_id
+  const byQuiz = new Map();
+  for (const a of (attempts || [])) {
+    const qq = a.quiz_questions;
+    const sq = qq?.session_quizzes;
+    if (!sq) continue;
+    const key = sq.id;
+    if (!byQuiz.has(key)) {
+      byQuiz.set(key, {
+        quizId: sq.id,
+        sessionId: sq.session_id,
+        quizType: sq.quiz_type,
+        title: sq.title || (sq.sessions?.title || sq.session_id) + ' — ' + sq.quiz_type,
+        sessionTitle: sq.sessions?.title || null,
+        attempts: [],
+        questionIdsSeen: new Set(),
+      });
+    }
+    const row = byQuiz.get(key);
+    row.attempts.push(a);
+    row.questionIdsSeen.add(a.question_id);
+  }
+
+  // For each quiz, get the question count from session_quizzes/quiz_questions
+  // by reading the distinct question_ids referenced (rather than another query).
+  // For accuracy we also pull the canonical question count per quiz.
+  const quizIds = [...byQuiz.keys()];
+  let questionCountByQuiz = new Map();
+  if (quizIds.length) {
+    const { data: qcRows, error: qcErr } = await sb
+      .from('quiz_questions')
+      .select('quiz_id')
+      .in('quiz_id', quizIds);
+    if (!qcErr && qcRows) {
+      for (const r of qcRows) {
+        questionCountByQuiz.set(r.quiz_id, (questionCountByQuiz.get(r.quiz_id) || 0) + 1);
+      }
+    }
+  }
+
+  // Roll each quiz up
+  const out = [];
+  for (const row of byQuiz.values()) {
+    const qcount = questionCountByQuiz.get(row.quizId) || row.questionIdsSeen.size;
+
+    // Bucket attempts by question and attempt_number
+    const firstByQ = new Map();
+    const secondByQ = new Map();
+    let lastAttemptAt = null;
+    let coinsFromFirst = 0, coinsFromRetake = 0;
+    for (const a of row.attempts) {
+      if (a.attempt_number === 1) firstByQ.set(a.question_id, a);
+      else if (a.attempt_number === 2) secondByQ.set(a.question_id, a);
+      const c = a.coins_awarded || 0;
+      if (a.attempt_number === 1) coinsFromFirst += c;
+      else if (a.attempt_number === 2) coinsFromRetake += c;
+      if (a.attempted_at && (!lastAttemptAt || a.attempted_at > lastAttemptAt)) lastAttemptAt = a.attempted_at;
+    }
+
+    const correctOnFirst = [...firstByQ.values()].filter((a) => a.is_correct === true).length;
+    // "after" — for each q, prefer attempt 2 if present, else attempt 1
+    let correctAfter = 0;
+    for (const qid of firstByQ.keys()) {
+      const sec = secondByQ.get(qid);
+      const fst = firstByQ.get(qid);
+      const r = sec || fst;
+      if (r && r.is_correct === true) correctAfter += 1;
+    }
+
+    const firstAttemptDone = qcount > 0 && firstByQ.size >= qcount;
+    const wrongOnFirstQs = [...firstByQ.values()].filter((a) => a.is_correct === false).map((a) => a.question_id);
+    const secondAttemptDone = wrongOnFirstQs.length > 0 && wrongOnFirstQs.every((qid) => secondByQ.has(qid));
+    const complete = firstAttemptDone && (wrongOnFirstQs.length === 0 || secondAttemptDone);
+
+    out.push({
+      quizId: row.quizId,
+      sessionId: row.sessionId,
+      quizType: row.quizType,
+      title: row.title,
+      questionCount: qcount,
+      correctOnFirst,
+      correctAfter,
+      coinsFromFirst,
+      coinsFromRetake,
+      totalCoins: coinsFromFirst + coinsFromRetake,
+      hasRetakeRows: secondByQ.size > 0,
+      complete,
+      lastAttemptAt,
+    });
+  }
+
+  // Sort: monthly tests first within session group, then by session id ascending
+  out.sort((a, b) => {
+    if (a.sessionId !== b.sessionId) return String(a.sessionId).localeCompare(String(b.sessionId));
+    if (a.quizType === b.quizType) return 0;
+    return a.quizType === 'monthly_test' ? -1 : 1;
+  });
+
+  return out;
+}
+
+// ── main ───────────────────────────────────────────────────────────────
+(async function main() {
+  const root = document.getElementById('page-root');
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  // Auth
+  let viewerId = null;
+  try {
+    const timer = new Promise(r => setTimeout(() => r(null), 4000));
+    const res = await Promise.race([sb.auth.getSession(), timer]);
+    const session = res?.data?.session ?? null;
+    if (session) viewerId = session.user.id;
+  } catch (e) { /* will surface as no-access below */ }
+
+  if (!viewerId) {
+    root.innerHTML = `
+      ${renderHeader('parent')}
+      <div class="no-access">
+        <h2>Please sign in</h2>
+        <p>You need to be signed in as a parent or administrator to view quiz performance. <a href="index.html">Sign in →</a></p>
+      </div>`;
+    return;
+  }
+
+  // Check viewer role
+  let viewerProfile = null;
+  try {
+    const { data, error } = await sb
+      .from('profiles')
+      .select('id, name, role, family_id')
+      .eq('id', viewerId)
+      .maybeSingle();
+    if (error) throw error;
+    viewerProfile = data || null;
+  } catch (e) {
+    console.error('Profile fetch failed.', e);
+  }
+
+  if (!viewerProfile) {
+    root.innerHTML = renderNoAccess('Profile not found');
+    return;
+  }
+  if (!['parent','admin','superuser'].includes(viewerProfile.role)) {
+    root.innerHTML = renderNoAccess('Parents and administrators only');
+    return;
+  }
+
+  // Load explorers and decide initial selection
+  let explorers = [];
+  try {
+    explorers = await loadExplorers(sb, viewerProfile);
+  } catch (e) {
+    console.error('Explorer load failed.', e);
+    root.innerHTML = `${renderHeader(viewerProfile.role)}<div class="qr-empty">We couldn't load your explorers. Please refresh.</div>`;
+    return;
+  }
+
+  // Allow ?explorer=<id> param to deep-link
+  const params = new URLSearchParams(window.location.search);
+  const requestedExplorer = params.get('explorer');
+  let selectedExplorerId = (explorers.find((e) => e.id === requestedExplorer)?.id) ||
+                            (explorers[0]?.id) || null;
+
+  async function paint() {
+    root.innerHTML = `
+      ${renderHeader(viewerProfile.role)}
+      ${renderPicker(explorers, selectedExplorerId)}
+      <div id="results-content"><div class="loading">Loading attempts...</div></div>
+    `;
+    const sel = document.getElementById('explorer-select');
+    if (sel) {
+      sel.addEventListener('change', (ev) => {
+        selectedExplorerId = ev.target.value;
+        const u = new URL(window.location);
+        u.searchParams.set('explorer', selectedExplorerId);
+        history.replaceState(null, '', u.toString());
+        paint();
+      });
+    }
+    if (!selectedExplorerId) {
+      document.getElementById('results-content').innerHTML =
+        `<div class="qr-empty">No explorers in this family yet.</div>`;
+      return;
+    }
+    try {
+      const rolled = await loadRolledQuizzes(sb, selectedExplorerId);
+      const summaryHtml = renderSummary(rolled);
+      const listHtml = renderQuizList(rolled);
+      const explorerName = (explorers.find((e) => e.id === selectedExplorerId)?.name) || 'this explorer';
+      document.getElementById('results-content').innerHTML = `
+        ${summaryHtml}
+        <div class="section-title">${esc(explorerName)}'s Quizzes</div>
+        ${listHtml}
+      `;
+    } catch (e) {
+      console.error('Roll-up failed.', e);
+      document.getElementById('results-content').innerHTML =
+        `<div class="qr-empty">We couldn't load attempts. Please refresh and try again.</div>`;
+    }
+  }
+
+  await paint();
+})();
+</script>
+</body>
+</html>

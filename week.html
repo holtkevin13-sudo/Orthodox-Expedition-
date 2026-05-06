@@ -310,19 +310,19 @@ body::before{
   }
 
   // ── LOAD PROFILE (for name-day banner) ─────────────
-  // Reads full_name and patron_saint. patron_saint is a future schema
+  // Reads name and patron_saint. patron_saint is a future schema
   // column — until Chat 2 adds it, the select degrades gracefully and
   // the name-day banner stays hidden.
   let profile = null;
   if (profileId) {
     try {
       const tryFull = await sb.from('profiles')
-        .select('id, full_name, patron_saint')
+        .select('id, name, patron_saint')
         .eq('id', profileId)
         .maybeSingle();
       if (tryFull.error) {
         const fallback = await sb.from('profiles')
-          .select('id, full_name')
+          .select('id, name')
           .eq('id', profileId)
           .maybeSingle();
         profile = fallback.data || null;

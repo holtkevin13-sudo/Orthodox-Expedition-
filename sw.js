@@ -1,10 +1,11 @@
-// Orthodox Expedition — Service Worker v6
-// v6: adds Lane 3 assessment UI — assess.html, quiz-results.html, js/quiz-runner.js
-// v5: adds topic-00-day.js for Lane 2 M/W/F rendering UI
-// v4: adds week.html, prayers.html, day-state, pause-card, prayers, and config JSON
+// Orthodox Expedition — Service Worker v7
+// v7: adds PWA icon set (Option 2 burgundy logo) — favicon.svg, icon-{180,192,512}.png, icon-maskable-{192,512}.png
+// v6: added quiz-runner.js, assess.html, quiz-results.html for Lane 3
+// v5: added topic-00-day.js for Lane 2 M/W/F rendering UI
+// v4: added week.html, prayers.html, day-state, pause-card, prayers, and config JSON
 // Version bump forces cache clear and fresh install
 
-const CACHE_NAME = 'orthodox-expedition-v6';
+const CACHE_NAME = 'orthodox-expedition-v7';
 const STATIC_ASSETS = [
   '/Orthodox-Expedition-/',
   '/Orthodox-Expedition-/index.html',
@@ -21,6 +22,11 @@ const STATIC_ASSETS = [
   '/Orthodox-Expedition-/assess.html',
   '/Orthodox-Expedition-/quiz-results.html',
   '/Orthodox-Expedition-/favicon.svg',
+  '/Orthodox-Expedition-/icon-180.png',
+  '/Orthodox-Expedition-/icon-192.png',
+  '/Orthodox-Expedition-/icon-512.png',
+  '/Orthodox-Expedition-/icon-maskable-192.png',
+  '/Orthodox-Expedition-/icon-maskable-512.png',
   '/Orthodox-Expedition-/manifest.json',
   '/Orthodox-Expedition-/js/day-state.js',
   '/Orthodox-Expedition-/js/pause-card.js',

@@ -229,10 +229,7 @@ body::before{
 .reading-open-arrow{color:rgba(100,160,220,0.4);font-size:0.75rem;}
 
 /* Video embed */
-.video-wrap{position:relative;width:100%;padding-top:56.25%;background:rgba(255,255,255,0.03);border-radius:8px;overflow:hidden;margin-bottom:0.75rem;border:1px solid rgba(201,146,42,0.12);}
-.video-wrap iframe{position:absolute;inset:0;width:100%;height:100%;border:none;}
-.video-placeholder{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:0.5rem;color:rgba(201,146,42,0.25);font-family:'Cinzel',serif;font-size:0.7rem;letter-spacing:0.12em;text-transform:uppercase;}
-.video-placeholder-icon{font-size:1.5rem;opacity:0.4;}
+/* video CSS removed — videos stripped from PWA per Wave 1B */
 
 /* Game link */
 .game-link{display:flex;align-items:center;gap:0.625rem;background:rgba(44,22,84,0.15);border:1px solid rgba(124,58,237,0.2);border-radius:8px;padding:0.625rem 0.875rem;margin-bottom:0.75rem;text-decoration:none;transition:all 0.2s;cursor:pointer;}
@@ -792,17 +789,8 @@ function renderSessionBody(s, isDone){
     </div>`;
   }
 
-  // ── VIDEO ──
-  if(s.video_url){
-    const videoId = extractYouTubeId(s.video_url);
-    if(videoId){
-      html+=`<div class="video-wrap"><iframe src="https://www.youtube.com/embed/${videoId}" allowfullscreen loading="lazy"></iframe></div>`;
-    } else {
-      html+=`<div class="video-wrap"><div class="video-placeholder"><span class="video-placeholder-icon">▶</span>Video Available</div></div>`;
-    }
-  } else {
-    html+=`<div class="video-wrap"><div class="video-placeholder"><span class="video-placeholder-icon">▶</span>Video Coming Soon</div></div>`;
-  }
+  // ── VIDEO ── REMOVED — videos stripped from PWA per Wave 1B; curriculum.html is index/syllabus only.
+  // Future "Video Library" feature will live elsewhere if/when we add YouTube content.
 
   // ── GAME LINK ──
   if(s.game_url){

@@ -1,4 +1,68 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <rect width="32" height="32" rx="6" fill="#0e0800"/>
-  <text x="16" y="23" font-family="serif" font-size="22" text-anchor="middle" fill="#c9922a">☩</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="The Orthodox Expedition">
+  <title>The Orthodox Expedition</title>
+  <desc>Byzantine three-bar cross at the heart of an 8-point compass rose. Gold mark on liturgical burgundy. Explore the Ancient Faith.</desc>
+
+  <!-- Background — actual brand burgundy -->
+  <rect width="512" height="512" rx="92" fill="#6b1a1a"/>
+
+  <!-- Subtle warm vignette to add depth -->
+  <defs>
+    <radialGradient id="vignette" cx="50%" cy="50%" r="60%">
+      <stop offset="0%" stop-color="#8b2a2a" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#6b1a1a" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="512" height="512" rx="92" fill="url(#vignette)"/>
+
+  <!-- Concentric gold rings -->
+  <circle cx="256" cy="256" r="220" fill="none" stroke="#c9922a" stroke-width="1.5" stroke-opacity="0.5"/>
+  <circle cx="256" cy="256" r="208" fill="none" stroke="#c9922a" stroke-width="0.8" stroke-opacity="0.3"/>
+
+  <!-- Compass star — 8 points -->
+  <g transform="translate(256 256)">
+    <!-- Major points (cardinal directions, longer + brighter) -->
+    <g fill="#f0c96e" fill-opacity="0.55">
+      <polygon points="0,-186 14,-30 -14,-30"/>
+      <polygon points="0,186 14,30 -14,30"/>
+      <polygon points="-186,0 -30,14 -30,-14"/>
+      <polygon points="186,0 30,14 30,-14"/>
+    </g>
+    <!-- Diagonal points (intercardinal, shorter + softer) -->
+    <g fill="#f0c96e" fill-opacity="0.32">
+      <polygon points="125,-125 30,-14 14,-30"/>
+      <polygon points="-125,-125 -30,-14 -14,-30"/>
+      <polygon points="125,125 30,14 14,30"/>
+      <polygon points="-125,125 -30,14 -14,30"/>
+    </g>
+  </g>
+
+  <!-- Cardinal point dots at compass extremes -->
+  <g fill="#ffd700" fill-opacity="0.85">
+    <circle cx="256" cy="68" r="4"/>
+    <circle cx="256" cy="444" r="4"/>
+    <circle cx="68" cy="256" r="4"/>
+    <circle cx="444" cy="256" r="4"/>
+  </g>
+
+  <!-- Byzantine three-bar cross — bright gold for focus -->
+  <g transform="translate(256 256)" fill="#ffd700">
+    <!-- Vertical staff -->
+    <rect x="-11" y="-156" width="22" height="300" rx="2.5"/>
+    <!-- Top short bar (titulus / INRI plaque) -->
+    <rect x="-40" y="-122" width="80" height="15" rx="2"/>
+    <!-- Main horizontal bar -->
+    <rect x="-78" y="-68" width="156" height="22" rx="2.5"/>
+    <!-- Slanted footrest (suppedaneum) -->
+    <g transform="translate(0 56) rotate(-18)">
+      <rect x="-62" y="-7.5" width="124" height="15" rx="2"/>
+    </g>
+  </g>
+
+  <!-- Cream highlight on main bar for depth -->
+  <rect x="178" y="190" width="156" height="3.5" fill="#f4e8c1" fill-opacity="0.45"/>
+
+  <!-- Center jewel — near-black ink with cream center -->
+  <circle cx="256" cy="256" r="9" fill="#6b1a1a"/>
+  <circle cx="256" cy="256" r="7" fill="#0e0800"/>
+  <circle cx="256" cy="256" r="3" fill="#f4e8c1" fill-opacity="0.95"/>
 </svg>

@@ -1,4 +1,6 @@
-// Orthodox Expedition — Service Worker v8
+// Orthodox Expedition — Service Worker v9
+// v9: Repair B1 — added progress.html (dedicated streak/stats page extracted from home.html)
+//     home.html streamlined to ADHD-first hero layout (today-card as visual hero, streaks moved out).
 // v8: LAUNCH-BLOCKER FIX — config/program-spine.json updated; Topic 00 now uses_three_day_model:true
 //     This activates Lane 2's M/W/F UI for Topic 00. Without it, week.html would render empty
 //     content on May 18 launch day (Topic00Day.render() returned '' when day_kind='topic00_open').
@@ -8,11 +10,12 @@
 // v4: added week.html, prayers.html, day-state, pause-card, prayers, and config JSON
 // Version bump forces cache clear and fresh install
 
-const CACHE_NAME = 'orthodox-expedition-v8';
+const CACHE_NAME = 'orthodox-expedition-v9';
 const STATIC_ASSETS = [
   '/Orthodox-Expedition-/',
   '/Orthodox-Expedition-/index.html',
   '/Orthodox-Expedition-/home.html',
+  '/Orthodox-Expedition-/progress.html',
   '/Orthodox-Expedition-/week.html',
   '/Orthodox-Expedition-/prayers.html',
   '/Orthodox-Expedition-/missions.html',

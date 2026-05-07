@@ -1,0 +1,64 @@
+/* ─────────────────────────────────────────────────────────────────
+   Orthodox Expedition — Bottom Nav Polish
+   ─────────────────────────────────────────────────────────────────
+   Repair Chat N (May 7, 2026) — pre-launch UX coherence pass.
+
+   THE BUG: Kevin observed during iPad smoke testing that the Holy
+   Scriptures (☦) icon in the bottom nav showed a stray pink outline
+   while the other four icons (✦ Home, ☩ Missions, ⊕ Topics, ✎ Field
+   Manual) did not.
+
+   THE ROOT CAUSE: iOS/iPadOS system fonts (San Francisco, Helvetica
+   Neue) do not contain a text glyph for U+2626 ORTHODOX CROSS. When
+   that happens, iOS Safari falls back to Apple Color Emoji, which
+   renders ☦ as a multicolor emoji glyph (pink/coral/red toned). Apple
+   Color Emoji glyphs IGNORE the CSS `color` property — they are
+   presentation emojis, not text characters — so the muted-gold rule
+   on .nav-mark has no effect on ☦ specifically. The other four glyphs
+   (✦ U+2726, ☩ U+2629, ⊕ U+2295, ✎ U+270E) all have text glyphs in
+   iOS system fonts and render in the muted gold the CSS prescribes.
+   What Kevin perceived as a "pink outline" is the Apple-emoji
+   rendering of ☦ leaking through the cascade.
+
+   THE FIX: two-pronged for defense-in-depth.
+
+     1. `font-variant-emoji: text` on .nav-mark — tells modern browsers
+        (Safari 17+, Chrome 117+, Firefox 116+) to prefer text glyphs
+        over emoji glyphs for any character with both presentations.
+        Kevin's iPad in May 2026 is overwhelmingly likely on iOS 17+,
+        but this is belt-and-suspenders.
+
+     2. The U+FE0E TEXT VARIATION SELECTOR appended to ☦ in the nav
+        HTML across all 6 bottom-nav-bearing pages. Standardised in
+        Unicode 3.2 (1999) and supported by every iOS version that
+        has ever existed. It's an invisible character that requests
+        text-style rendering for the preceding glyph — the visible
+        glyph stays exactly ☦. This is the bulletproof layer.
+
+   BONUS: a palette-matched :focus-visible ring is added for keyboard
+   accessibility. The dispatch hypothesised that a missing :focus rule
+   could cause the browser default outline (sometimes pink/orange) to
+   bleed through. The page CSS has no :focus rules anywhere on .nav-
+   item, so even though that wasn't the actual cause, this rule
+   pre-empts that whole class of bug while preserving keyboard a11y.
+
+   Modern :focus-visible heuristics never fire on touch/mouse — only
+   on keyboard navigation — so this rule is invisible to Nolan
+   tapping on iPad and visible to a parent tabbing through the nav
+   for accessibility review.
+   ───────────────────────────────────────────────────────────────── */
+
+/* ── (1) Force text presentation for nav glyphs (modern browsers) ── */
+.bottom-nav .nav-mark{
+  font-variant-emoji: text;
+}
+
+/* ── (2) Pointer focus suppressed; keyboard focus visible & gold ── */
+.bottom-nav .nav-item:focus{
+  outline: none;
+}
+.bottom-nav .nav-item:focus-visible{
+  outline: 2px solid rgba(201,168,76,0.85);
+  outline-offset: -3px;
+  border-radius: 4px;
+}

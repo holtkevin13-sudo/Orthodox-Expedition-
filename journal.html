@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<link rel="stylesheet" href="css/viewport.css">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Field Manual — The Orthodox Expedition</title>
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link rel="manifest" href="manifest.json">
@@ -41,7 +42,7 @@ body{
 
 /* ── JOURNAL COVER ── */
 .journal-wrap{
-  max-width:540px;margin:0 auto;
+  max-width:var(--container-max-width);margin:0 auto;
   min-height:100vh;
   background:var(--parchment);
   background-image:

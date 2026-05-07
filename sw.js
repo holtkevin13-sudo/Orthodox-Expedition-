@@ -1,4 +1,9 @@
-// Orthodox Expedition — Service Worker v9
+// Orthodox Expedition — Service Worker v10
+// v10: Repair B3 — added shared /css/viewport.css for responsive --container-max-width token.
+//      14 main pages updated: viewport meta standardized to width=device-width, initial-scale=1,
+//      viewport-fit=cover (drops user-scalable=no for accessibility, adds iPad safe-area).
+//      Page-root max-width replaced with var(--container-max-width) so the PWA fills the
+//      screen comfortably on Nolan's iPad (his primary device) without sprawling on desktop.
 // v9: Repair B1 — added progress.html (dedicated streak/stats page extracted from home.html)
 //     home.html streamlined to ADHD-first hero layout (today-card as visual hero, streaks moved out).
 // v8: LAUNCH-BLOCKER FIX — config/program-spine.json updated; Topic 00 now uses_three_day_model:true
@@ -10,7 +15,7 @@
 // v4: added week.html, prayers.html, day-state, pause-card, prayers, and config JSON
 // Version bump forces cache clear and fresh install
 
-const CACHE_NAME = 'orthodox-expedition-v9';
+const CACHE_NAME = 'orthodox-expedition-v10';
 const STATIC_ASSETS = [
   '/Orthodox-Expedition-/',
   '/Orthodox-Expedition-/index.html',
@@ -34,6 +39,7 @@ const STATIC_ASSETS = [
   '/Orthodox-Expedition-/icon-maskable-192.png',
   '/Orthodox-Expedition-/icon-maskable-512.png',
   '/Orthodox-Expedition-/manifest.json',
+  '/Orthodox-Expedition-/css/viewport.css',
   '/Orthodox-Expedition-/js/day-state.js',
   '/Orthodox-Expedition-/js/pause-card.js',
   '/Orthodox-Expedition-/js/prayers.js',

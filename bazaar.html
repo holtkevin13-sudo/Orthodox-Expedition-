@@ -304,6 +304,181 @@ body::before{
 .fade-up:nth-child(3){animation-delay:0.16s;}
 .fade-up:nth-child(4){animation-delay:0.22s;}
 .fade-up:nth-child(5){animation-delay:0.28s;}
+
+/* ── ADMIN VIEW (parent/superuser viewing explorer's wishlist) ── */
+/* Repair Chat W (May 7, 2026): mirrors Repair J's journal-viewer
+   architecture exactly. When a parent/admin/superuser visits
+   bazaar.html?admin=1, the page loads the Holt explorer's wishlist
+   instead of the current user's, hides all write affordances, and
+   shows a parchment banner identifying whose wishlist is on screen. */
+.admin-view-banner{
+  display:none;
+  margin:0 0 1rem;
+  padding:1.1rem 1.25rem 1rem;
+  background:linear-gradient(160deg, rgba(244,232,193,0.18), rgba(232,213,160,0.10));
+  border:1.5px solid rgba(201,146,42,0.55);
+  border-radius:14px;
+  text-align:center;
+  box-shadow:inset 0 0 0 1px rgba(244,232,193,0.06);
+}
+.admin-view-banner .av-eyebrow{
+  font-family:'Cinzel',serif;
+  font-size:0.62rem;
+  letter-spacing:0.32em;
+  color:rgba(201,146,42,0.85);
+  text-transform:uppercase;
+  margin-bottom:0.45rem;
+}
+.admin-view-banner .av-title{
+  font-family:'Cinzel Decorative',serif;
+  font-size:1.15rem;
+  color:#f0c96e;
+  letter-spacing:0.02em;
+  margin-bottom:0.35rem;
+  text-shadow:0 0 12px rgba(201,146,42,0.25);
+}
+.admin-view-banner .av-readonly{
+  font-family:'Crimson Text',serif;
+  font-style:italic;
+  font-size:0.88rem;
+  color:rgba(244,232,193,0.65);
+}
+.admin-view-banner .av-marks{
+  color:var(--gold);
+  letter-spacing:0.4em;
+  margin:0 0.35rem;
+}
+
+.admin-explorer-selector{
+  display:none;
+  margin:0 0 1rem;
+  text-align:center;
+}
+.admin-explorer-selector label{
+  font-family:'Cinzel',serif;
+  font-size:0.7rem;
+  letter-spacing:0.2em;
+  color:rgba(201,146,42,0.7);
+  text-transform:uppercase;
+  margin-right:0.6rem;
+}
+.admin-explorer-selector select{
+  font-family:'Crimson Text',serif;
+  font-size:1rem;
+  color:var(--ink);
+  background:var(--parchment);
+  border:1.5px solid rgba(201,146,42,0.5);
+  border-radius:8px;
+  padding:0.4rem 0.7rem;
+  cursor:pointer;
+}
+.admin-empty-family{
+  display:none;
+  margin:1.25rem 0;
+  padding:1.5rem;
+  background:rgba(244,232,193,0.06);
+  border:1px dashed rgba(201,146,42,0.4);
+  border-radius:12px;
+  text-align:center;
+  color:rgba(244,232,193,0.65);
+  font-family:'Crimson Text',serif;
+  font-style:italic;
+}
+
+/* Admin-view wishlist grid — rich card layout for parents to scan */
+#admin-wishlist-grid{display:none;}
+body.admin-view-active #admin-wishlist-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:0.625rem;
+  margin-bottom:1.5rem;
+}
+.admin-wish-card{
+  background:rgba(244,232,193,0.04);
+  border:1px solid rgba(201,146,42,0.25);
+  border-radius:14px;
+  padding:0.875rem 0.75rem;
+  display:flex;flex-direction:column;align-items:center;
+  text-align:center;gap:0.4rem;
+  position:relative;
+}
+.admin-wish-card.affordable{
+  border-color:rgba(201,146,42,0.5);
+  background:rgba(201,146,42,0.07);
+}
+.admin-wish-card .aw-emoji{font-size:2rem;line-height:1;margin-bottom:0.1rem;}
+.admin-wish-card .aw-name{
+  font-family:'Cinzel',serif;font-size:0.72rem;
+  color:rgba(244,232,193,0.85);line-height:1.3;font-weight:600;
+}
+.admin-wish-card .aw-cost{
+  font-family:'Cinzel Decorative',serif;font-size:0.85rem;
+  color:var(--gold-bright);text-shadow:0 0 8px rgba(255,215,0,0.3);
+}
+.admin-wish-card .aw-meta{
+  font-family:'Cinzel',serif;font-size:0.58rem;
+  letter-spacing:0.1em;text-transform:uppercase;
+  color:rgba(201,146,42,0.5);
+}
+.admin-wish-card.affordable .aw-meta{color:rgba(255,215,0,0.7);}
+.admin-empty-wishlist{
+  margin:1.5rem 0;padding:1.75rem 1.25rem;
+  background:rgba(244,232,193,0.04);
+  border:1px dashed rgba(201,146,42,0.3);
+  border-radius:12px;
+  text-align:center;
+  color:rgba(244,232,193,0.5);
+  font-family:'Crimson Text',serif;
+  font-style:italic;
+  font-size:0.92rem;
+}
+
+/* Admin-view: a coin-strip variant showing the EXPLORER's coins,
+   not the parent's. Replaces the standard coin strip in admin view. */
+.admin-coin-strip{display:none;}
+body.admin-view-active .admin-coin-strip{
+  display:flex;align-items:center;justify-content:space-between;
+  background:linear-gradient(135deg,rgba(44,22,84,0.6) 0%,rgba(107,26,26,0.55) 100%);
+  border:1px solid rgba(201,146,42,0.25);
+  border-radius:14px;padding:0.75rem 1.1rem;
+  margin-bottom:1rem;
+}
+.admin-coin-strip .acs-label{
+  font-family:'Cinzel',serif;font-size:0.6rem;
+  letter-spacing:0.18em;color:rgba(201,146,42,0.55);
+  text-transform:uppercase;
+}
+.admin-coin-strip .acs-val{
+  font-family:'Cinzel Decorative',serif;font-size:1.4rem;
+  color:var(--gold-bright);text-shadow:0 0 12px rgba(255,215,0,0.4);
+  line-height:1;
+}
+.admin-coin-strip .acs-right{text-align:right;}
+.admin-coin-strip .acs-sub{
+  font-family:'Cinzel',serif;font-size:0.72rem;
+  color:rgba(201,146,42,0.55);margin-top:0.15rem;
+}
+
+/* In admin view, hide explorer-only writeable surfaces.
+   The wishlist-strip's chip view is replaced by the richer
+   admin-wishlist-grid; tier tabs / prize tiers / history /
+   default coin strip / modal / success-flash all suppressed. */
+body.admin-view-active .coin-strip,
+body.admin-view-active .wishlist-strip,
+body.admin-view-active .tier-tabs,
+body.admin-view-active #prize-tiers,
+body.admin-view-active .history-section,
+body.admin-view-active #redeem-modal,
+body.admin-view-active #success-flash{
+  display:none !important;
+}
+/* And in case any prize-card slipped through (e.g. from a future
+   re-render hook), strip its action buttons defensively. */
+body.admin-view-active .prize-actions,
+body.admin-view-active .prize-btn-redeem,
+body.admin-view-active .prize-btn-wish{
+  display:none !important;
+}
 </style>
 </head>
 <body>
@@ -343,6 +518,39 @@ body::before{
     <div class="app-name">The Orthodox Expedition</div>
     <div class="app-divider">✦ ☩ ✦</div>
   </header>
+
+  <!-- ADMIN VIEW BANNER (parent/admin viewing explorer's wishlist; shown only when ?admin=1 + role check pass) -->
+  <div class="admin-view-banner" id="admin-view-banner">
+    <div class="av-eyebrow">Parent View</div>
+    <div class="av-title"><span class="av-marks">✦</span><span id="admin-view-name">Explorer</span>'s Wishlist<span class="av-marks">✦</span></div>
+    <div class="av-readonly">Read-only · Saved-but-not-redeemed</div>
+  </div>
+
+  <!-- ADMIN EXPLORER SELECTOR (shown only when family has multiple explorers) -->
+  <div class="admin-explorer-selector" id="admin-explorer-selector">
+    <label for="admin-explorer-select">Reading:</label>
+    <select id="admin-explorer-select" onchange="onAdminExplorerChange(this.value)"></select>
+  </div>
+
+  <!-- ADMIN EMPTY-FAMILY STATE (shown when no explorers exist in family) -->
+  <div class="admin-empty-family" id="admin-empty-family">
+    No explorers in this family yet. When children are added, their wishlists will appear here.
+  </div>
+
+  <!-- ADMIN COIN STRIP (shows the EXPLORER's coins, not the parent's) -->
+  <div class="admin-coin-strip">
+    <div>
+      <div class="acs-label" id="acs-explorer-label">Saint Coins</div>
+      <div class="acs-val" id="acs-coin-val">0</div>
+    </div>
+    <div class="acs-right">
+      <div class="acs-label">Lifetime Earned</div>
+      <div class="acs-sub" id="acs-lifetime-val">0</div>
+    </div>
+  </div>
+
+  <!-- ADMIN WISHLIST GRID (rich card view of saved-but-not-redeemed prizes) -->
+  <div id="admin-wishlist-grid"></div>
 
   <!-- COIN STRIP -->
   <div class="coin-strip fade-up">
@@ -417,10 +625,23 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // ── STATE ─────────────────────────────────────────────────────
-let profile = null;
+let profile = null;          // current authenticated user
 let allPrizes = [];
 let wishlistIds = [];
 let selectedPrize = null;
+
+// Repair Chat W (May 7, 2026) — admin-view state
+//
+// Mirrors Repair J's journal-viewer architecture. When a parent/admin/
+// superuser visits bazaar.html?admin=1, the page loads an explorer's
+// wishlist (read-only) instead of the current user's prize-shopping flow.
+// `viewingExplorerId` is the source of truth — `loadAll()` and the
+// admin-render path read from it; in normal flow it === profile.id.
+let isAdminView         = false;
+let viewingExplorerId   = null;   // whose wishlist is on screen
+let viewingExplorerName = '';     // display name for banner / labels
+let viewingExplorerProfile = null; // profile row for the viewed explorer
+let familyExplorers     = [];     // explorers in this family (for selector)
 
 const TIERS = [
   {id:0, label:'Common Finds',       badge:'🥉', range:'300–500 coins'},
@@ -436,10 +657,38 @@ const TIERS = [
     const res   = await Promise.race([sb.auth.getSession(), timer]);
     const session = res?.data?.session ?? null;
     if(!session){ window.location.href='index.html'; return; }
-    const {data:prof} = await sb.from('profiles').select('role').eq('id',session.user.id).single();
-    const isAdminView = new URLSearchParams(window.location.search).get('admin')==='1';
-    if((prof&&['superuser','admin','parent'].includes(prof.role))&&!isAdminView){ window.location.href= prof.role==='parent'?'parent.html':'admin.html'; return; }
-    await loadAll(session.user.id);
+
+    // Pull the full profile so we have role, name, family_id.
+    const {data:prof} = await sb.from('profiles').select('*').eq('id',session.user.id).single();
+    if(!prof){ window.location.href='index.html'; return; }
+    profile = prof;
+
+    // ── ADMIN VIEW DETECTION (mirror of Repair J) ────────────────
+    // Parents/admins/superusers landing here with ?admin=1 view an
+    // explorer's wishlist in read-only mode. Default = own bazaar.
+    // If a non-parent role tampers with ?admin=1, the role check fails
+    // and they get redirected to their own dashboard or stay in the
+    // explorer flow — admin view never activates.
+    const params         = new URLSearchParams(window.location.search);
+    const wantAdminView  = params.get('admin') === '1';
+    const isParentRole   = ['superuser','admin','parent'].includes(prof.role);
+
+    if (isParentRole && !wantAdminView) {
+      // Parent role without ?admin=1 — bounce them home (existing behavior).
+      window.location.href = prof.role==='parent' ? 'parent.html' : 'admin.html';
+      return;
+    }
+
+    if (wantAdminView && isParentRole) {
+      await enterAdminView();
+    } else {
+      // Normal explorer flow — Nolan's experience, unchanged.
+      viewingExplorerId      = prof.id;
+      viewingExplorerName    = prof.name || 'Explorer';
+      viewingExplorerProfile = prof;
+      await loadAll(prof.id);
+    }
+
     document.getElementById('loading').style.display='none';
     document.getElementById('app').style.display='block';
     document.getElementById('bottom-nav').style.display='flex';
@@ -448,6 +697,157 @@ const TIERS = [
     window.location.href='index.html';
   }
 })();
+
+// ── ADMIN VIEW HELPERS (Repair W) ─────────────────────────────
+// When a parent/admin/superuser arrives with ?admin=1, load the family's
+// explorer profiles, pick one (auto for single-child families, dropdown
+// for multi-child), wire the read-only banner, and load that explorer's
+// wishlist. RLS already permits parent reads of children's wishlist:
+//
+//   wishlist policy: (auth.uid() = explorer_id) OR is_admin()
+//
+// so the family-scope filter happens here at the query layer for
+// correctness, not security. Pattern mirrors Repair J's enterAdminView()
+// in journal.html exactly.
+async function enterAdminView(){
+  isAdminView = true;
+  document.body.classList.add('admin-view-active');
+
+  // Pull explorers in this family.
+  const { data: explorers, error } = await sb.from('profiles')
+    .select('id, name, coins, lifetime_coins')
+    .eq('family_id', profile.family_id)
+    .eq('role', 'explorer')
+    .order('name', { ascending: true });
+
+  if (error) {
+    console.error('Failed to load family explorers:', error);
+  }
+
+  familyExplorers = explorers || [];
+
+  if (familyExplorers.length === 0) {
+    // No children in this family — show empty-family state, suppress banner.
+    const empty = document.getElementById('admin-empty-family');
+    if (empty) empty.style.display = 'block';
+    viewingExplorerId      = null;
+    viewingExplorerName    = '';
+    viewingExplorerProfile = null;
+    return;
+  }
+
+  // Auto-select first explorer; dropdown lets parent switch in multi-child families.
+  viewingExplorerProfile = familyExplorers[0];
+  viewingExplorerId      = viewingExplorerProfile.id;
+  viewingExplorerName    = viewingExplorerProfile.name || 'Explorer';
+
+  // Show banner with the explorer's name
+  const banner = document.getElementById('admin-view-banner');
+  const nameEl = document.getElementById('admin-view-name');
+  if (nameEl) nameEl.textContent = viewingExplorerName;
+  if (banner) banner.style.display = 'block';
+
+  // If multiple explorers, populate and show the selector dropdown
+  if (familyExplorers.length > 1) {
+    const select = document.getElementById('admin-explorer-select');
+    const wrap   = document.getElementById('admin-explorer-selector');
+    if (select && wrap) {
+      select.innerHTML = '';
+      familyExplorers.forEach(ex => {
+        const opt = document.createElement('option');
+        opt.value = ex.id;
+        opt.textContent = ex.name || 'Explorer';
+        select.appendChild(opt);
+      });
+      select.value = viewingExplorerId;
+      wrap.style.display = 'block';
+    }
+  }
+
+  // Update the explorer-coins label to scope to the viewed child
+  const acsLabel = document.getElementById('acs-explorer-label');
+  if (acsLabel) acsLabel.textContent = `${viewingExplorerName}'s Coins`;
+
+  await loadAdminView();
+}
+
+// Switch which child's wishlist we're viewing (multi-child families)
+async function onAdminExplorerChange(newId){
+  if (!newId || newId === viewingExplorerId) return;
+  const found = familyExplorers.find(e => e.id === newId);
+  if (!found) return;
+
+  viewingExplorerProfile = found;
+  viewingExplorerId      = found.id;
+  viewingExplorerName    = found.name || 'Explorer';
+
+  const nameEl = document.getElementById('admin-view-name');
+  if (nameEl) nameEl.textContent = viewingExplorerName;
+
+  const acsLabel = document.getElementById('acs-explorer-label');
+  if (acsLabel) acsLabel.textContent = `${viewingExplorerName}'s Coins`;
+
+  await loadAdminView();
+}
+
+// Load all data for admin-view rendering: prizes table + the viewed
+// explorer's wishlist. We re-query the explorer's profile to get fresh
+// coin/lifetime values (the RLS-allowed family-scoped read).
+async function loadAdminView(){
+  if (!viewingExplorerId) return;
+
+  const [profRes, prizesRes, wishRes] = await Promise.all([
+    sb.from('profiles').select('id, name, coins, lifetime_coins').eq('id',viewingExplorerId).single(),
+    sb.from('prizes').select('*').eq('is_active',true).order('tier').order('cost'),
+    sb.from('wishlist').select('prize_id').eq('explorer_id',viewingExplorerId),
+  ]);
+
+  if (profRes.data) viewingExplorerProfile = profRes.data;
+  allPrizes   = prizesRes.data || [];
+  wishlistIds = (wishRes.data||[]).map(w => w.prize_id);
+
+  updateAdminCoinStrip();
+  renderAdminWishlist();
+}
+
+function updateAdminCoinStrip(){
+  const p = viewingExplorerProfile || {};
+  const coinEl = document.getElementById('acs-coin-val');
+  const lifeEl = document.getElementById('acs-lifetime-val');
+  if (coinEl) coinEl.textContent = (p.coins || 0).toLocaleString();
+  if (lifeEl) lifeEl.textContent = (p.lifetime_coins || 0).toLocaleString();
+}
+
+function renderAdminWishlist(){
+  const grid = document.getElementById('admin-wishlist-grid');
+  if (!grid) return;
+  grid.innerHTML = '';
+
+  const wishPrizes = allPrizes.filter(p => wishlistIds.includes(p.id));
+
+  if (!wishPrizes.length) {
+    const empty = document.createElement('div');
+    empty.className = 'admin-empty-wishlist';
+    empty.textContent = `${viewingExplorerName} hasn't saved any prizes to their wishlist yet.`;
+    grid.appendChild(empty);
+    return;
+  }
+
+  const explorerCoins = (viewingExplorerProfile && viewingExplorerProfile.coins) || 0;
+
+  wishPrizes.forEach(p => {
+    const affordable = explorerCoins >= p.cost;
+    const needMore   = Math.max(0, p.cost - explorerCoins);
+    const card = document.createElement('div');
+    card.className = `admin-wish-card${affordable ? ' affordable' : ''}`;
+    card.innerHTML = `
+      <div class="aw-emoji">${p.emoji || '🎁'}</div>
+      <div class="aw-name">${p.name}</div>
+      <div class="aw-cost">${p.cost.toLocaleString()}</div>
+      <div class="aw-meta">${affordable ? '✦ Can afford' : `Needs ${needMore.toLocaleString()} more`}</div>`;
+    grid.appendChild(card);
+  });
+}
 
 // ── LOAD ──────────────────────────────────────────────────────
 async function loadAll(userId){
@@ -561,6 +961,9 @@ function buildPrizeCard(prize){
 // ── WISHLIST TOGGLE ───────────────────────────────────────────
 async function toggleWish(e, prizeId){
   e.stopPropagation();
+  // Defense-in-depth: wish buttons are hidden in admin view via CSS, but
+  // refuse to write if anything fires this in admin-view mode anyway.
+  if(isAdminView) return;
   if(!profile) return;
 
   if(wishlistIds.includes(prizeId)){
@@ -581,8 +984,9 @@ async function toggleWish(e, prizeId){
 
 // ── REDEEM MODAL ──────────────────────────────────────────────
 function openModal(prizeId){
-  const isAdminView = new URLSearchParams(window.location.search).get('admin')==='1';
-  if(isAdminView){ alert('Admin view — redemption disabled.'); return; }
+  // Defense-in-depth: redeem buttons are hidden in admin view via CSS, but
+  // belt-and-suspenders against any stray invocation (DOM tampering, etc.)
+  if(isAdminView){ return; }
   selectedPrize = allPrizes.find(p=>p.id===prizeId);
   if(!selectedPrize||profile.coins<selectedPrize.cost) return;
   document.getElementById('modal-emoji').textContent  = selectedPrize.emoji;
@@ -597,6 +1001,10 @@ function closeModal(){
 }
 
 async function confirmRedeem(){
+  // Defense-in-depth — modal is suppressed in admin view via CSS, plus
+  // openModal() refuses to open it in admin view, but if confirmRedeem
+  // somehow fires in admin view, refuse to write.
+  if(isAdminView) return;
   if(!selectedPrize||!profile) return;
   if(profile.coins < selectedPrize.cost){
     closeModal();
@@ -630,20 +1038,39 @@ async function confirmRedeem(){
   profile.coins = newCoins;
   const redeemedPrize = {...selectedPrize};
 
-  // Send notification email to parent
+  // ── PARENT NOTIFICATION EMAIL (Repair W) ───────────────────────
+  // Fan out to ALL parents/admins/superusers in the family. Wrapped
+  // in try/catch — email failure must NEVER prevent the redemption
+  // from completing or block the success-flash UX for Nolan.
   try {
-    // Get parent email from family
-    const {data:fam} = await sb.from('families').select('parent_email,coin_rate').eq('id',profile.family_id).single();
-    if(fam?.parent_email){
+    // Pull the family's coin_rate (used for $ value calculation)
+    const {data:fam} = await sb.from('families')
+      .select('coin_rate').eq('id',profile.family_id).single();
+    const coinRate = fam?.coin_rate ?? 0.02;
+
+    // RPC returns name+email for every parent/admin/superuser in this
+    // family. SECURITY DEFINER lets it read auth.users.email which the
+    // anon key cannot reach directly. See migration
+    // `add_get_family_parent_emails_rpc` (May 7 2026).
+    const {data:parents, error:rpcErr} = await sb
+      .rpc('get_family_parent_emails', { family_uuid: profile.family_id });
+
+    if (rpcErr) {
+      console.error('parent-email RPC error:', rpcErr);
+    } else if (parents && parents.length){
+      // Pass through to the new EmailUtils.prizeRedeemed signature.
       await EmailUtils.prizeRedeemed({
-        parentEmail:    fam.parent_email,
+        parents:        parents.map(p => ({ name: p.name, email: p.email, role: p.role })),
         childName:      profile.name,
         prizeName:      redeemedPrize.name,
         prizeEmoji:     redeemedPrize.emoji,
         coinsSpent:     redeemedPrize.cost,
-        coinRate:       fam.coin_rate||0.02,
+        coinRate:       coinRate,
         remainingCoins: newCoins,
+        lifetimeCoins:  profile.lifetime_coins || 0,
       });
+    } else {
+      console.warn('No parent emails found for family', profile.family_id);
     }
   } catch(e){ console.error('Email error:', e); }
 

@@ -1,0 +1,42 @@
+/* ─────────────────────────────────────────────────────────────────
+   Orthodox Expedition — Shared Viewport Tokens
+   Repair B3 (Pass 8) — May 7, 2026
+   ─────────────────────────────────────────────────────────────────
+   Defines --container-max-width as a single source of truth for
+   page-root container sizing. Scales responsively so the PWA fills
+   the screen comfortably on Nolan's iPad (his primary device)
+   without sprawling on desktop.
+
+   Breakpoints (stepped, predictable — preferred over clamp() so
+   intent is legible to future maintainers):
+
+     - Phone   (< 600px)   100%   — fills viewport with page padding
+     - Tablet  (≥ 600px)   800px  — comfortable iPad width
+     - Desktop (≥ 1024px)  960px  — capped reading width
+
+   ADHD-first design lens: comfortable width with generous padding
+   beats maximum width with cramped padding. 800px on iPad portrait
+   means content fills the visible area through page padding while
+   leaving room to breathe.
+
+   Apply on each page by replacing the page-root max-width with
+   `max-width: var(--container-max-width);`. The existing
+   `margin: 0 auto` centers it; existing padding handles side
+   breathing room.
+   ─────────────────────────────────────────────────────────────── */
+
+:root {
+  --container-max-width: 100%;
+}
+
+@media (min-width: 600px) {
+  :root {
+    --container-max-width: 800px;
+  }
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --container-max-width: 960px;
+  }
+}

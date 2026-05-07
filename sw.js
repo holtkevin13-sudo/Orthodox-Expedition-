@@ -1,4 +1,10 @@
-// Orthodox Expedition — Service Worker v11
+// Orthodox Expedition — Service Worker v12
+// v12: Repair Chat W — bazaar wishlist viewer (admin-view mode) + redemption
+//      notification email fan-out to all family parents (Kevin + Danyelle).
+//      No new files; this version bump is to ensure the updated bazaar.html,
+//      email-utils.js, admin.html and parent.html clear any pre-cached
+//      revisions on Kevin's iPad. Also adds /email-utils.js to STATIC_ASSETS
+//      (it was previously fetched at run-time but never explicitly precached).
 // v11: Repair Chat N — added shared /css/nav-polish.css for bottom-nav final polish.
 //      Fix: the Holy Scriptures (☦) icon was rendering as a pink Apple Color Emoji on
 //      iOS/iPadOS because the system fonts have no text glyph for U+2626 ORTHODOX CROSS.
@@ -21,7 +27,7 @@
 // v4: added week.html, prayers.html, day-state, pause-card, prayers, and config JSON
 // Version bump forces cache clear and fresh install
 
-const CACHE_NAME = 'orthodox-expedition-v11';
+const CACHE_NAME = 'orthodox-expedition-v12';
 const STATIC_ASSETS = [
   '/Orthodox-Expedition-/',
   '/Orthodox-Expedition-/index.html',
@@ -38,6 +44,7 @@ const STATIC_ASSETS = [
   '/Orthodox-Expedition-/parent.html',
   '/Orthodox-Expedition-/assess.html',
   '/Orthodox-Expedition-/quiz-results.html',
+  '/Orthodox-Expedition-/email-utils.js',
   '/Orthodox-Expedition-/favicon.svg',
   '/Orthodox-Expedition-/icon-180.png',
   '/Orthodox-Expedition-/icon-192.png',

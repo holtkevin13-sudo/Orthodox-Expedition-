@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#c9922a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Expedition">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Progress — The Orthodox Expedition</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root {
+  --gold:#c9922a;--gold-light:#f0c96e;--gold-bright:#ffd700;
+  --parchment:#f4e8c1;--parchment-dark:#e8d5a0;
+  --ink:#1a0f00;
+  --burgundy:#6b1a1a;
+  --byzantine:#2c1654;
+  --bg:#0e0800;
+  --nav-h:72px;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overflow-x:hidden;}
+body{
+  font-family:'Crimson Text',serif;
+  background-color:var(--bg);
+  background-image:
+    radial-gradient(ellipse at 50% 0%,rgba(107,26,26,0.5) 0%,transparent 60%),
+    radial-gradient(ellipse at 100% 100%,rgba(44,22,84,0.35) 0%,transparent 50%),
+    radial-gradient(ellipse at 0% 70%,rgba(107,26,26,0.2) 0%,transparent 40%);
+  min-height:100vh;color:var(--ink);
+}
+body::before{
+  content:'';position:fixed;inset:0;
+  background-image:
+    linear-gradient(rgba(201,146,42,0.025) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(201,146,42,0.025) 1px,transparent 1px);
+  background-size:44px 44px;
+  pointer-events:none;z-index:0;
+}
+#app{display:none;position:relative;z-index:1;}
+.page{max-width:480px;margin:0 auto;padding:1.25rem 1rem calc(var(--nav-h) + 1.5rem);}
+
+.app-header{
+  text-align:center;padding:1.25rem 1rem 1rem;
+  border-bottom:1px solid rgba(201,146,42,0.18);
+  margin-bottom:1.25rem;position:relative;
+}
+.app-header-row{display:flex;align-items:center;justify-content:space-between;}
+.app-name{font-family:'Cinzel Decorative',serif;font-size:clamp(0.95rem,3.5vw,1.2rem);color:var(--gold-light);letter-spacing:0.06em;text-shadow:0 0 20px rgba(201,146,42,0.35);flex:1;text-align:center;}
+.back-btn{background:none;border:none;cursor:pointer;color:rgba(201,146,42,0.5);font-size:0.85rem;font-family:'Cinzel',serif;padding:0.25rem 0.5rem;text-decoration:none;}
+.app-divider{color:rgba(201,146,42,0.35);letter-spacing:0.6rem;font-size:0.65rem;margin-top:0.3rem;}
+
+.page-eyebrow{
+  font-family:'Cinzel',serif;font-size:0.7rem;letter-spacing:0.22em;
+  color:rgba(201,146,42,0.55);text-transform:uppercase;
+  text-align:center;margin-bottom:0.4rem;
+}
+.page-title{
+  font-family:'Cinzel Decorative',serif;
+  font-size:clamp(1.3rem,4.5vw,1.6rem);
+  color:var(--gold-light);text-align:center;
+  text-shadow:0 0 20px rgba(201,146,42,0.3);
+  margin-bottom:1.5rem;
+}
+
+/* ── DUAL STREAK ──────────────────────────────────────────────
+   B1.b — both cards use IDENTICAL internal grid: fixed-width icon slot,
+   flexible center, fixed-width right number block. Icons are normalized
+   to the same metric (both emoji rendering). This guarantees the "0"
+   numbers sit at matching x-positions across the two cards regardless
+   of which glyph each icon uses. */
+.dual-streak-row{
+  display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;
+  margin-bottom:1.5rem;
+}
+.streak-card-half{
+  background:rgba(244,232,193,0.04);
+  border:1px solid rgba(201,146,42,0.2);
+  border-radius:12px;padding:0.875rem;
+  display:grid;
+  grid-template-columns:1.75rem 1fr auto;
+  align-items:center;
+  gap:0.5rem;
+}
+.streak-icon{
+  font-size:1.25rem;line-height:1;
+  width:1.75rem;height:1.75rem;
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;
+}
+.streak-center{min-width:0;}
+.streak-title{
+  font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.1em;
+  color:rgba(201,146,42,0.55);text-transform:uppercase;
+  margin-bottom:0.35rem;line-height:1;
+}
+.streak-dots{display:flex;gap:0.25rem;}
+.streak-dot{
+  width:18px;height:18px;border-radius:50%;
+  border:1px solid rgba(201,146,42,0.25);
+  background:rgba(255,255,255,0.03);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Cinzel',serif;font-size:0.55rem;
+  color:rgba(201,146,42,0.2);transition:all 0.4s;
+}
+.streak-dot.lit{
+  background:linear-gradient(135deg,var(--gold),var(--gold-bright));
+  border-color:var(--gold-bright);color:var(--ink);
+  box-shadow:0 0 8px rgba(255,215,0,0.4);
+}
+.streak-right{text-align:right;}
+.streak-num{
+  font-family:'Cinzel Decorative',serif;font-size:1.7rem;
+  color:var(--gold-bright);text-shadow:0 0 12px rgba(255,215,0,0.4);
+  line-height:1;
+}
+.streak-sub{
+  font-family:'Cinzel',serif;font-size:0.5rem;letter-spacing:0.12em;
+  color:rgba(201,146,42,0.4);text-transform:uppercase;
+  margin-top:0.2rem;
+}
+
+/* ── STATS BLOCK ─────────────────────────────────────────────── */
+.stats-row{
+  display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;
+  margin-bottom:1.5rem;
+}
+.stat-card{
+  background:rgba(244,232,193,0.03);
+  border:1px solid rgba(201,146,42,0.18);
+  border-radius:12px;padding:0.875rem;text-align:center;
+}
+.stat-val{
+  font-family:'Cinzel Decorative',serif;font-size:1.5rem;
+  color:var(--gold-bright);text-shadow:0 0 12px rgba(255,215,0,0.3);
+  line-height:1;
+}
+.stat-lbl{
+  font-family:'Cinzel',serif;font-size:0.58rem;letter-spacing:0.12em;
+  color:rgba(201,146,42,0.45);text-transform:uppercase;
+  margin-top:0.3rem;
+}
+
+/* ── EXPLAINER (Parent + Nolan-friendly orientation) ────────── */
+.explainer{
+  background:rgba(244,232,193,0.03);
+  border:1px solid rgba(201,146,42,0.15);
+  border-radius:12px;padding:1rem 1.125rem;
+  margin-bottom:1.25rem;
+}
+.explainer-title{
+  font-family:'Cinzel',serif;font-size:0.7rem;letter-spacing:0.18em;
+  color:rgba(201,146,42,0.6);text-transform:uppercase;
+  margin-bottom:0.5rem;
+}
+.explainer-body{
+  font-family:'Crimson Text',serif;font-size:0.85rem;line-height:1.5;
+  color:rgba(244,232,193,0.6);
+}
+.explainer-body p+p{margin-top:0.5rem;}
+
+/* ── BOTTOM NAV (matches home.html exactly) ──────────────────── */
+.bottom-nav{
+  position:fixed;bottom:0;left:0;right:0;
+  height:var(--nav-h);
+  background:rgba(8,4,0,0.97);
+  border-top:1px solid rgba(201,146,42,0.18);
+  display:flex;align-items:stretch;
+  backdrop-filter:blur(16px);
+  z-index:200;
+  padding-bottom:env(safe-area-inset-bottom);
+}
+.nav-item{
+  flex:1;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:0.2rem;
+  cursor:pointer;border:none;background:none;
+  padding:0.5rem 0.25rem;position:relative;
+  transition:all 0.2s;text-decoration:none;
+}
+.nav-item:active{background:rgba(201,146,42,0.06);}
+.nav-mark{
+  font-size:1rem;line-height:1;
+  color:rgba(201,146,42,0.25);
+  transition:all 0.25s;
+}
+.nav-label{
+  font-family:'Cinzel',serif;font-size:0.52rem;
+  letter-spacing:0.08em;text-transform:uppercase;
+  color:rgba(201,146,42,0.3);
+  transition:all 0.25s;
+}
+
+/* Loading */
+#loading{
+  position:fixed;inset:0;z-index:400;
+  display:flex;align-items:center;justify-content:center;
+  background:var(--bg);transition:opacity 0.4s;
+}
+.loading-cross{
+  font-family:'Cinzel',serif;font-size:2rem;color:rgba(201,146,42,0.4);
+  animation:pulse 1.5s ease-in-out infinite;
+}
+@keyframes pulse{0%,100%{opacity:0.3;}50%{opacity:0.8;}}
+
+.fade-up{opacity:0;transform:translateY(14px);animation:fadeUp 0.45s ease forwards;}
+@keyframes fadeUp{to{opacity:1;transform:translateY(0);}}
+.fade-up:nth-child(1){animation-delay:0.04s;}
+.fade-up:nth-child(2){animation-delay:0.1s;}
+.fade-up:nth-child(3){animation-delay:0.16s;}
+.fade-up:nth-child(4){animation-delay:0.22s;}
+</style>
+</head>
+<body>
+
+<div id="loading"><div class="loading-cross">☩</div></div>
+
+<div id="app">
+  <div class="page">
+
+    <header class="app-header">
+      <div class="app-header-row">
+        <a class="back-btn" href="home.html">‹ Home</a>
+        <div class="app-name">Progress</div>
+        <div style="width:60px"></div>
+      </div>
+      <div class="app-divider">✦ ☩ ✦</div>
+    </header>
+
+    <div class="page-eyebrow fade-up">✦ Your Expedition Stats</div>
+    <div class="page-title fade-up" id="page-title">Loading…</div>
+
+    <!-- DUAL STREAK (B1.b — consistent intra-card layout) -->
+    <div class="dual-streak-row fade-up">
+      <div class="streak-card-half">
+        <div class="streak-icon">🔥</div>
+        <div class="streak-center">
+          <div class="streak-title">Weekly Streak</div>
+          <div class="streak-dots" id="streak-dots"></div>
+        </div>
+        <div class="streak-right">
+          <div class="streak-num" id="streak-num">0</div>
+          <div class="streak-sub">Weeks</div>
+        </div>
+      </div>
+      <div class="streak-card-half">
+        <div class="streak-icon">📿</div>
+        <div class="streak-center">
+          <div class="streak-title">Prayer Streak</div>
+          <div class="streak-dots" id="prayer-dots"></div>
+        </div>
+        <div class="streak-right">
+          <div class="streak-num" id="prayer-num">0</div>
+          <div class="streak-sub">Days</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LIFETIME STATS -->
+    <div class="stats-row fade-up">
+      <div class="stat-card">
+        <div class="stat-val" id="stat-coins">0</div>
+        <div class="stat-lbl">Saint Coins</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val" id="stat-lifetime">0</div>
+        <div class="stat-lbl">Lifetime Earned</div>
+      </div>
+    </div>
+
+    <div class="stats-row fade-up">
+      <div class="stat-card">
+        <div class="stat-val" id="stat-sessions">0</div>
+        <div class="stat-lbl">Sessions</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val" id="stat-topics">0</div>
+        <div class="stat-lbl">Topics Mastered</div>
+      </div>
+    </div>
+
+    <!-- EXPLAINER -->
+    <div class="explainer fade-up">
+      <div class="explainer-title">About These Streaks</div>
+      <div class="explainer-body">
+        <p><strong>Weekly Streak</strong> counts the number of weeks in a row you completed your expedition session.</p>
+        <p><strong>Prayer Streak</strong> counts how many days in a row you prayed Morning or Evening prayer. Even one prayer keeps the streak going.</p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<nav class="bottom-nav" id="bottom-nav" style="display:none;">
+  <a class="nav-item" href="home.html">
+    <span class="nav-mark">✦</span>
+    <span class="nav-label">Home</span>
+  </a>
+  <a class="nav-item" href="missions.html">
+    <span class="nav-mark">☩</span>
+    <span class="nav-label">Missions</span>
+  </a>
+  <a class="nav-item" href="curriculum.html">
+    <span class="nav-mark">⊕</span>
+    <span class="nav-label">Topics</span>
+  </a>
+  <a class="nav-item" href="bible-reader.html">
+    <span class="nav-mark">☦</span>
+    <span class="nav-label">Holy Scriptures</span>
+  </a>
+  <a class="nav-item" href="journal.html">
+    <span class="nav-mark">✎</span>
+    <span class="nav-label">Field Manual</span>
+  </a>
+</nav>
+
+<script>
+const SUPABASE_URL = 'https://ksfnsryfmkafwirzgjoe.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtzZm5zcnlmbWthZndpcnpnam9lIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2ODM4MTcsImV4cCI6MjA5MTI1OTgxN30.mHQty44WBnjQY8BJ8KbPk_pp-yTcOaifGxCZPUO4xpY';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+function showApp(){
+  document.getElementById('loading').style.display='none';
+  document.getElementById('app').style.display='block';
+  document.getElementById('bottom-nav').style.display='flex';
+}
+
+function renderWeeklyStreak(streak){
+  const dots = document.getElementById('streak-dots');
+  const numEl = document.getElementById('streak-num');
+  if(dots){
+    dots.innerHTML='';
+    for(let i=0;i<5;i++){
+      const d=document.createElement('div');
+      d.className='streak-dot'+(i<streak?' lit':'');
+      d.textContent=i<streak?'✦':'';
+      dots.appendChild(d);
+    }
+  }
+  if(numEl) numEl.textContent=streak;
+}
+
+function renderPrayerStreak(prayerMissions, missionComps){
+  let streak = 0;
+  if(prayerMissions.length){
+    const now = new Date();
+    for(let i=0; i<30; i++){
+      const d = new Date(now);
+      d.setDate(d.getDate()-i);
+      const key = d.toISOString().slice(0,10);
+      const hasAny = prayerMissions.some(m =>
+        missionComps.some(c=>c.mission_id===m.id && c.day_key===key)
+      );
+      if(hasAny) streak++;
+      else if(i>0) break;
+    }
+  }
+  const numEl = document.getElementById('prayer-num');
+  const dotsEl = document.getElementById('prayer-dots');
+  if(numEl) numEl.textContent = streak;
+  if(dotsEl){
+    dotsEl.innerHTML = '';
+    for(let i=0;i<5;i++){
+      const d = document.createElement('div');
+      d.className = 'streak-dot'+(i<Math.min(streak,5)?' lit':'');
+      d.textContent = i<Math.min(streak,5)?'☩':'';
+      dotsEl.appendChild(d);
+    }
+  }
+}
+
+async function loadData(userId){
+  const [profileRes, missionsRes, missionCompRes] = await Promise.all([
+    sb.from('profiles').select('*').eq('id',userId).single(),
+    sb.from('missions').select('*').eq('is_active',true).eq('type','daily'),
+    sb.from('mission_completions').select('mission_id,day_key,week_key').eq('explorer_id',userId),
+  ]);
+
+  const profile = profileRes.data;
+  const missions = missionsRes.data || [];
+  const missionComps = missionCompRes.data || [];
+
+  if(!profile){
+    window.location.href='home.html';
+    return;
+  }
+
+  // Title
+  const name = profile.name || profile.username || 'Explorer';
+  document.getElementById('page-title').textContent = name;
+
+  // Stats
+  document.getElementById('stat-coins').textContent     = (profile.coins||0).toLocaleString();
+  document.getElementById('stat-lifetime').textContent  = (profile.lifetime_coins||0).toLocaleString();
+  document.getElementById('stat-sessions').textContent  = (profile.sessions_attended||0);
+  document.getElementById('stat-topics').textContent    = (profile.topics_mastered||0);
+
+  // Streaks
+  renderWeeklyStreak(profile.streak||0);
+
+  const prayerMissions = missions.filter(m =>
+    m.name.toLowerCase().includes('prayer') || m.name.toLowerCase().includes('pray')
+  );
+  renderPrayerStreak(prayerMissions, missionComps);
+}
+
+// ── INIT ──────────────────────────────────────────────────────
+(async()=>{
+  try {
+    const timer = new Promise(r => setTimeout(() => r(null), 4000));
+    const res = await Promise.race([sb.auth.getSession(), timer]);
+    const session = res?.data?.session ?? null;
+    if(!session){ window.location.href='index.html'; return; }
+    const {data:prof} = await sb.from('profiles').select('role').eq('id',session.user.id).single();
+    const isAdminView = new URLSearchParams(window.location.search).get('admin')==='1';
+    if(prof && ['superuser','admin','parent'].includes(prof.role) && !isAdminView){
+      // Parents/admins land on their own dashboards; keep parity with home.html
+      window.location.href = prof.role==='parent' ? 'parent.html' : 'admin.html';
+      return;
+    }
+    await loadData(session.user.id);
+    showApp();
+  } catch(e) {
+    console.error('Progress error:', e);
+    window.location.href='index.html';
+  }
+})();
+
+// Preserve ?admin=1 across nav links if present
+(function(){
+  if(new URLSearchParams(window.location.search).get('admin')==='1'){
+    document.querySelectorAll('.nav-item, .back-btn').forEach(a=>{
+      if(a.href && !a.href.includes('?admin=1') && !a.href.includes('index.html')){
+        a.href = a.href + '?admin=1';
+      }
+    });
+  }
+})();
+</script>
+
+<script>
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('sw.js').catch(()=>{});
+  });
+}
+</script>
+</body>
+</html>

@@ -8,7 +8,8 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Expedition">
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<link rel="stylesheet" href="css/viewport.css">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Training Grounds — The Orthodox Expedition</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -40,7 +41,7 @@ body::before{
 .loading-mark{font-family:'Cinzel',serif;font-size:2rem;color:rgba(201,146,42,0.4);animation:pulse 1.5s ease-in-out infinite;}
 @keyframes pulse{0%,100%{opacity:0.3;}50%{opacity:0.8;}}
 #app{display:none;position:relative;z-index:1;}
-.page{max-width:480px;margin:0 auto;padding:1.25rem 1rem calc(var(--nav-h) + 1.5rem);}
+.page{max-width:var(--container-max-width);margin:0 auto;padding:1.25rem 1rem calc(var(--nav-h) + 1.5rem);}
 .app-header{text-align:center;padding:1.25rem 1rem 1rem;border-bottom:1px solid rgba(201,146,42,0.18);margin-bottom:1.25rem;}
 .app-name{font-family:'Cinzel Decorative',serif;font-size:clamp(0.9rem,3.2vw,1.1rem);color:var(--gold-light);letter-spacing:0.06em;text-shadow:0 0 20px rgba(201,146,42,0.35);}
 .app-divider{color:rgba(201,146,42,0.35);letter-spacing:0.6rem;font-size:0.65rem;margin-top:0.3rem;}

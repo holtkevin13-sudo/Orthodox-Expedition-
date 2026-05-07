@@ -20,6 +20,10 @@ function showAdminBar(){
 }
 
 // ── TODAY CARD ────────────────────────────────────────────────
+// B1.a — session item is built FIRST (visual hero); daily missions follow underneath.
+// ADHD-first: ONE clear next action above the smaller recurring practices.
+// Note: this is the hoisting-loser duplicate of the live function further down.
+// Both copies kept in lockstep so future edits surface mismatches immediately.
 function renderTodayCard(mastery, completed, topics, allSessions, missions, missionComps, today, progressRows){
   const container = document.getElementById('today-items');
   if(!container) return;
@@ -28,14 +32,7 @@ function renderTodayCard(mastery, completed, topics, allSessions, missions, miss
 
   const items = [];
 
-  // 1. Daily prayer missions
-  const dailyMissions = missions.filter(m=>m.type==='daily');
-  dailyMissions.forEach(m=>{
-    const done = missionComps.some(c=>c.mission_id===m.id && c.day_key===today);
-    items.push({text: m.name, coins: m.coins, done, link:'missions.html'});
-  });
-
-  // 2. Current session — use parseInt to avoid type mismatch
+  // 1. Current session (HERO) — use parseInt to avoid type mismatch
   const activeMastery = mastery.find(m=>m.status==='available'||m.status==='pending');
   if(activeMastery && allSessions.length > 0){
     const activeTopicId = parseInt(activeMastery.topic_id);
@@ -78,6 +75,13 @@ function renderTodayCard(mastery, completed, topics, allSessions, missions, miss
       });
     }
   }
+
+  // 2. Daily practice missions (under the session, smaller recurring rhythm)
+  const dailyMissions = missions.filter(m=>m.type==='daily');
+  dailyMissions.forEach(m=>{
+    const done = missionComps.some(c=>c.mission_id===m.id && c.day_key===today);
+    items.push({text: m.name, coins: m.coins, done, link:'missions.html'});
+  });
 
   if(!items.length){
     container.innerHTML='<div style="font-size:0.8rem;color:rgba(201,146,42,0.35);font-style:italic;padding:0.25rem 0;">All done for today! ✦</div>';
@@ -582,13 +586,20 @@ body::before{
 .admin-bar.show ~ .page{padding-top:calc(2.5rem + 1.25rem);}
 
 /* ── TODAY CARD ──────────────────────────────────────────────── */
+/* B1.a — hero treatment: this card is the ONE clear next action above the fold.
+   Stronger border, fuller gradient, bigger eyebrow. Session item is the visual hero;
+   daily practice items follow below with reduced visual weight. */
 .today-card{
-  background:linear-gradient(135deg,rgba(44,22,84,0.5),rgba(107,26,26,0.4));
-  border:1px solid rgba(201,146,42,0.3);border-radius:14px;
-  padding:1rem 1.125rem;margin-bottom:0.875rem;
+  background:linear-gradient(135deg,rgba(44,22,84,0.6),rgba(107,26,26,0.5));
+  border:1.5px solid rgba(255,215,0,0.35);border-radius:16px;
+  padding:1.25rem 1.25rem 1rem;margin-bottom:1.125rem;
+  box-shadow:0 8px 28px rgba(0,0,0,0.4),inset 0 1px 0 rgba(255,215,0,0.08);
 }
-.today-eyebrow{font-family:'Cinzel',serif;font-size:0.62rem;letter-spacing:0.2em;
-  color:rgba(201,146,42,0.6);text-transform:uppercase;margin-bottom:0.625rem;}
+.today-eyebrow{
+  font-family:'Cinzel',serif;font-size:0.72rem;letter-spacing:0.22em;
+  color:rgba(255,215,0,0.75);text-transform:uppercase;margin-bottom:0.875rem;
+  text-shadow:0 0 10px rgba(255,215,0,0.2);
+}
 .today-item{
   display:flex;align-items:center;gap:0.625rem;
   padding:0.5rem 0;border-bottom:1px solid rgba(201,146,42,0.08);
@@ -603,43 +614,55 @@ body::before{
 .today-item.done .today-text{color:rgba(244,232,193,0.35);text-decoration:line-through;}
 .today-coins{font-family:'Cinzel',serif;font-size:0.62rem;color:rgba(201,146,42,0.45);flex-shrink:0;}
 
-/* Session-item enhanced treatment — stacks title + day-rail (Mon/Wed/Fri) */
+/* Session-item enhanced treatment — stacks title + day-rail (Mon/Wed/Fri).
+   B1.a: bigger, bolder, more space — this is the hero. */
 .today-item.today-session-item{
-  align-items:flex-start;padding:0.625rem 0.25rem 0.625rem 0;
-  border-radius:8px;transition:background 0.15s ease;cursor:pointer;
+  align-items:flex-start;padding:0.875rem 0.5rem 1rem 0;
+  border-radius:10px;transition:background 0.15s ease;cursor:pointer;
+  border-bottom:1px solid rgba(255,215,0,0.18);
+  margin-bottom:0.25rem;
 }
 .today-item.today-session-item:hover{background:rgba(255,215,0,0.04);}
 .today-item.today-session-item:active{background:rgba(255,215,0,0.08);}
-.today-item.today-session-item .today-check{margin-top:2px;}
-.today-session-body{flex:1;display:flex;flex-direction:column;gap:0.45rem;min-width:0;}
+.today-item.today-session-item .today-check{
+  margin-top:2px;width:24px;height:24px;font-size:0.78rem;
+  border-color:rgba(255,215,0,0.5);color:rgba(255,215,0,0.85);
+}
+.today-session-body{flex:1;display:flex;flex-direction:column;gap:0.55rem;min-width:0;}
 .today-item.today-session-item .today-text{
-  font-size:0.78rem;color:rgba(244,232,193,0.95);font-weight:600;line-height:1.3;
+  font-size:0.92rem;color:rgba(255,235,180,1);font-weight:700;line-height:1.3;
+  letter-spacing:0.02em;
+}
+.today-item.today-session-item .today-coins{
+  font-size:0.7rem;color:rgba(255,215,0,0.7);
 }
 .today-session-chevron{
-  font-family:'Cinzel',serif;font-size:0.85rem;color:rgba(255,215,0,0.55);
+  font-family:'Cinzel',serif;font-size:1.05rem;color:rgba(255,215,0,0.7);
   flex-shrink:0;align-self:center;padding-left:0.25rem;
 }
+/* The first daily-mission item directly after a hero session item gets a tiny
+   eyebrow above it, set via CSS counter-style label, to soften the transition. */
 .day-rail-mini{
-  display:flex;align-items:center;gap:0.45rem;flex-wrap:wrap;
+  display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;
 }
-.day-rail-mini .day-pair{display:flex;align-items:center;gap:0.25rem;}
+.day-rail-mini .day-pair{display:flex;align-items:center;gap:0.3rem;}
 .day-rail-mini .day-dot{
   display:inline-flex;align-items:center;justify-content:center;
-  width:14px;height:14px;border-radius:50%;
-  font-size:0.55rem;font-weight:700;line-height:1;flex-shrink:0;
-  background:transparent;border:1.5px solid rgba(201,146,42,0.25);
+  width:16px;height:16px;border-radius:50%;
+  font-size:0.6rem;font-weight:700;line-height:1;flex-shrink:0;
+  background:transparent;border:1.5px solid rgba(201,146,42,0.3);
   color:transparent;
 }
 .day-rail-mini .day-dot.done{
   background:#ffd700;border-color:#ffd700;color:#0e0800;
-  box-shadow:0 0 6px rgba(255,215,0,0.35);
+  box-shadow:0 0 8px rgba(255,215,0,0.4);
 }
 .day-rail-mini .day-dot.today{
-  background:rgba(244,232,193,0.92);border-color:rgba(255,215,0,0.55);
+  background:rgba(244,232,193,0.92);border-color:rgba(255,215,0,0.6);
 }
 .day-rail-mini .day-dot-label{
-  font-family:'Cinzel',serif;font-size:0.55rem;letter-spacing:0.14em;
-  color:rgba(201,146,42,0.55);text-transform:uppercase;
+  font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.14em;
+  color:rgba(201,146,42,0.65);text-transform:uppercase;
 }
 .today-item.today-session-item.complete .day-rail-mini .day-dot.future{
   border-color:rgba(201,146,42,0.18);
@@ -887,9 +910,18 @@ body::before{
       <div class="app-divider">✦ ☩ ✦</div>
     </header>
 
-    <!-- JOURNAL LAUNCH -->
-    <div style="display:flex;justify-content:flex-end;padding:0.5rem 0 0.25rem;">
-      <a href="journal.html" target="_blank" 
+    <!-- CHIP ROW: Field Manual + Progress -->
+    <div style="display:flex;justify-content:flex-end;align-items:center;gap:0.5rem;padding:0.5rem 0 0.25rem;">
+      <a href="progress.html"
+         style="display:flex;align-items:center;gap:0.375rem;padding:0.35rem 0.875rem;
+         background:rgba(201,146,42,0.08);border:1px solid rgba(201,146,42,0.2);
+         border-radius:20px;text-decoration:none;transition:all 0.2s;"
+         onmouseenter="this.style.background='rgba(201,146,42,0.15)'"
+         onmouseleave="this.style.background='rgba(201,146,42,0.08)'">
+        <span style="font-size:0.85rem;">✦</span>
+        <span style="font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.12em;color:rgba(201,146,42,0.6);text-transform:uppercase;">Progress</span>
+      </a>
+      <a href="journal.html" target="_blank"
          style="display:flex;align-items:center;gap:0.375rem;padding:0.35rem 0.875rem;
          background:rgba(201,146,42,0.08);border:1px solid rgba(201,146,42,0.2);
          border-radius:20px;text-decoration:none;transition:all 0.2s;"
@@ -905,6 +937,12 @@ body::before{
       <div class="announcement-label">☩ Message from the Expedition</div>
       <div class="announcement-text" id="announcement-text"></div>
       <button class="announcement-dismiss" onclick="dismissAnnouncement()">✕</button>
+    </div>
+
+    <!-- TODAY CARD — HERO (B1.a, ADHD-first: ONE clear next action above the fold) -->
+    <div class="today-card fade-up" id="today-card">
+      <div class="today-eyebrow">✦ Today's Expedition</div>
+      <div class="today-items" id="today-items"></div>
     </div>
 
     <!-- RANK HERO -->
@@ -995,40 +1033,7 @@ body::before{
       </div>
     </div>
 
-    <!-- TODAY CARD -->
-    <div class="today-card fade-up" id="today-card">
-      <div class="today-eyebrow">✦ Today's Expedition</div>
-      <div class="today-items" id="today-items"></div>
-    </div>
-
-    <!-- DUAL STREAK -->
-    <div class="dual-streak-row fade-up">
-      <div class="streak-card-half">
-        <div class="streak-icon">🔥</div>
-        <div class="streak-center">
-          <div class="streak-title">Weekly Streak</div>
-          <div class="streak-dots" id="streak-dots"></div>
-        </div>
-        <div class="streak-right">
-          <div class="streak-num" id="streak-num">0</div>
-          <div class="streak-sub">Weeks</div>
-        </div>
-      </div>
-      <div class="streak-card-half">
-        <div class="streak-icon">☩</div>
-        <div class="streak-center">
-          <div class="streak-title">Prayer Streak</div>
-          <div class="streak-dots" id="prayer-dots"></div>
-        </div>
-        <div class="streak-right">
-          <div class="streak-num" id="prayer-num">0</div>
-          <div class="streak-sub">Days</div>
-        </div>
-      </div>
-    </div>
-
-
-    <!-- DESTINATION CARDS — Bazaar & Games -->
+    <!-- DESTINATION CARDS — Bazaar & Games (demoted below the fold per B1.a) -->
     <div class="destination-row fade-up">
       <a class="dest-card dest-card-bazaar" href="bazaar.html" id="home-bazaar-card">
         <span class="dest-card-icon">◈</span>
@@ -1189,7 +1194,13 @@ async function loadData(userId){
 
   const mastery       = masteryRes.data || [];
   const progressRows  = sessionsRes.data || [];
-  const completed     = progressRows.map(s=>s.session_id);
+  // B1.c — "completed" means FULLY complete: all three M/W/F days done.
+  // A bare session_progress row (legacy single-day model) does NOT count as complete.
+  // This semantic is shared by renderTodayCard (next-session lookup) and renderCurrentTopic
+  // (topic progress count + next-session label). checkNotifications ignores the param.
+  const completed     = progressRows
+    .filter(s => s.day_1_completed_at && s.day_2_completed_at && s.day_3_completed_at)
+    .map(s => s.session_id);
   const topics        = topicsRes.data || [];
   const missions      = missionsRes.data || [];
   const missionComps  = missionCompRes.data || [];
@@ -1293,15 +1304,20 @@ function setReq(key, current, required, alreadyMet){
 }
 
 function renderStreak(streak){
+  // B1.a — streak UI lives on progress.html; home.html intentionally has no streak elements.
+  // Null-safe so this no-ops on home.html and works on progress.html.
   const dots = document.getElementById('streak-dots');
-  dots.innerHTML='';
-  for(let i=0;i<5;i++){
-    const d=document.createElement('div');
-    d.className='streak-dot'+(i<streak?' lit':'');
-    d.textContent=i<streak?'✦':'';
-    dots.appendChild(d);
+  const numEl = document.getElementById('streak-num');
+  if(dots){
+    dots.innerHTML='';
+    for(let i=0;i<5;i++){
+      const d=document.createElement('div');
+      d.className='streak-dot'+(i<streak?' lit':'');
+      d.textContent=i<streak?'✦':'';
+      dots.appendChild(d);
+    }
   }
-  document.getElementById('streak-num').textContent=streak;
+  if(numEl) numEl.textContent=streak;
 }
 
 function renderCurrentTopic(mastery, completed, topics){
@@ -1450,6 +1466,10 @@ function showAdminBar(){
 })();
 
 // ── TODAY CARD ────────────────────────────────────────────────
+// B1.a — session item is built FIRST (visual hero); daily missions follow underneath.
+// ADHD-first: ONE clear next action above the smaller recurring practices.
+// JS hoisting: this is the live copy that wins. The earlier identical copy is kept
+// in lockstep so future edits surface mismatches immediately.
 function renderTodayCard(mastery, completed, topics, allSessions, missions, missionComps, today, progressRows){
   const container = document.getElementById('today-items');
   if(!container) return;
@@ -1458,14 +1478,7 @@ function renderTodayCard(mastery, completed, topics, allSessions, missions, miss
 
   const items = [];
 
-  // 1. Daily prayer missions
-  const dailyMissions = missions.filter(m=>m.type==='daily');
-  dailyMissions.forEach(m=>{
-    const done = missionComps.some(c=>c.mission_id===m.id && c.day_key===today);
-    items.push({text: m.name, coins: m.coins, done, link:'missions.html'});
-  });
-
-  // 2. Current session — use parseInt to avoid type mismatch
+  // 1. Current session (HERO) — use parseInt to avoid type mismatch
   const activeMastery = mastery.find(m=>m.status==='available'||m.status==='pending');
   if(activeMastery && allSessions.length > 0){
     const activeTopicId = parseInt(activeMastery.topic_id);
@@ -1508,6 +1521,13 @@ function renderTodayCard(mastery, completed, topics, allSessions, missions, miss
       });
     }
   }
+
+  // 2. Daily practice missions (under the session, smaller recurring rhythm)
+  const dailyMissions = missions.filter(m=>m.type==='daily');
+  dailyMissions.forEach(m=>{
+    const done = missionComps.some(c=>c.mission_id===m.id && c.day_key===today);
+    items.push({text: m.name, coins: m.coins, done, link:'missions.html'});
+  });
 
   if(!items.length){
     container.innerHTML='<div style="font-size:0.8rem;color:rgba(201,146,42,0.35);font-style:italic;padding:0.25rem 0;">All done for today! ✦</div>';

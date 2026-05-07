@@ -9,7 +9,8 @@
   <meta name="apple-mobile-web-app-title" content="Expedition">
 
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<link rel="stylesheet" href="css/viewport.css">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>The Orthodox Expedition</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -248,7 +249,7 @@ body::before{
 
 /* ── MAIN APP ──────────────────────────────────────────────── */
 #app{display:none;position:relative;z-index:1;}
-.page{max-width:480px;margin:0 auto;padding:1.25rem 1rem calc(var(--nav-h) + 1.5rem);}
+.page{max-width:var(--container-max-width);margin:0 auto;padding:1.25rem 1rem calc(var(--nav-h) + 1.5rem);}
 
 /* ── APP HEADER ────────────────────────────────────────────── */
 .app-header{

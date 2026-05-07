@@ -439,6 +439,90 @@ body{
   border-radius:2px 0 0 2px;
 }
 
+/* ── ADMIN VIEW (parent/superuser reading explorer's journal) ── */
+.admin-view-banner{
+  display:none;
+  margin:1.25rem 1.25rem 0.5rem 1.75rem;
+  padding:1.1rem 1.25rem 1rem;
+  background:linear-gradient(160deg, rgba(244,232,193,0.18), rgba(232,213,160,0.10));
+  border:1.5px solid rgba(201,146,42,0.55);
+  border-radius:14px;
+  text-align:center;
+  box-shadow:inset 0 0 0 1px rgba(244,232,193,0.06);
+}
+.admin-view-banner .av-eyebrow{
+  font-family:'Cinzel',serif;
+  font-size:0.62rem;
+  letter-spacing:0.32em;
+  color:rgba(201,146,42,0.85);
+  text-transform:uppercase;
+  margin-bottom:0.45rem;
+}
+.admin-view-banner .av-title{
+  font-family:'Cinzel Decorative',serif;
+  font-size:1.15rem;
+  color:#6b1a1a;
+  letter-spacing:0.02em;
+  margin-bottom:0.35rem;
+}
+.admin-view-banner .av-readonly{
+  font-family:'Crimson Text',serif;
+  font-style:italic;
+  font-size:0.88rem;
+  color:rgba(61,31,8,0.72);
+}
+.admin-view-banner .av-marks{
+  color:var(--gold);
+  letter-spacing:0.4em;
+  margin:0 0.35rem;
+}
+.admin-explorer-selector{
+  display:none;
+  margin:0.85rem 1.25rem 0 1.75rem;
+  text-align:center;
+}
+.admin-explorer-selector label{
+  font-family:'Cinzel',serif;
+  font-size:0.7rem;
+  letter-spacing:0.2em;
+  color:rgba(61,31,8,0.7);
+  text-transform:uppercase;
+  margin-right:0.6rem;
+}
+.admin-explorer-selector select{
+  font-family:'Crimson Text',serif;
+  font-size:1rem;
+  color:var(--ink);
+  background:var(--parchment);
+  border:1.5px solid rgba(201,146,42,0.5);
+  border-radius:8px;
+  padding:0.4rem 0.7rem;
+  cursor:pointer;
+}
+.admin-empty-family{
+  display:none;
+  margin:1.5rem 1.25rem 1rem 1.75rem;
+  padding:1.5rem;
+  background:rgba(244,232,193,0.06);
+  border:1px dashed rgba(201,146,42,0.4);
+  border-radius:12px;
+  text-align:center;
+  color:rgba(61,31,8,0.7);
+  font-family:'Crimson Text',serif;
+  font-style:italic;
+}
+
+/* In admin view, journal-cover, writing UI, and coming-home banner are all hidden via .admin-view-active class on body */
+body.admin-view-active #journal-cover,
+body.admin-view-active .entry-section,
+body.admin-view-active #coming-home-banner{
+  display:none !important;
+}
+/* In admin view, also hide per-entry delete buttons */
+body.admin-view-active .entry-delete{
+  display:none !important;
+}
+
 </style>
 </head>
 <body>
@@ -487,6 +571,24 @@ body{
       </div>
       <button class="close-btn" onclick="if(document.referrer && window.history.length>1){window.history.back();}else{window.location.href='home.html';}">✕ Close</button>
     </div>
+  </div>
+
+  <!-- ADMIN VIEW BANNER (parent/admin reading an explorer's journal; shown only when ?admin=1 + role check pass) -->
+  <div class="admin-view-banner" id="admin-view-banner">
+    <div class="av-eyebrow">Parent View</div>
+    <div class="av-title"><span class="av-marks">✦</span>Viewing <span id="admin-view-name">Explorer</span>'s Field Manual<span class="av-marks">✦</span></div>
+    <div class="av-readonly">Read-only · Their reflections, their voice</div>
+  </div>
+
+  <!-- ADMIN EXPLORER SELECTOR (shown only when family has multiple explorers) -->
+  <div class="admin-explorer-selector" id="admin-explorer-selector">
+    <label for="admin-explorer-select">Reading:</label>
+    <select id="admin-explorer-select" onchange="onAdminExplorerChange(this.value)"></select>
+  </div>
+
+  <!-- ADMIN EMPTY-FAMILY STATE (shown when no explorers exist in family) -->
+  <div class="admin-empty-family" id="admin-empty-family">
+    No explorers in this family yet. When children are added, their field manuals will appear here.
   </div>
 
   <!-- NEW ENTRY -->
@@ -547,7 +649,7 @@ body{
   <!-- PAST ENTRIES -->
   <div class="entries-section">
     <div class="entries-header">
-      <div class="entries-title">Your Field Manual</div>
+      <div class="entries-title" id="entries-title">Your Field Manual</div>
       <div class="filter-row">
         <button class="filter-btn active" onclick="filterEntries('all',this)">All</button>
         <button class="filter-btn" onclick="filterEntries('discovery',this)">Discoveries</button>
@@ -569,6 +671,16 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 let profile     = null;
 let allEntries  = [];
 let currentFilter = 'all';
+
+// Admin view: when ?admin=1 AND role∈{superuser,admin,parent}, the page
+// shifts into a read-only mode that loads a child's entries instead of
+// the current user's. viewingExplorerId is the source of truth for
+// loadEntries(); in normal flow it equals profile.id, in admin view it
+// points at the selected family explorer.
+let isAdminView        = false;
+let viewingExplorerId  = null;
+let viewingExplorerName = '';
+let familyExplorers    = [];
 
 let selectedCategory  = 'field_note';
 let selectedToolType  = 'pen';
@@ -669,24 +781,42 @@ const STAMPS = ['☩','✦','⊕','◈','⚔','🗺','📜','🏺','🔍','⭐',
     const coverName = document.getElementById('cover-explorer-name');
     if(coverName) coverName.textContent = prof.name || 'Explorer';
 
+    // ── ADMIN VIEW DETECTION ────────────────────────────────────
+    // Parents/admins/superusers landing here with ?admin=1 read an
+    // explorer's journal in read-only mode. Default = own journal.
+    const params = new URLSearchParams(window.location.search);
+    const wantAdminView = params.get('admin') === '1';
+    const isParentRole  = ['superuser','admin','parent'].includes(prof.role);
+
+    if (wantAdminView && isParentRole) {
+      await enterAdminView();
+    } else {
+      // Normal explorer flow — read your own entries.
+      viewingExplorerId   = prof.id;
+      viewingExplorerName = prof.name || 'Explorer';
+    }
+
     buildUI();
     await loadEntries();
 
     document.getElementById('loading').style.display='none';
     document.getElementById('app').style.display='block';
 
-    // Show leather cover animation — once per session
-    const coverSeen = sessionStorage.getItem('journal-cover-seen');
-    if(!coverSeen){
-      sessionStorage.setItem('journal-cover-seen','1');
-      const coverEl = document.getElementById('journal-cover');
-      if(coverEl){
-        coverEl.classList.add('active');
-        // Hold, then lift cover away
-        setTimeout(()=>{
-          coverEl.classList.add('opening');
-          setTimeout(()=>{ coverEl.style.display='none'; }, 950);
-        }, 1800);
+    // Show leather cover animation — once per session.
+    // Skip the cover ritual entirely in admin view (it's a Nolan-experience element).
+    if (!isAdminView) {
+      const coverSeen = sessionStorage.getItem('journal-cover-seen');
+      if(!coverSeen){
+        sessionStorage.setItem('journal-cover-seen','1');
+        const coverEl = document.getElementById('journal-cover');
+        if(coverEl){
+          coverEl.classList.add('active');
+          // Hold, then lift cover away
+          setTimeout(()=>{
+            coverEl.classList.add('opening');
+            setTimeout(()=>{ coverEl.style.display='none'; }, 950);
+          }, 1800);
+        }
       }
     }
   } catch(e){
@@ -694,6 +824,98 @@ const STAMPS = ['☩','✦','⊕','◈','⚔','🗺','📜','🏺','🔍','⭐',
     window.location.href='index.html';
   }
 })();
+
+// ── ADMIN VIEW HELPERS ────────────────────────────────────────
+// Called when a parent/admin/superuser arrives with ?admin=1.
+// Loads the family's explorer profiles, picks one (auto for single-child
+// families, dropdown for multi-child), wires the read-only banner, and
+// sets viewingExplorerId so loadEntries() pulls that child's entries
+// instead of the current user's.
+async function enterAdminView(){
+  isAdminView = true;
+  document.body.classList.add('admin-view-active');
+
+  // Pull explorers in this family. RLS: superuser/admin/parent roles
+  // can read field_journal across the platform per the
+  // explorer_own_journal policy; the family-scope filter happens here
+  // at the query layer for correctness, not security.
+  const { data: explorers, error } = await sb.from('profiles')
+    .select('id, name')
+    .eq('family_id', profile.family_id)
+    .eq('role', 'explorer')
+    .order('name', { ascending: true });
+
+  if (error) {
+    console.error('Failed to load family explorers:', error);
+  }
+
+  familyExplorers = explorers || [];
+
+  if (familyExplorers.length === 0) {
+    // No children in this family — show empty-family state, suppress banner.
+    const empty = document.getElementById('admin-empty-family');
+    if (empty) empty.style.display = 'block';
+    viewingExplorerId   = null;
+    viewingExplorerName = '';
+    return;
+  }
+
+  // Auto-select first explorer; dropdown lets parent switch in multi-child families.
+  viewingExplorerId   = familyExplorers[0].id;
+  viewingExplorerName = familyExplorers[0].name || 'Explorer';
+
+  // Show banner with the explorer's name
+  const banner = document.getElementById('admin-view-banner');
+  const nameEl = document.getElementById('admin-view-name');
+  if (nameEl) nameEl.textContent = viewingExplorerName;
+  if (banner) banner.style.display = 'block';
+
+  // If multiple explorers, populate and show the selector dropdown
+  if (familyExplorers.length > 1) {
+    const select = document.getElementById('admin-explorer-select');
+    const wrap   = document.getElementById('admin-explorer-selector');
+    if (select && wrap) {
+      select.innerHTML = '';
+      familyExplorers.forEach(ex => {
+        const opt = document.createElement('option');
+        opt.value = ex.id;
+        opt.textContent = ex.name || 'Explorer';
+        select.appendChild(opt);
+      });
+      select.value = viewingExplorerId;
+      wrap.style.display = 'block';
+    }
+  }
+
+  // Repurpose the header sub-line: "Orthodox Expedition · Viewing Nolan"
+  const explorerNameEl = document.getElementById('explorer-name');
+  if (explorerNameEl) explorerNameEl.textContent = `Viewing ${viewingExplorerName}`;
+
+  // Update the past-entries title from "Your Field Manual" to "[Name]'s Field Manual"
+  const entriesTitleEl = document.getElementById('entries-title');
+  if (entriesTitleEl) entriesTitleEl.textContent = `${viewingExplorerName}'s Field Manual`;
+}
+
+// Switch which child's entries we're viewing (multi-child families)
+async function onAdminExplorerChange(newId){
+  if (!newId || newId === viewingExplorerId) return;
+  const found = familyExplorers.find(e => e.id === newId);
+  if (!found) return;
+
+  viewingExplorerId   = found.id;
+  viewingExplorerName = found.name || 'Explorer';
+
+  const nameEl = document.getElementById('admin-view-name');
+  if (nameEl) nameEl.textContent = viewingExplorerName;
+
+  const explorerNameEl = document.getElementById('explorer-name');
+  if (explorerNameEl) explorerNameEl.textContent = `Viewing ${viewingExplorerName}`;
+
+  const entriesTitleEl = document.getElementById('entries-title');
+  if (entriesTitleEl) entriesTitleEl.textContent = `${viewingExplorerName}'s Field Manual`;
+
+  await loadEntries();
+}
 
 // ── BUILD UI ──────────────────────────────────────────────────
 function buildUI(){
@@ -921,6 +1143,10 @@ function updatePreview(){
 
 // ── SAVE ENTRY ────────────────────────────────────────────────
 async function saveEntry(){
+  // Defense-in-depth: the entire writing UI is hidden in admin view via
+  // CSS, so saveEntry shouldn't be reachable. If something invokes it
+  // anyway, we no-op rather than risk creating a stray entry.
+  if (isAdminView) return;
   const text = document.getElementById('entry-text').value.trim();
   const fb   = document.getElementById('entry-feedback');
   if(!text){ fb.textContent='Write something first!'; return; }
@@ -953,11 +1179,20 @@ async function saveEntry(){
 }
 
 // ── LOAD ENTRIES ──────────────────────────────────────────────
+// Reads the field_journal for whichever explorer is currently being
+// viewed. In normal flow viewingExplorerId === profile.id (own
+// entries); in admin view it points at the selected family explorer.
 async function loadEntries(){
   if(!profile) return;
+  if(!viewingExplorerId){
+    // Admin view with no children in family — render an empty state in the entries list too.
+    allEntries = [];
+    renderEntries();
+    return;
+  }
   const {data,error} = await sb.from('field_journal')
     .select('*')
-    .eq('explorer_id', profile.id)
+    .eq('explorer_id', viewingExplorerId)
     .order('created_at',{ascending:false});
   if(error){ console.error(error); return; }
   allEntries = data || [];
@@ -977,9 +1212,17 @@ function renderEntries(){
   if(currentFilter !== 'all') entries = entries.filter(e=>e.category===currentFilter);
 
   if(!entries.length){
-    const msg = currentFilter==='all'
-      ? 'Your field journal awaits. Write your first entry above!'
-      : 'No entries in this category yet.';
+    let msg;
+    if (isAdminView) {
+      const who = viewingExplorerName || 'This explorer';
+      msg = currentFilter === 'all'
+        ? `${who} hasn't written any entries yet.`
+        : `${who} has no entries in this category yet.`;
+    } else {
+      msg = currentFilter==='all'
+        ? 'Your field journal awaits. Write your first entry above!'
+        : 'No entries in this category yet.';
+    }
     el.innerHTML=`<div class="empty-journal"><div class="empty-journal-icon">📜</div>${msg}</div>`;
     return;
   }
@@ -1016,6 +1259,9 @@ function renderEntries(){
 
 // ── DELETE ENTRY ──────────────────────────────────────────────
 async function deleteEntry(id){
+  // Defense-in-depth: delete buttons are hidden in admin view via CSS;
+  // parents shouldn't be able to delete a child's reflections silently.
+  if (isAdminView) return;
   if(!confirm('Remove this entry from your journal?')) return;
   await sb.from('field_journal').delete().eq('id',id);
   await loadEntries();

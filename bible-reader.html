@@ -5,6 +5,7 @@
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0e0800">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Expedition">
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
@@ -1599,7 +1600,12 @@ async function loadBooks(){
     } catch (e) {
       // Network-failure fallback: render NT from local names so the books
       // view is always usable even if API.Bible is unreachable.
-      console.warn('NT book metadata fetch failed; falling back to local names.', e);
+      // NT book metadata fetch failed — this is non-fatal; the books view
+      // still renders correctly via the fallback below. Logged at debug
+      // level (suppressed by default; turn on Verbose in DevTools to see).
+      if (console && console.debug) {
+        console.debug('[bible-reader] NT book metadata fetch failed; using local names.', e && e.message);
+      }
       allBooks.nt = NT_BOOKS.map(id => ({ id, name: getBookName(id) }));
     }
     renderBooks();

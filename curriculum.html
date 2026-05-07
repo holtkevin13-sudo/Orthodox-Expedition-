@@ -2,37 +2,29 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-  <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#c9922a">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Expedition">
-  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#c9922a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Expedition">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Topics — The Orthodox Expedition</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
-function showAdminBar(){
-  const bar = document.getElementById('admin-bar');
-  if(bar) bar.classList.add('show');
-}
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-function showParentBar(){
-  const bar = document.getElementById('parent-bar');
-  if(bar) bar.classList.add('show');
-}
-</script>
 <style>
+/* ── PALETTE TOKENS ────────────────────────────────────────── */
 :root{
   --gold:#c9922a;--gold-light:#f0c96e;--gold-bright:#ffd700;
-  --parchment:#f4e8c1;--parchment-dark:#e8d5a0;--parchment-deeper:#d4b870;
-  --ink:#1a0f00;--ink-light:#3d2b1f;
-  --burgundy:#6b1a1a;--byzantine:#2c1654;--byzantine-light:#4a2a7a;
-  --green:#16a34a;--green-light:#22c55e;
-  --scripture:#1a3a5c;--scripture-light:#2a5a9c;
-  --shadow:rgba(26,15,0,0.5);
-  --bg:#0e0800;--nav-h:72px;
+  --parchment:#f4e8c1;--parchment-dark:#e8d5a0;
+  --ink:#1a0f00;
+  --burgundy:#6b1a1a;
+  --byzantine:#2c1654;
+  --bg:#0e0800;
+  --nav-h:72px;
 }
+
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 html,body{min-height:100%;overflow-x:hidden;}
 body{
@@ -41,7 +33,7 @@ body{
   background-image:
     radial-gradient(ellipse at 50% 0%,rgba(107,26,26,0.45) 0%,transparent 55%),
     radial-gradient(ellipse at 100% 100%,rgba(44,22,84,0.3) 0%,transparent 50%);
-  min-height:100vh;
+  min-height:100vh;color:var(--parchment);
 }
 body::before{
   content:'';position:fixed;inset:0;
@@ -51,324 +43,269 @@ body::before{
   background-size:44px 44px;pointer-events:none;z-index:0;
 }
 
-/* ── COIN RAIN ─────────────────────────────────────────────── */
-#coin-rain{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999;overflow:hidden;}
-.coin-p{position:absolute;top:-60px;font-size:1.5rem;animation:coinFall linear forwards;}
-@keyframes coinFall{0%{transform:translateY(0) rotate(0deg);opacity:1;}85%{opacity:1;}100%{transform:translateY(110vh) rotate(540deg) scale(0.4);opacity:0;}}
-
 /* ── LOADING ───────────────────────────────────────────────── */
-#loading{position:fixed;inset:0;z-index:400;display:flex;align-items:center;justify-content:center;background:var(--bg);}
-.loading-mark{font-family:'Cinzel',serif;font-size:2rem;color:rgba(201,146,42,0.4);animation:pulse 1.5s ease-in-out infinite;}
+#loading{
+  position:fixed;inset:0;z-index:400;
+  display:flex;align-items:center;justify-content:center;
+  background:var(--bg);transition:opacity 0.4s;
+}
+.loading-cross{
+  font-family:'Cinzel',serif;font-size:2rem;color:rgba(201,146,42,0.4);
+  animation:pulse 1.5s ease-in-out infinite;
+}
 @keyframes pulse{0%,100%{opacity:0.3;}50%{opacity:0.8;}}
 
 /* ── APP ───────────────────────────────────────────────────── */
 #app{display:none;position:relative;z-index:1;}
 .page{max-width:480px;margin:0 auto;padding:1.25rem 1rem calc(var(--nav-h) + 1.5rem);}
 
-/* ── HEADER ────────────────────────────────────────────────── */
-.app-header{text-align:center;padding:1.25rem 1rem 1rem;border-bottom:1px solid rgba(201,146,42,0.18);margin-bottom:1.25rem;}
-.app-name{font-family:'Cinzel Decorative',serif;font-size:clamp(0.9rem,3.2vw,1.1rem);color:var(--gold-light);letter-spacing:0.06em;text-shadow:0 0 20px rgba(201,146,42,0.35);}
-.app-divider{color:rgba(201,146,42,0.35);letter-spacing:0.6rem;font-size:0.65rem;margin-top:0.3rem;}
-
-/* ── JOURNEY STRIP ─────────────────────────────────────────── */
-.journey-strip{
-  background:rgba(244,232,193,0.03);
-  border:1px solid rgba(201,146,42,0.18);
-  border-radius:14px;padding:1rem 0.875rem;
-  margin-bottom:1.25rem;overflow:hidden;
+/* ── HEADER (matches progress.html / home.html pattern) ────── */
+.app-header{
+  text-align:center;padding:1.25rem 1rem 1rem;
+  border-bottom:1px solid rgba(201,146,42,0.18);
+  margin-bottom:1.25rem;position:relative;
 }
-.journey-title{font-family:'Cinzel',serif;font-size:0.62rem;letter-spacing:0.2em;color:rgba(201,146,42,0.45);text-transform:uppercase;margin-bottom:0.75rem;}
-.journey-track{
-  display:flex;align-items:center;
-  overflow-x:auto;-webkit-overflow-scrolling:touch;
-  padding:0.25rem 0 0.5rem;gap:0;
+.app-header-row{display:flex;align-items:center;justify-content:space-between;}
+.app-name{
+  font-family:'Cinzel Decorative',serif;
+  font-size:clamp(0.95rem,3.5vw,1.2rem);
+  color:var(--gold-light);letter-spacing:0.06em;
+  text-shadow:0 0 20px rgba(201,146,42,0.35);
+  flex:1;text-align:center;
 }
-.journey-track::-webkit-scrollbar{height:3px;}
-.journey-track::-webkit-scrollbar-thumb{background:rgba(201,146,42,0.2);border-radius:2px;}
-.journey-stop{
-  display:flex;flex-direction:column;align-items:center;
-  flex:0 0 auto;position:relative;
-  cursor:pointer;padding:0 0.25rem;
+.back-btn{
+  background:none;border:none;cursor:pointer;
+  color:rgba(201,146,42,0.5);font-size:0.85rem;
+  font-family:'Cinzel',serif;padding:0.25rem 0.5rem;
+  text-decoration:none;
 }
-.journey-stop-circle{
-  width:32px;height:32px;border-radius:50%;
-  display:flex;align-items:center;justify-content:center;
-  font-family:'Cinzel',serif;font-size:0.65rem;font-weight:700;
-  transition:all 0.4s;position:relative;z-index:1;
-  border:2px solid rgba(201,146,42,0.2);
-  background:rgba(255,255,255,0.03);
-  color:rgba(201,146,42,0.3);
-}
-.journey-stop.complete .journey-stop-circle{
-  background:linear-gradient(135deg,var(--gold),var(--gold-bright));
-  border-color:var(--gold-bright);color:var(--ink);
-  box-shadow:0 0 10px rgba(255,215,0,0.35);
-}
-.journey-stop.active .journey-stop-circle{
-  background:rgba(201,146,42,0.15);
-  border-color:var(--gold);color:var(--gold-light);
-  box-shadow:0 0 0 3px rgba(201,146,42,0.1);
-  animation:stopPulse 2s ease-in-out infinite;
-}
-.journey-stop.conclusion .journey-stop-circle{font-size:0.8rem;}
-@keyframes stopPulse{0%,100%{box-shadow:0 0 0 3px rgba(201,146,42,0.1);}50%{box-shadow:0 0 0 5px rgba(201,146,42,0.2);}}
-.journey-stop-label{
-  font-family:'Cinzel',serif;font-size:0.5rem;
-  color:rgba(201,146,42,0.3);margin-top:0.3rem;
-  text-align:center;white-space:nowrap;
-  max-width:36px;overflow:hidden;text-overflow:ellipsis;
-}
-.journey-stop.complete .journey-stop-label{color:rgba(201,146,42,0.6);}
-.journey-stop.active .journey-stop-label{color:var(--gold-light);}
-.journey-connector{
-  width:20px;height:2px;flex-shrink:0;
-  background:rgba(201,146,42,0.12);
-  transition:background 0.4s;
-}
-.journey-connector.lit{background:linear-gradient(90deg,var(--gold),rgba(201,146,42,0.4));}
-.journey-progress{
-  display:flex;justify-content:space-between;align-items:center;
-  margin-top:0.5rem;padding-top:0.5rem;
-  border-top:1px solid rgba(201,146,42,0.1);
-}
-.jp-text{font-family:'Cinzel',serif;font-size:0.6rem;color:rgba(201,146,42,0.4);}
-.jp-bar-wrap{flex:1;margin:0 0.75rem;}
-.jp-bar{height:4px;background:rgba(255,255,255,0.05);border-radius:2px;overflow:hidden;}
-.jp-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--gold),var(--gold-bright));transition:width 1s cubic-bezier(0.4,0,0.2,1);}
-
-/* ── TOPIC CARDS ───────────────────────────────────────────── */
-.topic-card{border-radius:16px;margin-bottom:0.875rem;overflow:hidden;transition:all 0.3s;}
-.topic-card.active-topic{
-  background:linear-gradient(160deg,rgba(44,22,84,0.95) 0%,rgba(18,8,40,0.98) 50%,rgba(107,26,26,0.95) 100%);
-  border:1px solid rgba(201,146,42,0.4);
-  box-shadow:0 8px 32px rgba(0,0,0,0.5),0 0 20px rgba(201,146,42,0.08);
-}
-.topic-card.locked{background:rgba(244,232,193,0.02);border:1px solid rgba(201,146,42,0.1);opacity:0.65;}
-.topic-card.complete{background:rgba(22,163,74,0.05);border:1px solid rgba(22,163,74,0.25);}
-.topic-card.available{background:rgba(244,232,193,0.03);border:1px solid rgba(201,146,42,0.2);}
-.topic-header{
-  display:flex;align-items:center;gap:0.875rem;
-  padding:1rem;cursor:pointer;
-  border:none;background:none;width:100%;text-align:left;
-}
-.topic-stop-num{font-family:'Cinzel Decorative',serif;font-size:1rem;flex-shrink:0;width:32px;text-align:center;color:rgba(201,146,42,0.4);transition:color 0.3s;}
-.topic-card.active-topic .topic-stop-num{color:var(--gold-bright);}
-.topic-card.complete .topic-stop-num{color:var(--green-light);}
-.topic-header-body{flex:1;min-width:0;}
-.topic-eyebrow{font-family:'Cinzel',serif;font-size:0.58rem;letter-spacing:0.18em;text-transform:uppercase;color:rgba(201,146,42,0.4);margin-bottom:0.2rem;}
-.topic-card.active-topic .topic-eyebrow{color:rgba(201,146,42,0.6);}
-.topic-name{font-family:'Cinzel',serif;font-size:0.88rem;font-weight:700;color:rgba(244,232,193,0.6);line-height:1.3;}
-.topic-card.active-topic .topic-name{color:var(--gold-light);}
-.topic-card.complete .topic-name{color:rgba(134,239,172,0.8);}
-.topic-progress-row{display:flex;align-items:center;gap:0.5rem;margin-top:0.3rem;}
-.topic-progress-bar{flex:1;height:4px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden;}
-.topic-progress-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--gold),var(--gold-bright));transition:width 0.8s cubic-bezier(0.4,0,0.2,1);}
-.topic-card.complete .topic-progress-fill{background:linear-gradient(90deg,var(--green),var(--green-light));}
-.topic-progress-text{font-family:'Cinzel',serif;font-size:0.58rem;color:rgba(201,146,42,0.4);flex-shrink:0;}
-.topic-chevron{color:rgba(201,146,42,0.3);font-size:0.9rem;flex-shrink:0;transition:transform 0.25s;}
-.topic-card.expanded .topic-chevron{transform:rotate(90deg);}
-.topic-body{display:none;padding:0 1rem 1rem;}
-.topic-card.expanded .topic-body{display:block;}
-.topic-description{font-size:0.82rem;color:rgba(244,232,193,0.4);font-style:italic;line-height:1.5;margin-bottom:0.875rem;padding-bottom:0.875rem;border-bottom:1px solid rgba(201,146,42,0.1);}
-
-/* ── SESSION CARDS ─────────────────────────────────────────── */
-.session-cards{display:flex;flex-direction:column;gap:0.5rem;margin-bottom:0.875rem;}
-.session-card{background:rgba(244,232,193,0.03);border:1px solid rgba(201,146,42,0.12);border-radius:10px;overflow:hidden;transition:all 0.25s;}
-.session-card.done{background:rgba(22,163,74,0.05);border-color:rgba(22,163,74,0.2);}
-.session-card.current-session{border-color:rgba(201,146,42,0.35);background:rgba(201,146,42,0.04);}
-.session-card-header{display:flex;align-items:center;gap:0.625rem;padding:0.7rem 0.875rem;cursor:pointer;border:none;background:none;width:100%;text-align:left;}
-.session-id{font-family:'Cinzel',serif;font-size:0.6rem;color:rgba(201,146,42,0.35);flex-shrink:0;width:24px;}
-.session-card.done .session-id{color:rgba(134,239,172,0.5);}
-.session-title-text{font-family:'Cinzel',serif;font-size:0.78rem;color:rgba(244,232,193,0.65);flex:1;line-height:1.3;text-align:left;}
-.session-card.done .session-title-text{color:rgba(134,239,172,0.7);}
-.session-card.current-session .session-title-text{color:var(--gold-light);}
-.session-coins-badge{font-family:'Cinzel',serif;font-size:0.6rem;color:rgba(201,146,42,0.4);flex-shrink:0;}
-.session-check{color:rgba(134,239,172,0.7);font-size:0.9rem;flex-shrink:0;}
-.session-expand-icon{color:rgba(201,146,42,0.25);font-size:0.75rem;flex-shrink:0;transition:transform 0.2s;}
-.session-card.expanded .session-expand-icon{transform:rotate(90deg);}
-.session-body{display:none;padding:0 0.875rem 0.875rem;}
-.session-card.expanded .session-body{display:block;}
-.session-description{font-size:0.8rem;color:rgba(244,232,193,0.4);font-style:italic;line-height:1.5;margin-bottom:0.75rem;}
-
-/* Key concepts */
-.concepts-label{font-family:'Cinzel',serif;font-size:0.62rem;letter-spacing:0.15em;color:rgba(201,146,42,0.45);text-transform:uppercase;margin-bottom:0.4rem;}
-.concepts-list{list-style:none;display:flex;flex-direction:column;gap:0.25rem;margin-bottom:0.75rem;}
-.concept-item{display:flex;gap:0.5rem;align-items:flex-start;font-size:0.78rem;color:rgba(244,232,193,0.45);line-height:1.4;}
-.concept-mark{color:rgba(201,146,42,0.4);flex-shrink:0;margin-top:0.1rem;font-size:0.65rem;}
-
-/* ── HOLY SCRIPTURES READING CARD ──────────────────────────── */
-.reading-card{
-  background:linear-gradient(135deg,rgba(26,58,92,0.5) 0%,rgba(10,22,40,0.6) 100%);
-  border:1px solid rgba(42,90,156,0.35);
-  border-radius:10px;padding:0.875rem;
-  margin-bottom:0.75rem;
-}
-.reading-eyebrow{
-  font-family:'Cinzel',serif;font-size:0.58rem;letter-spacing:0.18em;
-  text-transform:uppercase;color:rgba(100,160,220,0.6);
-  margin-bottom:0.35rem;
-}
-.reading-title{
-  font-family:'Cinzel',serif;font-size:0.82rem;
-  color:rgba(200,220,255,0.85);line-height:1.3;
-  margin-bottom:0.5rem;
-}
-.reading-coins-row{
-  font-family:'Cinzel',serif;font-size:0.6rem;
-  color:rgba(201,146,42,0.5);margin-bottom:0.625rem;
-}
-.reading-open-btn{
-  display:flex;align-items:center;gap:0.5rem;
-  background:rgba(42,90,156,0.2);border:1px solid rgba(42,90,156,0.3);
-  border-radius:7px;padding:0.5rem 0.75rem;
-  text-decoration:none;transition:all 0.2s;cursor:pointer;
-}
-.reading-open-btn:active{background:rgba(42,90,156,0.35);}
-.reading-open-icon{color:rgba(100,160,220,0.7);font-size:0.9rem;flex-shrink:0;}
-.reading-open-text{font-family:'Cinzel',serif;font-size:0.7rem;color:rgba(160,200,255,0.8);flex:1;letter-spacing:0.06em;}
-.reading-open-arrow{color:rgba(100,160,220,0.4);font-size:0.75rem;}
-
-/* Video embed */
-/* video CSS removed — videos stripped from PWA per Wave 1B */
-
-/* Game link */
-.game-link{display:flex;align-items:center;gap:0.625rem;background:rgba(44,22,84,0.15);border:1px solid rgba(124,58,237,0.2);border-radius:8px;padding:0.625rem 0.875rem;margin-bottom:0.75rem;text-decoration:none;transition:all 0.2s;cursor:pointer;}
-.game-link:active{background:rgba(44,22,84,0.25);border-color:rgba(124,58,237,0.4);}
-.game-link-icon{color:rgba(167,139,250,0.7);font-size:1rem;}
-.game-link-text{font-family:'Cinzel',serif;font-size:0.72rem;color:rgba(167,139,250,0.8);flex:1;}
-.game-link-arrow{color:rgba(167,139,250,0.4);font-size:0.75rem;}
-
-/* Field Manual / Journal */
-.journal-box{background:rgba(201,146,42,0.05);border:1px solid rgba(201,146,42,0.15);border-radius:8px;padding:0.75rem;margin-bottom:0.75rem;}
-.journal-label{font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.15em;color:rgba(201,146,42,0.5);text-transform:uppercase;margin-bottom:0.35rem;}
-.journal-text{font-size:0.8rem;color:rgba(244,232,193,0.5);font-style:italic;line-height:1.5;}
-
-/* ── ACTIVITY CARDS ─────────────────────────────────────────── */
-.activity-card{
-  border-radius:8px;padding:0.75rem;
-  margin-bottom:0.75rem;
-}
-.personal-activity-card{
-  background:rgba(107,26,26,0.12);
-  border:1px solid rgba(107,26,26,0.3);
-}
-.family-activity-card{
-  background:rgba(22,63,44,0.12);
-  border:1px solid rgba(22,103,74,0.25);
-}
-.activity-eyebrow{
-  font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.15em;
-  text-transform:uppercase;margin-bottom:0.35rem;
-}
-.personal-activity-card .activity-eyebrow{color:rgba(220,120,80,0.65);}
-.family-activity-card .activity-eyebrow{color:rgba(80,180,120,0.65);}
-.activity-text{font-size:0.8rem;color:rgba(244,232,193,0.5);line-height:1.5;margin-bottom:0.35rem;}
-.activity-coins{
-  font-family:'Cinzel',serif;font-size:0.6rem;
-  color:rgba(201,146,42,0.45);font-style:italic;
+.app-divider{
+  color:rgba(201,146,42,0.35);letter-spacing:0.6rem;
+  font-size:0.65rem;margin-top:0.3rem;
 }
 
-/* Complete button */
-.session-complete-btn{
-  width:100%;padding:0.75rem;min-height:48px;
-  background:linear-gradient(135deg,var(--gold) 0%,var(--gold-bright) 100%);
-  border:none;border-radius:9px;
-  font-family:'Cinzel',serif;font-size:0.78rem;letter-spacing:0.08em;
-  color:var(--ink);font-weight:700;cursor:pointer;
-  transition:all 0.2s;margin-bottom:0.75rem;
+/* ── PAGE TITLE BLOCK ──────────────────────────────────────── */
+.page-eyebrow{
+  font-family:'Cinzel',serif;font-size:0.7rem;letter-spacing:0.22em;
+  color:rgba(201,146,42,0.55);text-transform:uppercase;
+  text-align:center;margin-bottom:0.4rem;
 }
-.session-complete-btn:active{transform:scale(0.98);}
-.session-complete-btn:disabled{opacity:0.5;cursor:not-allowed;}
-.session-done-indicator{
-  display:flex;align-items:center;justify-content:center;gap:0.5rem;
-  padding:0.625rem;margin-bottom:0.75rem;
-  font-family:'Cinzel',serif;font-size:0.75rem;
-  color:rgba(134,239,172,0.7);
-  background:rgba(22,163,74,0.08);border-radius:9px;
-  border:1px solid rgba(22,163,74,0.2);
-}
-
-/* ── PARENT GUIDE SECTION ───────────────────────────────────── */
-.parent-guide{
-  margin-top:0.875rem;
-  background:linear-gradient(160deg,rgba(44,22,84,0.25) 0%,rgba(18,8,40,0.35) 100%);
-  border:1px solid rgba(124,58,237,0.2);
-  border-radius:10px;overflow:hidden;
-}
-.parent-guide-header{
-  display:flex;align-items:center;gap:0.5rem;
-  padding:0.625rem 0.875rem;
-  background:rgba(44,22,84,0.3);
-  border-bottom:1px solid rgba(124,58,237,0.15);
-}
-.parent-guide-icon{color:rgba(167,139,250,0.5);font-size:0.85rem;}
-.parent-guide-title{
-  font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.15em;
-  text-transform:uppercase;color:rgba(167,139,250,0.7);
-}
-.guide-section{
-  padding:0.75rem 0.875rem;
-  border-bottom:1px solid rgba(124,58,237,0.08);
-}
-.guide-section:last-child{border-bottom:none;}
-.guide-section-label{
-  font-family:'Cinzel',serif;font-size:0.58rem;letter-spacing:0.14em;
-  text-transform:uppercase;color:rgba(167,139,250,0.5);
+.page-title{
+  font-family:'Cinzel Decorative',serif;
+  font-size:clamp(1.3rem,4.5vw,1.6rem);
+  color:var(--gold-light);text-align:center;
+  text-shadow:0 0 20px rgba(201,146,42,0.3);
   margin-bottom:0.4rem;
 }
-.guide-section-text{
-  font-size:0.78rem;color:rgba(244,232,193,0.4);
-  line-height:1.55;
-}
-.discussion-q{
-  font-size:0.78rem;color:rgba(244,232,193,0.4);
-  line-height:1.5;margin-bottom:0.5rem;padding-left:0.5rem;
-  border-left:2px solid rgba(124,58,237,0.2);
-}
-.discussion-q:last-child{margin-bottom:0;}
-.discussion-day{
-  display:block;font-family:'Cinzel',serif;font-size:0.56rem;
-  letter-spacing:0.12em;text-transform:uppercase;
-  color:rgba(167,139,250,0.45);margin-bottom:0.2rem;
+.page-subtitle{
+  font-family:'Crimson Text',serif;font-size:0.85rem;
+  color:rgba(244,232,193,0.55);text-align:center;
+  font-style:italic;line-height:1.4;
+  margin-bottom:1.5rem;padding:0 0.5rem;
 }
 
-/* ── MASTERY ASSIGNMENT ─────────────────────────────────────── */
-.mastery-card{background:rgba(201,146,42,0.06);border:1.5px solid rgba(201,146,42,0.25);border-radius:12px;padding:1rem;margin-top:0.25rem;}
-.mastery-eyebrow{font-family:'Cinzel',serif;font-size:0.62rem;letter-spacing:0.18em;color:rgba(201,146,42,0.5);text-transform:uppercase;margin-bottom:0.4rem;}
-.mastery-title{font-family:'Cinzel',serif;font-size:0.85rem;color:var(--gold-light);margin-bottom:0.5rem;}
-.mastery-text{font-size:0.82rem;color:rgba(244,232,193,0.45);font-style:italic;line-height:1.5;margin-bottom:0.875rem;}
-.mastery-status-row{display:flex;align-items:center;gap:0.625rem;flex-wrap:wrap;}
-.mastery-badge{font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.08em;padding:0.2rem 0.6rem;border-radius:20px;}
-.mastery-badge.locked{background:rgba(107,26,26,0.2);color:rgba(244,232,193,0.3);border:1px solid rgba(107,26,26,0.3);}
-.mastery-badge.available{background:rgba(201,146,42,0.1);color:rgba(201,146,42,0.6);border:1px solid rgba(201,146,42,0.2);}
-.mastery-badge.pending{background:rgba(124,58,237,0.12);color:rgba(167,139,250,0.8);border:1px solid rgba(124,58,237,0.25);}
-.mastery-badge.complete{background:rgba(22,163,74,0.1);color:rgba(134,239,172,0.8);border:1px solid rgba(22,163,74,0.25);}
-.mastery-submit-btn{padding:0.5rem 1.25rem;min-height:40px;background:linear-gradient(135deg,var(--byzantine),var(--byzantine-light));border:none;border-radius:8px;font-family:'Cinzel',serif;font-size:0.72rem;color:rgba(244,232,193,0.9);cursor:pointer;transition:all 0.2s;}
-.mastery-submit-btn:disabled{opacity:0.4;cursor:not-allowed;}
-.mastery-coins-badge{font-family:'Cinzel',serif;font-size:0.7rem;color:rgba(201,146,42,0.5);}
+/* ── TOPIC BLOCK (active — Topic 00) ───────────────────────── */
+.topic-block{margin-bottom:1.75rem;}
+.topic-header{margin-bottom:0.875rem;padding:0 0.125rem;}
+.topic-eyebrow{
+  font-family:'Cinzel',serif;font-size:0.62rem;letter-spacing:0.18em;
+  color:rgba(201,146,42,0.55);text-transform:uppercase;
+  margin-bottom:0.3rem;
+}
+.topic-title{
+  font-family:'Cinzel',serif;font-size:1rem;font-weight:700;
+  color:var(--gold-light);line-height:1.3;
+  margin-bottom:0.4rem;
+}
+.topic-progress-line{
+  font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.1em;
+  color:rgba(201,146,42,0.45);text-transform:uppercase;
+}
 
-/* ── CONCLUSION CARD ───────────────────────────────────────── */
-.conclusion-card{background:linear-gradient(135deg,rgba(44,22,84,0.6) 0%,rgba(107,26,26,0.6) 100%);border:1px solid rgba(201,146,42,0.3);border-radius:16px;padding:1.25rem;margin-bottom:0.875rem;text-align:center;}
-.conclusion-mark{font-size:1.5rem;margin-bottom:0.5rem;}
-.conclusion-title{font-family:'Cinzel Decorative',serif;font-size:1rem;color:var(--gold-light);margin-bottom:0.35rem;}
-.conclusion-sub{font-size:0.8rem;color:rgba(244,232,193,0.4);font-style:italic;line-height:1.5;}
+/* ── SESSION CARDS ─────────────────────────────────────────── */
+.session-list{display:flex;flex-direction:column;gap:0.625rem;}
 
-/* ── BOTTOM NAV ────────────────────────────────────────────── */
+.session-card{
+  background:rgba(244,232,193,0.03);
+  border:1px solid rgba(201,146,42,0.18);
+  border-radius:11px;
+  overflow:hidden;
+  transition:all 0.2s ease;
+}
+.session-card.complete{
+  background:rgba(22,163,74,0.06);
+  border-color:rgba(22,163,74,0.25);
+}
+.session-card.current{
+  background:rgba(201,146,42,0.05);
+  border-color:rgba(201,146,42,0.35);
+  box-shadow:0 0 0 1px rgba(201,146,42,0.12);
+}
+
+/* PRIMARY TAP TARGET — the session row */
+.session-row{
+  display:flex;align-items:center;gap:0.75rem;
+  padding:0.875rem 0.875rem;
+  text-decoration:none;color:inherit;
+  cursor:pointer;
+  transition:background 0.15s ease;
+  min-height:60px;
+}
+.session-row:active{background:rgba(255,215,0,0.05);}
+.session-row:hover{background:rgba(255,215,0,0.03);}
+
+.session-row-main{
+  flex:1;min-width:0;display:flex;flex-direction:column;gap:0.3rem;
+}
+.session-row-id-line{
+  display:flex;align-items:baseline;gap:0.5rem;flex-wrap:wrap;
+}
+.session-id{
+  font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.12em;
+  color:rgba(201,146,42,0.55);text-transform:uppercase;
+  flex-shrink:0;
+}
+.session-card.complete .session-id{color:rgba(134,239,172,0.65);}
+.session-card.current .session-id{color:var(--gold-bright);}
+
+.session-title{
+  font-family:'Cinzel',serif;font-size:0.85rem;font-weight:600;
+  color:rgba(244,232,193,0.85);line-height:1.3;
+}
+.session-card.complete .session-title{color:rgba(180,240,200,0.85);}
+.session-card.current .session-title{color:var(--gold-light);}
+
+/* DAY RAIL — matches home.html pattern exactly */
+.day-rail-mini{
+  display:flex;align-items:center;gap:0.45rem;
+  flex-shrink:0;
+}
+.day-rail-mini .day-pair{
+  display:flex;align-items:center;gap:0.25rem;
+}
+.day-rail-mini .day-dot{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:16px;height:16px;border-radius:50%;
+  font-size:0.6rem;font-weight:700;line-height:1;flex-shrink:0;
+  background:transparent;border:1.5px solid rgba(201,146,42,0.3);
+  color:transparent;
+}
+.day-rail-mini .day-dot.done{
+  background:#ffd700;border-color:#ffd700;color:#0e0800;
+  box-shadow:0 0 8px rgba(255,215,0,0.4);
+}
+.day-rail-mini .day-dot.today{
+  background:rgba(244,232,193,0.92);border-color:rgba(255,215,0,0.6);
+}
+.day-rail-mini .day-dot-label{
+  font-family:'Cinzel',serif;font-size:0.55rem;letter-spacing:0.12em;
+  color:rgba(201,146,42,0.55);text-transform:uppercase;
+}
+.session-card.complete .day-rail-mini .day-dot.future{
+  border-color:rgba(201,146,42,0.18);
+}
+
+/* ── RESOURCES SUB-BLOCK ───────────────────────────────────── */
+.session-resources{
+  display:flex;flex-wrap:wrap;gap:0.5rem 1rem;
+  padding:0.5rem 0.875rem 0.75rem;
+  border-top:1px dashed rgba(201,146,42,0.15);
+  background:rgba(0,0,0,0.12);
+}
+.resource-link{
+  display:inline-flex;align-items:center;gap:0.35rem;
+  font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.08em;
+  color:rgba(201,146,42,0.6);text-transform:uppercase;
+  text-decoration:none;
+  padding:0.25rem 0;
+  border-bottom:1px solid transparent;
+  transition:all 0.2s ease;
+}
+.resource-link:hover{
+  color:var(--gold-light);
+  border-bottom-color:rgba(201,146,42,0.4);
+}
+.resource-link:active{color:var(--gold-bright);}
+.resource-icon{
+  font-size:0.75rem;line-height:1;
+  color:rgba(201,146,42,0.5);
+}
+
+/* ── LOCKED FUTURE TOPICS ──────────────────────────────────── */
+.topic-locked-card{
+  background:rgba(244,232,193,0.02);
+  border:1px solid rgba(201,146,42,0.12);
+  border-radius:11px;
+  padding:1rem 1rem;
+  margin-bottom:0.75rem;
+  opacity:0.7;
+  display:flex;align-items:center;gap:0.875rem;
+}
+.topic-locked-icon{
+  font-family:'Cinzel',serif;font-size:0.85rem;
+  width:32px;height:32px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(201,146,42,0.06);
+  border:1px solid rgba(201,146,42,0.18);
+  color:rgba(201,146,42,0.45);
+  flex-shrink:0;
+}
+.topic-locked-body{flex:1;min-width:0;}
+.topic-locked-eyebrow{
+  font-family:'Cinzel',serif;font-size:0.55rem;letter-spacing:0.16em;
+  color:rgba(201,146,42,0.4);text-transform:uppercase;
+  margin-bottom:0.25rem;
+}
+.topic-locked-title{
+  font-family:'Cinzel',serif;font-size:0.8rem;font-weight:600;
+  color:rgba(244,232,193,0.5);line-height:1.3;
+}
+.topic-locked-status{
+  font-family:'Cinzel',serif;font-size:0.55rem;letter-spacing:0.1em;
+  color:rgba(201,146,42,0.45);text-transform:uppercase;
+  flex-shrink:0;
+}
+
+/* ── BOTTOM NAV (matches home.html / progress.html) ────────── */
 .bottom-nav{
-  position:fixed;bottom:0;left:0;right:0;height:var(--nav-h);
-  background:rgba(8,4,0,0.97);border-top:1px solid rgba(201,146,42,0.18);
-  display:flex;align-items:stretch;backdrop-filter:blur(16px);z-index:200;
+  position:fixed;bottom:0;left:0;right:0;
+  height:var(--nav-h);
+  background:rgba(8,4,0,0.97);
+  border-top:1px solid rgba(201,146,42,0.18);
+  display:flex;align-items:stretch;
+  backdrop-filter:blur(16px);
+  z-index:200;
   padding-bottom:env(safe-area-inset-bottom);
 }
-.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0.2rem;cursor:pointer;border:none;background:none;padding:0.5rem 0.25rem;position:relative;transition:all 0.2s;text-decoration:none;}
+.nav-item{
+  flex:1;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:0.2rem;
+  cursor:pointer;border:none;background:none;
+  padding:0.5rem 0.25rem;position:relative;
+  transition:all 0.2s;text-decoration:none;
+}
 .nav-item:active{background:rgba(201,146,42,0.06);}
-.nav-mark{font-size:1rem;line-height:1;color:rgba(201,146,42,0.25);transition:all 0.25s;}
-.nav-label{font-family:'Cinzel',serif;font-size:0.52rem;letter-spacing:0.08em;text-transform:uppercase;color:rgba(201,146,42,0.3);transition:all 0.25s;}
-.nav-item.active .nav-mark{color:var(--gold-bright);text-shadow:0 0 12px rgba(255,215,0,0.6);}
+.nav-mark{
+  font-size:1rem;line-height:1;
+  color:rgba(201,146,42,0.25);
+  transition:all 0.25s;
+}
+.nav-label{
+  font-family:'Cinzel',serif;font-size:0.52rem;
+  letter-spacing:0.08em;text-transform:uppercase;
+  color:rgba(201,146,42,0.3);
+  transition:all 0.25s;
+}
+.nav-item.active .nav-mark{
+  color:var(--gold-bright);
+  text-shadow:0 0 12px rgba(255,215,0,0.6);
+}
 .nav-item.active .nav-label{color:var(--gold-light);}
-.nav-item.active::before{content:'';position:absolute;top:0;left:20%;right:20%;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent);border-radius:0 0 2px 2px;}
-.nav-dot{position:absolute;top:0.4rem;right:calc(50% - 18px);width:7px;height:7px;border-radius:50%;background:#ef4444;border:1.5px solid rgba(8,4,0,0.9);display:none;}
-.nav-dot.show{display:block;}
+.nav-item.active::before{
+  content:'';position:absolute;top:0;left:20%;right:20%;
+  height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent);
+  border-radius:0 0 2px 2px;
+}
 
 /* ── ANIMATIONS ────────────────────────────────────────────── */
 .fade-up{opacity:0;transform:translateY(12px);animation:fadeUp 0.4s ease forwards;}
@@ -376,18 +313,32 @@ body::before{
 .fade-up:nth-child(1){animation-delay:0.04s;}
 .fade-up:nth-child(2){animation-delay:0.1s;}
 .fade-up:nth-child(3){animation-delay:0.16s;}
+.fade-up:nth-child(4){animation-delay:0.22s;}
 
-/* ── ADMIN BAR ─────────────────────────────────────────────── */
-.admin-bar{position:fixed;top:0;left:0;right:0;z-index:999;background:linear-gradient(90deg,rgba(44,22,84,0.97),rgba(107,26,26,0.97));border-bottom:1px solid rgba(201,146,42,0.3);display:none;align-items:center;justify-content:space-between;padding:0.4rem 1rem;gap:0.75rem;}
+/* ── ADMIN / PARENT BARS ───────────────────────────────────── */
+.admin-bar{
+  position:fixed;top:0;left:0;right:0;z-index:999;
+  background:linear-gradient(90deg,rgba(44,22,84,0.97),rgba(107,26,26,0.97));
+  border-bottom:1px solid rgba(201,146,42,0.3);
+  display:none;align-items:center;justify-content:space-between;
+  padding:0.4rem 1rem;gap:0.75rem;
+}
 .admin-bar.show{display:flex;}
-.admin-bar-label{font-family:'Cinzel',serif;font-size:0.62rem;letter-spacing:0.15em;color:rgba(201,146,42,0.6);text-transform:uppercase;}
-.admin-bar-btn{background:none;border:1px solid rgba(201,146,42,0.3);border-radius:6px;padding:0.25rem 0.75rem;font-family:'Cinzel',serif;font-size:0.6rem;color:rgba(201,146,42,0.6);cursor:pointer;min-height:32px;transition:all 0.2s;}
-.admin-bar.show ~ .page{padding-top:calc(2.5rem + 1.25rem);}
+.admin-bar-label{
+  font-family:'Cinzel',serif;font-size:0.62rem;letter-spacing:0.15em;
+  color:rgba(201,146,42,0.6);text-transform:uppercase;
+}
+.admin-bar-btn{
+  background:none;border:1px solid rgba(201,146,42,0.3);
+  border-radius:6px;padding:0.25rem 0.75rem;
+  font-family:'Cinzel',serif;font-size:0.6rem;
+  color:rgba(201,146,42,0.6);cursor:pointer;
+  min-height:32px;transition:all 0.2s;
+}
+.admin-bar.show ~ #app .page{padding-top:calc(2.5rem + 1.25rem);}
 </style>
 </head>
 <body>
-
-<div id="coin-rain"></div>
 
 <!-- ADMIN BAR -->
 <div class="admin-bar" id="admin-bar">
@@ -398,55 +349,37 @@ body::before{
   </div>
 </div>
 <div class="admin-bar" id="parent-bar" style="background:linear-gradient(90deg,rgba(22,84,44,0.97),rgba(12,50,22,0.97));">
-  <span class="admin-bar-label" style="color:rgba(134,239,172,0.7);">☩ Parent View — Guide Notes Visible</span>
+  <span class="admin-bar-label" style="color:rgba(134,239,172,0.7);">☩ Parent View</span>
   <div style="display:flex;gap:0.4rem;">
     <button class="admin-bar-btn" style="color:rgba(134,239,172,0.7);border-color:rgba(134,239,172,0.25);" onclick="window.location.href='parent.html'">← Family Dashboard</button>
     <button class="admin-bar-btn" style="color:rgba(134,239,172,0.5);border-color:rgba(134,239,172,0.15);" onclick="window.location.href='index.html?signout=1'">Sign Out</button>
   </div>
 </div>
 
-<div id="loading"><div class="loading-mark">☩</div></div>
+<div id="loading"><div class="loading-cross">☩</div></div>
 
 <div id="app">
-<div class="page">
+  <div class="page">
 
-  <!-- HEADER -->
-  <header class="app-header">
-    <div style="display:flex;align-items:center;justify-content:space-between;width:100%;">
-      <div class="app-name">The Orthodox Expedition</div>
-      <a href="journal.html"
-         style="display:flex;align-items:center;gap:0.3rem;padding:0.3rem 0.625rem;
-         background:rgba(201,146,42,0.07);border:1px solid rgba(201,146,42,0.18);
-         border-radius:14px;text-decoration:none;flex-shrink:0;">
-        <span style="font-size:0.8rem;">✎</span>
-        <span style="font-family:'Cinzel',serif;font-size:0.56rem;letter-spacing:0.1em;color:rgba(201,146,42,0.5);text-transform:uppercase;">Field Manual</span>
-      </a>
-    </div>
-    <div class="app-divider">✦ ☩ ✦</div>
-  </header>
+    <!-- HEADER -->
+    <header class="app-header">
+      <div class="app-header-row">
+        <a class="back-btn" href="home.html">‹ Home</a>
+        <div class="app-name">Topics</div>
+        <div style="width:60px"></div>
+      </div>
+      <div class="app-divider">✦ ☩ ✦</div>
+    </header>
 
-  <!-- JOURNEY STRIP -->
-  <div class="journey-strip fade-up">
-    <div class="journey-title">The Expedition Journey</div>
-    <div class="journey-track" id="journey-track"></div>
-    <div class="journey-progress">
-      <span class="jp-text" id="jp-left">0 sessions complete</span>
-      <div class="jp-bar-wrap"><div class="jp-bar"><div class="jp-fill" id="jp-fill"></div></div></div>
-      <span class="jp-text" id="jp-right">0 of 77</span>
-    </div>
+    <!-- PAGE TITLE -->
+    <div class="page-eyebrow fade-up">✦ The Three-Year Expedition</div>
+    <div class="page-title fade-up">All Topics</div>
+    <div class="page-subtitle fade-up">A scroll of every session ahead. Tap a session to enter the week.</div>
+
+    <!-- TOPIC LIST -->
+    <div id="topic-list"></div>
+
   </div>
-
-  <!-- TOPIC LIST -->
-  <div id="topic-list"></div>
-
-  <!-- CONCLUSION -->
-  <div class="conclusion-card fade-up" id="conclusion-card" style="display:none;">
-    <div class="conclusion-mark">☩</div>
-    <div class="conclusion-title">The Conclusion</div>
-    <div class="conclusion-sub">Looking back at the full expedition — and the Grand Presentation.</div>
-  </div>
-
-</div>
 </div>
 
 <!-- BOTTOM NAV — Home · Missions · Topics · Holy Scriptures · Field Manual -->
@@ -458,7 +391,6 @@ body::before{
   <a class="nav-item" href="missions.html">
     <span class="nav-mark">☩</span>
     <span class="nav-label">Missions</span>
-    <span class="nav-dot" id="missions-dot"></span>
   </a>
   <a class="nav-item active" href="curriculum.html">
     <span class="nav-mark">⊕</span>
@@ -483,12 +415,26 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 // ── STATE ─────────────────────────────────────────────────────
 let profile = null;
 let allTopics = [];
-let allSessions = [];
-let completedIds = [];
-let masteryData = [];
-let activeTopicId = 0;
-let expandedTopics = new Set();
-let expandedSessions = new Set();
+let topic00Sessions = [];   // sessions where id LIKE '00.%' (sidesteps stale 0.x collision)
+let yearTopics = [];        // Year 1, 2, 3 — locked future topics
+let progressById = {};      // session_progress rows keyed by session_id
+let handoutsById = {};      // session_handouts rows keyed by session_id
+let masteryById = {};       // topic_mastery rows keyed by topic_id
+
+// ── HELPERS ───────────────────────────────────────────────────
+function showAdminBar(){
+  const bar = document.getElementById('admin-bar');
+  if(bar) bar.classList.add('show');
+}
+function showParentBar(){
+  const bar = document.getElementById('parent-bar');
+  if(bar) bar.classList.add('show');
+}
+function esc(s){
+  return String(s ?? '').replace(/[&<>"']/g, c => (
+    {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]
+  ));
+}
 
 // ── AUTH ──────────────────────────────────────────────────────
 (async()=>{
@@ -497,8 +443,9 @@ let expandedSessions = new Set();
     const res   = await Promise.race([sb.auth.getSession(), timer]);
     const session = res?.data?.session ?? null;
     if(!session){ window.location.href='index.html'; return; }
+
     const {data:prof} = await sb.from('profiles').select('role').eq('id',session.user.id).single();
-    const isAdminView = new URLSearchParams(window.location.search).get('admin')==='1';
+    const isAdminView    = new URLSearchParams(window.location.search).get('admin')==='1';
     const isParentAccess = prof && prof.role === 'parent';
     const isAdminAccess  = prof && ['superuser','admin'].includes(prof.role);
 
@@ -508,10 +455,12 @@ let expandedSessions = new Set();
     if(isAdminAccess && isAdminView){ showAdminBar(); }
     // Parents see parent bar directly — no ?admin=1 needed
     if(isParentAccess){ showParentBar(); }
+
     await loadAll(session.user.id);
     document.getElementById('loading').style.display='none';
     document.getElementById('app').style.display='block';
     document.getElementById('bottom-nav').style.display='flex';
+    propagateAdminQuery();
   } catch(e) {
     console.error('Curriculum error:', e);
     window.location.href='index.html';
@@ -520,535 +469,216 @@ let expandedSessions = new Set();
 
 // ── LOAD ──────────────────────────────────────────────────────
 async function loadAll(userId){
-  const [profRes, topicsRes, sessionsRes, spRes, tmRes] = await Promise.all([
+  // CRITICAL: filter sessions by id LIKE '00.%' to sidestep stale 0.x collisions.
+  // (7 stale 0.1-0.7 sessions sit at order_index 4-10 alongside Topic 00 sessions
+  // due to FK constraints preventing cleanup; they share topic_id=0 but pre-date
+  // the v3 schema. Filtering by id pattern guarantees a clean 15-row Topic 00 set.)
+  const [profRes, topicsRes, sessionsRes, spRes, tmRes, handoutsRes] = await Promise.all([
     sb.from('profiles').select('*').eq('id',userId).single(),
-    sb.from('topics').select('*').order('order_index'),
-    sb.from('sessions').select('*').order('topic_id').order('order_index'),
-    sb.from('session_progress').select('session_id').eq('explorer_id',userId),
-    sb.from('topic_mastery').select('*').eq('explorer_id',userId).order('topic_id'),
+    sb.from('topics').select('id,title,description,order_index,is_conclusion').order('order_index'),
+    sb.from('sessions')
+      .select('id,topic_id,title,order_index')
+      .like('id','00.%')
+      .order('order_index'),
+    sb.from('session_progress')
+      .select('session_id, day_1_completed_at, day_2_completed_at, day_3_completed_at')
+      .eq('explorer_id',userId),
+    sb.from('topic_mastery').select('topic_id,status').eq('explorer_id',userId),
+    sb.from('session_handouts').select('session_id, pdf_url').like('session_id','00.%'),
   ]);
-  profile      = profRes.data;
-  allTopics    = topicsRes.data    || [];
-  allSessions  = sessionsRes.data  || [];
-  completedIds = (spRes.data||[]).map(s=>s.session_id);
-  masteryData  = tmRes.data        || [];
 
-  const mainTopics = allTopics.filter(t=>!t.is_conclusion);
-  const active = masteryData.find(m=>{
-    const t = mainTopics.find(t=>t.id===m.topic_id);
-    return t && (m.status==='available'||m.status==='pending');
-  });
-  activeTopicId = active ? active.topic_id : 0;
-  expandedTopics.add(activeTopicId);
+  profile         = profRes.data;
+  allTopics       = topicsRes.data || [];
+  topic00Sessions = sessionsRes.data || [];
+
+  // Index session_progress and session_handouts by session_id
+  progressById = {};
+  (spRes.data || []).forEach(p => { progressById[p.session_id] = p; });
+  handoutsById = {};
+  (handoutsRes.data || []).forEach(h => { handoutsById[h.session_id] = h; });
+  masteryById = {};
+  (tmRes.data || []).forEach(m => { masteryById[m.topic_id] = m; });
+
+  // Year topics = topics 1, 2, 3 (Year 1/2/3 — legitimate future content).
+  // Topics 4-10 are explicit "Reserved — Repurposed Topic" placeholders;
+  // hidden from the syllabus per ADHD-first "reduce, don't add" principle.
+  yearTopics = allTopics.filter(t => t.id >= 1 && t.id <= 3);
+
   renderAll();
 }
 
 // ── RENDER ────────────────────────────────────────────────────
 function renderAll(){
-  renderJourneyStrip();
-  renderTopics();
-}
-
-// ── JOURNEY STRIP ─────────────────────────────────────────────
-function renderJourneyStrip(){
-  const track = document.getElementById('journey-track');
-  track.innerHTML='';
-
-  const mainTopics = allTopics.filter(t=>!t.is_conclusion);
-  const total = allSessions.filter(s=>{
-    const t=allTopics.find(t=>t.id===s.topic_id);
-    return t&&!t.is_conclusion;
-  }).length;
-  const done = completedIds.filter(id=>{
-    const s=allSessions.find(s=>s.id===id);
-    if(!s) return false;
-    const t=allTopics.find(t=>t.id===s.topic_id);
-    return t&&!t.is_conclusion;
-  }).length;
-
-  const pct = total>0?(done/total)*100:0;
-  document.getElementById('jp-left').textContent=`${done} sessions complete`;
-  document.getElementById('jp-right').textContent=`${done} of ${total}`;
-  requestAnimationFrame(()=>setTimeout(()=>{
-    document.getElementById('jp-fill').style.width=pct+'%';
-  },150));
-
-  mainTopics.forEach((topic,idx)=>{
-    const mastery = masteryData.find(m=>m.topic_id===topic.id);
-    const status = mastery?mastery.status:'locked';
-    const isActive = topic.id===activeTopicId;
-    const isComplete = status==='complete';
-
-    if(idx>0){
-      const conn=document.createElement('div');
-      conn.className='journey-connector'+(isComplete||mainTopics[idx-1].id===activeTopicId?'':
-        masteryData.find(m=>m.topic_id===mainTopics[idx-1].id)?.status==='complete'?' lit':'');
-      track.appendChild(conn);
-    }
-
-    const stop=document.createElement('div');
-    stop.className=`journey-stop${isComplete?' complete':isActive?' active':''}`;
-    stop.title=topic.title;
-    stop.onclick=()=>scrollToTopic(topic.id);
-    stop.innerHTML=`
-      <div class="journey-stop-circle">${isComplete?'✦':idx+1}</div>
-      <div class="journey-stop-label">${topic.title.split(' ')[0]}</div>`;
-    track.appendChild(stop);
-  });
-
-  const conclusionTopic = allTopics.find(t=>t.is_conclusion);
-  if(conclusionTopic){
-    const conn=document.createElement('div');conn.className='journey-connector';track.appendChild(conn);
-    const stop=document.createElement('div');
-    stop.className='journey-stop conclusion';
-    stop.title='The Conclusion';
-    stop.innerHTML=`<div class="journey-stop-circle">☩</div><div class="journey-stop-label">End</div>`;
-    track.appendChild(stop);
-  }
-}
-
-// ── TOPICS ────────────────────────────────────────────────────
-function renderTopics(){
   const list = document.getElementById('topic-list');
-  list.innerHTML='';
+  list.innerHTML = '';
 
-  const mainTopics = allTopics.filter(t=>!t.is_conclusion);
-  const conclusionTopic = allTopics.find(t=>t.is_conclusion);
+  // Topic 00 — the active block (always rendered, always expanded)
+  list.appendChild(renderActiveTopic00());
 
-  mainTopics.forEach((topic,idx)=>{
-    const mastery = masteryData.find(m=>m.topic_id===topic.id);
-    const status = mastery?mastery.status:'locked';
-    const isActive = topic.id===activeTopicId;
-    const isComplete = status==='complete';
-    const isAdminView = new URLSearchParams(window.location.search).get('admin')==='1';
-    const isParentAccess = profile && profile.role === 'parent';
-    const isLocked = status==='locked' && !isAdminView && !isParentAccess;
-    const isExpanded = expandedTopics.has(topic.id);
+  // Year 1, 2, 3 — locked cards (collapsed, no expansion)
+  yearTopics.forEach((topic, idx) => {
+    list.appendChild(renderLockedTopic(topic, idx));
+  });
+}
 
-    const topicSessions = allSessions.filter(s=>s.topic_id===topic.id);
-    const doneCount = topicSessions.filter(s=>completedIds.includes(s.id)).length;
-    const pct = topicSessions.length>0?(doneCount/topicSessions.length)*100:0;
+// ── TOPIC 00 (active) ─────────────────────────────────────────
+function renderActiveTopic00(){
+  const block = document.createElement('section');
+  block.className = 'topic-block fade-up';
 
-    const cardClass = isActive?'active-topic':isComplete?'complete':isLocked?'locked':'available';
+  const total    = topic00Sessions.length;
+  const complete = topic00Sessions.filter(s => sessionFullyComplete(s.id)).length;
 
-    const card = document.createElement('div');
-    card.className=`topic-card ${cardClass}${isExpanded?' expanded':''} fade-up`;
-    card.id=`topic-${topic.id}`;
-    card.style.animationDelay=`${idx*0.06+0.1}s`;
+  block.innerHTML = `
+    <div class="topic-header">
+      <div class="topic-eyebrow">Topic 00 · Active</div>
+      <div class="topic-title">Coming Home — Entry Block</div>
+      <div class="topic-progress-line">${complete} of ${total} sessions complete</div>
+    </div>
+    <div class="session-list" id="session-list-00"></div>
+  `;
 
-    let statusLabel = isComplete?'Complete':isActive?'In Progress':isLocked?'Locked':'Available';
+  const sessionList = block.querySelector('#session-list-00');
 
-    card.innerHTML=`
-      <button class="topic-header" onclick="toggleTopic(${topic.id})">
-        <span class="topic-stop-num">${isComplete?'✦':idx+1}</span>
-        <div class="topic-header-body">
-          <div class="topic-eyebrow">${statusLabel} · ${doneCount}/${topicSessions.length} sessions</div>
-          <div class="topic-name">${topic.title}</div>
-          ${!isLocked?`<div class="topic-progress-row">
-            <div class="topic-progress-bar"><div class="topic-progress-fill" style="width:0%" id="tpf-${topic.id}"></div></div>
-            <span class="topic-progress-text">${Math.round(pct)}%</span>
-          </div>`:''}
+  // Determine the "current" session: first one not yet fully complete.
+  // (If all complete, no card gets the 'current' highlight.)
+  const currentSession = topic00Sessions.find(s => !sessionFullyComplete(s.id));
+  const currentId = currentSession ? currentSession.id : null;
+
+  topic00Sessions.forEach(s => {
+    sessionList.appendChild(renderSessionCard(s, s.id === currentId));
+  });
+
+  return block;
+}
+
+// Determine if a session has all three days completed.
+function sessionFullyComplete(sessionId){
+  const p = progressById[sessionId];
+  return !!(p && p.day_1_completed_at && p.day_2_completed_at && p.day_3_completed_at);
+}
+
+// ── DAY-RAIL DOTS (visual treatment matches home.html) ───────
+// Today's day-of-week → which dot is "active today" (M=1, W=2, F=3; otherwise 0/none)
+function todayDayN(){
+  const dow = new Date().getDay(); // 0=Sun..6=Sat
+  return dow === 1 ? 1 : dow === 3 ? 2 : dow === 5 ? 3 : 0;
+}
+
+function dotClass(progress, n, isCurrentSession){
+  if(progress && progress[`day_${n}_completed_at`]) return 'done';
+  // Only highlight "today" on the current session — otherwise every Mon would
+  // light up M-dots across all 15 rows, which is misleading.
+  if(isCurrentSession && n === todayDayN()) return 'today';
+  return 'future';
+}
+
+function dotMarkup(progress, n, label, isCurrentSession){
+  const cls = dotClass(progress, n, isCurrentSession);
+  const glyph = cls === 'done' ? '✓' : '';
+  return `<span class="day-pair">`+
+    `<span class="day-dot ${cls}" aria-label="Day ${n} (${label}) ${cls}">${glyph}</span>`+
+    `<span class="day-dot-label" aria-hidden="true">${label}</span>`+
+    `</span>`;
+}
+
+// ── SESSION CARD ──────────────────────────────────────────────
+function renderSessionCard(session, isCurrent){
+  const progress = progressById[session.id] || null;
+  const isComplete = sessionFullyComplete(session.id);
+  const handout = handoutsById[session.id] || null;
+
+  const classes = ['session-card'];
+  if(isComplete) classes.push('complete');
+  else if(isCurrent) classes.push('current');
+
+  const card = document.createElement('div');
+  card.className = classes.join(' ');
+
+  // Determine whether to show the Quiz history resource link.
+  // quiz-results.html is restricted to parent/admin/superuser roles by design,
+  // so explorers (Nolan) don't see the link — keeps the resources block minimal.
+  const isParentRoleAccess = profile && ['parent','admin','superuser'].includes(profile.role);
+
+  // Build resource links (admin nav fix below appends ?admin=1 if needed)
+  const resources = [];
+  if(handout && handout.pdf_url){
+    resources.push(
+      `<a class="resource-link" href="${esc(handout.pdf_url)}" target="_blank" rel="noopener" `+
+      `aria-label="Download handout PDF for session ${esc(session.id)}">`+
+      `<span class="resource-icon">⌬</span>Handout PDF</a>`
+    );
+  }
+  if(isParentRoleAccess){
+    resources.push(
+      `<a class="resource-link" href="quiz-results.html" `+
+      `aria-label="View quiz history">`+
+      `<span class="resource-icon">✓</span>Quiz History</a>`
+    );
+  }
+
+  card.innerHTML = `
+    <a class="session-row" href="week.html" aria-label="Open week view for session ${esc(session.id)}: ${esc(session.title)}">
+      <div class="session-row-main">
+        <div class="session-row-id-line">
+          <span class="session-id">Session ${esc(session.id)}</span>
         </div>
-        <span class="topic-chevron">›</span>
-      </button>
-      <div class="topic-body">
-        <div class="topic-description">${topic.description}</div>
-        <div class="session-cards" id="sessions-${topic.id}"></div>
-        <div id="mastery-${topic.id}"></div>
-      </div>`;
-
-    list.appendChild(card);
-
-    if(!isLocked){
-      requestAnimationFrame(()=>setTimeout(()=>{
-        const bar=document.getElementById(`tpf-${topic.id}`);
-        if(bar) bar.style.width=pct+'%';
-      },200));
-    }
-
-    if(isExpanded){
-      renderSessions(topic.id, topicSessions, mastery);
-      renderMastery(topic.id, topic, mastery, doneCount>=topicSessions.length);
-    }
-  });
-
-  if(conclusionTopic){
-    document.getElementById('conclusion-card').style.display='block';
-  }
-}
-
-function toggleTopic(topicId){
-  const card = document.getElementById(`topic-${topicId}`);
-  if(!card) return;
-
-  const isAdminView = new URLSearchParams(window.location.search).get('admin')==='1';
-  const mastery = masteryData.find(m=>m.topic_id===topicId);
-  const status = mastery?mastery.status:'locked';
-  if(status==='locked' && !isAdminView) return;
-
-  if(expandedTopics.has(topicId)){
-    expandedTopics.delete(topicId);
-    card.classList.remove('expanded');
-  } else {
-    expandedTopics.add(topicId);
-    card.classList.add('expanded');
-    const topic = allTopics.find(t=>t.id===topicId);
-    const sessions = allSessions.filter(s=>s.topic_id===topicId);
-    const doneCount = sessions.filter(s=>completedIds.includes(s.id)).length;
-    renderSessions(topicId, sessions, mastery);
-    renderMastery(topicId, topic, mastery, doneCount>=sessions.length);
-  }
-}
-
-function scrollToTopic(topicId){
-  const el = document.getElementById(`topic-${topicId}`);
-  if(el) el.scrollIntoView({behavior:'smooth',block:'start'});
-  if(!expandedTopics.has(topicId)) toggleTopic(topicId);
-}
-
-// ── SESSIONS ─────────────────────────────────────────────────
-function renderSessions(topicId, sessions, mastery){
-  const container = document.getElementById(`sessions-${topicId}`);
-  if(!container) return;
-  container.innerHTML='';
-
-  const currentSession = sessions.find(s=>!completedIds.includes(s.id));
-
-  sessions.forEach(s=>{
-    const isDone = completedIds.includes(s.id);
-    const isCurrent = currentSession&&s.id===currentSession.id;
-    const isExpanded = expandedSessions.has(s.id);
-
-    const card = document.createElement('div');
-    card.className=`session-card${isDone?' done':isCurrent?' current-session':''}${isExpanded?' expanded':''}`;
-    card.id=`session-card-${s.id}`;
-
-    card.innerHTML=`
-      <button class="session-card-header" onclick="toggleSession('${s.id}')">
-        <span class="session-id">${s.id}</span>
-        <span class="session-title-text">${s.title}</span>
-        <span class="session-coins-badge">+${s.coins}</span>
-        ${isDone?'<span class="session-check">✦</span>':'<span class="session-expand-icon">›</span>'}
-      </button>
-      <div class="session-body" id="session-body-${s.id}"></div>`;
-
-    container.appendChild(card);
-    if(isExpanded) renderSessionBody(s, isDone);
-  });
-}
-
-function toggleSession(sessionId){
-  const card = document.getElementById(`session-card-${sessionId}`);
-  if(!card) return;
-  if(expandedSessions.has(sessionId)){
-    expandedSessions.delete(sessionId);
-    card.classList.remove('expanded');
-  } else {
-    expandedSessions.add(sessionId);
-    card.classList.add('expanded');
-    const session = allSessions.find(s=>s.id===sessionId);
-    const isDone = completedIds.includes(sessionId);
-    if(session) renderSessionBody(session, isDone);
-  }
-}
-
-// ── RENDER SESSION BODY ───────────────────────────────────────
-function renderSessionBody(s, isDone){
-  const body = document.getElementById(`session-body-${s.id}`);
-  if(!body) return;
-
-  // Determine role visibility
-  const isParentRole = profile && ['parent','admin','superuser'].includes(profile.role);
-  const isAdminView  = new URLSearchParams(window.location.search).get('admin')==='1';
-  const showParentGuide = isParentRole; // Only parent/admin/superuser roles see guide notes
-
-  // ── DESCRIPTION ──
-  let html=`<div class="session-description">${s.description||''}</div>`;
-
-  // ── KEY CONCEPTS ──
-  if(s.key_concepts&&s.key_concepts.length){
-    html+=`<div class="concepts-label">Key Concepts</div><ul class="concepts-list">`;
-    s.key_concepts.forEach(c=>{
-      html+=`<li class="concept-item"><span class="concept-mark">›</span>${c}</li>`;
-    });
-    html+=`</ul>`;
-  }
-
-  // ── HOLY SCRIPTURES READING CARD ──
-  if(s.reading_reference && s.reading_url){
-    html+=`
-    <div class="reading-card">
-      <div class="reading-eyebrow">☦ Holy Scriptures</div>
-      <div class="reading-title">${s.reading_reference}</div>
-      <div class="reading-coins-row">+${s.reading_coins||20} coins for completing this reading</div>
-      <a class="reading-open-btn" href="${s.reading_url}" target="_blank">
-        <span class="reading-open-icon">☦</span>
-        <span class="reading-open-text">Open Holy Scriptures</span>
-        <span class="reading-open-arrow">›</span>
-      </a>
-    </div>`;
-  }
-
-  // ── VIDEO ── REMOVED — videos stripped from PWA per Wave 1B; curriculum.html is index/syllabus only.
-  // Future "Video Library" feature will live elsewhere if/when we add YouTube content.
-
-  // ── GAME LINK ──
-  if(s.game_url){
-    html+=`<a class="game-link" href="${s.game_url}"><span class="game-link-icon">⚔</span><span class="game-link-text">Play the Expedition Game</span><span class="game-link-arrow">›</span></a>`;
-  }
-
-  // ── FIELD MANUAL / JOURNAL PROMPT ──
-  if(s.journal_prompt){
-    html+=`
-    <div class="journal-box">
-      <div class="journal-label">✎ Field Manual</div>
-      <div class="journal-text">${s.journal_prompt}</div>
-      <a href="journal.html" style="
-        display:inline-flex;align-items:center;gap:0.35rem;
-        margin-top:0.625rem;
-        font-family:'Cinzel',serif;font-size:0.62rem;
-        letter-spacing:0.08em;text-transform:uppercase;
-        color:rgba(201,146,42,0.6);text-decoration:none;
-        border-bottom:1px solid rgba(201,146,42,0.25);
-        padding-bottom:2px;transition:color 0.2s;
-      ">Open Field Manual ›</a>
-    </div>`;
-  }
-
-  // ── EXPLORER'S PERSONAL CHALLENGE ──
-  if(s.personal_activity){
-    html+=`
-    <div class="activity-card personal-activity-card">
-      <div class="activity-eyebrow">⚔ Explorer's Personal Challenge</div>
-      <div class="activity-text">${s.personal_activity}</div>
-      ${s.personal_activity_coins?`<div class="activity-coins">+${s.personal_activity_coins} coins — your parent will confirm when complete</div>`:''}
-    </div>`;
-  }
-
-  // ── FAMILY ACTIVITY ──
-  if(s.family_activity){
-    html+=`
-    <div class="activity-card family-activity-card">
-      <div class="activity-eyebrow">✦ Family Activity</div>
-      <div class="activity-text">${s.family_activity}</div>
-    </div>`;
-  }
-
-  // ── COMPLETE BUTTON OR DONE INDICATOR ──
-  if(isDone){
-    html+=`<div class="session-done-indicator"><span>✦</span>Session Complete<span>✦</span></div>`;
-  } else if(isAdminView && !isParentRole){
-    html+=`<div style="font-family:'Cinzel',serif;font-size:0.72rem;color:rgba(201,146,42,0.35);text-align:center;padding:0.5rem;font-style:italic;">Admin view — completion disabled</div>`;
-  } else if(!isParentRole){
-    html+=`<button class="session-complete-btn" id="complete-btn-${s.id}" onclick="completeSession('${s.id}',${s.coins})">Mark Session Complete — +${s.coins} Coins</button>`;
-  }
-
-  // ── PARENT GUIDE SECTION (parent/admin only) ──
-  if(showParentGuide){
-    const hasGuide = s.parent_note || s.discussion_q1 || s.discussion_q2 || s.discussion_q3 || s.liturgical_connection || s.reading_note;
-    if(hasGuide){
-      html+=`
-      <div class="parent-guide">
-        <div class="parent-guide-header">
-          <span class="parent-guide-icon">☩</span>
-          <span class="parent-guide-title">Guide Notes — For Parents</span>
-        </div>`;
-
-      if(s.parent_note){
-        html+=`
-        <div class="guide-section">
-          <div class="guide-section-label">Parent Note</div>
-          <div class="guide-section-text">${s.parent_note}</div>
-        </div>`;
-      }
-
-      if(s.liturgical_connection){
-        html+=`
-        <div class="guide-section">
-          <div class="guide-section-label">☩ Liturgical Connection</div>
-          <div class="guide-section-text">${s.liturgical_connection}</div>
-        </div>`;
-      }
-
-      if(s.reading_note){
-        html+=`
-        <div class="guide-section">
-          <div class="guide-section-label">Scripture Note</div>
-          <div class="guide-section-text">${s.reading_note}</div>
-        </div>`;
-      }
-
-      if(s.discussion_q1 || s.discussion_q2 || s.discussion_q3){
-        html+=`<div class="guide-section"><div class="guide-section-label">Discussion Questions</div>`;
-        if(s.discussion_q1) html+=`<div class="discussion-q"><span class="discussion-day">Sunday</span>${s.discussion_q1}</div>`;
-        if(s.discussion_q2) html+=`<div class="discussion-q"><span class="discussion-day">Wednesday</span>${s.discussion_q2}</div>`;
-        if(s.discussion_q3) html+=`<div class="discussion-q"><span class="discussion-day">Friday</span>${s.discussion_q3}</div>`;
-        html+=`</div>`;
-      }
-
-      html+=`</div>`;
-    }
-  }
-
-  body.innerHTML=html;
-}
-
-function extractYouTubeId(url){
-  if(!url) return null;
-  const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/);
-  return match?match[1]:null;
-}
-
-// ── COMPLETE SESSION ──────────────────────────────────────────
-async function completeSession(sessionId, coins){
-  if(completedIds.includes(sessionId)) return;
-  const btn = document.getElementById(`complete-btn-${sessionId}`);
-  if(btn){ btn.disabled=true; btn.textContent='Saving...';}
-
-  const session = allSessions.find(s=>s.id===sessionId);
-  const topic = session?allTopics.find(t=>t.id===session.topic_id):null;
-
-  const {error} = await sb.from('session_progress').insert({
-    explorer_id: profile.id,
-    session_id:  sessionId,
-    completed_at:new Date().toISOString(),
-    coins_awarded:coins,
-  });
-  if(error){ console.error(error); if(btn){btn.disabled=false;btn.textContent=`Mark Session Complete — +${coins} Coins`;} return;}
-
-  const newCoins    = (profile.coins||0)+coins;
-  const newLifetime = (profile.lifetime_coins||0)+coins;
-  const newSessions = (profile.sessions_attended||0)+1;
-  await Promise.all([
-    sb.from('profiles').update({coins:newCoins,lifetime_coins:newLifetime,sessions_attended:newSessions}).eq('id',profile.id),
-    sb.from('activity_log').insert({explorer_id:profile.id,amount:coins,reason:`Session: ${session?.title||sessionId}`,created_at:new Date().toISOString()}),
-  ]);
-  profile.coins=newCoins;
-  profile.lifetime_coins=newLifetime;
-  profile.sessions_attended=newSessions;
-
-  completedIds.push(sessionId);
-
-  if(topic){
-    const topicSessions = allSessions.filter(s=>s.topic_id===topic.id);
-    const doneCount = topicSessions.filter(s=>completedIds.includes(s.id)).length;
-    if(doneCount>=topicSessions.length){
-      const mastery=masteryData.find(m=>m.topic_id===topic.id);
-      if(mastery&&mastery.status==='available'){
-        await sb.from('topic_mastery').update({status:'available'}).eq('id',mastery.id);
-      }
-      await unlockNextTopic(topic.id);
-    }
-  }
-
-  coinRain(coins);
-  renderAll();
-}
-
-async function unlockNextTopic(completedTopicId){
-  const mainTopics = allTopics.filter(t=>!t.is_conclusion).sort((a,b)=>a.order_index-b.order_index);
-  const idx = mainTopics.findIndex(t=>t.id===completedTopicId);
-  if(idx<0||idx>=mainTopics.length-1) return;
-  const nextTopic = mainTopics[idx+1];
-  const nextMastery = masteryData.find(m=>m.topic_id===nextTopic.id);
-  if(nextMastery&&nextMastery.status==='locked'){
-    await sb.from('topic_mastery').update({status:'available'}).eq('id',nextMastery.id);
-    nextMastery.status='available';
-  }
-}
-
-// ── MASTERY ASSIGNMENT ────────────────────────────────────────
-function renderMastery(topicId, topic, mastery, allSessionsDone){
-  const container = document.getElementById(`mastery-${topicId}`);
-  if(!container) return;
-
-  const status = mastery?mastery.status:'locked';
-  const canSubmit = allSessionsDone && status==='available';
-  const isPending = status==='pending';
-  const isComplete = status==='complete';
-
-  let statusLabel = isComplete?'Complete':isPending?'Awaiting Approval':canSubmit?'Ready to Submit':'Complete all sessions first';
-  let badgeClass = isComplete?'complete':isPending?'pending':canSubmit?'available':'locked';
-
-  container.innerHTML=`
-    <div class="mastery-card">
-      <div class="mastery-eyebrow">Mastery Assignment</div>
-      <div class="mastery-title">Topic ${topicId} Mastery</div>
-      <div class="mastery-text">${topic.mastery_assignment}</div>
-      <div class="mastery-status-row">
-        <span class="mastery-badge ${badgeClass}">${statusLabel}</span>
-        <span class="mastery-coins-badge">+${topic.mastery_coins} coins</span>
-        ${canSubmit&&!new URLSearchParams(window.location.search).get('admin')?`<button class="mastery-submit-btn" onclick="submitMastery(${topicId})">I'm Ready to Present</button>`:''}
-        ${isPending?'<span style="font-family:Cinzel,serif;font-size:0.68rem;color:rgba(167,139,250,0.7);">Awaiting parent approval</span>':''}
-        ${isComplete?'<span style="font-family:Cinzel,serif;font-size:0.68rem;color:rgba(134,239,172,0.7);">✦ Mastered</span>':''}
+        <span class="session-title">${esc(session.title)}</span>
       </div>
-    </div>`;
+      <div class="day-rail-mini" role="group" aria-label="Mon Wed Fri progress for this session">
+        ${dotMarkup(progress, 1, 'Mon', isCurrent)}
+        ${dotMarkup(progress, 2, 'Wed', isCurrent)}
+        ${dotMarkup(progress, 3, 'Fri', isCurrent)}
+      </div>
+    </a>
+    ${resources.length ? `<div class="session-resources">${resources.join('')}</div>` : ''}
+  `;
+
+  return card;
 }
 
-async function submitMastery(topicId){
-  const mastery = masteryData.find(m=>m.topic_id===topicId);
-  if(!mastery||mastery.status!=='available') return;
+// ── LOCKED FUTURE TOPIC ───────────────────────────────────────
+function renderLockedTopic(topic, idx){
+  const card = document.createElement('div');
+  card.className = 'topic-locked-card fade-up';
 
-  await sb.from('topic_mastery').update({
-    status:'pending',submitted_at:new Date().toISOString()
-  }).eq('id',mastery.id);
-  mastery.status='pending';
+  // Use mastery status if present; otherwise default to 'locked'
+  const mastery = masteryById[topic.id];
+  const status = mastery ? mastery.status : 'locked';
+  const statusLabel = status === 'available' ? 'Available'
+                    : status === 'pending'   ? 'Awaiting Approval'
+                    : status === 'complete'  ? 'Complete'
+                    : 'Coming Soon';
 
-  const topic = allTopics.find(t=>t.id===topicId);
-  const sessions = allSessions.filter(s=>s.topic_id===topicId);
-  const doneCount = sessions.filter(s=>completedIds.includes(s.id)).length;
-  renderMastery(topicId, topic, mastery, doneCount>=sessions.length);
-}
+  card.innerHTML = `
+    <div class="topic-locked-icon">${idx + 1}</div>
+    <div class="topic-locked-body">
+      <div class="topic-locked-eyebrow">Topic ${topic.id}</div>
+      <div class="topic-locked-title">${esc(topic.title)}</div>
+    </div>
+    <div class="topic-locked-status">${esc(statusLabel)}</div>
+  `;
 
-// ── COIN RAIN ─────────────────────────────────────────────────
-function coinRain(amount){
-  const n=Math.min(Math.floor(amount/8)+3,16);
-  const c=document.getElementById('coin-rain');
-  const symbols=['✦','◈','☩','⊕'];
-  const colors=['#ffd700','#f0c96e','#c9922a'];
-  for(let i=0;i<n;i++){
-    setTimeout(()=>{
-      const el=document.createElement('div');
-      el.className='coin-p';
-      el.textContent=symbols[Math.floor(Math.random()*symbols.length)];
-      el.style.left=Math.random()*92+'vw';
-      el.style.animationDuration=(1.2+Math.random()*1.8)+'s';
-      el.style.color=colors[Math.floor(Math.random()*colors.length)];
-      el.style.filter=`drop-shadow(0 0 6px ${colors[0]})`;
-      c.appendChild(el);
-      setTimeout(()=>el.remove(),3500);
-    },i*65);
-  }
-}
-
-function showAdminBar(){
-  const bar = document.getElementById('admin-bar');
-  if(bar) bar.classList.add('show');
-}
-
-function showParentBar(){
-  const bar = document.getElementById('parent-bar');
-  if(bar) bar.classList.add('show');
+  return card;
 }
 
 // ── ADMIN NAV FIX ─────────────────────────────────────────────
-(function(){
-  if(new URLSearchParams(window.location.search).get('admin')==='1'){
-    document.querySelectorAll('.nav-item').forEach(a=>{
-      if(a.href && !a.href.includes('?admin=1') && !a.href.includes('index.html')){
-        a.href = a.href + '?admin=1';
-      }
-    });
-    document.querySelectorAll('a[href]').forEach(a=>{
-      const href=a.getAttribute('href');
-      if(href && !href.startsWith('#') && !href.startsWith('http') &&
-         !href.includes('?admin=1') && !href.includes('index.html') &&
-         !href.includes('games/')){
-        a.setAttribute('href', href + '?admin=1');
-      }
-    });
-  }
-})();
+// Preserve ?admin=1 across nav links and dynamically-rendered links.
+// Called once after the auth+render pipeline completes.
+function propagateAdminQuery(){
+  if(new URLSearchParams(window.location.search).get('admin') !== '1') return;
+
+  const append = (a) => {
+    const href = a.getAttribute('href');
+    if(!href) return;
+    if(href.startsWith('#') || href.startsWith('http')) return;
+    if(href.includes('?admin=1') || href.includes('index.html')) return;
+    a.setAttribute('href', href + '?admin=1');
+  };
+
+  document.querySelectorAll('.nav-item, .back-btn, .session-row, .resource-link')
+    .forEach(append);
+}
 </script>
 
 <script>

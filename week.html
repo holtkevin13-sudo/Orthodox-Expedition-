@@ -221,6 +221,148 @@ body::before{
 
 /* ── ARTIFACT NOTE & MISC ───────────────────────────────────────────────── */
 .artifact-note{margin-top:0.4rem;font-size:0.78rem;color:rgba(201,146,42,0.55);font-style:italic;}
+
+/* ── REPAIR P — PREP MODE COUNTDOWN BANNER ─────────────────────────────── */
+/* Shown only while today < spine.launch_date. Sits between the page header */
+/* and the day's content. Disappears entirely on May 18 and after.          */
+.prep-banner{
+  margin:0 auto 1.6rem;
+  padding:1.5rem 1.5rem 1.4rem;
+  background:linear-gradient(160deg,rgba(244,232,193,0.10),rgba(244,232,193,0.04));
+  border:1.5px solid rgba(201,146,42,0.38);
+  border-radius:14px;
+  text-align:center;
+  position:relative;
+  box-shadow:0 0 26px rgba(201,146,42,0.08) inset;
+}
+.prep-banner-eyebrow{
+  font-family:'Cinzel',serif;
+  font-size:0.7rem;
+  letter-spacing:0.3em;
+  color:rgba(201,146,42,0.78);
+  text-transform:uppercase;
+  margin-bottom:0.6rem;
+}
+.prep-banner-title{
+  font-family:'Cinzel Decorative',serif;
+  font-size:clamp(1.05rem,3.5vw,1.3rem);
+  color:var(--gold-light);
+  margin-bottom:0.65rem;
+  text-shadow:0 0 18px rgba(201,146,42,0.25);
+  line-height:1.35;
+}
+.prep-banner-title .ornament{
+  color:rgba(201,146,42,0.6);
+  margin:0 0.5rem;
+  font-size:0.95em;
+}
+.prep-banner-countdown{
+  font-family:'Cinzel',serif;
+  font-size:0.95rem;
+  letter-spacing:0.06em;
+  color:var(--gold-bright);
+  margin-bottom:0.55rem;
+}
+.prep-banner-note{
+  font-family:'Crimson Text',serif;
+  font-style:italic;
+  font-size:0.95rem;
+  color:rgba(244,232,193,0.65);
+  line-height:1.5;
+  max-width:34rem;
+  margin:0 auto;
+}
+
+/* ── REPAIR P — LAUNCH CELEBRATION ─────────────────────────────────────── */
+/* One-time overlay shown on May 18+ first-open (gated on localStorage).   */
+/* Dignified, brief — fades in, single Begin tap, fades out and unmounts.  */
+.launch-celebration{
+  position:fixed;
+  inset:0;
+  z-index:9999;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:2rem 1.5rem;
+  background:radial-gradient(ellipse at 50% 38%,rgba(107,26,26,0.92) 0%,rgba(14,8,0,0.97) 70%);
+  -webkit-backdrop-filter:blur(8px);
+  backdrop-filter:blur(8px);
+  opacity:0;
+  animation:lcFadeIn 1.4s ease-out forwards;
+}
+@keyframes lcFadeIn{to{opacity:1;}}
+.launch-celebration.fading-out{animation:lcFadeOut 0.7s ease-in forwards;}
+@keyframes lcFadeOut{to{opacity:0;visibility:hidden;}}
+.launch-celebration-card{
+  text-align:center;
+  max-width:480px;
+  animation:lcContent 1.6s ease-out 0.3s both;
+}
+@keyframes lcContent{
+  from{opacity:0;transform:translateY(12px);}
+  to{opacity:1;transform:translateY(0);}
+}
+.launch-celebration-logo{
+  width:96px;height:96px;
+  margin:0 auto 1.5rem;
+  display:block;
+  border-radius:50%;
+  box-shadow:0 0 40px rgba(255,215,0,0.45),0 0 80px rgba(255,215,0,0.2);
+  animation:lcGlow 3s ease-in-out infinite;
+}
+@keyframes lcGlow{
+  0%,100%{box-shadow:0 0 40px rgba(255,215,0,0.45),0 0 80px rgba(255,215,0,0.2);}
+  50%    {box-shadow:0 0 56px rgba(255,215,0,0.6), 0 0 110px rgba(255,215,0,0.3);}
+}
+.launch-celebration-title{
+  font-family:'Cinzel Decorative',serif;
+  font-size:clamp(1.4rem,5vw,1.85rem);
+  color:var(--gold-light);
+  margin-bottom:0.85rem;
+  line-height:1.3;
+}
+.launch-celebration-title .ornament{
+  color:rgba(201,146,42,0.65);
+  margin:0 0.5rem;
+}
+.launch-celebration-welcome{
+  font-family:'Crimson Text',serif;
+  font-style:italic;
+  font-size:1.1rem;
+  color:rgba(244,232,193,0.82);
+  margin-bottom:2rem;
+  line-height:1.55;
+}
+.launch-celebration-btn{
+  display:inline-block;
+  min-width:180px;
+  min-height:48px;
+  padding:0.85rem 2.4rem;
+  background:linear-gradient(135deg,var(--gold),var(--gold-bright));
+  border:none;
+  border-radius:12px;
+  font-family:'Cinzel',serif;
+  font-size:0.85rem;
+  letter-spacing:0.22em;
+  color:var(--bg);
+  font-weight:700;
+  text-transform:uppercase;
+  cursor:pointer;
+  box-shadow:0 4px 22px rgba(255,215,0,0.35);
+  transition:transform 0.15s,box-shadow 0.15s;
+}
+.launch-celebration-btn:hover,
+.launch-celebration-btn:focus{
+  transform:translateY(-1px);
+  box-shadow:0 6px 28px rgba(255,215,0,0.5);
+  outline:none;
+}
+@media (prefers-reduced-motion: reduce){
+  .launch-celebration,
+  .launch-celebration-card,
+  .launch-celebration-logo{animation:none;}
+  .launch-celebration{opacity:1;}
+}
 </style>
 </head>
 
@@ -252,7 +394,51 @@ body::before{
   }
 
   // ── COMPUTE TODAY'S STATE ─────────────────────────
-  const state = DayState.compute(new Date(), spine);
+  let state = DayState.compute(new Date(), spine);
+
+  // ── REPAIR P — SOFT-OPEN STATE SYNTHESIS (P.1) ─────
+  // Pre-launch (today < spine.launch_date) we no longer hard-gate week.html
+  // behind a countdown screen. Instead we synthesize a "Topic 00 Week 1"
+  // shadow state so the existing render branches just work — Mon/Wed/Fri
+  // surface the actual M/W/F content for session 00.1; Tue/Thu/Sat/Sun
+  // surface their normal calm-frames. Completions write to the DB exactly
+  // as they will post-launch (Option C — Honest Soft Start: whatever Nolan
+  // completes pre-launch counts; the catechetical journey is a relationship,
+  // not a software unlock).
+  //
+  // The May 18 spine date is preserved untouched. The launch-day celebration
+  // moment (P.3 below) replaces the gate event with a one-time greeting.
+  function softOpenLaunchDate(spineLaunchStr){
+    const [y,m,d] = spineLaunchStr.split('-').map(Number);
+    return new Date(y, m-1, d);
+  }
+  const __today = new Date(); __today.setHours(0,0,0,0);
+  const __launch = softOpenLaunchDate(spine.launch_date);
+  const isPreLaunch = __today < __launch;
+  if (isPreLaunch && state.day_kind === 'pre_launch') {
+    const dow = __today.getDay(); // 0=Sun..6=Sat
+    let synthDayKind;
+    if (dow === 0)      synthDayKind = 'sunday';
+    else if (dow === 6) synthDayKind = 'saturday';
+    else if (dow === 1) synthDayKind = 'day1';
+    else if (dow === 3) synthDayKind = 'day2';
+    else if (dow === 5) synthDayKind = 'day3';
+    else                synthDayKind = 'between_sessions'; // Tue, Thu
+    state = {
+      ...state,
+      day_kind: synthDayKind,
+      phase: 'topic_00',
+      program_week: 1,
+      current_session_id: '00.1',
+      session_week_number: 1,
+      pause_reason: null,
+      pause_resumes_on: null,
+      is_study_day: ['day1','day2','day3'].includes(synthDayKind),
+      is_topic_00: true,
+      uses_three_day_model: true,
+      next_session_starts_on: null,
+    };
+  }
 
   // ── SUPABASE + PROFILE (for prayers + future content) ──
   const SUPABASE_URL = 'https://ksfnsryfmkafwirzgjoe.supabase.co';
@@ -364,6 +550,83 @@ body::before{
   function esc(s){ if(s==null)return''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
   function formatLessonText(text){ if(!text) return ''; const paragraphs = String(text).split(/\n\s*\n/); return paragraphs.map(p => `<p>${esc(p).replace(/\n/g,'<br>')}</p>`).join(''); }
 
+  // ── REPAIR P — PREP BANNER + LAUNCH CELEBRATION (P.2 + P.3) ──────────
+  // Page-load countdown: days/hours from now to the May 18 launch.
+  function renderPrepBanner(){
+    if (!isPreLaunch) return '';
+    const now = new Date();
+    const ms = __launch - now;
+    if (ms <= 0) return '';
+    const totalHours = Math.floor(ms / 3600000);
+    const days = Math.floor(totalHours / 24);
+    const hours = totalHours - (days * 24);
+    let countdown;
+    if (days > 0) {
+      countdown = `${days} day${days === 1 ? '' : 's'}, ${hours} hour${hours === 1 ? '' : 's'}`;
+    } else if (hours > 0) {
+      countdown = `${hours} hour${hours === 1 ? '' : 's'}`;
+    } else {
+      const mins = Math.max(1, Math.floor(ms / 60000));
+      countdown = `${mins} minute${mins === 1 ? '' : 's'}`;
+    }
+    return `
+      <div class="prep-banner" role="status" aria-label="Preparation mode — expedition begins May 18">
+        <div class="prep-banner-eyebrow">Preparation</div>
+        <div class="prep-banner-title">
+          <span class="ornament">✦</span>Your expedition begins Monday, May 18<span class="ornament">✦</span>
+        </div>
+        <div class="prep-banner-countdown">${countdown}</div>
+        <div class="prep-banner-note">Explore freely. Your real journey starts then.</div>
+      </div>
+    `;
+  }
+  const prepBannerHtml = renderPrepBanner();
+
+  // One-time launch celebration. Triggers when today >= launch AND the
+  // localStorage flag has not yet been set on this device. Mounts after
+  // the page renders so the underlying content is already painted —
+  // tapping Begin fades the overlay out and reveals the normal week view.
+  // localStorage is intentional: keeps the flag explorer-device-scoped
+  // (Kevin's admin browser doesn't burn the celebration on Nolan's iPad)
+  // and avoids a DB schema change.
+  function maybeMountLaunchCelebration(){
+    try {
+      if (isPreLaunch) return;
+      if (localStorage.getItem('seen_launch_celebration') === 'true') return;
+    } catch (e) { /* localStorage unavailable — skip celebration silently */ return; }
+
+    const overlay = document.createElement('div');
+    overlay.className = 'launch-celebration';
+    overlay.setAttribute('role', 'dialog');
+    overlay.setAttribute('aria-modal', 'true');
+    overlay.setAttribute('aria-label', 'The expedition has begun');
+    overlay.innerHTML = `
+      <div class="launch-celebration-card">
+        <img class="launch-celebration-logo" src="icon-192.png" alt="" aria-hidden="true">
+        <div class="launch-celebration-title">
+          <span class="ornament">✦</span>The expedition has begun<span class="ornament">✦</span>
+        </div>
+        <div class="launch-celebration-welcome">Welcome, Nolan. Your journey starts here.</div>
+        <button type="button" class="launch-celebration-btn" data-action="begin-expedition">Begin</button>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+
+    const btn = overlay.querySelector('[data-action="begin-expedition"]');
+    function dismiss(){
+      try { localStorage.setItem('seen_launch_celebration', 'true'); } catch (e) {}
+      overlay.classList.add('fading-out');
+      setTimeout(() => { if (overlay.parentNode) overlay.parentNode.removeChild(overlay); }, 750);
+    }
+    btn.addEventListener('click', dismiss, { once: true });
+    btn.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); dismiss(); }
+    });
+    // Focus the Begin button after the content fade-in finishes (matches the
+    // 0.3s delay on the card animation + a small grace).
+    setTimeout(() => { try { btn.focus(); } catch (e) {} }, 1200);
+  }
+
   // ── ROUTING ───────────────────────────────────────
   const root = document.getElementById('page-root');
   const prayerPanel = Prayers.renderPanel(state, prayerStatus);
@@ -375,13 +638,16 @@ body::before{
   const nameDayPrefix = (state.day_kind === 'pre_launch') ? '' : nameDayBannerHtml;
 
   if (state.day_kind === 'pre_launch') {
+    // Safety fallback only — soft-open synthesis above means we never hit
+    // this branch in normal flow. Kept as a defensive default so the page
+    // never goes blank if state ever returns pre_launch unexpectedly.
     root.innerHTML = renderPreLaunch(state) + prayerPanel + renderBottomNav();
   } else if (state.day_kind === 'pause') {
     root.innerHTML = nameDayPrefix + PauseCard.render(state) + prayerPanel + renderBottomNav();
   } else if (state.day_kind === 'sunday') {
-    root.innerHTML = nameDayPrefix + renderHeader(state) + renderSunday() + prayerPanel + renderSaintBanner() + renderBottomNav();
+    root.innerHTML = nameDayPrefix + renderHeader(state) + prepBannerHtml + renderSunday() + prayerPanel + renderSaintBanner() + renderBottomNav();
   } else if (state.day_kind === 'saturday') {
-    root.innerHTML = nameDayPrefix + renderHeader(state) + renderSaturday() + prayerPanel + renderSaintBanner() + renderBottomNav();
+    root.innerHTML = nameDayPrefix + renderHeader(state) + prepBannerHtml + renderSaturday() + prayerPanel + renderSaintBanner() + renderBottomNav();
   } else if (state.is_topic_00 && window.Topic00Day) {
     // Topic 00 — Monday/Wednesday/Friday cadence (Wave 2 Lane 2 build)
     // Mon/Wed/Fri render through Topic00Day. Tue/Thu render the rest-day
@@ -390,7 +656,7 @@ body::before{
     const renderState = SessionLoader.renderState(sessionData?.session);
     if (renderState === 'coming_soon') {
       const sess = sessionData.session;
-      root.innerHTML = nameDayPrefix + renderHeader(state) + `
+      root.innerHTML = nameDayPrefix + renderHeader(state) + prepBannerHtml + `
         <div class="main-frame">
           <div class="day-heading">${esc(sess?.title || 'This Week')}</div>
           <div class="day-subheading">Coming soon</div>
@@ -402,7 +668,7 @@ body::before{
         </div>
       ` + prayerPanel + renderSaintBanner() + renderBottomNav();
     } else if (renderState === 'missing') {
-      root.innerHTML = nameDayPrefix + renderHeader(state) + `
+      root.innerHTML = nameDayPrefix + renderHeader(state) + prepBannerHtml + `
         <div class="main-frame">
           <div class="day-heading">This Week's Lesson</div>
           <div class="day-subheading">Take it gently — read, reflect, write</div>
@@ -417,16 +683,21 @@ body::before{
       // Renderable — branch on day_kind for M/W/F treatment
       const dayRail = Topic00Day.renderDayRail(state, sessionData?.progress);
       const main = Topic00Day.render(state, sessionData, topic00Ctx);
-      root.innerHTML = nameDayPrefix + renderHeader(state) + dayRail + main + prayerPanel + renderSaintBanner() + renderBottomNav();
+      root.innerHTML = nameDayPrefix + renderHeader(state) + prepBannerHtml + dayRail + main + prayerPanel + renderSaintBanner() + renderBottomNav();
       Topic00Day.attachHandlers(sb, profileId, sessionData, topic00Ctx);
     }
   } else if (state.day_kind === 'between_sessions') {
-    root.innerHTML = nameDayPrefix + renderHeader(state) + renderBetweenSessions() + prayerPanel + renderSaintBanner() + renderBottomNav();
+    root.innerHTML = nameDayPrefix + renderHeader(state) + prepBannerHtml + renderBetweenSessions() + prayerPanel + renderSaintBanner() + renderBottomNav();
   } else if (['day1','day2','day3'].includes(state.day_kind)) {
-    root.innerHTML = nameDayPrefix + renderHeader(state) + renderDayTabs(state) + renderThreeDayView(state) + prayerPanel + renderSidebar() + renderSaintBanner() + renderBottomNav();
+    root.innerHTML = nameDayPrefix + renderHeader(state) + prepBannerHtml + renderDayTabs(state) + renderThreeDayView(state) + prayerPanel + renderSidebar() + renderSaintBanner() + renderBottomNav();
   } else {
-    root.innerHTML = nameDayPrefix + renderHeader(state) + renderUnknown() + prayerPanel + renderBottomNav();
+    root.innerHTML = nameDayPrefix + renderHeader(state) + prepBannerHtml + renderUnknown() + prayerPanel + renderBottomNav();
   }
+
+  // ── REPAIR P — LAUNCH CELEBRATION MOUNT (P.3) ──────
+  // Runs after the page is rendered so the underlying content is already
+  // painted under the overlay. No-ops pre-launch and after the flag is set.
+  maybeMountLaunchCelebration();
 
   // ── RENDER FUNCTIONS ──────────────────────────────
   function renderPreLaunch(s){

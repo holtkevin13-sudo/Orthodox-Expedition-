@@ -1,4 +1,10 @@
-// Orthodox Expedition — Service Worker v10
+// Orthodox Expedition — Service Worker v11
+// v11: Repair Chat N — added shared /css/nav-polish.css for bottom-nav final polish.
+//      Fix: the Holy Scriptures (☦) icon was rendering as a pink Apple Color Emoji on
+//      iOS/iPadOS because the system fonts have no text glyph for U+2626 ORTHODOX CROSS.
+//      Two-pronged fix: (a) `font-variant-emoji: text` on .nav-mark in nav-polish.css,
+//      (b) U+FE0E TEXT VARIATION SELECTOR appended to ☦ in nav HTML across 6 pages.
+//      Also adds palette-matched :focus-visible ring for keyboard accessibility.
 // v10: Repair B3 — added shared /css/viewport.css for responsive --container-max-width token.
 //      14 main pages updated: viewport meta standardized to width=device-width, initial-scale=1,
 //      viewport-fit=cover (drops user-scalable=no for accessibility, adds iPad safe-area).
@@ -15,7 +21,7 @@
 // v4: added week.html, prayers.html, day-state, pause-card, prayers, and config JSON
 // Version bump forces cache clear and fresh install
 
-const CACHE_NAME = 'orthodox-expedition-v10';
+const CACHE_NAME = 'orthodox-expedition-v11';
 const STATIC_ASSETS = [
   '/Orthodox-Expedition-/',
   '/Orthodox-Expedition-/index.html',
@@ -40,6 +46,7 @@ const STATIC_ASSETS = [
   '/Orthodox-Expedition-/icon-maskable-512.png',
   '/Orthodox-Expedition-/manifest.json',
   '/Orthodox-Expedition-/css/viewport.css',
+  '/Orthodox-Expedition-/css/nav-polish.css',
   '/Orthodox-Expedition-/js/day-state.js',
   '/Orthodox-Expedition-/js/pause-card.js',
   '/Orthodox-Expedition-/js/prayers.js',

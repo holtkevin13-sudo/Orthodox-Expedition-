@@ -1,0 +1,59 @@
+/* ─────────────────────────────────────────────────────────────────
+   Orthodox Expedition — Shared Contrast Tokens
+   Repair R (Pass 8 polish) — May 7, 2026
+
+   Defines WCAG AA-compliant text-tier tokens for body, secondary, and
+   tertiary text on the Expedition's parchment-on-near-black palette.
+
+   Background of every dark page: var(--bg) = #0e0800
+   Background of admin.html (light theme): #ede0bc
+   Background of journal.html entry surface: var(--parchment) = #f4e8c1
+
+   Each token's contrast ratio is verified against its target background
+   using WCAG 2.1 sRGB relative-luminance math (no eyeballing). Ratios
+   below are measured, not estimated.
+
+   Tier intent:
+     primary    — body copy, headings, primary CTAs
+     secondary  — subtitles, list-item-sub, prominent meta
+     tertiary   — eyebrows, captions, dates, supporting meta
+     muted      — minimal-emphasis text (still legible — no FAILS here)
+     done       — completed/struck-through state, intentionally faded
+
+   ADHD-first design lens: predictable placement + predictable visual
+   weight per tier. Once Nolan's eye learns "that's tertiary," the
+   pattern carries across pages.
+
+   This file is loaded BEFORE each page's own <style> block so page
+   tokens can override on a per-page basis if needed (no page does).
+   The opacity values were chosen to land each tier comfortably above
+   its WCAG threshold while preserving the existing visual hierarchy.
+   ─────────────────────────────────────────────────────────────── */
+
+:root {
+  /* ── Dark theme (parchment on #0e0800) ─────────────────────────
+     Used by every page except admin.html and quiz-results.html. */
+
+  /* parchment family — primary body text and dimmed variants */
+  --text-primary:    rgba(244, 232, 193, 0.95);  /* 14.67:1  AAA — body, headings */
+  --text-secondary:  rgba(244, 232, 193, 0.78);  /*  9.96:1  AAA — subtitles, sub-text */
+  --text-tertiary:   rgba(244, 232, 193, 0.62);  /*  6.53:1  AA  — captions, meta */
+  --text-muted:      rgba(244, 232, 193, 0.50);  /*  4.55:1  AA  — minimal-emphasis text */
+  --text-done:       rgba(244, 232, 193, 0.55);  /*  5.30:1  AA  — strikethrough done state */
+
+  /* gold accent text — eyebrows, brand labels, decorative-but-readable */
+  --text-eyebrow:    rgba(240, 201, 110, 0.85);  /*  9.20:1  AAA — primary eyebrow / brand */
+  --text-eyebrow-2:  rgba(240, 201, 110, 0.70);  /*  6.45:1  AA  — secondary eyebrow */
+  --text-eyebrow-3:  rgba(240, 201, 110, 0.65);  /*  5.66:1  AA  — tertiary eyebrow / faint */
+
+  /* purple accent text (used in games.html, parent.html .pending,
+     admin.html .session-has-game). Uses the lighter purple base so
+     opacity-tweaks keep AA-clean. */
+  --text-purple:     rgba(196, 181, 253, 0.95);  /*  9.75:1  AAA — purple primary */
+  --text-purple-2:   rgba(196, 181, 253, 0.85);  /*  7.93:1  AAA — purple secondary */
+
+  /* status feedback — green ok / red err — already AA at high alphas
+     but tokenized for consistency where used. */
+  --text-ok:         rgba(187, 247, 208, 0.95);  /* 12.99:1  AAA */
+  --text-err:        rgba(252, 165, 165, 0.95);  /*  9.51:1  AAA */
+}

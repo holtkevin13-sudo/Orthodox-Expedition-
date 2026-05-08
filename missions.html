@@ -16,6 +16,7 @@
 <title>The Orthodox Expedition</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/prayer-rollup.js"></script>
 <script>
 function showAdminBar(){
   const bar = document.getElementById('admin-bar');
@@ -1405,6 +1406,12 @@ function closeRankup(){
     if(prof && ['superuser','admin','parent'].includes(prof.role) && isAdminView){ showAdminBar(); }
     await loadData(session.user.id);
     showApp();
+    // Lane 3 prayer rollup — fire-and-forget (see home.html for rationale).
+    if(window.PrayerRollup){
+      window.PrayerRollup.run(sb, session.user.id).catch(err => {
+        console.warn('Prayer rollup (missions) failed:', err);
+      });
+    }
   } catch(e) {
     console.error('Home error:', e);
     window.location.href='index.html';

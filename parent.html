@@ -175,6 +175,236 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
 .feedback{font-family:'Cinzel',serif;font-size:0.82rem;text-align:center;min-height:1.3rem;margin-top:0.6rem;letter-spacing:0.03em;}
 .feedback.ok{color:rgba(187,247,208,0.95);}
 .feedback.err{color:rgba(252,165,165,0.95);}
+
+/* ═══════════════════════════════════════════════════════════════
+   ── THIS WEEK'S COMPANION (Chat F) ─────────────────────────────
+   Parent-facing weekly digest: where Nolan is, what this week's
+   catechesis covers, recent activity, liturgical week ahead.
+   Uses existing palette tokens. Print stylesheet at bottom.
+   ═══════════════════════════════════════════════════════════════ */
+.tw-banner{
+  margin:0 0 1.5rem;padding:1.25rem 1.5rem 1.1rem;
+  background:linear-gradient(160deg, rgba(244,232,193,0.18), rgba(232,213,160,0.10));
+  border:1.5px solid rgba(201,146,42,0.55);border-radius:14px;
+  text-align:center;box-shadow:inset 0 0 0 1px rgba(244,232,193,0.06);
+}
+.tw-banner-eyebrow{font-family:'Cinzel',serif;font-size:0.62rem;letter-spacing:0.32em;color:rgba(240,201,110,0.95);text-transform:uppercase;margin-bottom:0.4rem;}
+.tw-banner-title{font-family:'Cinzel Decorative',serif;font-size:1.25rem;color:var(--gold-light);letter-spacing:0.02em;margin-bottom:0.3rem;}
+.tw-banner-marks{color:var(--gold);letter-spacing:0.4em;margin:0 0.45rem;}
+.tw-banner-sub{font-family:'Crimson Text',serif;font-style:italic;font-size:0.92rem;color:rgba(244,232,193,0.7);line-height:1.5;}
+
+.tw-section{margin-bottom:1.75rem;}
+.tw-section-head{
+  font-family:'Cinzel',serif;font-size:0.78rem;letter-spacing:0.18em;
+  text-transform:uppercase;color:var(--gold-light);margin-bottom:0.95rem;
+  padding-bottom:0.5rem;border-bottom:1px solid rgba(201,146,42,0.28);
+  display:flex;align-items:center;gap:0.5rem;font-weight:600;
+}
+.tw-section-mark{color:var(--gold);font-size:0.85rem;}
+
+.tw-card{
+  background:rgba(244,232,193,0.04);border:1px solid rgba(201,146,42,0.22);
+  border-radius:12px;padding:1.1rem 1.15rem;margin-bottom:0.85rem;
+}
+.tw-card-eyebrow{font-family:'Cinzel',serif;font-size:0.62rem;letter-spacing:0.22em;color:rgba(240,201,110,0.85);text-transform:uppercase;margin-bottom:0.55rem;}
+.tw-card-title{font-family:'Cinzel Decorative',serif;font-size:1.1rem;color:var(--gold-light);margin-bottom:0.6rem;letter-spacing:0.01em;}
+
+.tw-position-line{font-family:'Crimson Text',serif;font-size:1.08rem;color:rgba(244,232,193,0.95);margin-bottom:0.65rem;line-height:1.5;}
+.tw-position-line strong{color:var(--gold-bright);font-weight:600;}
+.tw-progress-track{height:8px;background:rgba(244,232,193,0.08);border-radius:4px;overflow:hidden;margin:0.3rem 0 0;border:1px solid rgba(201,146,42,0.18);}
+.tw-progress-fill{height:100%;background:linear-gradient(90deg, var(--gold), var(--gold-bright));transition:width 0.4s ease;}
+.tw-progress-label{font-family:'Cinzel',serif;font-size:0.7rem;color:rgba(244,232,193,0.7);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:0.15rem;}
+
+.tw-rail{display:flex;justify-content:center;gap:1.2rem;margin:0.65rem 0 0.5rem;}
+.tw-rail-pair{display:flex;flex-direction:column;align-items:center;gap:0.4rem;}
+.tw-rail-dot{width:14px;height:14px;border-radius:50%;border:1.5px solid rgba(201,146,42,0.45);background:rgba(244,232,193,0.04);}
+.tw-rail-dot.done{background:linear-gradient(135deg, var(--gold), var(--gold-bright));border-color:var(--gold);box-shadow:0 0 6px rgba(255,215,0,0.4);}
+.tw-rail-dot.today{border-color:var(--gold-bright);border-width:2px;background:rgba(244,232,193,0.06);}
+.tw-rail-label{font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.18em;color:rgba(244,232,193,0.7);text-transform:uppercase;}
+.tw-rail-summary{text-align:center;margin-top:0.4rem;font-family:'Crimson Text',serif;font-style:italic;color:rgba(244,232,193,0.7);font-size:0.92rem;}
+
+.tw-stats{display:grid;grid-template-columns:repeat(2,1fr);gap:0.55rem;margin-top:0.4rem;}
+.tw-stat{background:rgba(244,232,193,0.05);border:1px solid rgba(201,146,42,0.2);border-radius:10px;padding:0.7rem 0.8rem;}
+.tw-stat-label{font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.18em;color:rgba(244,232,193,0.65);text-transform:uppercase;margin-bottom:0.3rem;}
+.tw-stat-val{font-family:'Cinzel Decorative',serif;font-size:1rem;color:var(--gold-bright);line-height:1.25;}
+.tw-stat-sub{font-family:'Crimson Text',serif;font-size:0.85rem;color:rgba(244,232,193,0.75);font-style:italic;margin-top:0.15rem;line-height:1.35;}
+
+.tw-collapsible{margin:0.45rem 0 0;}
+.tw-collapsible-toggle{font-family:'Cinzel',serif;font-size:0.72rem;letter-spacing:0.12em;color:var(--gold-light);text-transform:uppercase;background:none;border:none;cursor:pointer;padding:0.5rem 0;display:flex;align-items:center;gap:0.45rem;font-weight:600;}
+.tw-collapsible-toggle:hover{color:var(--gold-bright);}
+.tw-collapsible-toggle .arrow{transition:transform 0.2s;display:inline-block;}
+.tw-collapsible.open .tw-collapsible-toggle .arrow{transform:rotate(90deg);}
+.tw-collapsible-body{display:none;margin-top:0.7rem;padding-top:0.85rem;border-top:1px solid rgba(201,146,42,0.18);}
+.tw-collapsible.open .tw-collapsible-body{display:block;}
+
+.tw-prose{font-family:'Crimson Text',serif;font-size:1rem;color:rgba(244,232,193,0.92);line-height:1.7;}
+.tw-prose p{margin:0 0 0.85rem;}
+.tw-prose p:last-child{margin-bottom:0;}
+.tw-prose strong{color:var(--gold-light);font-weight:600;}
+.tw-prose em{color:rgba(244,232,193,0.95);font-style:italic;}
+
+.tw-pattern-row{display:flex;flex-direction:column;gap:0.7rem;margin-top:0.4rem;}
+.tw-pattern-card{background:rgba(244,232,193,0.03);border:1px solid rgba(201,146,42,0.18);border-left:3px solid var(--gold);border-radius:8px;padding:0.85rem 1rem;}
+.tw-pattern-day{font-family:'Cinzel',serif;font-size:0.7rem;letter-spacing:0.2em;color:var(--gold-light);text-transform:uppercase;margin-bottom:0.4rem;font-weight:600;}
+.tw-pattern-text{font-family:'Crimson Text',serif;font-size:0.95rem;color:rgba(244,232,193,0.85);line-height:1.55;}
+
+.tw-entry{background:linear-gradient(160deg, rgba(244,232,193,0.06), rgba(244,232,193,0.02));border:1px solid rgba(201,146,42,0.22);border-radius:10px;padding:0.85rem 1rem;margin-bottom:0.6rem;}
+.tw-entry-meta{display:flex;justify-content:space-between;align-items:center;margin-bottom:0.45rem;gap:0.5rem;}
+.tw-entry-cat{font-family:'Cinzel',serif;font-size:0.62rem;letter-spacing:0.18em;color:var(--gold-light);text-transform:uppercase;background:rgba(201,146,42,0.14);padding:0.18rem 0.55rem;border-radius:10px;}
+.tw-entry-date{font-family:'Cinzel',serif;font-size:0.65rem;letter-spacing:0.12em;color:rgba(244,232,193,0.65);text-transform:uppercase;}
+.tw-entry-preview{font-family:'Crimson Text',serif;font-style:italic;font-size:0.95rem;color:rgba(244,232,193,0.82);line-height:1.55;}
+.tw-entry-link{display:inline-block;margin-top:0.5rem;font-family:'Cinzel',serif;font-size:0.66rem;letter-spacing:0.14em;color:var(--gold-light);text-transform:uppercase;text-decoration:none;}
+.tw-entry-link:hover{color:var(--gold-bright);}
+
+.tw-bazaar-summary{font-family:'Crimson Text',serif;font-size:0.98rem;color:rgba(244,232,193,0.85);line-height:1.55;margin-bottom:0.6rem;}
+.tw-bazaar-summary strong{color:var(--gold-light);font-weight:600;}
+.tw-bazaar-link{color:var(--gold-light);text-decoration:none;font-family:'Cinzel',serif;font-size:0.7rem;letter-spacing:0.1em;text-transform:uppercase;margin-left:0.4rem;}
+.tw-bazaar-link:hover{color:var(--gold-bright);}
+.tw-redemption{display:flex;justify-content:space-between;align-items:center;padding:0.55rem 0.7rem;margin-bottom:0.4rem;background:rgba(244,232,193,0.04);border:1px solid rgba(201,146,42,0.16);border-radius:8px;font-size:0.92rem;gap:0.6rem;}
+.tw-redemption-name{font-family:'Crimson Text',serif;color:rgba(244,232,193,0.9);flex:1;}
+.tw-redemption-meta{font-family:'Cinzel',serif;font-size:0.7rem;color:rgba(244,232,193,0.62);letter-spacing:0.06em;text-align:right;}
+
+.tw-litday{display:flex;gap:0.85rem;align-items:flex-start;padding:0.85rem 1rem;margin-bottom:0.55rem;background:rgba(244,232,193,0.04);border:1px solid rgba(201,146,42,0.18);border-radius:10px;border-left:3px solid rgba(201,146,42,0.35);}
+.tw-litday-date{flex:0 0 4.4rem;font-family:'Cinzel',serif;font-size:0.7rem;letter-spacing:0.16em;color:rgba(240,201,110,0.85);text-transform:uppercase;line-height:1.25;border-right:1px solid rgba(201,146,42,0.2);padding-right:0.6rem;}
+.tw-litday-day{display:block;font-size:0.74rem;font-weight:700;}
+.tw-litday-md{display:block;font-size:0.62rem;letter-spacing:0.12em;color:rgba(244,232,193,0.6);margin-top:0.18rem;}
+.tw-litday-body{flex:1;min-width:0;}
+.tw-litday-eyebrow{font-family:'Cinzel',serif;font-size:0.58rem;letter-spacing:0.22em;color:rgba(240,201,110,0.75);text-transform:uppercase;margin-bottom:0.25rem;}
+.tw-litday-feast{font-family:'Crimson Text',serif;font-size:0.98rem;color:rgba(244,232,193,0.92);line-height:1.45;}
+.tw-litday-mark{color:var(--gold-bright);margin-right:0.35rem;}
+.tw-litday-sub{font-family:'Crimson Text',serif;font-style:italic;font-size:0.86rem;color:rgba(244,232,193,0.65);margin-top:0.3rem;line-height:1.4;}
+.tw-litday-fast{display:inline-block;margin-left:0.45rem;font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.1em;color:rgba(244,232,193,0.7);background:rgba(107,26,26,0.25);padding:0.12rem 0.5rem;border-radius:8px;border:1px solid rgba(220,38,38,0.25);text-transform:uppercase;white-space:nowrap;}
+.tw-litday-empty{font-family:'Crimson Text',serif;font-style:italic;color:rgba(244,232,193,0.45);font-size:0.92rem;}
+.tw-litday.is-sunday{border-left:3px solid var(--gold-bright);background:linear-gradient(160deg, rgba(244,232,193,0.07), rgba(244,232,193,0.03));}
+.tw-litday.is-baptism, .tw-litday.is-nameday{border:1.5px solid rgba(201,146,42,0.6);background:linear-gradient(160deg, rgba(201,146,42,0.10), rgba(107,26,26,0.06));border-left:3px solid var(--gold-bright);box-shadow:0 0 12px rgba(201,146,42,0.18);}
+.tw-litday.is-baptism .tw-litday-eyebrow,
+.tw-litday.is-nameday .tw-litday-eyebrow{color:var(--gold-bright);font-weight:700;}
+
+.tw-print-row{margin-top:1.5rem;text-align:center;padding-top:1.25rem;border-top:1px solid rgba(201,146,42,0.18);}
+.tw-print-btn{padding:0.85rem 1.6rem;min-height:48px;background:rgba(201,146,42,0.12);border:1.5px solid rgba(201,146,42,0.4);border-radius:10px;font-family:'Cinzel',serif;font-size:0.78rem;color:var(--gold-light);letter-spacing:0.12em;text-transform:uppercase;cursor:pointer;transition:all 0.2s;font-weight:600;}
+.tw-print-btn:hover{background:rgba(201,146,42,0.22);border-color:var(--gold-light);color:var(--gold-bright);}
+.tw-print-foot{font-family:'Crimson Text',serif;font-style:italic;font-size:0.86rem;color:rgba(244,232,193,0.55);margin-top:0.5rem;}
+
+/* ── PRINT STYLESHEET — clean black-on-white companion ─── */
+@media print {
+  @page { margin: 0.6in 0.55in 0.7in; }
+
+  body{
+    background:white !important;background-image:none !important;
+    color:#1a0f00 !important;font-family:'Crimson Text',Georgia,serif !important;
+  }
+  body::before{display:none !important;}
+
+  /* Hide everything but the This Week tab content */
+  #loading, .top-bar, .tab-bar, .child-selector,
+  #modal-overlay, .tw-print-row, .tw-collapsible-toggle{
+    display:none !important;
+  }
+  #tab-overview, #tab-coins, #tab-missions, #tab-prizes, #tab-settings{
+    display:none !important;
+  }
+  #tab-thisweek{display:block !important;}
+  .page{max-width:100% !important;padding:0 !important;}
+
+  /* Force-open all collapsibles for print */
+  .tw-collapsible-body{display:block !important;}
+
+  /* Banner */
+  .tw-banner{
+    border:1.5px solid #c9922a !important;background:#fdf9ee !important;
+    box-shadow:none !important;page-break-after:avoid;margin-bottom:1.2rem !important;
+  }
+  .tw-banner-eyebrow{color:#8b6914 !important;}
+  .tw-banner-title{color:#6b1a1a !important;}
+  .tw-banner-marks{color:#c9922a !important;}
+  .tw-banner-sub{color:#3a2a10 !important;}
+
+  /* Section page-breaks */
+  .tw-section{page-break-inside:auto;}
+  .tw-section + .tw-section{page-break-before:always;}
+  .tw-section-head{
+    color:#6b1a1a !important;
+    border-bottom:1px solid #c9922a !important;
+    page-break-after:avoid;
+  }
+  .tw-section-mark{color:#c9922a !important;}
+
+  .tw-card{
+    background:#fdf9ee !important;border:1px solid #c9922a !important;
+    color:#1a0f00 !important;page-break-inside:avoid;
+  }
+  .tw-card-eyebrow{color:#8b6914 !important;}
+  .tw-card-title{color:#6b1a1a !important;}
+
+  .tw-prose, .tw-position-line, .tw-pattern-text,
+  .tw-entry-preview, .tw-bazaar-summary,
+  .tw-litday-feast{color:#1a0f00 !important;}
+  .tw-prose strong, .tw-position-line strong,
+  .tw-bazaar-summary strong{color:#6b1a1a !important;}
+
+  .tw-rail-dot{
+    border:1.5px solid #c9922a !important;background:white !important;
+    box-shadow:none !important;
+  }
+  .tw-rail-dot.done{background:#c9922a !important;border-color:#8b6914 !important;}
+  .tw-rail-label{color:#3a2a10 !important;}
+  .tw-rail-summary{color:#3a2a10 !important;}
+
+  .tw-progress-track{background:#f0e6cc !important;border:1px solid #c9922a !important;}
+  .tw-progress-fill{background:#c9922a !important;}
+  .tw-progress-label{color:#3a2a10 !important;}
+
+  .tw-stat{background:#fdf9ee !important;border:1px solid #c9922a !important;}
+  .tw-stat-label{color:#8b6914 !important;}
+  .tw-stat-val{color:#6b1a1a !important;}
+  .tw-stat-sub{color:#3a2a10 !important;}
+
+  .tw-pattern-card{
+    background:#fdf9ee !important;border:1px solid #c9922a !important;
+    border-left:3px solid #c9922a !important;page-break-inside:avoid;
+  }
+  .tw-pattern-day{color:#6b1a1a !important;}
+
+  .tw-entry{
+    background:#fdf9ee !important;border:1px solid #c9922a !important;
+    page-break-inside:avoid;
+  }
+  .tw-entry-cat{
+    background:#f0e6cc !important;color:#6b1a1a !important;
+    border:1px solid #c9922a !important;
+  }
+  .tw-entry-date{color:#3a2a10 !important;}
+  .tw-entry-link{display:none !important;}
+  .tw-bazaar-link{display:none !important;}
+
+  .tw-redemption{
+    background:#fdf9ee !important;border:1px solid #c9922a !important;
+  }
+  .tw-redemption-name{color:#1a0f00 !important;}
+  .tw-redemption-meta{color:#3a2a10 !important;}
+
+  .tw-litday{
+    background:#fdf9ee !important;border:1px solid #c9922a !important;
+    border-left:3px solid #c9922a !important;page-break-inside:avoid;
+  }
+  .tw-litday.is-sunday{
+    background:#fdf2cc !important;border-left:3px solid #c9922a !important;
+  }
+  .tw-litday.is-baptism, .tw-litday.is-nameday{
+    background:#f0e6cc !important;border:2px solid #c9922a !important;
+    border-left:3px solid #6b1a1a !important;box-shadow:none !important;
+  }
+  .tw-litday-date{color:#6b1a1a !important;border-right:1px solid #c9922a !important;}
+  .tw-litday-md{color:#3a2a10 !important;}
+  .tw-litday-eyebrow{color:#8b6914 !important;}
+  .tw-litday-mark{color:#c9922a !important;}
+  .tw-litday-sub{color:#3a2a10 !important;}
+  .tw-litday-fast{
+    background:#f0e6cc !important;border:1px solid #c9922a !important;
+    color:#6b1a1a !important;
+  }
+  .tw-litday-empty{color:#999 !important;}
+}
 </style>
 </head>
 <body>
@@ -203,6 +433,7 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
   <!-- TAB BAR -->
   <div class="tab-bar">
     <button class="tab active" onclick="showTab('overview')">Overview</button>
+    <button class="tab" onclick="showTab('thisweek')">This Week</button>
     <button class="tab" onclick="showTab('coins')">Coins</button>
     <button class="tab" onclick="showTab('missions')">Missions</button>
     <button class="tab" onclick="showTab('prizes')">Prizes <span class="tab-badge" id="redemption-badge" style="display:none"></span></button>
@@ -228,6 +459,14 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
       <div class="section">
         <div class="section-title">Recent Activity</div>
         <div id="overview-activity"></div>
+      </div>
+    </div>
+
+    <!-- ── THIS WEEK'S COMPANION TAB (Chat F) ── -->
+    <div class="tab-panel" id="tab-thisweek">
+      <div class="child-selector" id="child-selector-thisweek"></div>
+      <div id="tab-thisweek-content">
+        <div class="empty-state">Loading this week's companion…</div>
       </div>
     </div>
 
@@ -456,7 +695,7 @@ function renderAll(){
 }
 
 function renderChildSelectors(){
-  ['overview','coins','missions'].forEach(tab=>{
+  ['overview','thisweek','coins','missions'].forEach(tab=>{
     const el=document.getElementById(`child-selector-${tab}`);
     if(!el) return;
     el.innerHTML='';
@@ -474,6 +713,7 @@ function renderChildPanels(){
   renderOverview();
   renderActivityLog();
   renderMissionsTab();
+  loadThisWeek();
 }
 
 // ── OVERVIEW ──────────────────────────────────────────────────
@@ -863,6 +1103,511 @@ async function saveRate(){
 function closeModal(e){
   if(e&&e.target!==document.getElementById('modal-overlay')) return;
   document.getElementById('modal-overlay').classList.remove('show');
+}
+
+// ═════════════════════════════════════════════════════════════
+// ── THIS WEEK'S COMPANION (Chat F) ────────────────────────────
+// Live parent-facing weekly digest: where Nolan is, what this
+// week's catechesis covers, recent activity, liturgical week ahead.
+// Data is fetched fresh on every loadChildData() (i.e., page load
+// + child-change). No caching, no stored derived state.
+// ═════════════════════════════════════════════════════════════
+const TW_LAUNCH_DATE = new Date(2026, 4, 18); // May 18, 2026 local-time
+const TW_BAPTISM_DATE = '2026-06-19';
+const TW_NAMEDAY_DATE = '2026-08-09';
+const TW_DAY_NAMES   = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
+const TW_MONTH_NAMES = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+
+let twData = null;
+
+function twHtmlEscape(s){
+  return String(s == null ? '' : s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+function twISODate(d){
+  const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), dd=String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${dd}`;
+}
+
+function twGetCurrentMonday(){
+  // Local-time Monday-of-this-week. Mon-Sun semantics matches Lane 3 prayer streak boundary.
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  const dow = today.getDay(); // 0=Sun..6=Sat
+  const offset = (dow === 0) ? -6 : (1 - dow);
+  const mon = new Date(today);
+  mon.setDate(mon.getDate() + offset);
+  return mon;
+}
+
+function twComputeWeek(){
+  // Returns 0 (pre-launch), 1-15 (Topic 00 weeks), or 16 (post-Topic-00)
+  const today = new Date(); today.setHours(0,0,0,0);
+  const launch = new Date(TW_LAUNCH_DATE);
+  const days = Math.floor((today - launch) / 86400000);
+  if(days < 0) return 0;
+  if(days >= 15 * 7) return 16;
+  return Math.floor(days / 7) + 1;
+}
+
+function twFmtDayCell(d){
+  return { day: TW_DAY_NAMES[d.getDay()], md: `${TW_MONTH_NAMES[d.getMonth()]} ${d.getDate()}` };
+}
+
+function twNl2p(s){
+  // Convert raw text to <p> blocks split on blank lines, preserving single newlines as <br>.
+  // Operates on already-escaped text; safe for parent_note / lesson_text shapes.
+  if(!s) return '';
+  const escaped = twHtmlEscape(s);
+  const paras = escaped.split(/\n\s*\n+/);
+  return paras
+    .map(p => p.trim())
+    .filter(p => p.length > 0)
+    .map(p => `<p>${p.replace(/\n/g,'<br>')}</p>`)
+    .join('');
+}
+
+async function loadThisWeek(){
+  if(!selectedChild){
+    const r = document.getElementById('tab-thisweek-content');
+    if(r) r.innerHTML = '<div class="empty-state">No explorer selected.</div>';
+    return;
+  }
+
+  const monday = twGetCurrentMonday();
+  const sunday = new Date(monday); sunday.setDate(sunday.getDate() + 6);
+  const mondayISO = twISODate(monday);
+  const sundayISO = twISODate(sunday);
+  const week = twComputeWeek();
+
+  // Current Topic 00 session id; pre-launch shows 00.1; post-Topic-00 shows none
+  let sessionId = null;
+  if(week >= 1 && week <= 15){
+    sessionId = '00.' + week;
+  } else if(week === 0){
+    sessionId = '00.1';
+  }
+
+  const sevenDaysAgoISO  = new Date(Date.now() -  7 * 86400000).toISOString();
+  const thirtyDaysAgoISO = new Date(Date.now() - 30 * 86400000).toISOString();
+
+  try {
+    const queries = [
+      // 1. Current session content (lesson_text + parent_note)
+      sessionId
+        ? sb.from('sessions')
+            .select('id,title,week_number,lesson_text,parent_note')
+            .eq('id', sessionId).maybeSingle()
+        : Promise.resolve({data:null}),
+
+      // 2. session_progress for current session
+      sessionId
+        ? sb.from('session_progress')
+            .select('day_1_completed_at,day_2_completed_at,day_3_completed_at')
+            .eq('explorer_id', selectedChild.id)
+            .eq('session_id', sessionId).maybeSingle()
+        : Promise.resolve({data:null}),
+
+      // 3. Recent journal entries (last 7 days)
+      sb.from('field_journal')
+        .select('id,category,entry_text,created_at')
+        .eq('explorer_id', selectedChild.id)
+        .gte('created_at', sevenDaysAgoISO)
+        .order('created_at',{ascending:false})
+        .limit(5),
+
+      // 4. Recent redemptions (last 30 days)
+      sb.from('redemptions')
+        .select('prize_name,coins_spent,redeemed_at')
+        .eq('explorer_id', selectedChild.id)
+        .gte('redeemed_at', thirtyDaysAgoISO)
+        .order('redeemed_at',{ascending:false})
+        .limit(5),
+
+      // 5. Wishlist count — active prizes only (orphans hidden via inner-join filter)
+      sb.from('wishlist')
+        .select('id, prizes!inner(id,is_active)')
+        .eq('explorer_id', selectedChild.id)
+        .eq('prizes.is_active', true),
+
+      // 6. Liturgical calendar — current Mon-Sun window
+      sb.from('liturgical_calendar')
+        .select('calendar_date,liturgical_season,feast_name,feast_rank,fast_status,sunday_name,saint_commemorations')
+        .gte('calendar_date', mondayISO)
+        .lte('calendar_date', sundayISO)
+        .order('calendar_date'),
+
+      // 7. Prayer streak this week (Lane 3)
+      sb.from('prayer_streak_weekly')
+        .select('morning_count,evening_count,settled_at')
+        .eq('explorer_id', selectedChild.id)
+        .eq('week_start_date', mondayISO).maybeSingle(),
+
+      // 8. Activity log this week (sum positive amounts → "+N coins this week")
+      sb.from('activity_log')
+        .select('amount')
+        .eq('explorer_id', selectedChild.id)
+        .gte('created_at', monday.toISOString()),
+
+      // 9. Ranks (for current rank + distance to next)
+      sb.from('ranks')
+        .select('roman_numeral,title,min_coins')
+        .order('min_coins',{ascending:true}),
+    ];
+
+    const results = await Promise.all(queries);
+
+    twData = {
+      week, sessionId, monday, sunday, mondayISO, sundayISO,
+      session:        results[0]?.data || null,
+      progress:       results[1]?.data || null,
+      journals:       results[2]?.data || [],
+      redemptions:    results[3]?.data || [],
+      wishlistActive: (results[4]?.data || []).length,
+      calendar:       results[5]?.data || [],
+      prayerWeek:     results[6]?.data || null,
+      activityCoins:  (results[7]?.data || []).reduce((s,r)=> s + ((r.amount||0)>0 ? r.amount : 0), 0),
+      ranks:          results[8]?.data || [],
+    };
+  } catch(err){
+    console.error('loadThisWeek failed:', err);
+    const r = document.getElementById('tab-thisweek-content');
+    if(r) r.innerHTML = '<div class="empty-state">Could not load this week — check connection and refresh.</div>';
+    return;
+  }
+
+  renderThisWeek();
+}
+
+function renderThisWeek(){
+  if(!twData || !selectedChild) return;
+  const root = document.getElementById('tab-thisweek-content');
+  if(!root) return;
+
+  const c = selectedChild;
+  const d = twData;
+  const isPreLaunch   = d.week === 0;
+  const isPostTopic00 = d.week === 16;
+
+  // ── Rank computation
+  const sortedRanks = (d.ranks || []).slice().sort((a,b)=>a.min_coins-b.min_coins);
+  let currentRank = sortedRanks[0] || {roman_numeral:'I',title:'Novice Explorer',min_coins:0};
+  let nextRank = null;
+  const lifetime = c.lifetime_coins || 0;
+  for(const r of sortedRanks){ if(r.min_coins <= lifetime) currentRank = r; }
+  for(const r of sortedRanks){ if(r.min_coins > lifetime){ nextRank = r; break; } }
+
+  // ── Day-rail completion
+  const days = ['day_1_completed_at','day_2_completed_at','day_3_completed_at'];
+  const completedDays = days.map(k => !!(d.progress && d.progress[k]));
+  const completedCount = completedDays.filter(Boolean).length;
+
+  // Today indicator: Mon=Day1, Wed=Day2, Fri=Day3
+  const dow = new Date().getDay();
+  const todayMap = {1:0, 3:1, 5:2};
+  const todayDayIdx = todayMap[dow];
+
+  // ── Banner
+  const bannerWeekText = isPreLaunch
+    ? 'The expedition begins Monday, May 18, 2026'
+    : isPostTopic00
+      ? 'Topic 00 complete'
+      : `Week ${d.week} of 15 · ${TW_MONTH_NAMES[d.monday.getMonth()]} ${d.monday.getDate()} → ${TW_MONTH_NAMES[d.sunday.getMonth()]} ${d.sunday.getDate()}`;
+
+  const banner = `
+    <div class="tw-banner">
+      <div class="tw-banner-eyebrow">For Kevin &amp; Danyelle</div>
+      <div class="tw-banner-title"><span class="tw-banner-marks">✦</span> This Week's Companion <span class="tw-banner-marks">✦</span></div>
+      <div class="tw-banner-sub">${twHtmlEscape(bannerWeekText)}</div>
+    </div>`;
+
+  // ── Section 1: Where Nolan Is
+  const positionLine = isPreLaunch
+    ? `Beginning Monday, May 18, 2026 with <strong>Session 00.1 — The Church That Stayed</strong>.`
+    : isPostTopic00
+      ? `${twHtmlEscape(c.name)} has completed all 15 sessions of Topic 00. Year 1 — The Encounter — begins August 31, 2026.`
+      : (d.session
+          ? `Currently in: <strong>Topic 00 — Session ${twHtmlEscape(d.session.id)} — ${twHtmlEscape(d.session.title)}</strong>`
+          : `Currently in: <strong>Topic 00 — Week ${d.week}</strong>`);
+
+  const positionWeekLabel = isPreLaunch
+    ? 'Pre-launch'
+    : isPostTopic00
+      ? 'Topic 00 complete'
+      : `Week ${d.week} of 15`;
+
+  const progressPct = isPreLaunch ? 0 : Math.min(100, Math.round((d.week/15)*100));
+
+  const railHTML = `
+    <div class="tw-rail">
+      ${[0,1,2].map(i => {
+        const cls = ['tw-rail-dot'];
+        if(completedDays[i]) cls.push('done');
+        else if(todayDayIdx === i && !isPreLaunch) cls.push('today');
+        const labels = ['MON','WED','FRI'];
+        return `
+          <div class="tw-rail-pair">
+            <div class="${cls.join(' ')}"></div>
+            <div class="tw-rail-label">${labels[i]}</div>
+          </div>`;
+      }).join('')}
+    </div>
+    <div class="tw-rail-summary">${completedCount} of 3 days completed this week</div>`;
+
+  const morningC = (d.prayerWeek && d.prayerWeek.morning_count) || 0;
+  const eveningC = (d.prayerWeek && d.prayerWeek.evening_count) || 0;
+  const distance = nextRank ? Math.max(0, nextRank.min_coins - lifetime) : 0;
+  const weekDelta = d.activityCoins;
+
+  const statsHTML = `
+    <div class="tw-stats">
+      <div class="tw-stat">
+        <div class="tw-stat-label">Rank</div>
+        <div class="tw-stat-val">${twHtmlEscape(currentRank.roman_numeral)} · ${twHtmlEscape(currentRank.title)}</div>
+        <div class="tw-stat-sub">${nextRank ? `${distance.toLocaleString()} coins to ${twHtmlEscape(nextRank.title)}` : 'Highest rank reached'}</div>
+      </div>
+      <div class="tw-stat">
+        <div class="tw-stat-label">Lifetime Coins</div>
+        <div class="tw-stat-val">${lifetime.toLocaleString()}</div>
+        <div class="tw-stat-sub">${weekDelta > 0 ? '+' + weekDelta.toLocaleString() + ' this week' : 'no coins this week'}</div>
+      </div>
+      <div class="tw-stat">
+        <div class="tw-stat-label">Prayer Streak</div>
+        <div class="tw-stat-val">🌅 ${morningC} · 🌙 ${eveningC}</div>
+        <div class="tw-stat-sub">mornings &amp; evenings this week</div>
+      </div>
+      <div class="tw-stat">
+        <div class="tw-stat-label">Sessions Attended</div>
+        <div class="tw-stat-val">${(c.sessions_attended||0)}</div>
+        <div class="tw-stat-sub">across all topics</div>
+      </div>
+    </div>`;
+
+  const section1 = `
+    <div class="tw-section">
+      <div class="tw-section-head"><span class="tw-section-mark">✦</span> Where ${twHtmlEscape(c.name)} Is</div>
+
+      <div class="tw-card">
+        <div class="tw-card-eyebrow">Current Position</div>
+        <div class="tw-position-line">${positionLine}</div>
+        <div class="tw-progress-label">${twHtmlEscape(positionWeekLabel)}</div>
+        <div class="tw-progress-track"><div class="tw-progress-fill" style="width:${progressPct}%"></div></div>
+      </div>
+
+      <div class="tw-card">
+        <div class="tw-card-eyebrow">This Week's Days</div>
+        ${railHTML}
+      </div>
+
+      <div class="tw-card">
+        <div class="tw-card-eyebrow">Quick Stats</div>
+        ${statsHTML}
+      </div>
+    </div>`;
+
+  // ── Section 2: Catechetical Work
+  let section2 = '';
+  if(d.session){
+    const lessonHTML = twNl2p(d.session.lesson_text);
+    const noteHTML   = twNl2p(d.session.parent_note);
+    section2 = `
+      <div class="tw-section">
+        <div class="tw-section-head"><span class="tw-section-mark">✦</span> This Week's Catechetical Work</div>
+
+        <div class="tw-card">
+          <div class="tw-card-eyebrow">What ${twHtmlEscape(c.name)} reads this week</div>
+          <div class="tw-card-title">Session ${twHtmlEscape(d.session.id)} — ${twHtmlEscape(d.session.title)}</div>
+          <div class="tw-collapsible" id="tw-lesson-collapse">
+            <button class="tw-collapsible-toggle" type="button" onclick="twToggleLesson()">
+              <span class="arrow">▶</span> Read what ${twHtmlEscape(c.name)} reads
+            </button>
+            <div class="tw-collapsible-body">
+              <div class="tw-prose">${lessonHTML || '<p><em>No lesson text recorded.</em></p>'}</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tw-card">
+          <div class="tw-card-eyebrow">What to discuss, what to listen for</div>
+          <div class="tw-card-title">Discussion Guide for Parents</div>
+          <div class="tw-prose">${noteHTML || '<p><em>No parent note recorded.</em></p>'}</div>
+        </div>
+
+        <div class="tw-card">
+          <div class="tw-card-eyebrow">Day-by-day discussion pattern</div>
+          <div class="tw-pattern-row">
+            <div class="tw-pattern-card">
+              <div class="tw-pattern-day">Monday — Together</div>
+              <div class="tw-pattern-text">Read this week's lesson together. Ask: "What stood out to you?" Use the parent guide above for deeper questions if the conversation slows.</div>
+            </div>
+            <div class="tw-pattern-card">
+              <div class="tw-pattern-day">Wednesday — The Handout</div>
+              <div class="tw-pattern-text">Print this week's handout from missions.html. Read it together, then discuss the verification question before he submits his answer.</div>
+            </div>
+            <div class="tw-pattern-card">
+              <div class="tw-pattern-day">Friday — The Quiz</div>
+              <div class="tw-pattern-text">Quiz day. Don't review the answers ahead of time — let it be his moment. Reinforce: "Faith isn't about getting it right; it's about staying in the conversation."</div>
+            </div>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  // ── Section 3: Recent Activity
+  const journalsHTML = (d.journals && d.journals.length)
+    ? d.journals.map(e => {
+        const dt = new Date(e.created_at);
+        const dateStr = `${TW_MONTH_NAMES[dt.getMonth()]} ${dt.getDate()}`;
+        const txt = e.entry_text || '';
+        const preview = txt.slice(0, 150);
+        const ellipsis = txt.length > 150 ? '…' : '';
+        const catLabel = (e.category || 'note').replace(/_/g,' ');
+        return `
+          <div class="tw-entry">
+            <div class="tw-entry-meta">
+              <span class="tw-entry-cat">${twHtmlEscape(catLabel)}</span>
+              <span class="tw-entry-date">${dateStr}</span>
+            </div>
+            <div class="tw-entry-preview">${twHtmlEscape(preview)}${ellipsis}</div>
+            <a class="tw-entry-link" href="journal.html?admin=1" target="_blank" rel="noopener">Open in Field Manual →</a>
+          </div>`;
+      }).join('')
+    : '<div class="empty-state" style="padding:0.5rem 0;">No journal entries this week.</div>';
+
+  const redemptionsHTML = (d.redemptions && d.redemptions.length)
+    ? d.redemptions.map(r => {
+        const dt = new Date(r.redeemed_at);
+        const dateStr = `${TW_MONTH_NAMES[dt.getMonth()]} ${dt.getDate()}`;
+        return `
+          <div class="tw-redemption">
+            <div class="tw-redemption-name">${twHtmlEscape(r.prize_name || 'Prize')}</div>
+            <div class="tw-redemption-meta">${(r.coins_spent||0).toLocaleString()} coins · ${dateStr}</div>
+          </div>`;
+      }).join('')
+    : '';
+
+  const itemWord = d.wishlistActive === 1 ? 'item' : 'items';
+
+  const section3 = `
+    <div class="tw-section">
+      <div class="tw-section-head"><span class="tw-section-mark">✦</span> Recent Activity</div>
+
+      <div class="tw-card">
+        <div class="tw-card-eyebrow">Field Manual entries · last 7 days</div>
+        ${journalsHTML}
+      </div>
+
+      <div class="tw-card">
+        <div class="tw-card-eyebrow">Bazaar · last 30 days</div>
+        <div class="tw-bazaar-summary">
+          Wishlist: <strong>${d.wishlistActive}</strong> ${itemWord} saved.
+          <a class="tw-bazaar-link" href="bazaar.html?admin=1" target="_blank" rel="noopener">Open ↗</a>
+        </div>
+        ${redemptionsHTML || '<div class="tw-bazaar-summary"><em>No prize redemptions in the last 30 days.</em></div>'}
+      </div>
+    </div>`;
+
+  // ── Section 4: Liturgical Week Ahead
+  const litLookup = {};
+  (d.calendar || []).forEach(row => { litLookup[row.calendar_date] = row; });
+
+  const litRowsHTML = [];
+  for(let i=0; i<7; i++){
+    const dayDate = new Date(d.monday); dayDate.setDate(dayDate.getDate() + i);
+    const iso = twISODate(dayDate);
+    const fmt = twFmtDayCell(dayDate);
+    const row = litLookup[iso];
+
+    let extraCls = '';
+    let eyebrowOverride = null;
+    let subOverride = null;
+
+    if(iso === TW_BAPTISM_DATE){
+      extraCls = ' is-baptism';
+      eyebrowOverride = 'Baptism Day';
+      subOverride = `Today is ${twHtmlEscape(c.name)}'s baptism + chrismation. Apostle Thaddeus, brother of the Lord.`;
+    } else if(iso === TW_NAMEDAY_DATE){
+      extraCls = ' is-nameday';
+      eyebrowOverride = 'Name Day';
+      subOverride = `Today is ${twHtmlEscape(c.name)}'s patron saint feast. Χρόνια πολλά.`;
+    }
+
+    if(!row){
+      // Pre-launch / data-gap: parchment-muted "—" placeholder, layout intact
+      litRowsHTML.push(`
+        <div class="tw-litday${extraCls}">
+          <div class="tw-litday-date"><span class="tw-litday-day">${fmt.day}</span><span class="tw-litday-md">${fmt.md}</span></div>
+          <div class="tw-litday-body">
+            ${eyebrowOverride ? `<div class="tw-litday-eyebrow">${twHtmlEscape(eyebrowOverride)}</div>` : ''}
+            <div class="tw-litday-feast tw-litday-empty">—</div>
+            ${subOverride ? `<div class="tw-litday-sub">${subOverride}</div>` : ''}
+          </div>
+        </div>`);
+      continue;
+    }
+
+    const isSunday = !!row.sunday_name;
+    if(isSunday) extraCls += ' is-sunday';
+
+    const principalFeast =
+         row.feast_name
+      || (Array.isArray(row.saint_commemorations) && row.saint_commemorations[0])
+      || '';
+    const isGreat = row.feast_rank === 'great';
+
+    const eyebrow = eyebrowOverride
+      || (isSunday ? row.sunday_name : (row.liturgical_season || ''));
+
+    let fastBadge = '';
+    if(row.fast_status === 'strict'){
+      fastBadge = `<span class="tw-litday-fast">Strict fast</span>`;
+    } else if(row.fast_status === 'wine_oil'){
+      fastBadge = `<span class="tw-litday-fast">Wine &amp; oil</span>`;
+    } else if(row.fast_status === 'fish_allowed'){
+      fastBadge = `<span class="tw-litday-fast">Fish allowed</span>`;
+    } else if(row.fast_status === 'dairy_allowed'){
+      fastBadge = `<span class="tw-litday-fast">Dairy allowed</span>`;
+    }
+
+    litRowsHTML.push(`
+      <div class="tw-litday${extraCls}">
+        <div class="tw-litday-date"><span class="tw-litday-day">${fmt.day}</span><span class="tw-litday-md">${fmt.md}</span></div>
+        <div class="tw-litday-body">
+          ${eyebrow ? `<div class="tw-litday-eyebrow">${twHtmlEscape(eyebrow)}</div>` : ''}
+          <div class="tw-litday-feast">${isGreat ? '<span class="tw-litday-mark">✦</span>' : ''}${twHtmlEscape(principalFeast || '—')}${fastBadge}</div>
+          ${subOverride ? `<div class="tw-litday-sub">${subOverride}</div>` : ''}
+        </div>
+      </div>`);
+  }
+
+  const section4 = `
+    <div class="tw-section">
+      <div class="tw-section-head"><span class="tw-section-mark">✦</span> Liturgical Week Ahead</div>
+      ${litRowsHTML.join('')}
+    </div>`;
+
+  // ── Print row
+  const printRow = `
+    <div class="tw-print-row">
+      <button class="tw-print-btn" type="button" onclick="twPrint()">🖨 Print This Week's Companion</button>
+      <div class="tw-print-foot">Opens your browser's print dialog · Save as PDF or print on demand</div>
+    </div>`;
+
+  root.innerHTML = banner + section1 + section2 + section3 + section4 + printRow;
+}
+
+function twToggleLesson(){
+  const c = document.getElementById('tw-lesson-collapse');
+  if(c) c.classList.toggle('open');
+}
+
+function twPrint(){
+  // Force-open lesson collapsible so its content prints
+  const c = document.getElementById('tw-lesson-collapse');
+  if(c) c.classList.add('open');
+  window.print();
 }
 
 // ── TABS ──────────────────────────────────────────────────────

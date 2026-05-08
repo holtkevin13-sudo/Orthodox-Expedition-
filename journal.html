@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <link rel="stylesheet" href="css/viewport.css">
+<link rel="stylesheet" href="css/contrast.css">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Field Manual — The Orthodox Expedition</title>
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
@@ -22,7 +23,7 @@ html,body{min-height:100%;overflow-x:hidden;}
 
 /* ── LOADING ── */
 #loading{position:fixed;inset:0;z-index:400;display:flex;align-items:center;justify-content:center;background:var(--leather);}
-.loading-mark{font-family:'Cinzel',serif;font-size:2rem;color:rgba(244,232,193,0.4);animation:pulse 1.5s ease-in-out infinite;}
+.loading-mark{font-family:'Cinzel',serif;font-size:2rem;color:rgba(244,232,193,0.62);animation:pulse 1.5s ease-in-out infinite;}
 @keyframes pulse{0%,100%{opacity:0.3;}50%{opacity:0.9;}}
 
 /* ── JOURNAL BODY ── */
@@ -81,8 +82,8 @@ body{
 }
 .journal-header-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:0.25rem;}
 .journal-title{font-family:'Cinzel Decorative',serif;font-size:1.1rem;color:var(--gold-light);text-shadow:0 0 12px rgba(201,146,42,0.4);}
-.journal-sub{font-family:'Cinzel',serif;font-size:0.58rem;letter-spacing:0.2em;color:rgba(201,146,42,0.5);text-transform:uppercase;}
-.close-btn{padding:0.35rem 0.75rem;background:rgba(201,146,42,0.15);border:1px solid rgba(201,146,42,0.3);border-radius:6px;font-family:'Cinzel',serif;font-size:0.6rem;color:rgba(201,146,42,0.7);cursor:pointer;}
+.journal-sub{font-family:'Cinzel',serif;font-size:0.58rem;letter-spacing:0.2em;color:rgba(240,201,110,0.7);text-transform:uppercase;}
+.close-btn{padding:0.35rem 0.75rem;background:rgba(201,146,42,0.15);border:1px solid rgba(201,146,42,0.3);border-radius:6px;font-family:'Cinzel',serif;font-size:0.6rem;color:rgba(240,201,110,0.85);cursor:pointer;}
 
 /* ── APP ── */
 #app{display:none;}
@@ -96,20 +97,20 @@ body{
   padding:0.3rem 0.625rem;border-radius:12px;font-family:'Cinzel',serif;font-size:0.6rem;
   letter-spacing:0.08em;cursor:pointer;border:1.5px solid transparent;
   transition:all 0.2s;background:rgba(61,31,8,0.08);
-  color:rgba(61,31,8,0.6);border-color:rgba(61,31,8,0.2);
+  color:rgba(61,31,8,0.85);border-color:rgba(61,31,8,0.78);
 }
 .cat-btn.active{background:var(--leather);color:var(--parchment);border-color:var(--leather);}
 
 /* Tool selector */
 .tools-panel{background:rgba(61,31,8,0.06);border:1px solid rgba(61,31,8,0.12);border-radius:12px;padding:0.875rem;margin-bottom:0.875rem;}
-.tools-section-label{font-family:'Cinzel',serif;font-size:0.58rem;letter-spacing:0.15em;color:rgba(61,31,8,0.45);text-transform:uppercase;margin-bottom:0.4rem;}
+.tools-section-label{font-family:'Cinzel',serif;font-size:0.58rem;letter-spacing:0.15em;color:rgba(61,31,8,0.78);text-transform:uppercase;margin-bottom:0.4rem;}
 .tool-row{display:flex;gap:0.25rem;flex-wrap:wrap;margin-bottom:0.625rem;}
 .tool-type-row{display:flex;gap:0.375rem;margin-bottom:0.625rem;}
 .tool-type-btn{
   flex:1;padding:0.4rem 0.5rem;border-radius:8px;
   font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.06em;
   cursor:pointer;border:1.5px solid rgba(61,31,8,0.2);
-  background:rgba(61,31,8,0.05);color:rgba(61,31,8,0.55);
+  background:rgba(61,31,8,0.05);color:rgba(61,31,8,0.85);
   transition:all 0.2s;text-align:center;
 }
 .tool-type-btn.active{background:var(--leather);color:var(--parchment);border-color:var(--leather);}
@@ -132,7 +133,7 @@ body{
   width:26px;height:14px;border-radius:4px;cursor:pointer;
   border:2px solid rgba(61,31,8,0.3);background:white;
   font-size:0.55rem;display:flex;align-items:center;justify-content:center;
-  color:rgba(61,31,8,0.5);font-family:'Cinzel',serif;flex-shrink:0;
+  color:rgba(61,31,8,0.78);font-family:'Cinzel',serif;flex-shrink:0;
 }
 .highlight-none.active{border-color:rgba(61,31,8,0.7);}
 
@@ -162,7 +163,7 @@ body{
   transition:border-color 0.2s;
   color:inherit;
 }
-.writing-area:focus{border-color:rgba(61,31,8,0.5);background:rgba(255,255,255,0.8);}
+.writing-area:focus{border-color:rgba(61,31,8,0.78);background:rgba(255,255,255,0.8);}
 
 /* Stamps preview */
 .stamps-display{font-size:1.3rem;letter-spacing:0.15rem;margin-top:0.4rem;min-height:24px;}
@@ -178,7 +179,7 @@ body{
 }
 .save-btn:hover{box-shadow:0 6px 18px rgba(0,0,0,0.3);}
 .save-btn:active{transform:scale(0.98);}
-.entry-feedback{font-family:'Cinzel',serif;font-size:0.7rem;text-align:center;margin-top:0.5rem;min-height:1rem;color:rgba(61,31,8,0.6);}
+.entry-feedback{font-family:'Cinzel',serif;font-size:0.7rem;text-align:center;margin-top:0.5rem;min-height:1rem;color:rgba(61,31,8,0.85);}
 
 /* ── DIVIDER ── */
 .journal-divider{
@@ -186,7 +187,7 @@ body{
   display:flex;align-items:center;gap:0.75rem;
 }
 .divider-line{flex:1;height:1px;background:rgba(61,31,8,0.15);}
-.divider-mark{font-family:'Cinzel',serif;font-size:0.7rem;color:rgba(61,31,8,0.3);letter-spacing:0.2em;}
+.divider-mark{font-family:'Cinzel',serif;font-size:0.7rem;color:rgba(61,31,8,0.78);letter-spacing:0.2em;}
 
 /* ── PAST ENTRIES ── */
 .entries-section{padding:0 1.25rem 3rem 1.75rem;}
@@ -194,13 +195,13 @@ body{
   display:flex;align-items:center;justify-content:space-between;
   margin-bottom:0.875rem;
 }
-.entries-title{font-family:'Cinzel',serif;font-size:0.65rem;letter-spacing:0.2em;color:rgba(61,31,8,0.5);text-transform:uppercase;}
+.entries-title{font-family:'Cinzel',serif;font-size:0.65rem;letter-spacing:0.2em;color:rgba(61,31,8,0.78);text-transform:uppercase;}
 .filter-row{display:flex;gap:0.375rem;}
 .filter-btn{
   padding:0.25rem 0.625rem;border-radius:10px;
   font-family:'Cinzel',serif;font-size:0.58rem;
   cursor:pointer;border:1px solid rgba(61,31,8,0.2);
-  background:transparent;color:rgba(61,31,8,0.45);
+  background:transparent;color:rgba(61,31,8,0.78);
   transition:all 0.15s;
 }
 .filter-btn.active{background:rgba(61,31,8,0.1);color:rgba(61,31,8,0.7);}
@@ -221,23 +222,23 @@ body{
 .entry-cat-badge{
   font-family:'Cinzel',serif;font-size:0.56rem;letter-spacing:0.1em;
   padding:0.15rem 0.5rem;border-radius:8px;
-  background:rgba(61,31,8,0.08);color:rgba(61,31,8,0.55);
+  background:rgba(61,31,8,0.08);color:rgba(61,31,8,0.85);
   border:1px solid rgba(61,31,8,0.12);text-transform:uppercase;
 }
-.entry-date{font-family:'Cinzel',serif;font-size:0.58rem;color:rgba(61,31,8,0.35);margin-left:auto;}
+.entry-date{font-family:'Cinzel',serif;font-size:0.58rem;color:rgba(61,31,8,0.78);margin-left:auto;}
 .entry-text{font-family:'Caveat',cursive;font-size:1.05rem;line-height:1.7;white-space:pre-wrap;word-break:break-word;}
 .entry-stamps{font-size:1.1rem;letter-spacing:0.1rem;margin-top:0.35rem;}
 .entry-delete{
   position:absolute;top:0.5rem;right:0.625rem;
-  background:none;border:none;color:rgba(61,31,8,0.2);
+  background:none;border:none;color:rgba(61,31,8,0.78);
   font-size:0.875rem;cursor:pointer;padding:0.2rem;
   transition:color 0.15s;
 }
-.entry-delete:hover{color:rgba(180,30,30,0.5);}
+.entry-delete:hover{color:rgba(139,26,26,0.85);}
 .empty-journal{
   text-align:center;padding:3rem 1rem;
   font-family:'Cinzel',serif;font-size:0.72rem;letter-spacing:0.15em;
-  color:rgba(61,31,8,0.3);text-transform:uppercase;
+  color:rgba(61,31,8,0.78);text-transform:uppercase;
 }
 .empty-journal-icon{font-size:2.5rem;margin-bottom:0.75rem;opacity:0.3;}
 
@@ -285,7 +286,7 @@ body{
 
 /* Corner ornaments */
 .cover-corner-mark {
-  position:absolute;font-size:1rem;color:rgba(201,146,42,0.25);
+  position:absolute;font-size:1rem;color:rgba(240,201,110,0.65);
   font-family:'Cinzel',serif;line-height:1;
 }
 .cover-corner-mark.tl{top:1.25rem;left:1.5rem;}
@@ -324,7 +325,7 @@ body{
 /* Embossed cross */
 .cover-emboss-cross {
   font-family:'Cinzel',serif;font-size:2.5rem;
-  color:rgba(201,146,42,0.25);
+  color:rgba(240,201,110,0.65);
   text-shadow:
     0 1px 0 rgba(255,200,80,0.12),
     0 -1px 0 rgba(0,0,0,0.4);
@@ -336,7 +337,7 @@ body{
 .cover-title-main {
   font-family:'Cinzel Decorative',serif;
   font-size:clamp(1.1rem,5vw,1.5rem);
-  color:rgba(201,146,42,0.45);
+  color:rgba(240,201,110,0.7);
   text-shadow:
     0 1px 0 rgba(255,200,80,0.1),
     0 -1px 0 rgba(0,0,0,0.5),
@@ -350,7 +351,7 @@ body{
   font-size:0.6rem;
   letter-spacing:0.25em;
   text-transform:uppercase;
-  color:rgba(201,146,42,0.22);
+  color:rgba(240,201,110,0.65);
   margin-bottom:1.25rem;
 }
 
@@ -363,22 +364,22 @@ body{
 .cover-explorer-label {
   font-family:'Cinzel',serif;font-size:0.5rem;
   letter-spacing:0.22em;text-transform:uppercase;
-  color:rgba(201,146,42,0.2);margin-bottom:0.35rem;
+  color:rgba(240,201,110,0.65);margin-bottom:0.35rem;
 }
 .cover-explorer-name {
   font-family:'Cinzel',serif;font-size:clamp(0.95rem,4vw,1.15rem);
-  color:rgba(201,146,42,0.38);letter-spacing:0.08em;
+  color:rgba(240,201,110,0.7);letter-spacing:0.08em;
   text-shadow:0 1px 0 rgba(0,0,0,0.4);
   margin-bottom:0.5rem;
 }
 .cover-rank-line {
   font-family:'Cinzel',serif;font-size:0.55rem;
   letter-spacing:0.16em;text-transform:uppercase;
-  color:rgba(201,146,42,0.18);margin-bottom:1.5rem;
+  color:rgba(240,201,110,0.65);margin-bottom:1.5rem;
 }
 .cover-bottom-mark {
   font-size:0.65rem;letter-spacing:0.5rem;
-  color:rgba(201,146,42,0.14);font-family:'Cinzel',serif;
+  color:rgba(240,201,110,0.65);font-family:'Cinzel',serif;
 }
 
 /* Opening animation — cover lifts up */
@@ -455,7 +456,7 @@ body{
   font-family:'Cinzel',serif;
   font-size:0.62rem;
   letter-spacing:0.32em;
-  color:rgba(201,146,42,0.85);
+  color:rgba(240,201,110,0.95);
   text-transform:uppercase;
   margin-bottom:0.45rem;
 }
@@ -595,7 +596,7 @@ body.admin-view-active .entry-delete{
   <!-- NEW ENTRY -->
   <!-- Year 0 — Coming Home banner (shown when arriving from a Topic 00 session prompt) -->
   <div id="coming-home-banner" style="display:none;margin:1rem 1.25rem 0 1.75rem;padding:1.25rem 1.5rem;background:linear-gradient(160deg,rgba(244,232,193,0.06),rgba(244,232,193,0.02));border:1px solid rgba(201,146,42,0.3);border-radius:14px;text-align:center;">
-    <div style="font-family:'Cinzel',serif;font-size:0.65rem;letter-spacing:0.25em;color:rgba(201,146,42,0.65);text-transform:uppercase;margin-bottom:0.4rem;">Year 0 — Coming Home</div>
+    <div style="font-family:'Cinzel',serif;font-size:0.65rem;letter-spacing:0.25em;color:rgba(240,201,110,0.85);text-transform:uppercase;margin-bottom:0.4rem;">Year 0 — Coming Home</div>
     <div style="font-family:'Cinzel Decorative',serif;font-size:1.05rem;color:#6b1a1a;margin-bottom:0.4rem;" id="coming-home-session-title">The Expedition Begins</div>
     <div id="coming-home-prompt" style="font-family:'Crimson Text',serif;font-style:italic;font-size:0.95rem;color:rgba(61,31,8,0.85);line-height:1.55;max-width:480px;margin:0 auto;"></div>
   </div>

@@ -4,23 +4,28 @@
 <meta charset="UTF-8">
 <link rel="stylesheet" href="css/viewport.css">
 <link rel="stylesheet" href="css/contrast.css">
+<link rel="stylesheet" href="css/nav-polish.css">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Daily Prayer — The Orthodox Expedition</title>
+<title>Prayer — The Orthodox Expedition</title>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
-<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=Caveat:wght@400;600&display=swap" rel="stylesheet">
+<meta name="theme-color" content="#0e0800">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400;1,600&family=Caveat:wght@400;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
+/* ─── PALETTE ──────────────────────────────────────────────── */
 :root{
   --gold:#c9922a;
   --gold-light:#f0c96e;
   --gold-bright:#ffd700;
   --parchment:#f4e8c1;
+  --parchment-dark:#e8d5a0;
   --ink:#1a0f00;
   --burgundy:#6b1a1a;
   --byzantine:#2c1654;
   --bg:#0e0800;
+  --nav-h:64px;
 }
 
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
@@ -32,9 +37,11 @@ body{
     radial-gradient(ellipse at 50% 0%,rgba(107,26,26,0.5) 0%,transparent 55%),
     radial-gradient(ellipse at 100% 100%,rgba(44,22,84,0.35) 0%,transparent 50%);
   min-height:100vh;
-  color:var(--parchment);
-  padding:1rem 1rem 3rem;
+  color:var(--text-primary);
+  padding:0 0 calc(var(--nav-h) + env(safe-area-inset-bottom));
+  padding-top:env(safe-area-inset-top);
 }
+body.no-nav{padding-bottom:env(safe-area-inset-bottom);}
 body::before{
   content:'';
   position:fixed;
@@ -47,120 +54,249 @@ body::before{
   z-index:0;
 }
 
-.prayer-container{
+/* iOS emoji defense — ensure liturgical glyphs render in text variant */
+.glyph{font-variant-emoji:text;}
+
+/* ─── PAGE ─────────────────────────────────────────────────── */
+#app{
   max-width:var(--container-max-width);
   margin:0 auto;
   position:relative;
   z-index:1;
-  padding:1rem 0;
+  padding:1rem 1rem 2rem;
 }
 
-.prayer-header{
-  text-align:center;
-  padding:1.5rem 0 2rem;
-  border-bottom:1px solid rgba(201,146,42,0.15);
-  margin-bottom:2rem;
+/* fade-in on view switch */
+.view{animation:view-fade 200ms ease-out;}
+@keyframes view-fade{
+  from{opacity:0;transform:translateY(4px);}
+  to{opacity:1;transform:translateY(0);}
 }
-.prayer-eyebrow{
+@media (prefers-reduced-motion: reduce){
+  .view{animation:none;}
+}
+
+/* ─── HEADER (shared) ──────────────────────────────────────── */
+.p-header{
+  text-align:center;
+  padding:1.5rem 0 1.75rem;
+  position:relative;
+}
+.p-eyebrow{
   font-family:'Cinzel',serif;
   font-size:0.7rem;
-  letter-spacing:0.25em;
-  color:rgba(240,201,110,0.7);
+  letter-spacing:0.28em;
+  color:var(--text-eyebrow-2);
   text-transform:uppercase;
-  margin-bottom:0.5rem;
+  margin-bottom:0.55rem;
 }
-.prayer-title{
+.p-title{
   font-family:'Cinzel Decorative',serif;
-  font-size:clamp(1.5rem,5vw,2rem);
+  font-size:clamp(1.75rem,5.4vw,2.25rem);
   color:var(--gold-light);
-  text-shadow:0 0 20px rgba(201,146,42,0.35);
-  margin-bottom:0.4rem;
+  text-shadow:0 0 22px rgba(201,146,42,0.32);
   font-weight:400;
+  line-height:1.15;
 }
-.prayer-subtitle{
-  font-family:'Caveat',cursive;
-  font-size:1.1rem;
-  color:rgba(240,201,110,0.85);
-  font-style:italic;
+.p-title .glyph{
+  color:var(--text-eyebrow);
+  margin:0 0.45rem;
+  font-size:0.85em;
+  vertical-align:0.04em;
+  letter-spacing:0;
 }
-
-/* ── PRAYER BLOCKS ──────────────────────────────────── */
-.prayer-block{
-  margin-bottom:2rem;
-  padding-bottom:1.5rem;
-  border-bottom:1px solid rgba(201,146,42,0.08);
-}
-.prayer-block:last-of-type{border-bottom:none;}
-
-.prayer-name{
+.p-back{
+  position:absolute;
+  left:0;
+  top:1.4rem;
   font-family:'Cinzel',serif;
-  font-size:0.85rem;
-  letter-spacing:0.18em;
-  color:var(--gold);
+  font-size:0.7rem;
+  letter-spacing:0.16em;
+  color:var(--text-eyebrow-2);
   text-transform:uppercase;
-  margin-bottom:0.25rem;
-  font-weight:600;
-  text-align:center;
+  padding:0.45rem 0.85rem;
+  min-height:40px;
+  display:inline-flex;
+  align-items:center;
+  border:1px solid rgba(201,146,42,0.25);
+  border-radius:8px;
+  background:transparent;
+  cursor:pointer;
+  font-variant-emoji:text;
 }
-.prayer-name-sub{
-  font-family:'Crimson Text',serif;
-  font-style:italic;
-  font-size:0.75rem;
-  color:rgba(240,201,110,0.7);
-  text-align:center;
-  margin-bottom:1rem;
+.p-back:hover,.p-back:focus-visible{
+  color:var(--gold-light);
+  border-color:rgba(240,201,110,0.55);
 }
-.prayer-name + .prayer-line{margin-top:1rem;}
+.p-back .arrow{margin-right:0.4rem;font-size:0.95rem;line-height:1;}
 
-.prayer-line{
-  font-size:1.1rem;
-  line-height:1.75;
-  color:rgba(244,232,193,0.9);
-  margin-bottom:0.75rem;
-  text-align:center;
-  max-width:540px;
-  margin-left:auto;
-  margin-right:auto;
-}
-
-/* ── RUBRICS (instructions, not prayer) ─────────────── */
-.rubric{
-  font-family:'Cinzel',serif;
-  font-style:italic;
-  font-size:0.75rem;
-  letter-spacing:0.1em;
-  color:rgba(240,201,110,0.7);
-  text-transform:uppercase;
-  text-align:center;
-  margin:1.5rem 0;
-  padding:0.5rem 0;
-}
-
-/* ── CLOSING ─────────────────────────────────────────── */
-.closing-block{
-  margin-top:2rem;
-  padding-top:1.5rem;
-  border-top:1px solid rgba(201,146,42,0.15);
-  text-align:center;
-}
-.closing-line{
-  font-family:'Caveat',cursive;
-  font-size:1.3rem;
-  color:rgba(240,201,110,0.85);
-  font-style:italic;
-  margin-bottom:0.5rem;
-}
-
-/* ── ACTIONS ─────────────────────────────────────────── */
-.prayer-actions{
-  margin-top:3rem;
-  text-align:center;
+/* ─── LANDING (Screen 1) ──────────────────────────────────── */
+.landing-cards{
   display:flex;
   flex-direction:column;
-  align-items:center;
   gap:1rem;
+  margin-top:0.5rem;
 }
-.prayer-done-btn{
+.rule-card{
+  display:block;
+  width:100%;
+  text-align:left;
+  background:linear-gradient(160deg,rgba(244,232,193,0.10),rgba(232,213,160,0.05));
+  border:1.5px solid rgba(201,146,42,0.35);
+  border-radius:14px;
+  padding:1.4rem 1.4rem 1.3rem;
+  cursor:pointer;
+  transition:all 0.2s;
+  font-family:inherit;
+  color:inherit;
+  position:relative;
+  overflow:hidden;
+}
+.rule-card:hover,.rule-card:focus-visible{
+  border-color:rgba(240,201,110,0.65);
+  background:linear-gradient(160deg,rgba(244,232,193,0.14),rgba(232,213,160,0.08));
+  transform:translateY(-1px);
+}
+.rule-card:active{transform:translateY(0);}
+.rule-card .rc-icon{
+  font-size:2rem;
+  line-height:1;
+  margin-bottom:0.5rem;
+  display:block;
+  font-variant-emoji:text;
+}
+.rule-card .rc-name{
+  font-family:'Cinzel Decorative',serif;
+  font-size:1.35rem;
+  color:var(--gold-light);
+  margin-bottom:0.3rem;
+  font-weight:400;
+  line-height:1.15;
+}
+.rule-card .rc-meta{
+  font-family:'Crimson Text',serif;
+  font-style:italic;
+  font-size:0.95rem;
+  color:var(--text-secondary);
+  margin-bottom:1rem;
+  line-height:1.4;
+}
+.rule-card .rc-cta{
+  display:inline-flex;
+  align-items:center;
+  gap:0.5rem;
+  padding:0.55rem 1.15rem;
+  min-height:42px;
+  background:linear-gradient(135deg,var(--gold),var(--gold-bright));
+  color:var(--bg);
+  font-family:'Cinzel',serif;
+  font-size:0.78rem;
+  letter-spacing:0.18em;
+  text-transform:uppercase;
+  font-weight:700;
+  border-radius:10px;
+  box-shadow:0 4px 16px rgba(255,215,0,0.18);
+}
+
+.rule-card.browse{
+  background:linear-gradient(160deg,rgba(244,232,193,0.07),rgba(232,213,160,0.03));
+  border-color:rgba(201,146,42,0.25);
+}
+.rule-card.browse .rc-cta{
+  background:transparent;
+  color:var(--gold-light);
+  border:1.5px solid rgba(201,146,42,0.5);
+  box-shadow:none;
+}
+
+/* This-week summary */
+.week-summary{
+  margin-top:2rem;
+  padding:1rem 1.25rem;
+  text-align:center;
+  border-top:1px solid rgba(201,146,42,0.15);
+  border-bottom:1px solid rgba(201,146,42,0.15);
+}
+.week-summary .ws-eyebrow{
+  font-family:'Cinzel',serif;
+  font-size:0.62rem;
+  letter-spacing:0.32em;
+  color:var(--text-eyebrow-2);
+  text-transform:uppercase;
+  margin-bottom:0.35rem;
+}
+.week-summary .ws-line{
+  font-family:'Crimson Text',serif;
+  font-size:1rem;
+  color:var(--text-primary);
+  font-style:italic;
+  line-height:1.5;
+}
+.week-summary .ws-line .glyph{
+  color:var(--gold-light);
+  margin:0 0.35rem;
+}
+
+/* ─── ROUTINE FLOW (Screen 2) ───────────────────────────── */
+.routine-meta{
+  text-align:center;
+  font-family:'Cinzel',serif;
+  font-size:0.65rem;
+  letter-spacing:0.32em;
+  color:var(--text-eyebrow-2);
+  text-transform:uppercase;
+  margin:0.5rem 0 0.4rem;
+}
+.routine-progress{
+  text-align:center;
+  font-family:'Cinzel',serif;
+  font-size:0.7rem;
+  letter-spacing:0.18em;
+  color:var(--text-tertiary);
+  text-transform:uppercase;
+  margin-bottom:1.5rem;
+}
+
+.prayer-pane{
+  background:linear-gradient(180deg,rgba(244,232,193,0.05),rgba(244,232,193,0.02));
+  border:1px solid rgba(201,146,42,0.22);
+  border-radius:12px;
+  padding:2rem 1.4rem 1.5rem;
+  margin:0 auto 2rem;
+  max-width:620px;
+}
+.prayer-pane .pp-name{
+  font-family:'Cinzel Decorative',serif;
+  font-size:clamp(1.5rem,4.6vw,1.85rem);
+  color:var(--gold-light);
+  text-align:center;
+  font-weight:400;
+  margin-bottom:1.5rem;
+  line-height:1.2;
+  text-shadow:0 0 18px rgba(201,146,42,0.25);
+}
+.prayer-pane .pp-rule{
+  width:60%;
+  height:1px;
+  border:0;
+  background:linear-gradient(90deg,transparent,rgba(201,146,42,0.55),transparent);
+  margin:0 auto 1.25rem;
+}
+.prayer-pane .pp-text{
+  font-family:'Crimson Text',serif;
+  font-size:1.1rem;
+  line-height:1.75;
+  color:var(--text-primary);
+  text-align:left;
+}
+.prayer-pane .pp-text p{margin-bottom:1.05rem;}
+.prayer-pane .pp-text p:last-child{margin-bottom:0;}
+
+.routine-actions{
+  text-align:center;
+  margin-top:1.25rem;
+}
+.routine-next-btn{
   padding:1rem 2.5rem;
   min-height:56px;
   background:linear-gradient(135deg,var(--gold),var(--gold-bright));
@@ -168,7 +304,7 @@ body::before{
   border-radius:14px;
   font-family:'Cinzel',serif;
   font-size:0.85rem;
-  letter-spacing:0.1em;
+  letter-spacing:0.18em;
   color:var(--bg);
   font-weight:700;
   cursor:pointer;
@@ -176,111 +312,1241 @@ body::before{
   box-shadow:0 4px 20px rgba(255,215,0,0.25);
   max-width:340px;
   width:100%;
+  font-variant-emoji:text;
 }
-.prayer-done-btn:active{transform:scale(0.97);}
-.prayer-done-btn.completed{
-  background:rgba(22,163,74,0.2);
-  color:rgba(134,239,172,0.85);
-  box-shadow:none;
-  cursor:default;
+.routine-next-btn:active{transform:scale(0.97);}
+.routine-next-btn .glyph{margin-right:0.5rem;}
+
+/* Routine completion toast (parchment notice mirroring Repair J banner) */
+.routine-toast{
+  position:fixed;
+  top:50%;left:50%;
+  transform:translate(-50%,-50%);
+  z-index:900;
+  max-width:380px;width:88%;
+  padding:1.25rem 1.5rem;
+  background:linear-gradient(160deg,rgba(244,232,193,0.20),rgba(232,213,160,0.10));
+  border:1.5px solid rgba(201,146,42,0.55);
+  border-radius:14px;
+  text-align:center;
+  backdrop-filter:blur(18px);
+  -webkit-backdrop-filter:blur(18px);
+  box-shadow:0 14px 40px rgba(0,0,0,0.5),inset 0 0 0 1px rgba(244,232,193,0.06);
+  opacity:0;
+  pointer-events:none;
+  animation:toast-pop 1.5s ease-out forwards;
 }
-.prayer-back{
+.routine-toast .rt-marks{
+  font-family:'Cinzel',serif;
+  color:var(--gold-light);
+  letter-spacing:0.4em;font-size:0.85rem;
+  margin-bottom:0.4rem;
+  font-variant-emoji:text;
+}
+.routine-toast .rt-text{
+  font-family:'Cinzel Decorative',serif;
+  color:var(--gold-light);
+  font-size:1.15rem;
+  line-height:1.25;
+  font-weight:400;
+}
+@keyframes toast-pop{
+  0%  {opacity:0;transform:translate(-50%,-50%) scale(0.92);}
+  18% {opacity:1;transform:translate(-50%,-50%) scale(1);}
+  82% {opacity:1;transform:translate(-50%,-50%) scale(1);}
+  100%{opacity:0;transform:translate(-50%,-50%) scale(1);}
+}
+@media (prefers-reduced-motion: reduce){
+  .routine-toast{animation:toast-static 1.5s linear forwards;}
+  @keyframes toast-static{0%,100%{opacity:0;}10%,90%{opacity:1;}}
+}
+
+/* ─── BROWSE LIBRARY (Screen 3) ─────────────────────────── */
+.filter-row{
+  display:flex;
+  flex-wrap:wrap;
+  gap:0.5rem;
+  justify-content:center;
+  margin-bottom:1.75rem;
+}
+.filter-chip{
+  padding:0.45rem 0.95rem;
+  min-height:36px;
+  background:transparent;
+  border:1px solid rgba(201,146,42,0.30);
+  border-radius:20px;
+  font-family:'Cinzel',serif;
+  font-size:0.66rem;
+  letter-spacing:0.16em;
+  color:var(--text-eyebrow-2);
+  text-transform:uppercase;
+  cursor:pointer;
+  transition:all 0.2s;
+}
+.filter-chip:hover,.filter-chip:focus-visible{
+  border-color:rgba(240,201,110,0.7);
+  color:var(--gold-light);
+}
+.filter-chip.active{
+  background:rgba(201,146,42,0.18);
+  border-color:rgba(240,201,110,0.85);
+  color:var(--gold-light);
+  font-weight:600;
+}
+
+.cat-section{margin-bottom:1.75rem;}
+.cat-header{
   font-family:'Cinzel',serif;
   font-size:0.7rem;
-  letter-spacing:0.15em;
-  color:rgba(240,201,110,0.7);
-  text-decoration:none;
+  letter-spacing:0.32em;
+  color:var(--text-eyebrow);
   text-transform:uppercase;
-  padding:0.5rem 0.875rem;
-  min-height:40px;
-  display:inline-flex;
-  align-items:center;
-  border:1px solid rgba(201,146,42,0.15);
-  border-radius:8px;
+  text-align:center;
+  margin:1.25rem 0 1rem;
+  padding-bottom:0.4rem;
+  border-bottom:1px solid rgba(201,146,42,0.18);
 }
-.prayer-back:hover{color:var(--gold-light);border-color:rgba(240,201,110,0.65);}
 
-/* ── LOADING ─────────────────────────────────────────── */
+.prayer-row{
+  display:block;
+  width:100%;
+  text-align:left;
+  background:linear-gradient(160deg,rgba(244,232,193,0.06),rgba(232,213,160,0.02));
+  border:1px solid rgba(201,146,42,0.22);
+  border-radius:10px;
+  padding:0.95rem 1.1rem;
+  margin-bottom:0.55rem;
+  cursor:pointer;
+  font-family:inherit;
+  color:inherit;
+  transition:all 0.2s;
+}
+.prayer-row:hover,.prayer-row:focus-visible{
+  border-color:rgba(240,201,110,0.55);
+  background:linear-gradient(160deg,rgba(244,232,193,0.10),rgba(232,213,160,0.04));
+}
+.prayer-row.muted{opacity:0.55;}
+.prayer-row.muted:hover{opacity:0.85;}
+.prayer-row.in-routine-morning,
+.prayer-row.in-routine-evening{
+  border-color:rgba(240,201,110,0.55);
+  background:linear-gradient(160deg,rgba(244,232,193,0.12),rgba(232,213,160,0.05));
+}
+
+.prayer-row .pr-row-top{
+  display:flex;
+  align-items:center;
+  gap:0.65rem;
+}
+.prayer-row .pr-row-icon{
+  font-size:1.1rem;
+  line-height:1;
+  color:var(--gold-light);
+  font-variant-emoji:text;
+}
+.prayer-row .pr-row-name{
+  font-family:'Cinzel',serif;
+  font-size:0.82rem;
+  letter-spacing:0.1em;
+  color:var(--text-primary);
+  text-transform:uppercase;
+  font-weight:600;
+  flex:1;
+  min-width:0;
+}
+.prayer-row .pr-row-tag{
+  font-family:'Cinzel',serif;
+  font-size:0.55rem;
+  letter-spacing:0.2em;
+  color:var(--text-eyebrow-2);
+  text-transform:uppercase;
+  padding:0.18rem 0.55rem;
+  border:1px solid rgba(201,146,42,0.30);
+  border-radius:10px;
+  white-space:nowrap;
+}
+.prayer-row .pr-row-tag.morning,
+.prayer-row .pr-row-tag.evening{
+  color:var(--gold-light);border-color:rgba(240,201,110,0.5);
+}
+.prayer-row .pr-row-preview{
+  margin-top:0.4rem;
+  font-family:'Crimson Text',serif;
+  font-style:italic;
+  font-size:0.88rem;
+  color:var(--text-tertiary);
+  line-height:1.4;
+  display:-webkit-box;
+  -webkit-line-clamp:1;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
+}
+
+/* Expanded state */
+.prayer-row.expanded{
+  background:linear-gradient(180deg,rgba(244,232,193,0.10),rgba(232,213,160,0.04));
+  border-color:rgba(240,201,110,0.65);
+}
+.prayer-row.expanded .pr-row-preview{display:none;}
+.prayer-row .pr-expand{
+  display:none;
+  margin-top:1rem;
+  padding-top:1rem;
+  border-top:1px dashed rgba(201,146,42,0.25);
+}
+.prayer-row.expanded .pr-expand{display:block;}
+.prayer-row .pr-expand-text{
+  font-family:'Crimson Text',serif;
+  font-size:1rem;
+  line-height:1.7;
+  color:var(--text-primary);
+}
+.prayer-row .pr-expand-text p{margin-bottom:0.85rem;}
+.prayer-row .pr-expand-text p:last-child{margin-bottom:0;}
+
+.pr-actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:0.4rem;
+  margin-top:1rem;
+}
+.pr-action-btn{
+  padding:0.45rem 0.9rem;
+  min-height:38px;
+  background:transparent;
+  border:1px solid rgba(201,146,42,0.40);
+  border-radius:8px;
+  font-family:'Cinzel',serif;
+  font-size:0.6rem;
+  letter-spacing:0.18em;
+  color:var(--text-eyebrow);
+  text-transform:uppercase;
+  cursor:pointer;
+  transition:all 0.2s;
+  font-variant-emoji:text;
+}
+.pr-action-btn:hover,.pr-action-btn:focus-visible{
+  border-color:rgba(240,201,110,0.85);
+  color:var(--gold-light);
+}
+.pr-action-btn.danger{color:rgba(252,165,165,0.95);border-color:rgba(252,165,165,0.30);}
+.pr-action-btn.danger:hover{border-color:rgba(252,165,165,0.65);}
+.pr-action-btn.primary{
+  background:linear-gradient(135deg,rgba(201,146,42,0.85),rgba(255,215,0,0.85));
+  color:var(--bg);
+  border-color:transparent;
+  font-weight:700;
+}
+.pr-action-btn.primary:hover{filter:brightness(1.05);}
+
+.muted-explainer{
+  font-family:'Cinzel',serif;
+  font-size:0.58rem;
+  letter-spacing:0.2em;
+  color:var(--text-eyebrow-2);
+  text-transform:uppercase;
+  margin-bottom:0.55rem;
+  font-style:italic;
+}
+
+/* ─── BOTTOM NAV ────────────────────────────────────────── */
+.bottom-nav{
+  position:fixed;bottom:0;left:0;right:0;
+  height:var(--nav-h);
+  background:rgba(8,4,0,0.97);
+  border-top:1px solid rgba(201,146,42,0.18);
+  display:flex;align-items:stretch;
+  backdrop-filter:blur(16px);
+  -webkit-backdrop-filter:blur(16px);
+  z-index:200;
+  padding-bottom:env(safe-area-inset-bottom);
+}
+.nav-item{
+  flex:1;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:0.2rem;
+  cursor:pointer;border:none;background:none;
+  padding:0.5rem 0.25rem;position:relative;
+  transition:all 0.2s;text-decoration:none;
+}
+.nav-item:active{background:rgba(201,146,42,0.06);}
+.nav-mark{
+  font-size:1rem;line-height:1;
+  color:var(--text-eyebrow-2);
+  transition:all 0.25s;
+}
+.nav-label{
+  font-family:'Cinzel',serif;font-size:0.52rem;
+  letter-spacing:0.08em;text-transform:uppercase;
+  color:var(--text-eyebrow-2);
+  transition:all 0.25s;
+}
+.nav-item.active .nav-mark{
+  color:var(--gold-bright);
+  text-shadow:0 0 12px rgba(255,215,0,0.6);
+  filter:drop-shadow(0 0 4px rgba(255,215,0,0.4));
+}
+.nav-item.active .nav-label{color:var(--gold-light);}
+
+/* ─── LOADING / ERROR ───────────────────────────────────── */
 .loading{
   text-align:center;
   padding:4rem 2rem;
   font-family:'Cinzel',serif;
   font-size:0.8rem;
-  letter-spacing:0.15em;
-  color:rgba(240,201,110,0.7);
+  letter-spacing:0.2em;
+  color:var(--text-eyebrow-2);
   text-transform:uppercase;
+}
+.error-block{
+  text-align:center;
+  padding:2rem 1rem;
+  font-family:'Crimson Text',serif;
+  font-size:1rem;
+  font-style:italic;
+  color:var(--text-secondary);
 }
 </style>
 </head>
 
 <body>
-<div id="root">
+<div id="app">
   <div class="loading">Opening the prayer book...</div>
 </div>
 
-<script src="js/day-state.js"></script>
-<script src="js/prayers.js"></script>
+<nav class="bottom-nav" id="bottom-nav" style="display:none;">
+  <a class="nav-item" href="home.html">
+    <span class="nav-mark glyph">&#x2726;&#xFE0E;</span>
+    <span class="nav-label">Home</span>
+  </a>
+  <a class="nav-item" href="missions.html">
+    <span class="nav-mark glyph">&#x2629;&#xFE0E;</span>
+    <span class="nav-label">Missions</span>
+  </a>
+  <a class="nav-item" href="curriculum.html">
+    <span class="nav-mark glyph">&#x2295;&#xFE0E;</span>
+    <span class="nav-label">Topics</span>
+  </a>
+  <a class="nav-item" href="bible-reader.html">
+    <span class="nav-mark glyph">&#x2626;&#xFE0E;</span>
+    <span class="nav-label">Holy Scriptures</span>
+  </a>
+  <a class="nav-item" href="journal.html">
+    <span class="nav-mark glyph">&#x270E;&#xFE0E;</span>
+    <span class="nav-label">Field Manual</span>
+  </a>
+</nav>
+
+<script src="js/prayer-rollup.js"></script>
 <script>
+'use strict';
+
+// ──────────────────────────────────────────────────────────────────
+// CONFIG
+// ──────────────────────────────────────────────────────────────────
 const SUPABASE_URL = 'https://ksfnsryfmkafwirzgjoe.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtzZm5zcnlmbWthZndpcnpnam9lIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2ODM4MTcsImV4cCI6MjA5MTI1OTgxN30.mHQty44WBnjQY8BJ8KbPk_pp-yTcOaifGxCZPUO4xpY';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-(async function main(){
-  // Determine which prayer to render.
-  const params = new URLSearchParams(window.location.search);
-  const time = params.get('time') === 'evening' ? 'evening' : 'morning';
+// Mission keys (pre-build verified: both rows exist, coins=0, repeatable=true,
+// is_active=true). DO NOT modify the mission rows — Lane 2 zeroed
+// per-completion coin drops; the Sunday rollup is the reward.
+const MISSION_KEY_MORNING = 'daily_morning_prayer';
+const MISSION_KEY_EVENING = 'daily_evening_prayer';
 
-  // Load Supabase + profile (with the same 4s timeout pattern the rest of the app uses).
-  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-  let profileId = null;
-  try {
-    const timer = new Promise(r => setTimeout(() => r(null), 4000));
-    const res = await Promise.race([sb.auth.getSession(), timer]);
-    const session = res?.data?.session ?? null;
-    if (session) profileId = session.user.id;
-  } catch (e) {
-    console.warn('Auth check failed; rendering prayers anyway.');
-  }
-
-  // Load the program spine to determine which prayer variant to use.
-  let variant = 'pre_chrismation';
-  try {
-    const spineRes = await fetch('config/program-spine.json');
-    const spine = await spineRes.json();
-    const state = DayState.compute(new Date(), spine);
-    variant = Prayers.variantForState(state);
-  } catch (e) {
-    console.warn('Could not determine variant; defaulting to pre_chrismation.');
-  }
-
-  // Init prayers module + render.
-  await Prayers.init(sb, profileId);
-
-  document.getElementById('root').innerHTML = Prayers.renderPrayer(time, variant);
-
-  // Wire up the "I have prayed" button.
-  const btn = document.getElementById('mark-prayer-done');
-  if (btn && profileId) {
-    btn.addEventListener('click', async () => {
-      btn.disabled = true;
-      btn.textContent = 'Recording...';
-      const result = await Prayers.markComplete(time);
-      if (result.ok) {
-        btn.classList.add('completed');
-        btn.textContent = result.alreadyCompleted
-          ? '✓ Already Recorded Today'
-          : '✓ Glory to God';
-      } else {
-        // Graceful degradation if Chat 2 hasn't run the migration yet.
-        btn.classList.add('completed');
-        btn.textContent = '✓ Glory to God';
-        console.warn('Prayer mark failed; missions table may not yet have prayer rows.', result);
-      }
-    });
-  } else if (btn) {
-    btn.textContent = 'Glory to God';
-    btn.disabled = true;
-  }
+// Liturgical season heuristics — for launch we statically mute three prayers
+// based on calendar windows. Per dispatch: "do not auto-detect dynamically."
+// A future content lane should source these from the liturgical_calendar
+// table; this is a launch-acceptable simplification.
+const PASCHA_WINDOW_START = '2026-04-12';   // Pascha 2026
+const PASCHA_WINDOW_END   = '2026-05-31';   // through Pentecost
+const TODAY_ISO = (function(){
+  const d = new Date();
+  return d.getFullYear() + '-' +
+    String(d.getMonth()+1).padStart(2,'0') + '-' +
+    String(d.getDate()).padStart(2,'0');
 })();
+const IN_PASCHA_SEASON = TODAY_ISO >= PASCHA_WINDOW_START && TODAY_ISO <= PASCHA_WINDOW_END;
+const IN_LENT          = false;   // Static at launch; not currently in Lent.
+
+const CATEGORY_LABELS = {
+  anytime:  'Anytime Prayers',
+  morning:  'Morning Prayers',
+  evening:  'Evening Prayers',
+  patron:   'Patron Saints',
+  special:  'Special Prayers',
+  lent:     'Great Lent',
+};
+const CATEGORY_ORDER = ['anytime','morning','evening','patron','special','lent'];
+
+// Filter chips — "All" plus the six categories.
+const FILTER_CHIPS = [
+  { key:'all',     label:'All' },
+  { key:'anytime', label:'Anytime' },
+  { key:'morning', label:'Morning' },
+  { key:'evening', label:'Evening' },
+  { key:'patron',  label:'Patron' },
+  { key:'special', label:'Special' },
+  { key:'lent',    label:'Lent' },
+];
+
+// Per-prayer ornament glyph (each paired with U+FE0E for iOS text variant).
+function iconFor(prayer){
+  const map = {
+    sign_of_cross:        '\u271D\uFE0E',
+    trisagion:            '\u2726\uFE0E',
+    lords_prayer:         '\u2629\uFE0E',
+    jesus_prayer:         '\u2626\uFE0E',
+    glory_be:             '\u2726\uFE0E',
+    o_heavenly_king:      '\u2734\uFE0E',
+    paschal_troparion:    '\u2734\uFE0E',
+    morning_theotokos:    '\u2727\uFE0E',
+    guardian_angel:       '\u2727\uFE0E',
+    st_macarius_evening:  '\u263E\uFE0E',
+    psalm_50_full:        '\u2735\uFE0E',
+    psalm_50_short:       '\u2735\uFE0E',
+    examination:          '\u2737\uFE0E',
+    evening_theotokos:    '\u263E\uFE0E',
+    phos_hilaron:         '\u263C\uFE0E',
+    st_herman:            '\u2725\uFE0E',
+    for_parents:          '\u2727\uFE0E',
+    nicene_creed:         '\u2629\uFE0E',
+    truly_meet:           '\u2727\uFE0E',
+    st_ephrem:            '\u2725\uFE0E',
+  };
+  return map[prayer.slug] || '\u2726\uFE0E';
+}
+
+// ──────────────────────────────────────────────────────────────────
+// STATE
+// ──────────────────────────────────────────────────────────────────
+const state = {
+  view: 'landing',           // 'landing' | 'routine' | 'browse'
+  routineKind: null,         // 'morning' | 'evening' | null
+  routineIndex: 0,
+  browseFilter: 'all',
+  expandedSlug: null,
+  // data
+  profileId: null,
+  prayers: [],               // ordered by display_order
+  prayersBySlug: {},
+  prayersById:   {},
+  routines: { morning:null, evening:null },
+  thisWeek: { morning_count:0, evening_count:0, week_start_date:null },
+  todayCompleted: { morning:false, evening:false },
+};
+
+// ──────────────────────────────────────────────────────────────────
+// INIT
+// ──────────────────────────────────────────────────────────────────
+(async function main(){
+  // 1. Auth (4s timeout — same pattern as week.html / quiz-runner.js)
+  try{
+    const timer = new Promise(r => setTimeout(()=>r(null), 4000));
+    const res   = await Promise.race([sb.auth.getSession(), timer]);
+    const session = res && res.data && res.data.session ? res.data.session : null;
+    if(session) state.profileId = session.user.id;
+  }catch(_){
+    console.warn('Prayer: auth check failed; rendering library read-only.');
+  }
+
+  // 2. Load all active prayers (single query)
+  try{
+    const { data, error } = await sb
+      .from('prayers')
+      .select('*')
+      .eq('is_active', true)
+      .order('display_order', { ascending:true });
+    if(error) throw error;
+    state.prayers = data || [];
+    state.prayers.forEach(p => {
+      state.prayersBySlug[p.slug] = p;
+      state.prayersById[p.id]     = p;
+    });
+  }catch(e){
+    console.error('Prayer: failed to load prayers', e);
+    document.getElementById('app').innerHTML =
+      '<div class="error-block">The prayer book could not be opened. Please check your connection and try again.</div>';
+    document.getElementById('bottom-nav').style.display='flex';
+    return;
+  }
+
+  // 3. Load this explorer's routines (if signed in)
+  if(state.profileId){
+    try{
+      const { data, error } = await sb
+        .from('prayer_routines')
+        .select('*')
+        .eq('explorer_id', state.profileId);
+      if(error) throw error;
+      (data||[]).forEach(r => { state.routines[r.kind] = r; });
+    }catch(e){
+      console.warn('Prayer: failed to load routines', e);
+    }
+  }
+
+  // 4. Run the Sunday-night rollup BEFORE we load the current-week row,
+  //    so any newly-settled past-week rows don't get mis-displayed as
+  //    "this week's progress." Awaited so the celebration renders before
+  //    we paint the landing screen.
+  if(state.profileId && window.PrayerRollup){
+    try{ await window.PrayerRollup.run(sb, state.profileId); }
+    catch(e){ console.warn('Prayer: rollup failed (non-fatal)', e); }
+  }
+
+  // 5. Load this week's streak counter row (or fall back to zeros)
+  if(state.profileId){
+    const monday = window.PrayerRollup
+      ? window.PrayerRollup.getCurrentMonday(new Date())
+      : computeMonday(new Date());
+    const mondayKey = window.PrayerRollup
+      ? window.PrayerRollup.ymd(monday)
+      : ymdLocal(monday);
+    state.thisWeek.week_start_date = mondayKey;
+    try{
+      const { data, error } = await sb
+        .from('prayer_streak_weekly')
+        .select('*')
+        .eq('explorer_id', state.profileId)
+        .eq('week_start_date', mondayKey)
+        .maybeSingle();
+      if(error) throw error;
+      if(data){
+        state.thisWeek.morning_count = data.morning_count || 0;
+        state.thisWeek.evening_count = data.evening_count || 0;
+      }
+    }catch(e){
+      console.warn('Prayer: failed to load this-week streak', e);
+    }
+  }
+
+  // 6. Check today's mission_completion to dedupe routine completion taps
+  //    (Operational Learning #4 — query before assuming).
+  if(state.profileId){
+    await refreshTodayCompletions();
+  }
+
+  // 7. Apply URL params for backward compat with home.html / missions.html
+  //    links: `?time=morning` / `?time=evening` jumps straight into routine.
+  const params = new URLSearchParams(window.location.search);
+  const timeParam = params.get('time');
+  const viewParam = params.get('view');
+  if(timeParam === 'morning' || timeParam === 'evening'){
+    if(state.routines[timeParam]){
+      state.view = 'routine';
+      state.routineKind  = timeParam;
+      state.routineIndex = 0;
+    }
+  } else if(viewParam === 'browse'){
+    state.view = 'browse';
+  }
+
+  render();
+})();
+
+// ──────────────────────────────────────────────────────────────────
+// RENDER (top-level dispatcher)
+// ──────────────────────────────────────────────────────────────────
+function render(){
+  const root = document.getElementById('app');
+  root.innerHTML = '';
+  const view = document.createElement('div');
+  view.className = 'view view-' + state.view;
+  if(state.view === 'landing'){
+    view.appendChild(renderLanding());
+    showBottomNav(true);
+  } else if(state.view === 'routine'){
+    view.appendChild(renderRoutine());
+    showBottomNav(false);
+  } else {
+    view.appendChild(renderBrowse());
+    showBottomNav(false);
+  }
+  root.appendChild(view);
+  // Reset scroll on view change for predictable read position.
+  window.scrollTo(0, 0);
+}
+
+function showBottomNav(show){
+  const nav = document.getElementById('bottom-nav');
+  if(!nav) return;
+  nav.style.display = show ? 'flex' : 'none';
+  document.body.classList.toggle('no-nav', !show);
+}
+
+// ──────────────────────────────────────────────────────────────────
+// VIEW: LANDING
+// ──────────────────────────────────────────────────────────────────
+function renderLanding(){
+  const wrap = document.createElement('div');
+
+  // Header
+  const header = document.createElement('div');
+  header.className = 'p-header';
+  header.innerHTML =
+    '<div class="p-eyebrow">Daily Prayer</div>' +
+    '<h1 class="p-title"><span class="glyph">&#x2726;&#xFE0E;</span>Prayer<span class="glyph">&#x2726;&#xFE0E;</span></h1>';
+  wrap.appendChild(header);
+
+  // Three rule cards
+  const cards = document.createElement('div');
+  cards.className = 'landing-cards';
+
+  const morningCount = state.routines.morning && state.routines.morning.prayer_ids
+    ? state.routines.morning.prayer_ids.length : 0;
+  const eveningCount = state.routines.evening && state.routines.evening.prayer_ids
+    ? state.routines.evening.prayer_ids.length : 0;
+
+  cards.appendChild(makeRuleCard({
+    icon:'\uD83C\uDF05',                    // 🌅
+    name:'Morning Rule',
+    meta: morningCount === 0
+      ? 'Tap to set up your morning prayers'
+      : (morningCount + ' prayer' + (morningCount===1?'':'s') +
+         (state.todayCompleted.morning ? ' \u00B7 prayed today' : '')),
+    cta: state.todayCompleted.morning ? 'Pray Again' : 'Begin',
+    onClick: function(){
+      if(!state.routines.morning){
+        state.view = 'browse';
+        state.expandedSlug = null;
+        render();
+        return;
+      }
+      state.view = 'routine';
+      state.routineKind = 'morning';
+      state.routineIndex = 0;
+      render();
+    },
+  }));
+
+  cards.appendChild(makeRuleCard({
+    icon:'\uD83C\uDF19',                    // 🌙
+    name:'Evening Rule',
+    meta: eveningCount === 0
+      ? 'Tap to set up your evening prayers'
+      : (eveningCount + ' prayer' + (eveningCount===1?'':'s') +
+         (state.todayCompleted.evening ? ' \u00B7 prayed today' : '')),
+    cta: state.todayCompleted.evening ? 'Pray Again' : 'Begin',
+    onClick: function(){
+      if(!state.routines.evening){
+        state.view = 'browse';
+        state.expandedSlug = null;
+        render();
+        return;
+      }
+      state.view = 'routine';
+      state.routineKind = 'evening';
+      state.routineIndex = 0;
+      render();
+    },
+  }));
+
+  cards.appendChild(makeRuleCard({
+    icon:'\uD83D\uDCD6',                    // 📖
+    name:'Browse Prayers',
+    meta:'The full prayer book \u2014 and customize your Rules',
+    cta:'Open',
+    extraClass:'browse',
+    onClick: function(){
+      state.view = 'browse';
+      state.expandedSlug = null;
+      state.browseFilter = 'all';
+      render();
+    },
+  }));
+
+  wrap.appendChild(cards);
+
+  // This-week summary
+  if(state.profileId){
+    const m = state.thisWeek.morning_count;
+    const e = state.thisWeek.evening_count;
+    const summary = document.createElement('div');
+    summary.className = 'week-summary';
+    let line;
+    if(m === 0 && e === 0){
+      line = '<em>A new week of faithful prayer awaits.</em>';
+    } else {
+      line =
+        '<span class="glyph">&#x2726;&#xFE0E;</span> ' +
+        m + ' morning' + (m===1?'':'s') + ' &middot; ' +
+        e + ' evening' + (e===1?'':'s') +
+        ' this week';
+    }
+    summary.innerHTML =
+      '<div class="ws-eyebrow">This Week</div>' +
+      '<div class="ws-line">' + line + '</div>';
+    wrap.appendChild(summary);
+  }
+
+  return wrap;
+}
+
+function makeRuleCard(opts){
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'rule-card' + (opts.extraClass ? ' ' + opts.extraClass : '');
+  btn.innerHTML =
+    '<span class="rc-icon glyph">' + opts.icon + '</span>' +
+    '<div class="rc-name">' + opts.name + '</div>' +
+    '<div class="rc-meta">' + opts.meta + '</div>' +
+    '<span class="rc-cta">' + opts.cta + '</span>';
+  btn.addEventListener('click', opts.onClick);
+  return btn;
+}
+
+// ──────────────────────────────────────────────────────────────────
+// VIEW: ROUTINE FLOW
+// ──────────────────────────────────────────────────────────────────
+function renderRoutine(){
+  const wrap = document.createElement('div');
+  const routine = state.routines[state.routineKind];
+
+  if(!routine || !routine.prayer_ids || routine.prayer_ids.length === 0){
+    // Defensive — Landing bounces to Browse if empty, but render an exit anyway.
+    wrap.innerHTML = '<div class="error-block">No prayers in this Rule yet. Browse the prayer library to add some.</div>';
+    return wrap;
+  }
+
+  const total = routine.prayer_ids.length;
+  const idx = Math.max(0, Math.min(state.routineIndex, total - 1));
+  const prayer = state.prayersById[routine.prayer_ids[idx]];
+
+  if(!prayer){
+    wrap.innerHTML = '<div class="error-block">This prayer could not be loaded.</div>';
+    return wrap;
+  }
+
+  // Header — back arrow exits without marking complete (no half-credit).
+  const header = document.createElement('div');
+  header.className = 'p-header';
+  header.innerHTML =
+    '<button class="p-back" id="routine-back" type="button">' +
+    '<span class="arrow">&larr;</span>Exit</button>' +
+    '<div class="routine-meta">' + (state.routineKind === 'morning' ? 'Morning Rule' : 'Evening Rule') + '</div>';
+  wrap.appendChild(header);
+
+  // Progress
+  const prog = document.createElement('div');
+  prog.className = 'routine-progress';
+  prog.textContent = 'Prayer ' + (idx+1) + ' of ' + total;
+  wrap.appendChild(prog);
+
+  // Prayer pane
+  const pane = document.createElement('div');
+  pane.className = 'prayer-pane';
+  pane.innerHTML =
+    '<div class="pp-name">' + escapeHtml(prayer.name) + '</div>' +
+    '<hr class="pp-rule">' +
+    '<div class="pp-text">' + formatPrayerText(prayer.text) + '</div>';
+  wrap.appendChild(pane);
+
+  // Action button
+  const actions = document.createElement('div');
+  actions.className = 'routine-actions';
+  const isLast = (idx === total - 1);
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'routine-next-btn';
+  btn.innerHTML = isLast
+    ? '<span class="glyph">&#x2726;&#xFE0E;</span>Done'
+    : 'Next';
+  btn.addEventListener('click', function(){
+    if(isLast){
+      finishRoutine();
+    } else {
+      state.routineIndex = idx + 1;
+      render();
+    }
+  });
+  actions.appendChild(btn);
+  wrap.appendChild(actions);
+
+  // Wire back button (after insertion into DOM)
+  setTimeout(function(){
+    const back = document.getElementById('routine-back');
+    if(back) back.addEventListener('click', function(){
+      state.view = 'landing';
+      state.routineKind = null;
+      state.routineIndex = 0;
+      render();
+    });
+  }, 0);
+
+  return wrap;
+}
+
+async function finishRoutine(){
+  const kind = state.routineKind;
+  const missionKey = (kind === 'morning') ? MISSION_KEY_MORNING : MISSION_KEY_EVENING;
+
+  // Record routine completion (auto-mark the daily prayer mission + bump
+  // streak counter). All writes are best-effort.
+  if(state.profileId){
+    try{
+      await recordRoutineCompletion(kind, missionKey);
+    }catch(e){
+      console.warn('Prayer: routine record failed (non-fatal):', e);
+    }
+  }
+
+  showRoutineToast();
+  setTimeout(function(){
+    state.view = 'landing';
+    state.routineKind = null;
+    state.routineIndex = 0;
+    render();
+  }, 1500);
+}
+
+function showRoutineToast(){
+  const toast = document.createElement('div');
+  toast.className = 'routine-toast';
+  toast.innerHTML =
+    '<div class="rt-marks"><span class="glyph">&#x2726;&#xFE0E;</span></div>' +
+    '<div class="rt-text">Routine complete</div>';
+  document.body.appendChild(toast);
+  setTimeout(function(){ if(toast.parentNode) toast.remove(); }, 1700);
+}
+
+// ──────────────────────────────────────────────────────────────────
+// AUTO-MARK + STREAK BUMP (per-day dedupe)
+// ──────────────────────────────────────────────────────────────────
+//
+// Dedupe rule (orchestrator-recommended): one Morning Rule per day counts
+// toward the streak. Second tap on the same day silently no-ops on the
+// streak counter AND skips re-recording the mission_completion (cleaner
+// than re-recording dup completions). The per-routine reward is 0 coins
+// regardless, so no economic implication either way.
+async function recordRoutineCompletion(kind, missionKey){
+  const mRes = await sb
+    .from('missions')
+    .select('id, key, coins')
+    .eq('key', missionKey)
+    .single();
+  if(mRes.error || !mRes.data){
+    console.warn('Prayer: mission not found for key', missionKey, mRes.error);
+    return { ok:false, reason:'mission-missing' };
+  }
+  const missionId = mRes.data.id;
+  const todayKey = window.PrayerRollup
+    ? window.PrayerRollup.ymd(new Date())
+    : ymdLocal(new Date());
+
+  // Already completed today? No-op the streak bump.
+  const dupRes = await sb
+    .from('mission_completions')
+    .select('id')
+    .eq('explorer_id', state.profileId)
+    .eq('mission_id', missionId)
+    .eq('day_key', todayKey)
+    .eq('status', 'completed')
+    .limit(1);
+  if(dupRes.error){
+    console.warn('Prayer: dedupe query failed (proceeding without dedupe):', dupRes.error);
+  }
+  const alreadyDone = !dupRes.error && dupRes.data && dupRes.data.length > 0;
+
+  if(alreadyDone){
+    state.todayCompleted[kind] = true;
+    return { ok:true, deduped:true };
+  }
+
+  // Insert mission_completion. coins_awarded = 0 per Lane 2.
+  const insRes = await sb
+    .from('mission_completions')
+    .insert({
+      explorer_id:   state.profileId,
+      mission_id:    missionId,
+      status:        'completed',
+      day_key:       todayKey,
+      completed_at:  new Date().toISOString(),
+      coins_awarded: 0,
+      notes:         'auto-marked by routine completion',
+    });
+  if(insRes.error){
+    console.warn('Prayer: mission_completion insert failed:', insRes.error);
+    // Continue to streak bump — the streak counter is the primary source
+    // of truth for the rollup; mission_completion is a secondary log.
+  }
+
+  // UPSERT this week's streak counter (+1 to morning_count or evening_count).
+  const monday = window.PrayerRollup
+    ? window.PrayerRollup.getCurrentMonday(new Date())
+    : computeMonday(new Date());
+  const mondayKey = window.PrayerRollup
+    ? window.PrayerRollup.ymd(monday)
+    : ymdLocal(monday);
+
+  const existRes = await sb
+    .from('prayer_streak_weekly')
+    .select('*')
+    .eq('explorer_id', state.profileId)
+    .eq('week_start_date', mondayKey)
+    .maybeSingle();
+  if(existRes.error){
+    console.warn('Prayer: streak read failed:', existRes.error);
+    state.todayCompleted[kind] = true;
+    return { ok:false, reason:'streak-read-failed' };
+  }
+
+  if(existRes.data){
+    const incField = (kind === 'morning') ? 'morning_count' : 'evening_count';
+    const newVal = (existRes.data[incField] || 0) + 1;
+    const upd = {};
+    upd[incField] = newVal;
+    const updRes = await sb
+      .from('prayer_streak_weekly')
+      .update(upd)
+      .eq('id', existRes.data.id);
+    if(updRes.error){
+      console.warn('Prayer: streak increment failed:', updRes.error);
+    } else {
+      if(kind === 'morning') state.thisWeek.morning_count = newVal;
+      else                   state.thisWeek.evening_count = newVal;
+    }
+  } else {
+    const insertRow = {
+      explorer_id:     state.profileId,
+      week_start_date: mondayKey,
+      morning_count:   kind === 'morning' ? 1 : 0,
+      evening_count:   kind === 'evening' ? 1 : 0,
+    };
+    const insRowRes = await sb
+      .from('prayer_streak_weekly')
+      .insert(insertRow);
+    if(insRowRes.error){
+      // Race fallback: another tab may have just created the row.
+      console.warn('Prayer: streak insert failed, retrying via update:', insRowRes.error);
+      const retry = await sb
+        .from('prayer_streak_weekly')
+        .select('*')
+        .eq('explorer_id', state.profileId)
+        .eq('week_start_date', mondayKey)
+        .maybeSingle();
+      if(retry.data){
+        const incField = (kind === 'morning') ? 'morning_count' : 'evening_count';
+        const newVal = (retry.data[incField] || 0) + 1;
+        const upd = {};
+        upd[incField] = newVal;
+        await sb
+          .from('prayer_streak_weekly')
+          .update(upd)
+          .eq('id', retry.data.id);
+        if(kind === 'morning') state.thisWeek.morning_count = newVal;
+        else                   state.thisWeek.evening_count = newVal;
+      }
+    } else {
+      if(kind === 'morning') state.thisWeek.morning_count = 1;
+      else                   state.thisWeek.evening_count = 1;
+    }
+  }
+
+  state.todayCompleted[kind] = true;
+  return { ok:true };
+}
+
+async function refreshTodayCompletions(){
+  const todayKey = window.PrayerRollup
+    ? window.PrayerRollup.ymd(new Date())
+    : ymdLocal(new Date());
+  try{
+    const mRes = await sb
+      .from('missions')
+      .select('id, key')
+      .in('key', [MISSION_KEY_MORNING, MISSION_KEY_EVENING]);
+    if(mRes.error || !mRes.data) return;
+    const idByKey = {};
+    mRes.data.forEach(function(m){ idByKey[m.key] = m.id; });
+    const ids = Object.values(idByKey);
+    if(ids.length === 0) return;
+    const cRes = await sb
+      .from('mission_completions')
+      .select('mission_id')
+      .eq('explorer_id', state.profileId)
+      .eq('status','completed')
+      .eq('day_key', todayKey)
+      .in('mission_id', ids);
+    if(cRes.error || !cRes.data) return;
+    const completedSet = new Set(cRes.data.map(function(c){ return c.mission_id; }));
+    state.todayCompleted.morning = completedSet.has(idByKey[MISSION_KEY_MORNING]);
+    state.todayCompleted.evening = completedSet.has(idByKey[MISSION_KEY_EVENING]);
+  }catch(e){
+    console.warn('Prayer: today-completions refresh failed:', e);
+  }
+}
+
+// ──────────────────────────────────────────────────────────────────
+// VIEW: BROWSE LIBRARY
+// ──────────────────────────────────────────────────────────────────
+function renderBrowse(){
+  const wrap = document.createElement('div');
+
+  // Header
+  const header = document.createElement('div');
+  header.className = 'p-header';
+  header.innerHTML =
+    '<button class="p-back" id="browse-back" type="button">' +
+    '<span class="arrow">&larr;</span>Back</button>' +
+    '<div class="p-eyebrow">Prayer Library</div>' +
+    '<h1 class="p-title"><span class="glyph">&#x2726;&#xFE0E;</span>Prayer Library<span class="glyph">&#x2726;&#xFE0E;</span></h1>';
+  wrap.appendChild(header);
+
+  // Filter chips
+  const filterRow = document.createElement('div');
+  filterRow.className = 'filter-row';
+  FILTER_CHIPS.forEach(function(chip){
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'filter-chip' + (state.browseFilter === chip.key ? ' active' : '');
+    b.textContent = chip.label;
+    b.addEventListener('click', function(){
+      state.browseFilter = chip.key;
+      state.expandedSlug = null;
+      render();
+    });
+    filterRow.appendChild(b);
+  });
+  wrap.appendChild(filterRow);
+
+  // Group prayers by category in the filter context
+  const groups = {};
+  CATEGORY_ORDER.forEach(function(c){ groups[c] = []; });
+  state.prayers.forEach(function(p){
+    if(state.browseFilter !== 'all' && p.category !== state.browseFilter) return;
+    if(!groups[p.category]) groups[p.category] = [];
+    groups[p.category].push(p);
+  });
+
+  let renderedAny = false;
+  CATEGORY_ORDER.forEach(function(cat){
+    const list = groups[cat] || [];
+    if(list.length === 0) return;
+    renderedAny = true;
+    const section = document.createElement('div');
+    section.className = 'cat-section';
+    section.innerHTML = '<div class="cat-header">' + (CATEGORY_LABELS[cat] || cat) + '</div>';
+    list.forEach(function(prayer){
+      section.appendChild(makePrayerRow(prayer));
+    });
+    wrap.appendChild(section);
+  });
+
+  if(!renderedAny){
+    const empty = document.createElement('div');
+    empty.className = 'error-block';
+    empty.innerHTML = 'No prayers in this category.';
+    wrap.appendChild(empty);
+  }
+
+  setTimeout(function(){
+    const back = document.getElementById('browse-back');
+    if(back) back.addEventListener('click', function(){
+      state.view = 'landing';
+      state.expandedSlug = null;
+      render();
+    });
+  }, 0);
+
+  return wrap;
+}
+
+function makePrayerRow(prayer){
+  const muted = isOutOfSeason(prayer);
+  const inMorning = !!(state.routines.morning && state.routines.morning.prayer_ids && state.routines.morning.prayer_ids.indexOf(prayer.id) !== -1);
+  const inEvening = !!(state.routines.evening && state.routines.evening.prayer_ids && state.routines.evening.prayer_ids.indexOf(prayer.id) !== -1);
+  const expanded  = state.expandedSlug === prayer.slug;
+
+  const row = document.createElement('button');
+  row.type = 'button';
+  row.className = 'prayer-row';
+  if(muted)     row.classList.add('muted');
+  if(inMorning) row.classList.add('in-routine-morning');
+  if(inEvening) row.classList.add('in-routine-evening');
+  if(expanded)  row.classList.add('expanded');
+
+  let tag = '';
+  if(inMorning && inEvening) tag = '<span class="pr-row-tag morning">Morning &middot; Evening</span>';
+  else if(inMorning)         tag = '<span class="pr-row-tag morning">Morning Rule</span>';
+  else if(inEvening)         tag = '<span class="pr-row-tag evening">Evening Rule</span>';
+
+  const preview = previewOf(prayer.text);
+  const mutedNote = muted ? '<div class="muted-explainer">Out of season &mdash; shown for reference</div>' : '';
+
+  row.innerHTML =
+    '<div class="pr-row-top">' +
+    '<span class="pr-row-icon">' + iconFor(prayer) + '</span>' +
+    '<span class="pr-row-name">' + escapeHtml(prayer.name) + '</span>' +
+    tag +
+    '</div>' +
+    '<div class="pr-row-preview">' + escapeHtml(preview) + '</div>' +
+    '<div class="pr-expand">' +
+      mutedNote +
+      '<div class="pr-expand-text">' + formatPrayerText(prayer.text) + '</div>' +
+      '<div class="pr-actions" id="actions-' + prayer.slug + '"></div>' +
+    '</div>';
+
+  row.addEventListener('click', function(ev){
+    if(ev.target.closest('.pr-action-btn')) return;
+    state.expandedSlug = (state.expandedSlug === prayer.slug) ? null : prayer.slug;
+    render();
+  });
+
+  setTimeout(function(){ buildPrayerActions(prayer, inMorning, inEvening); }, 0);
+  return row;
+}
+
+function buildPrayerActions(prayer, inMorning, inEvening){
+  const host = document.getElementById('actions-' + prayer.slug);
+  if(!host) return;
+  if(!state.profileId){
+    host.innerHTML = '<div class="muted-explainer">Sign in to customize your Rule.</div>';
+    return;
+  }
+  host.innerHTML = '';
+
+  function addAction(label, onClick, opts){
+    opts = opts || {};
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'pr-action-btn' + (opts.danger ? ' danger' : '') + (opts.primary ? ' primary' : '');
+    btn.innerHTML = label;
+    btn.addEventListener('click', function(e){
+      e.stopPropagation();
+      onClick();
+    });
+    host.appendChild(btn);
+  }
+
+  if(inMorning){
+    const idx = state.routines.morning.prayer_ids.indexOf(prayer.id);
+    const len = state.routines.morning.prayer_ids.length;
+    if(idx > 0)        addAction('&uarr; Up',   function(){ moveInRoutine('morning', idx, -1); });
+    if(idx < len - 1)  addAction('&darr; Down', function(){ moveInRoutine('morning', idx, +1); });
+    addAction('Remove from Morning', function(){ removeFromRoutine('morning', prayer.id); }, { danger:true });
+  } else {
+    addAction('+ Add to Morning', function(){ addToRoutine('morning', prayer.id); }, { primary:true });
+  }
+
+  if(inEvening){
+    const idx = state.routines.evening.prayer_ids.indexOf(prayer.id);
+    const len = state.routines.evening.prayer_ids.length;
+    if(idx > 0)        addAction('&uarr; Up',   function(){ moveInRoutine('evening', idx, -1); });
+    if(idx < len - 1)  addAction('&darr; Down', function(){ moveInRoutine('evening', idx, +1); });
+    addAction('Remove from Evening', function(){ removeFromRoutine('evening', prayer.id); }, { danger:true });
+  } else {
+    addAction('+ Add to Evening', function(){ addToRoutine('evening', prayer.id); }, { primary:true });
+  }
+}
+
+// ──────────────────────────────────────────────────────────────────
+// ROUTINE EDITS
+// ──────────────────────────────────────────────────────────────────
+async function addToRoutine(kind, prayerId){
+  const existing = state.routines[kind];
+  let newIds;
+  if(existing){
+    if(existing.prayer_ids.indexOf(prayerId) !== -1) return;
+    newIds = existing.prayer_ids.concat([prayerId]);
+  } else {
+    newIds = [prayerId];
+  }
+  await persistRoutine(kind, newIds);
+}
+
+async function removeFromRoutine(kind, prayerId){
+  const existing = state.routines[kind];
+  if(!existing) return;
+  const newIds = existing.prayer_ids.filter(function(id){ return id !== prayerId; });
+  await persistRoutine(kind, newIds);
+}
+
+async function moveInRoutine(kind, idx, dir){
+  const existing = state.routines[kind];
+  if(!existing) return;
+  const ids = existing.prayer_ids.slice();
+  const ni = idx + dir;
+  if(ni < 0 || ni >= ids.length) return;
+  const tmp = ids[idx]; ids[idx] = ids[ni]; ids[ni] = tmp;
+  await persistRoutine(kind, ids);
+}
+
+async function persistRoutine(kind, newIds){
+  if(!state.profileId) return;
+  try{
+    const existing = state.routines[kind];
+    if(existing){
+      const { error } = await sb
+        .from('prayer_routines')
+        .update({ prayer_ids: newIds, updated_at: new Date().toISOString() })
+        .eq('id', existing.id);
+      if(error) throw error;
+      existing.prayer_ids = newIds;
+    } else {
+      const { data, error } = await sb
+        .from('prayer_routines')
+        .insert({ explorer_id: state.profileId, kind: kind, prayer_ids: newIds })
+        .select()
+        .single();
+      if(error) throw error;
+      state.routines[kind] = data;
+    }
+  }catch(e){
+    console.error('Prayer: routine persist failed', e);
+  }
+  render();
+}
+
+// ──────────────────────────────────────────────────────────────────
+// HELPERS
+// ──────────────────────────────────────────────────────────────────
+function isOutOfSeason(prayer){
+  // Per dispatch: muting is heuristic, static, three known cases.
+  if(prayer.slug === 'paschal_troparion') return !IN_PASCHA_SEASON;
+  if(prayer.slug === 'o_heavenly_king')   return  IN_PASCHA_SEASON;
+  if(prayer.slug === 'st_ephrem')         return !IN_LENT;
+  return false;
+}
+
+function formatPrayerText(text){
+  // Split on blank lines into paragraphs; preserve single newlines as spaces.
+  const paras = (text || '').split(/\n\s*\n/);
+  return paras.map(function(p){
+    return '<p>' + escapeHtml(p).replace(/\n/g,' ') + '</p>';
+  }).join('');
+}
+
+function previewOf(text){
+  if(!text) return '';
+  const first = (text.split(/\n\s*\n/)[0] || '').replace(/\s+/g,' ').trim();
+  if(first.length <= 110) return first;
+  const slice = first.slice(0, 110);
+  const lastSpace = slice.lastIndexOf(' ');
+  return (lastSpace > 60 ? slice.slice(0, lastSpace) : slice) + '...';
+}
+
+function escapeHtml(s){
+  return String(s == null ? '' : s)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#39;');
+}
+
+// Local-time fallbacks (kept identical to prayer-rollup.js for parity).
+function computeMonday(d){
+  const out = new Date(d);
+  out.setHours(0,0,0,0);
+  const dow = out.getDay();
+  const diff = (dow === 0) ? -6 : 1 - dow;
+  out.setDate(out.getDate() + diff);
+  return out;
+}
+function ymdLocal(d){
+  return d.getFullYear() + '-' +
+    String(d.getMonth()+1).padStart(2,'0') + '-' +
+    String(d.getDate()).padStart(2,'0');
+}
 </script>
 </body>
 </html>

@@ -1,4 +1,15 @@
-// Orthodox Expedition — Service Worker v12
+// Orthodox Expedition — Service Worker v13
+// v13: Repair Chat R — added shared /css/contrast.css for WCAG AA-compliant
+//      text-tier tokens. Fixes Kevin's smoke-test observation that "the various
+//      pages are dark with darker text." Audit found 295 sub-AA text-color
+//      declarations across 13 pages (gold/parchment at low opacity on near-black
+//      bg). Programmatic rgba opacity bumps applied across all dark pages plus
+//      surgical fixes to admin.html's parchment-theme override block (73 more)
+//      and to journal.html's leather-on-parchment entries. All 14 main pages
+//      verified clean against WCAG 2.1 AA (4.5:1 body, 3:1 UI/large) — see
+//      contrast.css header for token tier definitions and measured ratios.
+//      No color/font/aesthetic changes; only opacity values and rgba bases
+//      bumped to land each tier above its WCAG threshold.
 // v12: Repair Chat W — bazaar wishlist viewer (admin-view mode) + redemption
 //      notification email fan-out to all family parents (Kevin + Danyelle).
 //      No new files; this version bump is to ensure the updated bazaar.html,
@@ -27,7 +38,7 @@
 // v4: added week.html, prayers.html, day-state, pause-card, prayers, and config JSON
 // Version bump forces cache clear and fresh install
 
-const CACHE_NAME = 'orthodox-expedition-v12';
+const CACHE_NAME = 'orthodox-expedition-v13';
 const STATIC_ASSETS = [
   '/Orthodox-Expedition-/',
   '/Orthodox-Expedition-/index.html',
@@ -53,6 +64,7 @@ const STATIC_ASSETS = [
   '/Orthodox-Expedition-/icon-maskable-512.png',
   '/Orthodox-Expedition-/manifest.json',
   '/Orthodox-Expedition-/css/viewport.css',
+  '/Orthodox-Expedition-/css/contrast.css',
   '/Orthodox-Expedition-/css/nav-polish.css',
   '/Orthodox-Expedition-/js/day-state.js',
   '/Orthodox-Expedition-/js/pause-card.js',

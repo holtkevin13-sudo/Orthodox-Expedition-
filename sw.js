@@ -1,4 +1,22 @@
-// Orthodox Expedition — Service Worker v14
+// Orthodox Expedition — Service Worker v15
+// v15: Lane A — Daily Anchor Card ("Today We Celebrate") on home.html.
+//      Two new tables (daily_verses 35 rows, journal_prompts 30 rows)
+//      back a day-of-year rotation that pairs a Bible verse with a
+//      reflection prompt below today-card and above rank-hero. Verse
+//      sub-card deep-links to bible-reader.html?book=&chapter=&source=
+//      expedition (LXX numbering for Psalms); prompt sub-card deep-
+//      links to journal.html?prompt=daily&text= which surfaces it via
+//      the existing coming-home-banner pattern (joining name_day +
+//      session as a third arrival mode). Aug 9 St. Herman name-day
+//      gets a card-level flourish (Greek "Χρόνια πολλά, Nolan" framing,
+//      gold elevation) — coexists with week.html's existing name-day-
+//      banner. May 8-17 pre-launch calendar gap handled via Path B
+//      graceful fallback ("Christ is Risen!" + journey-begins-May-18
+//      teaser); no liturgical_calendar backfill in this lane. Greek
+//      micro-accent: Α/Ω flank "Current Rank" eyebrow on rank-hero
+//      (theological resonance: Christ is the Alpha and Omega). New
+//      file: js/daily-anchor-card.js (pure render module, sister to
+//      js/calendar-card.js).
 // v14: Wave 2 Lane 3 — Prayer System. Three new tables (prayers,
 //      prayer_routines, prayer_streak_weekly) seeded with 20 traditional
 //      Orthodox prayers + Nolan's two starter Rules. prayers.html rebuilt
@@ -50,7 +68,7 @@
 // v4: added week.html, prayers.html, day-state, pause-card, prayers, and config JSON
 // Version bump forces cache clear and fresh install
 
-const CACHE_NAME = 'orthodox-expedition-v14';
+const CACHE_NAME = 'orthodox-expedition-v15';
 const STATIC_ASSETS = [
   '/Orthodox-Expedition-/',
   '/Orthodox-Expedition-/index.html',
@@ -82,6 +100,7 @@ const STATIC_ASSETS = [
   '/Orthodox-Expedition-/js/pause-card.js',
   '/Orthodox-Expedition-/js/prayers.js',
   '/Orthodox-Expedition-/js/prayer-rollup.js',
+  '/Orthodox-Expedition-/js/daily-anchor-card.js',
   '/Orthodox-Expedition-/js/topic-00-day.js',
   '/Orthodox-Expedition-/js/quiz-runner.js',
   '/Orthodox-Expedition-/config/program-spine.json',

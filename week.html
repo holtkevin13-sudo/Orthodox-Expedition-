@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <link rel="stylesheet" href="css/viewport.css">
+<link rel="stylesheet" href="css/contrast.css">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>This Week — The Orthodox Expedition</title>
 <link rel="manifest" href="manifest.json">
@@ -56,29 +57,29 @@ body::before{
 
 /* HEADER */
 .header{text-align:center;padding:1.5rem 0 1rem;border-bottom:1px solid rgba(201,146,42,0.15);margin-bottom:2rem;}
-.greeting{font-family:'Cinzel',serif;font-size:0.7rem;letter-spacing:0.25em;color:rgba(201,146,42,0.5);text-transform:uppercase;margin-bottom:0.4rem;}
+.greeting{font-family:'Cinzel',serif;font-size:0.7rem;letter-spacing:0.25em;color:rgba(240,201,110,0.7);text-transform:uppercase;margin-bottom:0.4rem;}
 .day-name{font-family:'Cinzel Decorative',serif;font-size:clamp(1.4rem,5vw,1.9rem);color:var(--gold-light);text-shadow:0 0 18px rgba(201,146,42,0.35);margin-bottom:0.15rem;}
 .full-date{font-family:'Crimson Text',serif;font-style:italic;font-size:0.95rem;color:rgba(244,232,193,0.55);margin-bottom:0.75rem;}
 .liturgical-context{margin-top:0.5rem;margin-bottom:0;text-align:left;}
 .liturgical-context:empty{display:none;}
 .session-title{font-family:'Cinzel Decorative',serif;font-size:clamp(1rem,3.5vw,1.25rem);color:var(--parchment);margin-bottom:0.25rem;padding:0 1rem;}
-.session-week{font-family:'Cinzel',serif;font-size:0.65rem;letter-spacing:0.2em;color:rgba(201,146,42,0.4);text-transform:uppercase;}
+.session-week{font-family:'Cinzel',serif;font-size:0.65rem;letter-spacing:0.2em;color:rgba(240,201,110,0.7);text-transform:uppercase;}
 
 /* DAY TABS */
 .day-tabs{display:flex;justify-content:center;gap:0.4rem;margin-bottom:2rem;flex-wrap:wrap;}
-.day-tab{padding:0.5rem 1rem;min-width:110px;min-height:48px;background:rgba(44,22,84,0.18);border:1px solid rgba(201,146,42,0.18);border-radius:10px;font-family:'Cinzel',serif;font-size:0.7rem;letter-spacing:0.1em;color:rgba(201,146,42,0.5);text-transform:uppercase;cursor:default;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.3;}
-.day-tab .day-label{font-size:0.62rem;color:rgba(201,146,42,0.35);}
-.day-tab.active{background:rgba(107,26,26,0.35);border-color:rgba(255,215,0,0.4);color:var(--gold-bright);box-shadow:0 0 16px rgba(255,215,0,0.15);}
+.day-tab{padding:0.5rem 1rem;min-width:110px;min-height:48px;background:rgba(44,22,84,0.18);border:1px solid rgba(201,146,42,0.18);border-radius:10px;font-family:'Cinzel',serif;font-size:0.7rem;letter-spacing:0.1em;color:rgba(240,201,110,0.7);text-transform:uppercase;cursor:default;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.3;}
+.day-tab .day-label{font-size:0.62rem;color:rgba(240,201,110,0.65);}
+.day-tab.active{background:rgba(107,26,26,0.35);border-color:rgba(240,201,110,0.85);color:var(--gold-bright);box-shadow:0 0 16px rgba(255,215,0,0.15);}
 .day-tab.active .day-label{color:rgba(255,215,0,0.6);}
 
 /* MAIN FRAME */
 .main-frame{background:linear-gradient(160deg,rgba(244,232,193,0.04),rgba(244,232,193,0.01));border:1.5px solid rgba(201,146,42,0.18);border-radius:16px;padding:2rem 1.5rem;margin-bottom:1.5rem;}
 .day-heading{font-family:'Cinzel Decorative',serif;font-size:1.3rem;color:var(--gold-light);margin-bottom:0.25rem;text-align:center;}
-.day-subheading{font-family:'Cinzel',serif;font-size:0.65rem;letter-spacing:0.2em;color:rgba(201,146,42,0.5);text-transform:uppercase;margin-bottom:1.5rem;text-align:center;}
+.day-subheading{font-family:'Cinzel',serif;font-size:0.65rem;letter-spacing:0.2em;color:rgba(240,201,110,0.7);text-transform:uppercase;margin-bottom:1.5rem;text-align:center;}
 
 /* ARTIFACT SLOTS */
 .artifact-slot{margin-bottom:1.25rem;padding:1.25rem;background:rgba(14,8,0,0.4);border:1px solid rgba(201,146,42,0.12);border-radius:10px;position:relative;}
-.artifact-slot.placeholder::before{content:'AWAITING CONTENT';position:absolute;top:0.5rem;right:0.75rem;font-family:'Cinzel',serif;font-size:0.55rem;letter-spacing:0.2em;color:rgba(201,146,42,0.25);}
+.artifact-slot.placeholder::before{content:'AWAITING CONTENT';position:absolute;top:0.5rem;right:0.75rem;font-family:'Cinzel',serif;font-size:0.55rem;letter-spacing:0.2em;color:rgba(240,201,110,0.65);}
 .artifact-icon{font-size:1.5rem;color:var(--gold);margin-bottom:0.4rem;}
 .artifact-title{font-family:'Cinzel Decorative',serif;font-size:1.05rem;color:var(--gold-light);margin-bottom:0.25rem;}
 .artifact-blurb{font-size:0.88rem;color:rgba(244,232,193,0.55);line-height:1.5;font-style:italic;}
@@ -91,25 +92,25 @@ body::before{
 .sidebar{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:2rem;}
 @media(max-width:520px){.sidebar{grid-template-columns:1fr;}}
 .side-card{padding:1.25rem;background:rgba(44,22,84,0.12);border:1px solid rgba(201,146,42,0.12);border-radius:12px;}
-.side-eyebrow{font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.2em;color:rgba(201,146,42,0.5);text-transform:uppercase;margin-bottom:0.5rem;}
+.side-eyebrow{font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.2em;color:rgba(240,201,110,0.7);text-transform:uppercase;margin-bottom:0.5rem;}
 .side-content{font-size:0.9rem;color:rgba(244,232,193,0.65);line-height:1.5;}
-.side-content em{color:rgba(201,146,42,0.6);font-style:italic;}
+.side-content em{color:rgba(240,201,110,0.85);font-style:italic;}
 
 /* PRAYER PANEL */
 .prayer-panel{margin-bottom:1.5rem;padding:1.25rem 1.5rem;background:rgba(44,22,84,0.18);border:1px solid rgba(201,146,42,0.18);border-radius:12px;}
-.prayer-panel-eyebrow{font-family:'Cinzel',serif;font-size:0.7rem;letter-spacing:0.2em;color:rgba(201,146,42,0.55);text-transform:uppercase;margin-bottom:0.875rem;text-align:center;}
+.prayer-panel-eyebrow{font-family:'Cinzel',serif;font-size:0.7rem;letter-spacing:0.2em;color:rgba(240,201,110,0.7);text-transform:uppercase;margin-bottom:0.875rem;text-align:center;}
 .prayer-panel-row{display:flex;gap:0.875rem;flex-wrap:wrap;}
 .prayer-link{display:flex;align-items:center;gap:0.6rem;flex:1;min-width:200px;padding:0.875rem 1rem;background:rgba(14,8,0,0.4);border:1px solid rgba(201,146,42,0.18);border-radius:10px;text-decoration:none;font-family:'Cinzel',serif;font-size:0.78rem;letter-spacing:0.05em;color:rgba(244,232,193,0.7);min-height:48px;transition:all 0.15s;}
-.prayer-link:hover{border-color:rgba(201,146,42,0.4);color:var(--gold-light);}
+.prayer-link:hover{border-color:rgba(240,201,110,0.7);color:var(--gold-light);}
 .prayer-link.done{background:rgba(22,163,74,0.1);border-color:rgba(22,163,74,0.3);color:rgba(134,239,172,0.85);}
-.prayer-link .prayer-mark{font-size:1.3rem;color:rgba(201,146,42,0.6);}
+.prayer-link .prayer-mark{font-size:1.3rem;color:rgba(240,201,110,0.85);}
 .prayer-link.done .prayer-mark{color:rgba(134,239,172,0.9);}
-.prayer-panel-streak{margin-top:0.875rem;padding-top:0.875rem;border-top:1px solid rgba(201,146,42,0.12);font-family:'Caveat',cursive;font-size:1.05rem;color:rgba(201,146,42,0.7);text-align:center;}
+.prayer-panel-streak{margin-top:0.875rem;padding-top:0.875rem;border-top:1px solid rgba(201,146,42,0.12);font-family:'Caveat',cursive;font-size:1.05rem;color:rgba(240,201,110,0.85);text-align:center;}
 
 /* BOTTOM NAV */
 .bottom-nav{display:flex;justify-content:center;gap:1rem;padding-top:1.5rem;border-top:1px solid rgba(201,146,42,0.15);flex-wrap:wrap;}
-.bottom-nav a{font-family:'Cinzel',serif;font-size:0.7rem;letter-spacing:0.15em;color:rgba(201,146,42,0.55);text-decoration:none;text-transform:uppercase;padding:0.5rem 0.875rem;min-height:40px;display:inline-flex;align-items:center;border:1px solid rgba(201,146,42,0.15);border-radius:8px;}
-.bottom-nav a:hover{color:var(--gold-light);border-color:rgba(201,146,42,0.35);}
+.bottom-nav a{font-family:'Cinzel',serif;font-size:0.7rem;letter-spacing:0.15em;color:rgba(240,201,110,0.7);text-decoration:none;text-transform:uppercase;padding:0.5rem 0.875rem;min-height:40px;display:inline-flex;align-items:center;border:1px solid rgba(201,146,42,0.15);border-radius:8px;}
+.bottom-nav a:hover{color:var(--gold-light);border-color:rgba(240,201,110,0.65);}
 
 /* PRE-LAUNCH */
 .pre-launch{text-align:center;padding:3rem 1.5rem;max-width:480px;margin:2rem auto;}
@@ -123,16 +124,16 @@ body::before{
 .calm-icon{font-size:2.5rem;color:var(--gold);margin-bottom:0.75rem;text-shadow:0 0 20px rgba(201,146,42,0.3);}
 .calm-title{font-family:'Cinzel Decorative',serif;font-size:1.4rem;color:var(--gold-light);margin-bottom:0.5rem;}
 .calm-text{font-size:1rem;color:rgba(244,232,193,0.7);line-height:1.6;max-width:420px;margin:0 auto;}
-.calm-quote{font-family:'Caveat',cursive;font-size:1.15rem;color:rgba(201,146,42,0.7);margin-top:1.25rem;font-style:italic;}
+.calm-quote{font-family:'Caveat',cursive;font-size:1.15rem;color:rgba(240,201,110,0.85);margin-top:1.25rem;font-style:italic;}
 
 /* SAINT BANNER */
 .saint-banner{display:flex;align-items:center;gap:1rem;padding:1rem 1.25rem;background:rgba(107,26,26,0.18);border:1px solid rgba(201,146,42,0.2);border-radius:12px;margin-bottom:1.5rem;}
-.saint-banner .saint-icon{width:54px;height:54px;border-radius:50%;background:rgba(44,22,84,0.5);border:2px solid rgba(201,146,42,0.3);display:flex;align-items:center;justify-content:center;font-size:1.5rem;color:rgba(201,146,42,0.5);flex-shrink:0;overflow:hidden;}
+.saint-banner .saint-icon{width:54px;height:54px;border-radius:50%;background:rgba(44,22,84,0.5);border:2px solid rgba(201,146,42,0.3);display:flex;align-items:center;justify-content:center;font-size:1.5rem;color:rgba(240,201,110,0.7);flex-shrink:0;overflow:hidden;}
 .saint-banner .saint-icon img{width:100%;height:100%;object-fit:cover;border-radius:50%;}
 .saint-banner .saint-text{flex:1;}
-.saint-banner .saint-eyebrow{font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.2em;color:rgba(201,146,42,0.5);text-transform:uppercase;margin-bottom:0.15rem;}
+.saint-banner .saint-eyebrow{font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.2em;color:rgba(240,201,110,0.7);text-transform:uppercase;margin-bottom:0.15rem;}
 .saint-banner .saint-name{font-family:'Cinzel Decorative',serif;font-size:1.05rem;color:var(--gold-light);}
-.saint-banner .saint-feast{font-family:'Cinzel',serif;font-size:0.65rem;letter-spacing:0.1em;color:rgba(201,146,42,0.5);text-transform:uppercase;margin-top:0.2rem;}
+.saint-banner .saint-feast{font-family:'Cinzel',serif;font-size:0.65rem;letter-spacing:0.1em;color:rgba(240,201,110,0.7);text-transform:uppercase;margin-top:0.2rem;}
 
 /* LESSON BODY */
 .lesson-body{font-size:1.02rem;line-height:1.75;color:rgba(244,232,193,0.92);margin-top:0.6rem;}
@@ -147,7 +148,7 @@ body::before{
 
 /* READING / EXTERNAL LINKS */
 .reading-link{display:inline-block;font-family:'Cinzel',serif;font-size:0.75rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--gold-light);text-decoration:none;padding:0.5rem 0.875rem;border:1px solid rgba(201,146,42,0.3);border-radius:8px;margin-top:0.4rem;transition:all 0.15s;}
-.reading-link:hover{background:rgba(201,146,42,0.1);border-color:rgba(201,146,42,0.5);}
+.reading-link:hover{background:rgba(201,146,42,0.1);border-color:rgba(240,201,110,0.7);}
 
 /* COMPLETE BUTTON ENABLED STATE */
 .complete-btn[data-session-id]{opacity:1;cursor:pointer;box-shadow:0 4px 18px rgba(255,215,0,0.2);}
@@ -159,12 +160,12 @@ body::before{
 /* ── M/W/F DAY RAIL ─────────────────────────────────────────────────────── */
 /* The day-tabs reused as a 3-dot progress rail. .done shows a check; .active is the live day. */
 .day-rail .day-tab{position:relative;flex:1;max-width:160px;}
-.day-rail .day-tab.done{background:rgba(22,163,74,0.14);border-color:rgba(134,239,172,0.35);color:rgba(134,239,172,0.85);}
+.day-rail .day-tab.done{background:rgba(22,163,74,0.14);border-color:rgba(134,239,172,0.62);color:rgba(134,239,172,0.85);}
 .day-rail .day-tab.done .day-label{color:rgba(134,239,172,0.6);}
 .day-rail .day-mark{position:absolute;top:0.3rem;right:0.55rem;width:1.1rem;height:1.1rem;border-radius:50%;background:rgba(134,239,172,0.85);color:#0e0800;font-size:0.7rem;line-height:1.1rem;text-align:center;font-weight:700;}
 
 /* ── REWARD LINES ───────────────────────────────────────────────────────── */
-.reward-hint{margin-top:0.7rem;font-family:'Cinzel',serif;font-size:0.7rem;letter-spacing:0.18em;text-transform:uppercase;color:rgba(201,146,42,0.55);text-align:center;}
+.reward-hint{margin-top:0.7rem;font-family:'Cinzel',serif;font-size:0.7rem;letter-spacing:0.18em;text-transform:uppercase;color:rgba(240,201,110,0.7);text-align:center;}
 .reward-line{margin-top:0.9rem;font-family:'Cinzel',serif;font-size:0.78rem;letter-spacing:0.18em;text-transform:uppercase;color:rgba(255,215,0,0.9);text-align:center;text-shadow:0 0 14px rgba(255,215,0,0.25);}
 @keyframes rewardFlash{0%{transform:scale(0.96);opacity:0.4;}45%{transform:scale(1.04);opacity:1;text-shadow:0 0 32px rgba(255,215,0,0.8);}100%{transform:scale(1);opacity:1;text-shadow:0 0 14px rgba(255,215,0,0.25);}}
 .reward-line-flash{animation:rewardFlash 0.9s ease-out;}
@@ -176,7 +177,7 @@ body::before{
 .pdf-download-btn .pdf-text{flex:1;display:flex;flex-direction:column;gap:0.2rem;text-align:left;}
 .pdf-download-btn .pdf-title{font-family:'Cinzel',serif;font-size:0.78rem;letter-spacing:0.14em;color:var(--gold-light);text-transform:uppercase;font-weight:600;}
 .pdf-download-btn .pdf-subtitle{font-family:'Crimson Text',serif;font-size:0.88rem;color:rgba(244,232,193,0.7);font-style:italic;line-height:1.35;}
-.pdf-download-btn .pdf-arrow{font-size:1.3rem;color:rgba(201,146,42,0.6);flex-shrink:0;transition:transform 0.18s;}
+.pdf-download-btn .pdf-arrow{font-size:1.3rem;color:rgba(240,201,110,0.85);flex-shrink:0;transition:transform 0.18s;}
 .pdf-download-btn:hover .pdf-arrow{transform:translateY(2px);color:var(--gold-bright);}
 
 /* ── WEDNESDAY: VERIFICATION QUESTION ───────────────────────────────────── */
@@ -184,13 +185,13 @@ body::before{
 .verify-question-text{font-family:'Crimson Text',serif;font-size:1.04rem;line-height:1.6;color:rgba(244,232,193,0.95);margin-bottom:0.95rem;}
 .verify-options{display:flex;flex-direction:column;gap:0.55rem;margin-bottom:0.85rem;}
 .verify-option{display:flex;align-items:flex-start;gap:0.7rem;padding:0.75rem 0.9rem;background:rgba(14,8,0,0.5);border:1px solid rgba(201,146,42,0.18);border-radius:10px;cursor:pointer;transition:all 0.15s;min-height:48px;}
-.verify-option:hover{border-color:rgba(201,146,42,0.45);background:rgba(14,8,0,0.7);}
+.verify-option:hover{border-color:rgba(240,201,110,0.7);background:rgba(14,8,0,0.7);}
 .verify-option input[type="radio"]{margin-top:0.18rem;flex-shrink:0;cursor:pointer;accent-color:var(--gold-bright);}
 .verify-option input[type="radio"]:disabled{cursor:default;}
 .verify-option-letter{font-family:'Cinzel',serif;font-size:0.78rem;letter-spacing:0.1em;color:var(--gold-light);font-weight:700;width:1.2rem;flex-shrink:0;}
 .verify-option-text{flex:1;font-family:'Crimson Text',serif;font-size:0.98rem;line-height:1.45;color:rgba(244,232,193,0.85);}
-.verify-option:has(input:checked){border-color:rgba(255,215,0,0.55);background:rgba(107,26,26,0.25);}
-.verify-option.already-correct{border-color:rgba(134,239,172,0.45);background:rgba(22,163,74,0.12);}
+.verify-option:has(input:checked){border-color:rgba(240,201,110,0.85);background:rgba(107,26,26,0.25);}
+.verify-option.already-correct{border-color:rgba(134,239,172,0.62);background:rgba(22,163,74,0.12);}
 .verify-submit-btn{display:block;width:100%;padding:0.75rem;background:linear-gradient(135deg,var(--gold),var(--gold-bright));border:none;border-radius:10px;font-family:'Cinzel',serif;font-size:0.78rem;letter-spacing:0.15em;color:var(--bg);font-weight:700;text-transform:uppercase;cursor:pointer;min-height:48px;}
 .verify-submit-btn:hover{box-shadow:0 4px 16px rgba(255,215,0,0.25);}
 .verify-submit-btn:disabled{opacity:0.6;cursor:default;box-shadow:none;}
@@ -206,11 +207,11 @@ body::before{
 .quiz-launcher-slot{background:rgba(14,8,0,0.5);border:1.5px solid rgba(201,146,42,0.25);}
 .quiz-meta{display:grid;grid-template-columns:repeat(2,1fr);gap:0.55rem 0.9rem;margin:0.85rem 0 1rem;padding:0.85rem 1rem;background:rgba(44,22,84,0.18);border:1px solid rgba(201,146,42,0.15);border-radius:10px;}
 .quiz-meta-item{display:flex;flex-direction:column;gap:0.15rem;}
-.quiz-meta-label{font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.16em;text-transform:uppercase;color:rgba(201,146,42,0.55);}
+.quiz-meta-label{font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.16em;text-transform:uppercase;color:rgba(240,201,110,0.7);}
 .quiz-meta-value{font-family:'Cinzel Decorative',serif;font-size:0.95rem;color:var(--gold-light);}
 .quiz-launcher-btn{display:block;width:100%;padding:1rem;background:linear-gradient(135deg,var(--burgundy),#8b2222);border:1.5px solid rgba(255,215,0,0.45);border-radius:12px;font-family:'Cinzel',serif;font-size:0.85rem;letter-spacing:0.18em;color:var(--gold-bright);text-decoration:none;text-align:center;text-transform:uppercase;font-weight:700;min-height:54px;display:flex;align-items:center;justify-content:center;transition:all 0.18s;box-shadow:0 4px 16px rgba(107,26,26,0.45);}
 .quiz-launcher-btn:hover{transform:translateY(-1px);box-shadow:0 6px 22px rgba(255,215,0,0.25);border-color:rgba(255,215,0,0.7);}
-.quiz-launcher-btn.done{background:rgba(22,163,74,0.18);border-color:rgba(134,239,172,0.35);color:rgba(134,239,172,0.95);box-shadow:none;}
+.quiz-launcher-btn.done{background:rgba(22,163,74,0.18);border-color:rgba(134,239,172,0.62);color:rgba(134,239,172,0.95);box-shadow:none;}
 
 /* ── WEEK COMPLETE BANNER (Friday after all 3 days done) ────────────────── */
 .week-complete-banner{display:flex;align-items:center;gap:1.1rem;margin-top:1.3rem;padding:1.2rem 1.4rem;background:linear-gradient(135deg,rgba(255,215,0,0.1),rgba(107,26,26,0.18));border:1px solid rgba(255,215,0,0.3);border-radius:12px;}
@@ -220,7 +221,7 @@ body::before{
 .week-complete-sub{font-family:'Crimson Text',serif;font-size:0.95rem;color:rgba(244,232,193,0.7);font-style:italic;}
 
 /* ── ARTIFACT NOTE & MISC ───────────────────────────────────────────────── */
-.artifact-note{margin-top:0.4rem;font-size:0.78rem;color:rgba(201,146,42,0.55);font-style:italic;}
+.artifact-note{margin-top:0.4rem;font-size:0.78rem;color:rgba(240,201,110,0.7);font-style:italic;}
 
 /* ── REPAIR P — PREP MODE COUNTDOWN BANNER ─────────────────────────────── */
 /* Shown only while today < spine.launch_date. Sits between the page header */
@@ -239,7 +240,7 @@ body::before{
   font-family:'Cinzel',serif;
   font-size:0.7rem;
   letter-spacing:0.3em;
-  color:rgba(201,146,42,0.78);
+  color:rgba(240,201,110,0.85);
   text-transform:uppercase;
   margin-bottom:0.6rem;
 }
@@ -252,7 +253,7 @@ body::before{
   line-height:1.35;
 }
 .prep-banner-title .ornament{
-  color:rgba(201,146,42,0.6);
+  color:rgba(240,201,110,0.85);
   margin:0 0.5rem;
   font-size:0.95em;
 }
@@ -322,7 +323,7 @@ body::before{
   line-height:1.3;
 }
 .launch-celebration-title .ornament{
-  color:rgba(201,146,42,0.65);
+  color:rgba(240,201,110,0.85);
   margin:0 0.5rem;
 }
 .launch-celebration-welcome{
@@ -703,7 +704,7 @@ body::before{
   function renderPreLaunch(s){
     const launchDate = formatLongDate(s.next_session_starts_on);
     const days = daysUntil(s.next_session_starts_on);
-    return `<div class="pre-launch"><div class="icon">☩</div><h2>The Expedition Begins</h2><p>Welcome, Nolan. The Orthodox Expedition has not yet begun. Soon you will walk through the open door of the Church and begin to learn what is happening inside.</p><div class="when">${launchDate}</div><p style="font-family:'Caveat',cursive;font-size:1.2rem;color:rgba(201,146,42,0.7);">${days > 0 ? `${days} day${days === 1 ? '' : 's'} until we begin` : 'We begin today.'}</p></div>`;
+    return `<div class="pre-launch"><div class="icon">☩</div><h2>The Expedition Begins</h2><p>Welcome, Nolan. The Orthodox Expedition has not yet begun. Soon you will walk through the open door of the Church and begin to learn what is happening inside.</p><div class="when">${launchDate}</div><p style="font-family:'Caveat',cursive;font-size:1.2rem;color:rgba(240,201,110,0.85);">${days > 0 ? `${days} day${days === 1 ? '' : 's'} until we begin` : 'We begin today.'}</p></div>`;
   }
   function renderHeader(s){
     const session = findSession(s.current_session_id);

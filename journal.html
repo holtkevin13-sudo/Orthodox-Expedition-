@@ -997,6 +997,30 @@ async function applySessionPrompt(){
       return;
     }
 
+    // ── DAILY REFLECTION PROMPT (from home.html Daily Anchor Card) ──
+    // URL pattern: journal.html?prompt=daily&text=URL%2Dencoded%20prompt%20text
+    // The home page's "Today's Reflection" sub-card deep-links here so
+    // Nolan arrives with the day's prompt already framed above an empty
+    // textarea. He writes his own reflection — the prompt is a starter,
+    // not editable text, to keep the textarea clean for free expression.
+    if (promptMode === 'daily') {
+      const text = params.get('text') || '';
+      if (!text) return;
+      const banner = document.getElementById('coming-home-banner');
+      const titleEl = document.getElementById('coming-home-session-title');
+      const promptEl = document.getElementById('coming-home-prompt');
+      if (!banner || !titleEl || !promptEl) return;
+
+      banner.style.display = 'block';
+      titleEl.textContent = "Today's Reflection";
+      promptEl.textContent = text;
+      const ta = document.getElementById('entry-text');
+      if (ta && !ta.value) {
+        ta.placeholder = text + '\n\n— Begin your entry below —';
+      }
+      return;
+    }
+
     // ── SESSION PROMPT (from week.html session-link) ──────────
     if (promptMode !== 'session') return;
     const sessionId = params.get('session');

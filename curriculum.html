@@ -9,6 +9,7 @@
 <meta name="apple-mobile-web-app-title" content="Expedition">
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link rel="stylesheet" href="css/viewport.css">
+<link rel="stylesheet" href="css/contrast.css">
 <link rel="stylesheet" href="css/nav-polish.css">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Topics — The Orthodox Expedition</title>
@@ -52,7 +53,7 @@ body::before{
   background:var(--bg);transition:opacity 0.4s;
 }
 .loading-cross{
-  font-family:'Cinzel',serif;font-size:2rem;color:rgba(201,146,42,0.4);
+  font-family:'Cinzel',serif;font-size:2rem;color:rgba(240,201,110,0.7);
   animation:pulse 1.5s ease-in-out infinite;
 }
 @keyframes pulse{0%,100%{opacity:0.3;}50%{opacity:0.8;}}
@@ -77,19 +78,19 @@ body::before{
 }
 .back-btn{
   background:none;border:none;cursor:pointer;
-  color:rgba(201,146,42,0.5);font-size:0.85rem;
+  color:rgba(240,201,110,0.7);font-size:0.85rem;
   font-family:'Cinzel',serif;padding:0.25rem 0.5rem;
   text-decoration:none;
 }
 .app-divider{
-  color:rgba(201,146,42,0.35);letter-spacing:0.6rem;
+  color:rgba(240,201,110,0.65);letter-spacing:0.6rem;
   font-size:0.65rem;margin-top:0.3rem;
 }
 
 /* ── PAGE TITLE BLOCK ──────────────────────────────────────── */
 .page-eyebrow{
   font-family:'Cinzel',serif;font-size:0.7rem;letter-spacing:0.22em;
-  color:rgba(201,146,42,0.55);text-transform:uppercase;
+  color:rgba(240,201,110,0.7);text-transform:uppercase;
   text-align:center;margin-bottom:0.4rem;
 }
 .page-title{
@@ -111,7 +112,7 @@ body::before{
 .topic-header{margin-bottom:0.875rem;padding:0 0.125rem;}
 .topic-eyebrow{
   font-family:'Cinzel',serif;font-size:0.62rem;letter-spacing:0.18em;
-  color:rgba(201,146,42,0.55);text-transform:uppercase;
+  color:rgba(240,201,110,0.7);text-transform:uppercase;
   margin-bottom:0.3rem;
 }
 .topic-title{
@@ -121,7 +122,7 @@ body::before{
 }
 .topic-progress-line{
   font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.1em;
-  color:rgba(201,146,42,0.45);text-transform:uppercase;
+  color:rgba(240,201,110,0.7);text-transform:uppercase;
 }
 
 /* ── SESSION CARDS ─────────────────────────────────────────── */
@@ -140,7 +141,7 @@ body::before{
 }
 .session-card.current{
   background:rgba(201,146,42,0.05);
-  border-color:rgba(201,146,42,0.35);
+  border-color:rgba(240,201,110,0.65);
   box-shadow:0 0 0 1px rgba(201,146,42,0.12);
 }
 
@@ -164,7 +165,7 @@ body::before{
 }
 .session-id{
   font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.12em;
-  color:rgba(201,146,42,0.55);text-transform:uppercase;
+  color:rgba(240,201,110,0.7);text-transform:uppercase;
   flex-shrink:0;
 }
 .session-card.complete .session-id{color:rgba(134,239,172,0.65);}
@@ -201,10 +202,10 @@ body::before{
 }
 .day-rail-mini .day-dot-label{
   font-family:'Cinzel',serif;font-size:0.55rem;letter-spacing:0.12em;
-  color:rgba(201,146,42,0.55);text-transform:uppercase;
+  color:rgba(240,201,110,0.7);text-transform:uppercase;
 }
 .session-card.complete .day-rail-mini .day-dot.future{
-  border-color:rgba(201,146,42,0.18);
+  border-color:rgba(240,201,110,0.65);
 }
 
 /* ── RESOURCES SUB-BLOCK ───────────────────────────────────── */
@@ -217,7 +218,7 @@ body::before{
 .resource-link{
   display:inline-flex;align-items:center;gap:0.35rem;
   font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.08em;
-  color:rgba(201,146,42,0.6);text-transform:uppercase;
+  color:rgba(240,201,110,0.85);text-transform:uppercase;
   text-decoration:none;
   padding:0.25rem 0;
   border-bottom:1px solid transparent;
@@ -225,12 +226,12 @@ body::before{
 }
 .resource-link:hover{
   color:var(--gold-light);
-  border-bottom-color:rgba(201,146,42,0.4);
+  border-bottom-color:rgba(240,201,110,0.7);
 }
 .resource-link:active{color:var(--gold-bright);}
 .resource-icon{
   font-size:0.75rem;line-height:1;
-  color:rgba(201,146,42,0.5);
+  color:rgba(240,201,110,0.7);
 }
 
 /* ── LOCKED FUTURE TOPICS ──────────────────────────────────── */
@@ -249,13 +250,13 @@ body::before{
   display:flex;align-items:center;justify-content:center;
   background:rgba(201,146,42,0.06);
   border:1px solid rgba(201,146,42,0.18);
-  color:rgba(201,146,42,0.45);
+  color:rgba(240,201,110,0.7);
   flex-shrink:0;
 }
 .topic-locked-body{flex:1;min-width:0;}
 .topic-locked-eyebrow{
   font-family:'Cinzel',serif;font-size:0.55rem;letter-spacing:0.16em;
-  color:rgba(201,146,42,0.4);text-transform:uppercase;
+  color:rgba(240,201,110,0.7);text-transform:uppercase;
   margin-bottom:0.25rem;
 }
 .topic-locked-title{
@@ -264,7 +265,7 @@ body::before{
 }
 .topic-locked-status{
   font-family:'Cinzel',serif;font-size:0.55rem;letter-spacing:0.1em;
-  color:rgba(201,146,42,0.45);text-transform:uppercase;
+  color:rgba(240,201,110,0.7);text-transform:uppercase;
   flex-shrink:0;
 }
 
@@ -289,13 +290,13 @@ body::before{
 .nav-item:active{background:rgba(201,146,42,0.06);}
 .nav-mark{
   font-size:1rem;line-height:1;
-  color:rgba(201,146,42,0.25);
+  color:rgba(240,201,110,0.65);
   transition:all 0.25s;
 }
 .nav-label{
   font-family:'Cinzel',serif;font-size:0.52rem;
   letter-spacing:0.08em;text-transform:uppercase;
-  color:rgba(201,146,42,0.3);
+  color:rgba(240,201,110,0.65);
   transition:all 0.25s;
 }
 .nav-item.active .nav-mark{
@@ -328,13 +329,13 @@ body::before{
 .admin-bar.show{display:flex;}
 .admin-bar-label{
   font-family:'Cinzel',serif;font-size:0.62rem;letter-spacing:0.15em;
-  color:rgba(201,146,42,0.6);text-transform:uppercase;
+  color:rgba(240,201,110,0.85);text-transform:uppercase;
 }
 .admin-bar-btn{
   background:none;border:1px solid rgba(201,146,42,0.3);
   border-radius:6px;padding:0.25rem 0.75rem;
   font-family:'Cinzel',serif;font-size:0.6rem;
-  color:rgba(201,146,42,0.6);cursor:pointer;
+  color:rgba(240,201,110,0.85);cursor:pointer;
   min-height:32px;transition:all 0.2s;
 }
 .admin-bar.show ~ #app .page{padding-top:calc(2.5rem + 1.25rem);}
@@ -353,8 +354,8 @@ body::before{
 <div class="admin-bar" id="parent-bar" style="background:linear-gradient(90deg,rgba(22,84,44,0.97),rgba(12,50,22,0.97));">
   <span class="admin-bar-label" style="color:rgba(134,239,172,0.7);">☩ Parent View</span>
   <div style="display:flex;gap:0.4rem;">
-    <button class="admin-bar-btn" style="color:rgba(134,239,172,0.7);border-color:rgba(134,239,172,0.25);" onclick="window.location.href='parent.html'">← Family Dashboard</button>
-    <button class="admin-bar-btn" style="color:rgba(134,239,172,0.5);border-color:rgba(134,239,172,0.15);" onclick="window.location.href='index.html?signout=1'">Sign Out</button>
+    <button class="admin-bar-btn" style="color:rgba(134,239,172,0.7);border-color:rgba(134,239,172,0.62);" onclick="window.location.href='parent.html'">← Family Dashboard</button>
+    <button class="admin-bar-btn" style="color:rgba(134,239,172,0.62);border-color:rgba(134,239,172,0.62);" onclick="window.location.href='index.html?signout=1'">Sign Out</button>
   </div>
 </div>
 

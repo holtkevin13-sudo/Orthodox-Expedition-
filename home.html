@@ -17,6 +17,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/prayer-rollup.js"></script>
+<script src="js/daily-anchor-card.js"></script>
 <script>
 function showAdminBar(){
   const bar = document.getElementById('admin-bar');
@@ -693,6 +694,156 @@ body::before{
   color:rgba(240,201,110,0.7);text-transform:uppercase;margin-bottom:0.3rem;
 }
 
+/* ── DAILY ANCHOR CARD ("Today We Celebrate") ───────────────────
+   Lane A — devotional anchor between today-card (the day's action)
+   and rank-hero (status reflection). Carries liturgical season,
+   feast/saint, Bible verse (deep-link to bible-reader), and a daily
+   journal prompt (deep-link to journal.html). Tokens borrowed from
+   contrast.css (text tiers) and home page gold/parchment palette.
+   ─────────────────────────────────────────────────────────────── */
+.daily-anchor-card{
+  background:linear-gradient(160deg,rgba(28,16,52,0.55) 0%,rgba(60,18,28,0.4) 100%);
+  border:1px solid rgba(201,146,42,0.32);
+  border-radius:16px;
+  padding:1.15rem 1.1rem 1rem;
+  margin-bottom:1.125rem;
+  box-shadow:0 6px 22px rgba(0,0,0,0.32),inset 0 1px 0 rgba(255,215,0,0.05);
+}
+.daily-anchor-card .dac-inner{
+  display:flex;flex-direction:column;gap:0.7rem;
+}
+/* Great-feast tier — slightly thicker gold border, subtle glow. */
+.daily-anchor-card:has(.dac-inner.dac-great){
+  border-width:1.5px;
+  border-color:rgba(240,201,110,0.55);
+  box-shadow:0 6px 22px rgba(0,0,0,0.32),0 0 18px rgba(255,215,0,0.08),inset 0 1px 0 rgba(255,215,0,0.08);
+}
+/* Name-day tier (Aug 9) — even more elevated, parchment-warm. */
+.daily-anchor-card:has(.dac-inner.dac-name-day){
+  background:linear-gradient(160deg,rgba(60,30,80,0.55) 0%,rgba(80,30,30,0.4) 100%);
+  border-color:rgba(255,215,0,0.5);
+  box-shadow:0 6px 22px rgba(0,0,0,0.32),0 0 24px rgba(255,215,0,0.12),inset 0 1px 0 rgba(255,215,0,0.1);
+}
+.dac-eyebrow{
+  font-family:'Cinzel',serif;
+  font-size:0.7rem;
+  letter-spacing:0.22em;
+  color:var(--text-eyebrow-2);
+  text-transform:uppercase;
+  text-align:center;
+  font-weight:600;
+}
+.dac-framing{
+  font-family:'Cinzel Decorative',serif;
+  font-size:1.1rem;
+  color:var(--text-eyebrow);
+  text-align:center;
+  line-height:1.25;
+  display:flex;align-items:center;justify-content:center;gap:0.55rem;flex-wrap:wrap;
+}
+.dac-orn{
+  /* iOS emoji defense (Repair N pattern): keep ✦ as text glyph,
+     not multi-color emoji presentation. U+2726 BLACK FOUR POINTED
+     STAR is followed by U+FE0E TEXT VARIATION SELECTOR in the
+     rendered HTML; this CSS is the belt-and-suspenders pair. */
+  font-variant-emoji:text;
+  font-family:'Cinzel Decorative',serif;
+  color:var(--text-eyebrow);
+  font-size:0.95rem;
+  line-height:1;
+  flex-shrink:0;
+}
+.dac-framing-text{display:inline-block;}
+/* Greater elevation for great-feast / name-day on the framing line. */
+.dac-inner.dac-great .dac-framing,
+.dac-inner.dac-name-day .dac-framing{
+  font-size:1.22rem;
+}
+.dac-body{
+  font-family:'Crimson Text',serif;
+  font-size:1rem;
+  line-height:1.45;
+  color:var(--text-primary);
+  text-align:center;
+  padding:0 0.25rem;
+}
+.dac-body-great{font-size:1.1rem;}
+
+/* ── DAC sub-cards (verse + prompt) ──────────────────────────── */
+.dac-sub{
+  display:block;
+  text-decoration:none;
+  background:rgba(244,232,193,0.05);
+  border:1px solid rgba(201,146,42,0.22);
+  border-radius:12px;
+  padding:0.85rem 0.95rem 0.7rem;
+  transition:background 0.18s ease,border-color 0.18s ease,transform 0.12s ease;
+  min-height:44px;  /* iOS tap target floor */
+  color:inherit;
+}
+.dac-sub:hover{background:rgba(244,232,193,0.07);border-color:rgba(240,201,110,0.4);}
+.dac-sub:active{transform:scale(0.99);background:rgba(244,232,193,0.08);}
+.dac-sub-eyebrow{
+  font-family:'Cinzel',serif;
+  font-size:0.62rem;
+  letter-spacing:0.2em;
+  color:var(--text-eyebrow-3);
+  text-transform:uppercase;
+  margin-bottom:0.4rem;
+  font-weight:600;
+}
+.dac-verse-text{
+  font-family:'Crimson Text',serif;
+  font-style:italic;
+  font-size:0.98rem;
+  line-height:1.5;
+  color:var(--text-primary);
+  margin-bottom:0.4rem;
+}
+.dac-verse-ref{
+  font-family:'Cinzel',serif;
+  font-size:0.72rem;
+  letter-spacing:0.08em;
+  color:var(--text-eyebrow-2);
+  text-align:right;
+  margin-bottom:0.6rem;
+}
+.dac-prompt-text{
+  font-family:'Crimson Text',serif;
+  font-style:italic;
+  font-size:0.98rem;
+  line-height:1.5;
+  color:var(--text-primary);
+  margin-bottom:0.6rem;
+}
+.dac-sub-cta{
+  display:flex;align-items:center;justify-content:flex-end;gap:0.3rem;
+  font-family:'Cinzel',serif;
+  font-size:0.68rem;
+  letter-spacing:0.14em;
+  color:var(--text-eyebrow-2);
+  text-transform:uppercase;
+  font-weight:600;
+}
+.dac-sub-arrow{font-size:1rem;line-height:1;}
+
+/* ── Rank-hero Α/Ω flank (Greek micro-accent #1) ──────────────────
+   Α (Alpha) and Ω (Omega) flank the "Current Rank" eyebrow as a
+   subtle theological resonance — Christ is the Alpha and Omega.
+   Per Repair N pattern, we apply font-variant-emoji:text defensively;
+   Α/Ω are Greek capital letters with native text glyphs in all
+   system fonts so no U+FE0E variation selector is needed (those
+   are emoji-codepoint glyphs only). */
+.rank-eyebrow .rank-eyebrow-greek{
+  display:inline-block;
+  font-variant-emoji:text;
+  font-family:'Cinzel Decorative',serif;
+  color:rgba(240,201,110,0.85);  /* matches --text-eyebrow */
+  margin:0 0.5em;
+  font-weight:400;
+  letter-spacing:0;
+}
+
 /* ── HOME DESTINATION CARDS ────────────────────────────────── */
 .destination-row{
   display:grid;grid-template-columns:1fr 1fr;
@@ -939,6 +1090,13 @@ body::before{
       <div class="today-items" id="today-items"></div>
     </div>
 
+    <!-- DAILY ANCHOR CARD — Lane A "Today We Celebrate"
+         Liturgical season + feast/saint + Bible verse + reflection prompt.
+         Renders into .daily-anchor-card by loadDailyAnchorCard() in the
+         script section below. Hidden until populated to avoid an empty
+         frame flash. -->
+    <div class="daily-anchor-card fade-up" id="daily-anchor-card" style="display:none;"></div>
+
     <!-- RANK HERO -->
     <div class="rank-hero fade-up" id="rank-hero">
       <div class="rank-hero-bg"></div>
@@ -946,7 +1104,7 @@ body::before{
       <div class="rank-hero-border" id="rank-border"></div>
       <div class="rank-hero-deco-tl">✦</div>
       <div class="rank-hero-deco-br">✦</div>
-      <div class="rank-eyebrow">Current Rank</div>
+      <div class="rank-eyebrow"><span class="rank-eyebrow-greek" aria-hidden="true">Α</span>Current Rank<span class="rank-eyebrow-greek" aria-hidden="true">Ω</span></div>
       <div class="rank-badge-row">
         <div class="rank-medallion" id="rank-medallion">
           <div class="rank-numeral" id="rank-numeral">I</div>
@@ -1193,6 +1351,7 @@ async function loadData(userId){
   renderTodayCard(mastery, completed, topics, allSessions, missions, missionComps, today, progressRows);
   renderPrayerStreak(missions, missionComps);
   loadAnnouncement();
+  loadDailyAnchorCard();
 }
 
 // ── RENDER ────────────────────────────────────────────────────
@@ -1635,6 +1794,67 @@ function dismissAnnouncement(){
   const text = document.getElementById('announcement-text').textContent;
   localStorage.setItem('announcement-dismissed', text);
   document.getElementById('announcement-banner').classList.remove('show');
+}
+
+// ── DAILY ANCHOR CARD (Lane A) ────────────────────────────────
+// Pulls today's liturgical_calendar row + a daily verse + a daily
+// reflection prompt, and asks DailyAnchorCard.render() (loaded from
+// js/daily-anchor-card.js) to produce the markup. Three queries in
+// parallel; failures degrade silently (the card just stays hidden).
+//
+// Date matching uses the local wall-clock day to avoid late-night
+// UTC drift bumping us forward a day in Florida time.
+async function loadDailyAnchorCard(){
+  try {
+    if (typeof DailyAnchorCard === 'undefined') return; // defensive
+
+    const now = new Date();
+    const localISO = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+    const doy = (() => {
+      // Day-of-year in local wall clock — matches Postgres EXTRACT(DOY)
+      const start = new Date(now.getFullYear(), 0, 0);
+      const diff  = now - start;
+      return Math.floor(diff / 86400000); // 1..365/366
+    })();
+
+    const [calRes, versesRes, promptsRes] = await Promise.all([
+      sb.from('liturgical_calendar')
+        .select('calendar_date,liturgical_season,feast_name,feast_rank,sunday_name,saint_commemorations')
+        .eq('calendar_date', localISO).maybeSingle(),
+      sb.from('daily_verses')
+        .select('reference,text,bible_book_code,bible_chapter')
+        .eq('is_active', true).order('display_order'),
+      sb.from('journal_prompts')
+        .select('prompt_text')
+        .eq('is_active', true).order('display_order'),
+    ]);
+
+    const verses  = versesRes.data  || [];
+    const prompts = promptsRes.data || [];
+    const verse   = verses.length  ? verses[(doy - 1 + verses.length)  % verses.length]  : null;
+    const prompt  = prompts.length ? prompts[(doy - 1 + prompts.length) % prompts.length] : null;
+
+    const explorerName = (profile && profile.name)
+      ? String(profile.name).trim().split(/\s+/)[0]
+      : null;
+
+    const html = DailyAnchorCard.render({
+      row: calRes && calRes.data ? calRes.data : null,
+      verse,
+      prompt,
+      today: now,
+      explorerName,
+    });
+
+    const host = document.getElementById('daily-anchor-card');
+    if (host && html) {
+      host.innerHTML = html;
+      host.style.display = 'block';
+    }
+  } catch (e) {
+    // Silent fail — the card stays hidden, page is still usable.
+    console.warn('Daily anchor card load failed:', e);
+  }
 }
 </script>
 

@@ -1,4 +1,16 @@
-// Orthodox Expedition — Service Worker v13
+// Orthodox Expedition — Service Worker v14
+// v14: Wave 2 Lane 3 — Prayer System. Three new tables (prayers,
+//      prayer_routines, prayer_streak_weekly) seeded with 20 traditional
+//      Orthodox prayers + Nolan's two starter Rules. prayers.html rebuilt
+//      as a three-screen state machine (Landing / Routine flow / Browse
+//      Library). Sunday-night weekly rollup awards 5 × morning_count
+//      + 5 × evening_count coins on next-open Mon-or-later, with quiet
+//      parchment celebration overlay (slides in from top, doxological
+//      framing). Per-routine completion auto-marks daily_morning_prayer
+//      / daily_evening_prayer mission rows but drops 0 coins (Lane 2's
+//      zeroing preserved). Adds shared js/prayer-rollup.js, hooked into
+//      home.html and missions.html init paths so the rollup also fires
+//      on those entry points.
 // v13: Repair Chat R — added shared /css/contrast.css for WCAG AA-compliant
 //      text-tier tokens. Fixes Kevin's smoke-test observation that "the various
 //      pages are dark with darker text." Audit found 295 sub-AA text-color
@@ -38,7 +50,7 @@
 // v4: added week.html, prayers.html, day-state, pause-card, prayers, and config JSON
 // Version bump forces cache clear and fresh install
 
-const CACHE_NAME = 'orthodox-expedition-v13';
+const CACHE_NAME = 'orthodox-expedition-v14';
 const STATIC_ASSETS = [
   '/Orthodox-Expedition-/',
   '/Orthodox-Expedition-/index.html',
@@ -69,6 +81,7 @@ const STATIC_ASSETS = [
   '/Orthodox-Expedition-/js/day-state.js',
   '/Orthodox-Expedition-/js/pause-card.js',
   '/Orthodox-Expedition-/js/prayers.js',
+  '/Orthodox-Expedition-/js/prayer-rollup.js',
   '/Orthodox-Expedition-/js/topic-00-day.js',
   '/Orthodox-Expedition-/js/quiz-runner.js',
   '/Orthodox-Expedition-/config/program-spine.json',

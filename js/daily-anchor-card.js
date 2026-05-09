@@ -13,6 +13,14 @@
  * prompt with deep-link to journal.html. No fast info, no full saint
  * list — those live on week.html's calendar card.
  *
+ * Saint-list expansion (Repair I):
+ *   When `feast_name` is null but `saint_commemorations` has entries,
+ *   the body line surfaces up to two saints rather than only the
+ *   first. 1 saint → "X". 2 saints → "X and Y". 3+ saints →
+ *   "X, Y + N more" (truncated count keeps the card compact for
+ *   ADHD-first scannability; full list still lives on week.html's
+ *   calendar card).
+ *
  * Aug 9 (St. Herman) flourish:
  *   On exactly 08-09 the card adopts a "name day" treatment — the
  *   eyebrow becomes "Name Day", the framing line becomes "Χρόνια
@@ -107,7 +115,18 @@ const DailyAnchorCard = (() => {
       const eyebrow = row.liturgical_season || null;
       let body = row.feast_name || null;
       if (!body && Array.isArray(row.saint_commemorations) && row.saint_commemorations.length > 0) {
-        body = row.saint_commemorations[0];
+        // Saint-list expansion (Repair I): surface up to two saints
+        // when `feast_name` is null. Three or more → first two plus a
+        // truncated count, keeping the card compact (full list lives
+        // on week.html's calendar card).
+        const saints = row.saint_commemorations;
+        if (saints.length === 1) {
+          body = saints[0];
+        } else if (saints.length === 2) {
+          body = `${saints[0]} and ${saints[1]}`;
+        } else {
+          body = `${saints[0]}, ${saints[1]} + ${saints.length - 2} more`;
+        }
       }
       // Last-line fallback if still nothing
       if (!body) {

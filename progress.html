@@ -15,6 +15,7 @@
 <title>Progress — The Orthodox Expedition</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/streak-grace.js"></script>
 <style>
 :root {
   --gold:#c9922a;--gold-light:#f0c96e;--gold-bright:#ffd700;
@@ -100,7 +101,19 @@ body::before{
   font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.1em;
   color:rgba(240,201,110,0.7);text-transform:uppercase;
   margin-bottom:0.35rem;line-height:1;
+  display:flex;align-items:center;gap:0.4rem;
 }
+/* Repair B — muted-gold grace pip. Subtle, never punitive. Visible
+   only when grace has been used in the current week; absent in the
+   default state. Hidden via [hidden] attribute when grace not yet used. */
+.grace-pip{
+  display:inline-block;width:5px;height:5px;border-radius:50%;
+  background:rgba(201,146,42,0.55);
+  box-shadow:0 0 4px rgba(201,146,42,0.35);
+  flex-shrink:0;
+  cursor:help;
+}
+.grace-pip[hidden]{display:none;}
 .streak-dots{display:flex;gap:0.25rem;}
 .streak-dot{
   width:18px;height:18px;border-radius:50%;
@@ -241,7 +254,11 @@ body::before{
       <div class="streak-card-half">
         <div class="streak-icon">🔥</div>
         <div class="streak-center">
-          <div class="streak-title">Weekly Streak</div>
+          <div class="streak-title">
+            <span>Weekly Streak</span>
+            <span class="grace-pip" id="session-grace-pip" hidden
+                  title="Grace used this week" aria-label="Grace used this week"></span>
+          </div>
           <div class="streak-dots" id="streak-dots"></div>
         </div>
         <div class="streak-right">
@@ -252,7 +269,11 @@ body::before{
       <div class="streak-card-half">
         <div class="streak-icon">📿</div>
         <div class="streak-center">
-          <div class="streak-title">Prayer Streak</div>
+          <div class="streak-title">
+            <span>Prayer Streak</span>
+            <span class="grace-pip" id="prayer-grace-pip" hidden
+                  title="Grace used this week" aria-label="Grace used this week"></span>
+          </div>
           <div class="streak-dots" id="prayer-dots"></div>
         </div>
         <div class="streak-right">
@@ -290,7 +311,8 @@ body::before{
       <div class="explainer-title">About These Streaks</div>
       <div class="explainer-body">
         <p><strong>Weekly Streak</strong> counts the number of weeks in a row you completed your expedition session.</p>
-        <p><strong>Prayer Streak</strong> counts how many days in a row you prayed Morning or Evening prayer. Even one prayer keeps the streak going.</p>
+        <p><strong>Prayer Streak</strong> counts how many days in a row you prayed both Morning and Evening prayer.</p>
+        <p>Each week, missing one prayer slot or one session day is gently absorbed — your streak holds. A small gold dot beside the title means grace was used this week. Glory to God for your faithfulness.</p>
       </div>
     </div>
 
@@ -347,20 +369,27 @@ function renderWeeklyStreak(streak){
 }
 
 function renderPrayerStreak(prayerMissions, missionComps){
-  let streak = 0;
-  if(prayerMissions.length){
-    const now = new Date();
-    for(let i=0; i<30; i++){
-      const d = new Date(now);
-      d.setDate(d.getDate()-i);
-      const key = d.toISOString().slice(0,10);
-      const hasAny = prayerMissions.some(m =>
-        missionComps.some(c=>c.mission_id===m.id && c.day_key===key)
-      );
-      if(hasAny) streak++;
-      else if(i>0) break;
-    }
-  }
+  // Repair B — strict "both prayers required" semantic with once-per-
+  // week grace token. Today never breaks (Nolan may still pray).
+  // Returns the set of week-Mondays where grace was consumed; caller
+  // persists prayer_streak_weekly.grace_used for the current week.
+  const missionMap = {};
+  prayerMissions.forEach(m => {
+    const lc = (m.name || '').toLowerCase();
+    if (lc.includes('morning')) missionMap[m.id] = 'morning';
+    else if (lc.includes('evening')) missionMap[m.id] = 'evening';
+  });
+  const byDay = {};
+  (missionComps || []).forEach(c => {
+    const slot = missionMap[c.mission_id];
+    if (!slot) return;
+    if (!byDay[c.day_key]) byDay[c.day_key] = { morning:false, evening:false };
+    byDay[c.day_key][slot] = true;
+  });
+  const result = (window.StreakGrace
+    ? window.StreakGrace.computePrayerStreak(byDay, new Date(), 60)
+    : { streak: 0, weeksWithGrace: [] });
+  const streak = result.streak;
   const numEl = document.getElementById('prayer-num');
   const dotsEl = document.getElementById('prayer-dots');
   if(numEl) numEl.textContent = streak;
@@ -373,18 +402,23 @@ function renderPrayerStreak(prayerMissions, missionComps){
       dotsEl.appendChild(d);
     }
   }
+  return result;
 }
 
 async function loadData(userId){
-  const [profileRes, missionsRes, missionCompRes] = await Promise.all([
+  const [profileRes, missionsRes, missionCompRes, sessionProgressRes, sessionsRes] = await Promise.all([
     sb.from('profiles').select('*').eq('id',userId).single(),
     sb.from('missions').select('*').eq('is_active',true).eq('type','daily'),
     sb.from('mission_completions').select('mission_id,day_key,week_key').eq('explorer_id',userId),
+    sb.from('session_progress').select('session_id, day_1_completed_at, day_2_completed_at, day_3_completed_at').eq('explorer_id',userId),
+    sb.from('sessions').select('id, topic_id, order_index').order('topic_id').order('order_index'),
   ]);
 
   const profile = profileRes.data;
   const missions = missionsRes.data || [];
   const missionComps = missionCompRes.data || [];
+  const progressRows = sessionProgressRes.data || [];
+  const allSessions = sessionsRes.data || [];
 
   if(!profile){
     window.location.href='home.html';
@@ -407,7 +441,56 @@ async function loadData(userId){
   const prayerMissions = missions.filter(m =>
     m.name.toLowerCase().includes('prayer') || m.name.toLowerCase().includes('pray')
   );
-  renderPrayerStreak(prayerMissions, missionComps);
+  const prayerResult = renderPrayerStreak(prayerMissions, missionComps);
+
+  // ── Repair B — Grace evaluation + pip rendering ───────────────
+  if (window.StreakGrace) {
+    const today = new Date();
+    const currentMondayKey = window.StreakGrace.ymd(window.StreakGrace.getCurrentMonday(today));
+
+    // Prayer grace pip — render from a) DB-persisted flag OR b) this
+    // walk's freshly-detected consumption. Persist write-back lazily.
+    const prayerGraceUsedThisWalk =
+      (prayerResult && prayerResult.weeksWithGrace || []).indexOf(currentMondayKey) !== -1;
+    let prayerPipShouldShow = prayerGraceUsedThisWalk;
+    try {
+      // Read-then-write keeps the pip authoritative even if walk missed
+      // it (e.g., a settled past week we don't re-walk).
+      const persistedFlag = await window.StreakGrace.readPrayerGraceFlag(sb, userId, currentMondayKey);
+      prayerPipShouldShow = prayerPipShouldShow || persistedFlag;
+      if (prayerGraceUsedThisWalk && !persistedFlag) {
+        // Best-effort write; don't block UI on it.
+        window.StreakGrace.persistPrayerGrace(sb, userId, currentMondayKey);
+      }
+    } catch(e) { /* graceful fallback — pip just won't show */ }
+    const prayerPip = document.getElementById('prayer-grace-pip');
+    if (prayerPip) prayerPip.hidden = !prayerPipShouldShow;
+
+    // Session-week grace — evaluate against the first incomplete
+    // session (matches home.html B.5 derivation).
+    const completedIds = progressRows
+      .filter(s => s.day_1_completed_at && s.day_2_completed_at && s.day_3_completed_at)
+      .map(s => s.session_id);
+    const currentSession = allSessions.find(s => !completedIds.includes(s.id));
+    let sessionPipShouldShow = false;
+    if (currentSession) {
+      const currentProgress = progressRows.find(p => p.session_id === currentSession.id) || null;
+      const weekStart = window.StreakGrace.getCurrentMonday(today);
+      const sessionEval = window.StreakGrace.evaluateSessionWeek(currentProgress, today, weekStart);
+      sessionPipShouldShow = sessionEval.graceShouldBeUsed;
+      if (sessionPipShouldShow) {
+        // Best-effort persist.
+        window.StreakGrace.persistSessionGrace(sb, userId, currentMondayKey);
+      }
+    }
+    // OR persisted flag (e.g., catch-up on a previously-detected miss)
+    try {
+      const persistedSessionFlag = await window.StreakGrace.readSessionGraceFlag(sb, userId, currentMondayKey);
+      sessionPipShouldShow = sessionPipShouldShow || persistedSessionFlag;
+    } catch(e) { /* graceful */ }
+    const sessionPip = document.getElementById('session-grace-pip');
+    if (sessionPip) sessionPip.hidden = !sessionPipShouldShow;
+  }
 }
 
 // ── INIT ──────────────────────────────────────────────────────

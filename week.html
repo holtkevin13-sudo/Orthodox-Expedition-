@@ -72,6 +72,11 @@ body::before{
 .day-tab.active{background:rgba(107,26,26,0.35);border-color:rgba(240,201,110,0.85);color:var(--gold-bright);box-shadow:0 0 16px rgba(255,215,0,0.15);}
 .day-tab.active .day-label{color:rgba(255,215,0,0.6);}
 
+/* Repair J — catch-up pill (gentle gold, never red). Glyph: ↺ */
+.day-tab.active.catch-up{background:rgba(201,146,42,0.18);border-color:rgba(201,146,42,0.55);box-shadow:0 0 14px rgba(201,146,42,0.18);color:rgba(240,201,110,0.92);}
+.day-subheading-catchup{color:rgba(201,146,42,0.7) !important;}
+.catch-up-note{font-family:'Crimson Text',serif;font-style:italic;font-size:0.88rem;color:rgba(244,232,193,0.78);text-align:center;margin:-0.6rem auto 1.4rem;padding:0.55rem 0.95rem;background:rgba(201,146,42,0.06);border:1px solid rgba(201,146,42,0.22);border-radius:8px;max-width:42rem;line-height:1.45;}
+
 /* MAIN FRAME */
 .main-frame{background:linear-gradient(160deg,rgba(244,232,193,0.04),rgba(244,232,193,0.01));border:1.5px solid rgba(201,146,42,0.18);border-radius:16px;padding:2rem 1.5rem;margin-bottom:1.5rem;}
 .day-heading{font-family:'Cinzel Decorative',serif;font-size:1.3rem;color:var(--gold-light);margin-bottom:0.25rem;text-align:center;}
@@ -497,6 +502,25 @@ body::before{
     }
   }
 
+  // ── REPAIR J — SCHEDULE FLEXIBILITY ────────────────
+  // Compute once whether today should surface a catch-up view (a missed past
+  // M/W/F slot from the *current* week) instead of the literal calendar-day
+  // calm-frame. The progress arg is already scoped to the current session via
+  // SessionLoader.load above, so cross-week catch-up is structurally
+  // impossible. See js/topic-00-day.js → determineEffectiveDay for the full
+  // 9-case decision table and the sequence/future-day-lock invariants.
+  let topic00Effective = { effectiveDayKind: null, catchUp: false, originalDayKind: null };
+  if (state.is_topic_00 && window.Topic00Day && typeof window.Topic00Day.determineEffectiveDay === 'function') {
+    try {
+      topic00Effective = window.Topic00Day.determineEffectiveDay(
+        state, sessionData?.progress || null, new Date()
+      );
+    } catch (e) {
+      console.warn('[repair J] determineEffectiveDay failed; falling back to literal day.', e);
+      topic00Effective = { effectiveDayKind: null, catchUp: false, originalDayKind: null };
+    }
+  }
+
   // ── LOAD PROFILE (for name-day banner) ─────────────
   // Reads name and patron_saint. patron_saint is a future schema
   // column — until Chat 2 adds it, the select degrades gracefully and
@@ -645,15 +669,25 @@ body::before{
     root.innerHTML = renderPreLaunch(state) + prayerPanel + renderBottomNav();
   } else if (state.day_kind === 'pause') {
     root.innerHTML = nameDayPrefix + PauseCard.render(state) + prayerPanel + renderBottomNav();
-  } else if (state.day_kind === 'sunday') {
+  } else if (state.day_kind === 'sunday' && !(state.is_topic_00 && topic00Effective.catchUp)) {
+    // Repair J: when Topic 00 has a weekend catch-up target, fall through to
+    // the topic_00 branch below so renderMonday/Wed/Fri can surface the
+    // missed slot. Otherwise, the calm Sunday frame renders as before.
     root.innerHTML = nameDayPrefix + renderHeader(state) + prepBannerHtml + renderSunday() + prayerPanel + renderSaintBanner() + renderBottomNav();
-  } else if (state.day_kind === 'saturday') {
+  } else if (state.day_kind === 'saturday' && !(state.is_topic_00 && topic00Effective.catchUp)) {
+    // Repair J: same fall-through as Sunday for weekend catch-up.
     root.innerHTML = nameDayPrefix + renderHeader(state) + prepBannerHtml + renderSaturday() + prayerPanel + renderSaintBanner() + renderBottomNav();
   } else if (state.is_topic_00 && window.Topic00Day) {
     // Topic 00 — Monday/Wednesday/Friday cadence (Wave 2 Lane 2 build)
     // Mon/Wed/Fri render through Topic00Day. Tue/Thu render the rest-day
     // calm-frame WITH the M/W/F day rail above so Nolan keeps a sense of
     // where he is in the week.
+    //
+    // Repair J: when topic00Effective.catchUp is true and an effectiveDayKind
+    // is one of monday/wednesday/friday, synthesize a state with the matching
+    // day_kind so Topic00Day.render dispatches into the catch-up renderer.
+    // This handles Tue/Thu day_1-or-day_2 incomplete AND Sat/Sun fall-through
+    // from the branches above.
     const renderState = SessionLoader.renderState(sessionData?.session);
     if (renderState === 'coming_soon') {
       const sess = sessionData.session;
@@ -681,11 +715,26 @@ body::before{
         </div>
       ` + prayerPanel + renderSaintBanner() + renderBottomNav();
     } else {
-      // Renderable — branch on day_kind for M/W/F treatment
-      const dayRail = Topic00Day.renderDayRail(state, sessionData?.progress);
-      const main = Topic00Day.render(state, sessionData, topic00Ctx);
+      // Renderable — branch on day_kind for M/W/F treatment.
+      // Repair J: synthesize a catch-up state when applicable.
+      let renderableState = state;
+      let renderableCtx = topic00Ctx;
+      let railEffectiveDayKind = null;
+      if (topic00Effective.catchUp) {
+        const synthDayKind = topic00Effective.effectiveDayKind === 'monday'    ? 'day1'
+                           : topic00Effective.effectiveDayKind === 'wednesday' ? 'day2'
+                           : topic00Effective.effectiveDayKind === 'friday'    ? 'day3'
+                           : null;
+        if (synthDayKind) {
+          renderableState = Object.assign({}, state, { day_kind: synthDayKind });
+          renderableCtx = Object.assign({}, topic00Ctx, { catchUp: true });
+          railEffectiveDayKind = topic00Effective.effectiveDayKind;
+        }
+      }
+      const dayRail = Topic00Day.renderDayRail(renderableState, sessionData?.progress, railEffectiveDayKind);
+      const main = Topic00Day.render(renderableState, sessionData, renderableCtx);
       root.innerHTML = nameDayPrefix + renderHeader(state) + prepBannerHtml + dayRail + main + prayerPanel + renderSaintBanner() + renderBottomNav();
-      Topic00Day.attachHandlers(sb, profileId, sessionData, topic00Ctx);
+      Topic00Day.attachHandlers(sb, profileId, sessionData, renderableCtx);
     }
   } else if (state.day_kind === 'between_sessions') {
     root.innerHTML = nameDayPrefix + renderHeader(state) + prepBannerHtml + renderBetweenSessions() + prayerPanel + renderSaintBanner() + renderBottomNav();

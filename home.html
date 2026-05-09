@@ -97,14 +97,37 @@ function renderTodayCard(mastery, completed, topics, allSessions, missions, miss
   const dow = new Date().getDay(); // 0=Sun..6=Sat
   const todayDayN = dow === 1 ? 1 : dow === 3 ? 2 : dow === 5 ? 3 : 0;
 
-  function dotClass(progress, n){
+  // Repair J — schedule flexibility on the home day-rail mini.
+  // isSlotPast: is M/W/F slot N strictly before today's calendar day?
+  //   slot 1 (Mon) lives at dow=1, slot 2 (Wed) at dow=3, slot 3 (Fri) at dow=5.
+  //   Sunday (dow=0) is treated as past every weekday slot in the just-ended week.
+  function isSlotPast(n, currentDow){
+    const slotDow = n === 1 ? 1 : n === 2 ? 3 : 5;
+    if (currentDow === 0) return true;
+    return slotDow < currentDow;
+  }
+  // pickCatchUpDay: walk slots in order; the first incomplete *past* slot wins,
+  // gated on prior slots being complete (sequence rule — day_2 always requires
+  // day_1 complete, day_3 requires both). Returns 1 | 2 | 3 | null.
+  function pickCatchUpDay(progress, currentDow){
+    if (isSlotPast(1, currentDow) && !(progress && progress.day_1_completed_at)) return 1;
+    if (progress && progress.day_1_completed_at && isSlotPast(2, currentDow) && !progress.day_2_completed_at) return 2;
+    if (progress && progress.day_1_completed_at && progress.day_2_completed_at && isSlotPast(3, currentDow) && !progress.day_3_completed_at) return 3;
+    return null;
+  }
+
+  function dotClass(progress, n, catchUpDay){
     if(progress && progress[`day_${n}_completed_at`]) return 'done';
+    if(catchUpDay !== null && catchUpDay !== undefined && n === catchUpDay) return 'catch-up';
+    // When a catch-up is active, suppress the literal-today highlight to
+    // keep one focal point — the catch-up dot becomes the active visual.
+    if(catchUpDay !== null && catchUpDay !== undefined) return 'future';
     if(n === todayDayN) return 'today';
     return 'future';
   }
-  function dotMarkup(progress, n, label){
-    const cls = dotClass(progress, n);
-    const glyph = cls === 'done' ? '✓' : '';
+  function dotMarkup(progress, n, label, catchUpDay){
+    const cls = dotClass(progress, n, catchUpDay);
+    const glyph = cls === 'done' ? '✓' : (cls === 'catch-up' ? '↺' : '');
     return `<span class="day-pair">`+
       `<span class="day-dot ${cls}" aria-label="Day ${n} (${label}) ${cls}">${glyph}</span>`+
       `<span class="day-dot-label" aria-hidden="true">${label}</span>`+
@@ -122,14 +145,15 @@ function renderTodayCard(mastery, completed, topics, allSessions, missions, miss
       const p = item.dayProgress;
       const allThree = p && p.day_1_completed_at && p.day_2_completed_at && p.day_3_completed_at;
       if(allThree) div.classList.add('complete');
+      const catchUpDay = pickCatchUpDay(p, dow);
       div.innerHTML = `
         <div class="today-check ${item.done?'done':'pending'}">${item.done?'✦':'☩'}</div>
         <div class="today-session-body">
           <span class="today-text">${item.text}</span>
           <div class="day-rail-mini" role="group" aria-label="Mon Wed Fri progress for this session">
-            ${dotMarkup(p, 1, 'Mon')}
-            ${dotMarkup(p, 2, 'Wed')}
-            ${dotMarkup(p, 3, 'Fri')}
+            ${dotMarkup(p, 1, 'Mon', catchUpDay)}
+            ${dotMarkup(p, 2, 'Wed', catchUpDay)}
+            ${dotMarkup(p, 3, 'Fri', catchUpDay)}
           </div>
         </div>
         <span class="today-coins">${item.done?'':'+'+ item.coins}</span>
@@ -654,6 +678,13 @@ body::before{
 }
 .day-rail-mini .day-dot.today{
   background:rgba(244,232,193,0.92);border-color:rgba(255,215,0,0.6);
+}
+/* Repair J — catch-up dot: muted gold, ↺ glyph, sized like other dots */
+.day-rail-mini .day-dot.catch-up{
+  background:rgba(201,146,42,0.55);
+  border-color:rgba(201,146,42,0.75);
+  color:#0e0800;
+  font-size:0.62rem;
 }
 .day-rail-mini .day-dot-label{
   font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.14em;
@@ -1685,14 +1716,37 @@ function renderTodayCard(mastery, completed, topics, allSessions, missions, miss
   const dow = new Date().getDay(); // 0=Sun..6=Sat
   const todayDayN = dow === 1 ? 1 : dow === 3 ? 2 : dow === 5 ? 3 : 0;
 
-  function dotClass(progress, n){
+  // Repair J — schedule flexibility on the home day-rail mini.
+  // isSlotPast: is M/W/F slot N strictly before today's calendar day?
+  //   slot 1 (Mon) lives at dow=1, slot 2 (Wed) at dow=3, slot 3 (Fri) at dow=5.
+  //   Sunday (dow=0) is treated as past every weekday slot in the just-ended week.
+  function isSlotPast(n, currentDow){
+    const slotDow = n === 1 ? 1 : n === 2 ? 3 : 5;
+    if (currentDow === 0) return true;
+    return slotDow < currentDow;
+  }
+  // pickCatchUpDay: walk slots in order; the first incomplete *past* slot wins,
+  // gated on prior slots being complete (sequence rule — day_2 always requires
+  // day_1 complete, day_3 requires both). Returns 1 | 2 | 3 | null.
+  function pickCatchUpDay(progress, currentDow){
+    if (isSlotPast(1, currentDow) && !(progress && progress.day_1_completed_at)) return 1;
+    if (progress && progress.day_1_completed_at && isSlotPast(2, currentDow) && !progress.day_2_completed_at) return 2;
+    if (progress && progress.day_1_completed_at && progress.day_2_completed_at && isSlotPast(3, currentDow) && !progress.day_3_completed_at) return 3;
+    return null;
+  }
+
+  function dotClass(progress, n, catchUpDay){
     if(progress && progress[`day_${n}_completed_at`]) return 'done';
+    if(catchUpDay !== null && catchUpDay !== undefined && n === catchUpDay) return 'catch-up';
+    // When a catch-up is active, suppress the literal-today highlight to
+    // keep one focal point — the catch-up dot becomes the active visual.
+    if(catchUpDay !== null && catchUpDay !== undefined) return 'future';
     if(n === todayDayN) return 'today';
     return 'future';
   }
-  function dotMarkup(progress, n, label){
-    const cls = dotClass(progress, n);
-    const glyph = cls === 'done' ? '✓' : '';
+  function dotMarkup(progress, n, label, catchUpDay){
+    const cls = dotClass(progress, n, catchUpDay);
+    const glyph = cls === 'done' ? '✓' : (cls === 'catch-up' ? '↺' : '');
     return `<span class="day-pair">`+
       `<span class="day-dot ${cls}" aria-label="Day ${n} (${label}) ${cls}">${glyph}</span>`+
       `<span class="day-dot-label" aria-hidden="true">${label}</span>`+
@@ -1710,14 +1764,15 @@ function renderTodayCard(mastery, completed, topics, allSessions, missions, miss
       const p = item.dayProgress;
       const allThree = p && p.day_1_completed_at && p.day_2_completed_at && p.day_3_completed_at;
       if(allThree) div.classList.add('complete');
+      const catchUpDay = pickCatchUpDay(p, dow);
       div.innerHTML = `
         <div class="today-check ${item.done?'done':'pending'}">${item.done?'✦':'☩'}</div>
         <div class="today-session-body">
           <span class="today-text">${item.text}</span>
           <div class="day-rail-mini" role="group" aria-label="Mon Wed Fri progress for this session">
-            ${dotMarkup(p, 1, 'Mon')}
-            ${dotMarkup(p, 2, 'Wed')}
-            ${dotMarkup(p, 3, 'Fri')}
+            ${dotMarkup(p, 1, 'Mon', catchUpDay)}
+            ${dotMarkup(p, 2, 'Wed', catchUpDay)}
+            ${dotMarkup(p, 3, 'Fri', catchUpDay)}
           </div>
         </div>
         <span class="today-coins">${item.done?'':'+'+ item.coins}</span>

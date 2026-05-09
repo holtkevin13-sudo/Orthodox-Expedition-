@@ -88,28 +88,113 @@
     return progress && progress.day_1_completed_at && progress.day_2_completed_at && progress.day_3_completed_at;
   }
 
+  // ── Repair J: schedule flexibility ─────────────────────────────────────────
+  // determineEffectiveDay() — given today's calendar day and the explorer's
+  // session_progress row for the current week, compute which Mon/Wed/Fri view
+  // (if any) Nolan should be looking at, plus whether that view is on-time
+  // ("catch-up: false") or surfaced because a past slot wasn't completed
+  // ("catch-up: true").
+  //
+  // Sequence rule: day_2 always requires day_1 complete; day_3 requires both.
+  //                If an earlier slot is incomplete, the catch-up target walks
+  //                back to that earlier slot. Future days within the same week
+  //                stay locked (Tue cannot unlock Wed's slot, etc.).
+  //
+  // Returns: { effectiveDayKind, catchUp, originalDayKind } where day-kind
+  //          values are calendar-day name strings ('monday' .. 'sunday').
+  //
+  // Called UPSTREAM of session settlement. We do NOT modify session_progress
+  // here; the existing catch-up writes (writeMondayCompletion etc.) set
+  // day_N_completed_at to the actual click timestamp, so streak-grace.js and
+  // session-rollup.js continue to evaluate correctly with no other changes.
+  //
+  // The progress arg is already scoped to the current week's session via
+  // day-state.js → session-loader.js, so cross-week catch-up is structurally
+  // impossible: this function only reads progress for the current calendar
+  // week's session and never reaches into prior weeks.
+  function determineEffectiveDay(state, progress, today) {
+    const DOW_NAMES = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
+    const t = today instanceof Date ? today : new Date();
+    const dow = t.getDay(); // 0=Sun..6=Sat
+    const originalDayKind = DOW_NAMES[dow];
+
+    // Slot N (1=Mon, 2=Wed, 3=Fri) is "past" iff its calendar day-of-week
+    // (1, 3, 5) is strictly before today's dow. Sunday (dow=0) is treated
+    // as past every weekday slot for the just-ended week.
+    function isSlotPast(n) {
+      const slotDow = n === 1 ? 1 : n === 2 ? 3 : 5;
+      if (dow === 0) return true;
+      return slotDow < dow;
+    }
+
+    const day1Done = !!(progress && progress.day_1_completed_at);
+    const day2Done = !!(progress && progress.day_2_completed_at);
+    const day3Done = !!(progress && progress.day_3_completed_at);
+
+    // Sequenced walk — first incomplete past slot becomes the target,
+    // gated on prior slots being complete (sequence rule).
+    let catchUpSlot = null;
+    if (isSlotPast(1) && !day1Done) {
+      catchUpSlot = 1;
+    } else if (day1Done && isSlotPast(2) && !day2Done) {
+      catchUpSlot = 2;
+    } else if (day1Done && day2Done && isSlotPast(3) && !day3Done) {
+      catchUpSlot = 3;
+    }
+
+    if (catchUpSlot !== null) {
+      const slotName = catchUpSlot === 1 ? 'monday'
+                     : catchUpSlot === 2 ? 'wednesday'
+                     : 'friday';
+      return { effectiveDayKind: slotName, catchUp: true, originalDayKind: originalDayKind };
+    }
+
+    return { effectiveDayKind: originalDayKind, catchUp: false, originalDayKind: originalDayKind };
+  }
+
   // ── 3-dot day rail ─────────────────────────────────────────────────────────
   // Mon / Wed / Fri progress visualization. Active day is highlighted; done
   // days show a checkmark; future days dim.
-  function renderDayRail(state, progress) {
+  //
+  // Repair J: an optional `effectiveDayKind` override (calendar-day name —
+  // 'monday' | 'wednesday' | 'friday') determines which pill is highlighted
+  // when catch-up is active. e.g., on Tuesday with day_1 incomplete, the
+  // Monday pill should still read as "active" because Monday's lesson is
+  // what's being rendered. Without the override, the existing day_kind
+  // dispatch is used as before.
+  function renderDayRail(state, progress, effectiveDayKind) {
+    let activeDay1 = state.day_kind === 'day1';
+    let activeDay2 = state.day_kind === 'day2';
+    let activeDay3 = state.day_kind === 'day3';
+    if (effectiveDayKind === 'monday')    { activeDay1 = true; activeDay2 = false; activeDay3 = false; }
+    if (effectiveDayKind === 'wednesday') { activeDay1 = false; activeDay2 = true; activeDay3 = false; }
+    if (effectiveDayKind === 'friday')    { activeDay1 = false; activeDay2 = false; activeDay3 = true; }
+    // Repair J: when an effectiveDayKind override is provided, the active
+    // pill is being surfaced as a catch-up. Tag it with .catch-up so CSS
+    // can render the muted-gold treatment and ↺ glyph instead of the
+    // bright on-time treatment.
+    const isCatchUpRender = (effectiveDayKind === 'monday' || effectiveDayKind === 'wednesday' || effectiveDayKind === 'friday');
     const days = [
-      { n: 1, label: 'Monday',    short: 'Day 1 · Teach',   active: state.day_kind === 'day1' },
-      { n: 2, label: 'Wednesday', short: 'Day 2 · Work',    active: state.day_kind === 'day2' },
-      { n: 3, label: 'Friday',    short: 'Day 3 · Reflect', active: state.day_kind === 'day3' },
+      { n: 1, label: 'Monday',    short: 'Day 1 · Teach',   active: activeDay1 },
+      { n: 2, label: 'Wednesday', short: 'Day 2 · Work',    active: activeDay2 },
+      { n: 3, label: 'Friday',    short: 'Day 3 · Reflect', active: activeDay3 },
     ];
     const tabs = days.map((d) => {
       const done = dayDone(progress, d.n);
       const cls = ['day-tab'];
       if (d.active) cls.push('active');
       if (done) cls.push('done');
-      const mark = done ? '<span class="day-mark" aria-hidden="true">✓</span>' : '';
+      if (d.active && isCatchUpRender) cls.push('catch-up');
+      const mark = done
+        ? '<span class="day-mark" aria-hidden="true">✓</span>'
+        : (d.active && isCatchUpRender ? '<span class="day-mark" aria-hidden="true">↺</span>' : '');
       return `<div class="${cls.join(' ')}" role="tab" aria-selected="${d.active}"><span class="day-label">${esc(d.label)}</span>${esc(d.short)}${mark}</div>`;
     }).join('');
     return `<div class="day-tabs day-rail" role="tablist" aria-label="This week's three days">${tabs}</div>`;
   }
 
   // ── Monday view ────────────────────────────────────────────────────────────
-  function renderMonday(sess, handout, progress) {
+  function renderMonday(sess, handout, progress, catchUp) {
     const isDone = dayDone(progress, 1);
     const lessonHtml = sess.lesson_text
       ? `<div class="lesson-body">${formatLessonText(sess.lesson_text)}</div>`
@@ -134,10 +219,22 @@
       ? '✓ I read this with my dad'
       : 'I read this with my dad';
 
+    // Repair J: catch-up surfacing — gold subhead + soft .catch-up-note line.
+    // No red, no "MISSED", no "OVERDUE". Same lesson and button below; we
+    // only re-frame the day with gentle catch-up language at the top.
+    const subheadText = catchUp
+      ? "Catch up — Monday's lesson, with your dad"
+      : 'Monday — Day 1 · The teaching day, with your dad';
+    const subheadCls = catchUp ? 'day-subheading day-subheading-catchup' : 'day-subheading';
+    const catchUpNote = catchUp
+      ? `<div class="catch-up-note">↺ A missed day from this week — finish it now and the week is back on track.</div>`
+      : '';
+
     return `
       <div class="main-frame" data-day="1">
         <div class="day-heading">${esc(sess.title)}</div>
-        <div class="day-subheading">Monday — Day 1 · The teaching day, with your dad</div>
+        <div class="${subheadCls}">${esc(subheadText)}</div>
+        ${catchUpNote}
 
         <div class="artifact-slot" data-slot="lesson">
           <div class="artifact-icon">📖</div>
@@ -166,14 +263,25 @@
   // Uses session_handouts.pdf_url + verification_questions JSONB.
   // Renders ONE question at a time (currently exactly 1 per Topic 00 handout,
   // but iterates the array so future multi-question handouts also work).
-  function renderWednesday(sess, handout, progress) {
+  function renderWednesday(sess, handout, progress, catchUp) {
     const isDone = dayDone(progress, 2);
+
+    // Repair J: subhead/catch-up framing for the placeholder branch too —
+    // even when the handout isn't loaded, the catch-up reframing should hold.
+    const subheadOnTime = 'Wednesday — Day 2 · Working through the handout, on your own';
+    const subheadCatchUp = "Catch up — Wednesday's handout, on your own";
+    const subheadText = catchUp ? subheadCatchUp : subheadOnTime;
+    const subheadCls = catchUp ? 'day-subheading day-subheading-catchup' : 'day-subheading';
+    const catchUpNote = catchUp
+      ? `<div class="catch-up-note">↺ A missed day from this week — finish it now and the week is back on track.</div>`
+      : '';
 
     if (!handout) {
       return `
         <div class="main-frame" data-day="2">
           <div class="day-heading">${esc(sess.title)}</div>
-          <div class="day-subheading">Wednesday — Day 2 · Independent work</div>
+          <div class="${subheadCls}">${esc(subheadText)}</div>
+          ${catchUpNote}
           <div class="artifact-slot placeholder">
             <div class="artifact-icon">⌛</div>
             <div class="artifact-title">This week's handout is being prepared</div>
@@ -213,7 +321,8 @@
     return `
       <div class="main-frame" data-day="2">
         <div class="day-heading">${esc(sess.title)}</div>
-        <div class="day-subheading">Wednesday — Day 2 · Working through the handout, on your own</div>
+        <div class="${subheadCls}">${esc(subheadText)}</div>
+        ${catchUpNote}
 
         <div class="artifact-slot" data-slot="handout_pdf">
           <div class="artifact-icon">📋</div>
@@ -266,15 +375,26 @@
   // the 8 quiz_questions, writes quiz_attempts (which trigger-rolls coins
   // via log_quiz_attempt_coins), and on submit writes
   // session_progress.day_3_completed_at.
-  function renderFriday(sess, fridayQuiz, progress) {
+  function renderFriday(sess, fridayQuiz, progress, catchUp) {
     const isDone = dayDone(progress, 3);
     const isComplete = weekFullyComplete(progress);
+
+    // Repair J: catch-up subhead/note for Friday's quiz when surfaced
+    // out of its natural day (e.g., Sat/Sun catch-up).
+    const subheadOnTime = 'Friday — Day 3 · Closing the week with a short quiz';
+    const subheadCatchUp = "Catch up — Friday's quiz, closing the week";
+    const subheadText = catchUp ? subheadCatchUp : subheadOnTime;
+    const subheadCls = catchUp ? 'day-subheading day-subheading-catchup' : 'day-subheading';
+    const catchUpNote = catchUp
+      ? `<div class="catch-up-note">↺ A missed day from this week — finish it now and the week is back on track.</div>`
+      : '';
 
     if (!fridayQuiz) {
       return `
         <div class="main-frame" data-day="3">
           <div class="day-heading">${esc(sess.title)}</div>
-          <div class="day-subheading">Friday — Day 3 · The week's quiz</div>
+          <div class="${subheadCls}">${esc(subheadText)}</div>
+          ${catchUpNote}
           <div class="artifact-slot placeholder">
             <div class="artifact-icon">⌛</div>
             <div class="artifact-title">This week's quiz is being prepared</div>
@@ -293,7 +413,8 @@
     return `
       <div class="main-frame" data-day="3">
         <div class="day-heading">${esc(sess.title)}</div>
-        <div class="day-subheading">Friday — Day 3 · Closing the week with a short quiz</div>
+        <div class="${subheadCls}">${esc(subheadText)}</div>
+        ${catchUpNote}
 
         <div class="artifact-slot quiz-launcher-slot" data-slot="friday_quiz">
           <div class="artifact-icon">◈</div>
@@ -384,10 +505,11 @@
 
     const handout = ctx?.handout || null;
     const fridayQuiz = ctx?.fridayQuiz || null;
+    const catchUp = !!(ctx && ctx.catchUp); // Repair J: catch-up flag
 
-    if (state.day_kind === 'day1') return renderMonday(sess, handout, progress);
-    if (state.day_kind === 'day2') return renderWednesday(sess, handout, progress);
-    if (state.day_kind === 'day3') return renderFriday(sess, fridayQuiz, progress);
+    if (state.day_kind === 'day1') return renderMonday(sess, handout, progress, catchUp);
+    if (state.day_kind === 'day2') return renderWednesday(sess, handout, progress, catchUp);
+    if (state.day_kind === 'day3') return renderFriday(sess, fridayQuiz, progress, catchUp);
     if (state.day_kind === 'between_sessions') return renderRestDay(state, sess, progress) || '';
     return ''; // sat/sun/pre_launch/pause routed elsewhere
   }
@@ -750,5 +872,6 @@
     attachHandlers,
     weekFullyComplete,
     dayDone,
+    determineEffectiveDay, // Repair J: schedule flexibility
   };
 })();

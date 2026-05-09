@@ -1,0 +1,1019 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Bible Trivia — Orthodox Expedition</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="game-utils.js"></script>
+<style>
+:root{
+  --gold:#c9922a;--gold-light:#f0c96e;--gold-bright:#ffd700;
+  --parchment:#f4e8c1;
+  --burgundy:#6b1a1a;--byzantine:#2c1654;--byzantine-light:#4a2a7a;
+  --green:#16a34a;--green-light:#22c55e;
+  --red:#dc2626;
+  --bg:#0e0800;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{min-height:100%;overflow-x:hidden;}
+body{
+  font-family:'Crimson Text',serif;
+  background:var(--bg);
+  background-image:radial-gradient(ellipse at 50% 0%,rgba(107,26,26,0.5) 0%,transparent 55%),radial-gradient(ellipse at 100% 100%,rgba(44,22,84,0.35) 0%,transparent 50%);
+  min-height:100vh;padding:1.25rem 1rem 2rem;
+}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(201,146,42,0.02) 1px,transparent 1px),linear-gradient(90deg,rgba(201,146,42,0.02) 1px,transparent 1px);background-size:44px 44px;pointer-events:none;}
+
+#coin-rain{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999;overflow:hidden;}
+@keyframes coinFall{0%{transform:translateY(0) rotate(0deg);opacity:1;}85%{opacity:1;}100%{transform:translateY(110vh) rotate(540deg) scale(0.4);opacity:0;}}
+
+.back-btn{background:none;border:1px solid rgba(201,146,42,0.2);border-radius:8px;padding:0.4rem 0.875rem;font-family:'Cinzel',serif;font-size:0.65rem;color:rgba(201,146,42,0.45);cursor:pointer;min-height:40px;margin-bottom:1.25rem;display:inline-block;}
+
+/* Persistent home/close × button — Chat L pattern, visible at all times */
+.home-btn{position:fixed;top:0.875rem;right:0.875rem;width:36px;height:36px;border-radius:50%;background:rgba(14,8,0,0.85);border:1px solid rgba(201,146,42,0.35);color:rgba(240,201,110,0.85);font-family:'Cinzel',serif;font-size:1.1rem;line-height:1;cursor:pointer;z-index:50;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);transition:all 0.2s;}
+.home-btn:hover{background:rgba(107,26,26,0.4);border-color:var(--gold);color:var(--gold-light);}
+
+.screen{display:none;max-width:440px;margin:0 auto;text-align:center;}
+.screen.show{display:block;}
+
+/* START */
+.game-icon{font-size:3rem;margin-bottom:0.5rem;}
+.game-title{font-family:'Cinzel Decorative',serif;font-size:clamp(1.1rem,4vw,1.4rem);color:var(--gold-light);text-shadow:0 0 20px rgba(201,146,42,0.4);margin-bottom:0.25rem;}
+.game-sub{font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.2em;color:rgba(201,146,42,0.4);text-transform:uppercase;margin-bottom:1rem;}
+.game-desc{font-size:0.85rem;color:rgba(244,232,193,0.45);font-style:italic;line-height:1.6;margin-bottom:1rem;max-width:340px;margin-left:auto;margin-right:auto;}
+.coin-info{display:inline-flex;align-items:center;gap:0.5rem;background:rgba(201,146,42,0.08);border:1px solid rgba(201,146,42,0.2);border-radius:20px;padding:0.4rem 1rem;font-family:'Cinzel',serif;font-size:0.7rem;color:rgba(201,146,42,0.6);margin-bottom:1rem;}
+#coin-reminder{margin-bottom:1.25rem;min-height:30px;}
+.start-btn{padding:0.9rem 2.5rem;min-height:52px;background:linear-gradient(135deg,var(--gold),var(--gold-bright));border:none;border-radius:13px;font-family:'Cinzel',serif;font-size:0.85rem;letter-spacing:0.1em;color:var(--bg);font-weight:700;cursor:pointer;}
+
+.round-preview{display:grid;grid-template-columns:repeat(3,1fr);gap:0.5rem;margin:0.5rem auto 1rem;max-width:360px;}
+.round-pill{background:rgba(44,22,84,0.25);border:1px solid rgba(201,146,42,0.18);border-radius:10px;padding:0.5rem 0.4rem;}
+.round-pill-num{font-family:'Cinzel',serif;font-size:0.55rem;letter-spacing:0.18em;color:rgba(201,146,42,0.4);text-transform:uppercase;margin-bottom:0.15rem;}
+.round-pill-name{font-family:'Cinzel Decorative',serif;font-size:0.72rem;color:rgba(240,201,110,0.75);}
+
+/* GAME */
+.round-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:0.5rem;}
+.round-lbl{font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.18em;color:rgba(201,146,42,0.45);text-transform:uppercase;}
+.round-theme{font-family:'Cinzel Decorative',serif;font-size:0.78rem;color:rgba(240,201,110,0.8);}
+
+.progress-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:0.5rem;}
+.progress-lbl{font-family:'Cinzel',serif;font-size:0.62rem;color:rgba(201,146,42,0.4);letter-spacing:0.05em;}
+.score-num{font-family:'Cinzel Decorative',serif;font-size:1.35rem;color:var(--gold-bright);text-shadow:0 0 10px rgba(255,215,0,0.3);}
+.progress-bar-wrap{width:100%;height:5px;background:rgba(255,255,255,0.05);border-radius:3px;overflow:hidden;margin-bottom:1rem;}
+.progress-bar{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--gold),var(--gold-bright));transition:width 0.4s ease;}
+
+/* Question card — parchment-toned, Greek-friendly */
+.q-card{
+  width:100%;
+  background:linear-gradient(160deg,rgba(44,22,84,0.96),rgba(18,8,40,0.99) 50%,rgba(107,26,26,0.96));
+  border:1.5px solid rgba(201,146,42,0.3);border-radius:16px;
+  padding:1.25rem 1rem;margin-bottom:1rem;
+  position:relative;overflow:hidden;
+}
+.q-type{font-family:'Cinzel',serif;font-size:0.55rem;letter-spacing:0.22em;color:rgba(201,146,42,0.4);text-transform:uppercase;margin-bottom:0.5rem;}
+.q-stem{font-family:'Crimson Text',serif;font-size:1.02rem;color:var(--parchment);line-height:1.4;text-shadow:0 0 6px rgba(255,215,0,0.08);}
+.q-stem em{font-style:italic;color:rgba(240,201,110,0.92);}
+
+/* MC choices — vertical stack for Bible texts/long names */
+.mc-list{display:flex;flex-direction:column;gap:0.55rem;margin-bottom:0.5rem;}
+.mc-choice{
+  background:rgba(44,22,84,0.32);border:1.5px solid rgba(201,146,42,0.22);
+  border-radius:11px;padding:0.75rem 0.875rem;
+  font-family:'Crimson Text',serif;font-size:0.92rem;color:rgba(244,232,193,0.85);
+  cursor:pointer;transition:all 0.18s;text-align:left;min-height:48px;
+  display:flex;align-items:center;line-height:1.35;position:relative;
+}
+.mc-choice:hover:not(.locked){background:rgba(44,22,84,0.5);border-color:rgba(201,146,42,0.5);color:var(--parchment);}
+.mc-choice:active:not(.locked){transform:scale(0.98);}
+.mc-choice.locked{cursor:not-allowed;}
+.mc-choice.correct-pick{background:rgba(22,163,74,0.18);border-color:rgba(22,163,74,0.7);color:rgba(187,247,208,0.95);animation:flashGreen 0.5s ease;}
+.mc-choice.wrong-pick{background:rgba(220,38,38,0.14);border-color:rgba(220,38,38,0.55);color:rgba(252,165,165,0.85);animation:shakeRed 0.4s ease;}
+.mc-choice.reveal-correct{background:rgba(22,163,74,0.12);border-color:rgba(22,163,74,0.55);color:rgba(187,247,208,0.85);}
+.mc-choice.dim{opacity:0.4;}
+.mc-mark{position:absolute;right:0.75rem;font-family:'Cinzel',serif;font-weight:700;font-size:1rem;}
+.mc-choice.correct-pick .mc-mark{color:rgba(134,239,172,0.95);}
+.mc-choice.wrong-pick .mc-mark{color:rgba(252,165,165,0.95);}
+.mc-choice.reveal-correct .mc-mark{color:rgba(134,239,172,0.85);}
+@keyframes flashGreen{0%,100%{box-shadow:none;}50%{box-shadow:0 0 18px rgba(22,163,74,0.45);}}
+@keyframes shakeRed{0%,100%{transform:translateX(0);}25%{transform:translateX(-6px);}75%{transform:translateX(6px);}}
+
+.q-feedback{font-family:'Cinzel',serif;font-size:0.72rem;text-align:center;min-height:1.2rem;margin-top:0.4rem;}
+.q-feedback.ok{color:rgba(134,239,172,0.85);}
+.q-feedback.no{color:rgba(252,165,165,0.75);}
+
+.q-ctx{font-family:'Crimson Text',serif;font-size:0.82rem;font-style:italic;color:rgba(240,201,110,0.75);line-height:1.45;text-align:center;margin-top:0.4rem;min-height:1rem;padding:0 0.25rem;opacity:0;transition:opacity 0.4s ease;}
+.q-ctx.show{opacity:1;}
+
+/* ROUND-COMPLETE banner */
+.round-complete-card{
+  background:linear-gradient(160deg,rgba(44,22,84,0.85),rgba(107,26,26,0.85));
+  border:2px solid rgba(201,146,42,0.45);border-radius:18px;
+  padding:1.75rem 1.25rem;margin-top:2rem;
+  box-shadow:0 0 36px rgba(201,146,42,0.18);
+}
+.rc-glyph{font-size:2.4rem;margin-bottom:0.5rem;}
+.rc-banner{font-family:'Cinzel',serif;font-size:0.62rem;letter-spacing:0.22em;color:rgba(201,146,42,0.55);text-transform:uppercase;margin-bottom:0.4rem;}
+.rc-title{font-family:'Cinzel Decorative',serif;font-size:1.15rem;color:var(--gold-light);margin-bottom:0.5rem;}
+.rc-stats{font-family:'Cinzel',serif;font-size:0.85rem;color:rgba(244,232,193,0.7);margin-bottom:0.5rem;}
+.rc-msg{font-size:0.88rem;color:rgba(244,232,193,0.55);font-style:italic;line-height:1.5;margin-bottom:1.25rem;}
+.rc-next-btn{padding:0.85rem 2.25rem;min-height:50px;background:linear-gradient(135deg,var(--gold),var(--gold-bright));border:none;border-radius:12px;font-family:'Cinzel',serif;font-size:0.82rem;letter-spacing:0.08em;color:var(--bg);font-weight:700;cursor:pointer;}
+
+/* END */
+.result-ring{width:115px;height:115px;border-radius:50%;background:linear-gradient(135deg,rgba(44,22,84,0.9),rgba(107,26,26,0.9));border:3px solid var(--gold);display:flex;flex-direction:column;align-items:center;justify-content:center;margin:0 auto 1rem;box-shadow:0 0 30px rgba(201,146,42,0.25);}
+.result-pct{font-family:'Cinzel Decorative',serif;font-size:1.85rem;color:var(--gold-bright);line-height:1;}
+.result-lbl{font-family:'Cinzel',serif;font-size:0.55rem;color:rgba(201,146,42,0.55);letter-spacing:0.1em;margin-top:0.15rem;}
+.result-title{font-family:'Cinzel Decorative',serif;font-size:1.2rem;color:var(--gold-light);margin-bottom:0.4rem;}
+.result-msg{font-size:0.85rem;color:rgba(244,232,193,0.5);font-style:italic;margin-bottom:0.6rem;line-height:1.5;max-width:340px;margin-left:auto;margin-right:auto;}
+.coin-award{font-family:'Cinzel',serif;font-size:0.85rem;color:var(--gold-bright);margin-bottom:1.25rem;text-shadow:0 0 10px rgba(255,215,0,0.3);min-height:1.2rem;}
+.end-btns{display:flex;gap:0.5rem;justify-content:center;flex-wrap:wrap;}
+.play-again-btn{padding:0.75rem 1.75rem;min-height:48px;background:linear-gradient(135deg,var(--gold),var(--gold-bright));border:none;border-radius:11px;font-family:'Cinzel',serif;font-size:0.78rem;color:var(--bg);font-weight:700;cursor:pointer;}
+.back-games-btn{padding:0.75rem 1.25rem;min-height:48px;background:transparent;border:1px solid rgba(201,146,42,0.25);border-radius:11px;font-family:'Cinzel',serif;font-size:0.72rem;color:rgba(201,146,42,0.5);cursor:pointer;}
+</style>
+</head>
+<body>
+<div id="coin-rain"></div>
+<button class="home-btn" onclick="window.location.href='../home.html'" aria-label="Close to home">×</button>
+<button class="back-btn" onclick="window.location.href='../games.html'">← Games</button>
+
+<!-- START -->
+<div class="screen show" id="screen-start">
+  <div class="game-icon">📖</div>
+  <div class="game-title">Bible Trivia</div>
+  <div class="game-sub">Session Game · All Topics</div>
+  <div class="game-desc">Three rounds of questions across the whole Bible — from Genesis to Revelation, with the wisdom of the Septuagint along the way. Each round grows a little harder.</div>
+  <div class="round-preview">
+    <div class="round-pill"><div class="round-pill-num">Round 1</div><div class="round-pill-name">Foundations</div></div>
+    <div class="round-pill"><div class="round-pill-num">Round 2</div><div class="round-pill-name">Words &amp; Voices</div></div>
+    <div class="round-pill"><div class="round-pill-num">Round 3</div><div class="round-pill-name">Sequence &amp; Substance</div></div>
+  </div>
+  <div class="coin-info">⚔ 10 coins for playing · 20 for winning</div>
+  <div id="coin-reminder"></div>
+  <button class="start-btn" onclick="startGame()">Open the Scroll ›</button>
+</div>
+
+<!-- GAME -->
+<div class="screen" id="screen-game">
+  <div class="round-row">
+    <div class="round-lbl" id="round-lbl">Round 1 of 3</div>
+    <div class="round-theme" id="round-theme">Foundations</div>
+  </div>
+  <div class="progress-row">
+    <div class="progress-lbl" id="progress-lbl">Question 1 of 10</div>
+    <div class="score-num" id="score-num">0</div>
+  </div>
+  <div class="progress-bar-wrap"><div class="progress-bar" id="progress-bar" style="width:0%"></div></div>
+
+  <div class="q-card">
+    <div class="q-type" id="q-type">Identify the Book</div>
+    <div class="q-stem" id="q-stem">Loading...</div>
+  </div>
+
+  <div class="mc-list" id="mc-list"></div>
+
+  <div class="q-feedback" id="q-feedback"></div>
+  <div class="q-ctx" id="q-ctx"></div>
+</div>
+
+<!-- ROUND COMPLETE -->
+<div class="screen" id="screen-round-complete">
+  <div class="round-complete-card">
+    <div class="rc-glyph" id="rc-glyph">✦</div>
+    <div class="rc-banner" id="rc-banner">Round 1 Complete</div>
+    <div class="rc-title" id="rc-title">Take a breath.</div>
+    <div class="rc-stats" id="rc-stats">7 / 10 correct so far</div>
+    <div class="rc-msg" id="rc-msg">Now we listen for the voices behind the words…</div>
+    <button class="rc-next-btn" onclick="nextRound()" id="rc-next-btn">Begin Round 2 ›</button>
+  </div>
+</div>
+
+<!-- END -->
+<div class="screen" id="screen-end">
+  <div class="result-ring">
+    <div class="result-pct" id="result-pct">0%</div>
+    <div class="result-lbl">correct</div>
+  </div>
+  <div class="result-title" id="result-title">Well done!</div>
+  <div class="result-msg" id="result-msg"></div>
+  <div class="coin-award" id="coin-award"></div>
+  <div class="end-btns">
+    <button class="play-again-btn" onclick="startGame()">Play Again</button>
+    <button class="back-games-btn" onclick="window.location.href='../games.html'">Games</button>
+  </div>
+</div>
+
+<script>
+const GAME_ID = 'bible-trivia';
+const QUESTIONS_PER_ROUND = 10;
+const TOTAL_ROUNDS = 3;
+const TOTAL_QUESTIONS = QUESTIONS_PER_ROUND * TOTAL_ROUNDS;
+
+const ROUND_META = {
+  1: { theme: 'Foundations',           glyph: '✠', msg: 'You walk among the foundations. Now we listen for the voices behind the words…' },
+  2: { theme: 'Words & Voices',        glyph: '✦', msg: 'Many tongues, one Spirit. The final round goes deeper — sequence, wisdom, and subtler verses.' },
+  3: { theme: 'Sequence & Substance',  glyph: '✧', msg: 'You have walked the whole Scripture.' }
+};
+
+/**
+ * QUESTION_BANK — 55 questions tagged by type, difficulty, and round-eligibility.
+ * Greek Orthodox / LXX-aware. 2-3 deuterocanonical questions per dispatch.
+ * Each correct choice carries `ctx` — the catechetical micro-context shown after a correct tap.
+ *
+ * type:       'book' | 'author' | 'verse' | 'sequence' | 'trivia'
+ * difficulty: 'easy' | 'medium' | 'hard'
+ * round:      1 | 2 | 3 (which round this question is eligible for)
+ */
+const QUESTION_BANK = [
+  // ════════════════════════════════════════════════════════════════
+  // ROUND 1 — FOUNDATIONS (~20 candidates, 10 sampled per session)
+  // Theme: foundational books, well-known stories, major figures
+  // ════════════════════════════════════════════════════════════════
+  {
+    id:'bt001', type:'book', difficulty:'easy', round:1,
+    stem:'Which book begins, "In the beginning, God created the heavens and the earth"?',
+    choices:[
+      { text:'Genesis (Γένεσις)', correct:true, ctx:'Genesis is the first book of the Bible. The Greek name Γένεσις means "origin" or "beginnings."' },
+      { text:'Exodus' },
+      { text:'Psalms' },
+      { text:'John' }
+    ]
+  },
+  {
+    id:'bt002', type:'book', difficulty:'easy', round:1,
+    stem:'Which book tells of Israel\'s escape from slavery in Egypt?',
+    choices:[
+      { text:'Exodus (Ἔξοδος)', correct:true, ctx:'The Greek title Ἔξοδος means "the way out." It tells of the Passover and the parting of the Red Sea.' },
+      { text:'Genesis' },
+      { text:'Joshua' },
+      { text:'Numbers' }
+    ]
+  },
+  {
+    id:'bt003', type:'book', difficulty:'easy', round:1,
+    stem:'Which book of the Bible contains 150 sacred songs of prayer and praise?',
+    choices:[
+      { text:'Psalms (Ψαλμοί)', correct:true, ctx:'The Psalms are the prayer-book of the Church. The Orthodox Church reads through all 150 every week of the year.' },
+      { text:'Proverbs' },
+      { text:'Hymns' },
+      { text:'Wisdom' }
+    ]
+  },
+  {
+    id:'bt004', type:'trivia', difficulty:'easy', round:1,
+    stem:'How many Gospels are in the New Testament?',
+    choices:[
+      { text:'Four', correct:true, ctx:'Matthew, Mark, Luke, and John — the four Evangelists. Together they tell the one Gospel of Christ from four faithful points of view.' },
+      { text:'Three' },
+      { text:'Seven' },
+      { text:'Twelve' }
+    ]
+  },
+  {
+    id:'bt005', type:'book', difficulty:'easy', round:1,
+    stem:'Which book contains the story of Noah and the great Flood?',
+    choices:[
+      { text:'Genesis', correct:true, ctx:'Noah\'s ark prefigures the Church — a vessel of salvation through the waters. The story is in Genesis chapters 6–9.' },
+      { text:'Exodus' },
+      { text:'Job' },
+      { text:'Daniel' }
+    ]
+  },
+  {
+    id:'bt006', type:'book', difficulty:'easy', round:1,
+    stem:'Which Gospel is named for the tax collector who became one of the Twelve?',
+    choices:[
+      { text:'Matthew', correct:true, ctx:'Matthew (also called Levi) was a tax collector when Christ called him with the words "Follow Me." His feast day is November 16.' },
+      { text:'Mark' },
+      { text:'Luke' },
+      { text:'John' }
+    ]
+  },
+  {
+    id:'bt007', type:'trivia', difficulty:'easy', round:1,
+    stem:'Who built the Ark before the great Flood?',
+    choices:[
+      { text:'Noah', correct:true, ctx:'Noah was a righteous man in his generation. He, his family, and the animals were saved through the waters of judgment.' },
+      { text:'Abraham' },
+      { text:'Moses' },
+      { text:'Joshua' }
+    ]
+  },
+  {
+    id:'bt008', type:'trivia', difficulty:'easy', round:1,
+    stem:'Who was the first man God created?',
+    choices:[
+      { text:'Adam', correct:true, ctx:'Adam was formed from the dust of the earth (ἀδαμά in Hebrew means "ground"). Christ is called "the Second Adam" by the Apostle Paul.' },
+      { text:'Abel' },
+      { text:'Enoch' },
+      { text:'Noah' }
+    ]
+  },
+  {
+    id:'bt009', type:'book', difficulty:'easy', round:1,
+    stem:'Which book describes God giving the Ten Commandments to Moses on Mount Sinai?',
+    choices:[
+      { text:'Exodus', correct:true, ctx:'Moses received the tablets of the Law on Mount Sinai. The icon of Mount Sinai is one of the oldest in the Church.' },
+      { text:'Leviticus' },
+      { text:'Deuteronomy' },
+      { text:'Genesis' }
+    ]
+  },
+  {
+    id:'bt010', type:'verse', difficulty:'easy', round:1,
+    stem:'"The Lord is my shepherd; I shall not want." From which book?',
+    choices:[
+      { text:'Psalms (Psalm 22 in the LXX, Psalm 23 in Hebrew)', correct:true, ctx:'This is one of the most beloved Psalms — sung at funerals and prayed at Vespers. The LXX numbers it Psalm 22.' },
+      { text:'Proverbs' },
+      { text:'Isaiah' },
+      { text:'John' }
+    ]
+  },
+  {
+    id:'bt011', type:'book', difficulty:'easy', round:1,
+    stem:'In which book do we read of David and Goliath?',
+    choices:[
+      { text:'1 Samuel (1 Kingdoms in the LXX)', correct:true, ctx:'In the LXX Septuagint, the books of Samuel are called 1–2 Kingdoms (Βασιλειῶν), and Kings are 3–4 Kingdoms.' },
+      { text:'Judges' },
+      { text:'2 Chronicles' },
+      { text:'Daniel' }
+    ]
+  },
+  {
+    id:'bt012', type:'trivia', difficulty:'easy', round:1,
+    stem:'How many disciples did Christ choose as His Apostles?',
+    choices:[
+      { text:'Twelve', correct:true, ctx:'The Twelve Apostles correspond to the Twelve Tribes of Israel. The Church celebrates their synaxis on June 30.' },
+      { text:'Seven' },
+      { text:'Ten' },
+      { text:'Seventy' }
+    ]
+  },
+  {
+    id:'bt013', type:'trivia', difficulty:'easy', round:1,
+    stem:'What is the first book of the New Testament?',
+    choices:[
+      { text:'Matthew', correct:true, ctx:'The Gospel according to Matthew (Εὐαγγέλιον κατὰ Ματθαῖον) opens the New Testament with the genealogy of Christ.' },
+      { text:'Mark' },
+      { text:'Acts' },
+      { text:'Genesis' }
+    ]
+  },
+  {
+    id:'bt014', type:'trivia', difficulty:'easy', round:1,
+    stem:'What is the last book of the New Testament?',
+    choices:[
+      { text:'Revelation (Apocalypse)', correct:true, ctx:'The Greek title Ἀποκάλυψις means "unveiling." It was written by St. John the Theologian on the island of Patmos.' },
+      { text:'Jude' },
+      { text:'Hebrews' },
+      { text:'2 Peter' }
+    ]
+  },
+  {
+    id:'bt015', type:'book', difficulty:'medium', round:1,
+    stem:'In which book do we read of Joseph being sold by his brothers and rising to power in Egypt?',
+    choices:[
+      { text:'Genesis', correct:true, ctx:'Joseph\'s story is told in Genesis 37–50. The Church remembers him as "Joseph the All-Comely" on Holy Monday.' },
+      { text:'Exodus' },
+      { text:'1 Kings' },
+      { text:'Esther' }
+    ]
+  },
+  {
+    id:'bt016', type:'book', difficulty:'medium', round:1,
+    stem:'Which book describes Solomon building the great Temple in Jerusalem?',
+    choices:[
+      { text:'1 Kings (3 Kingdoms in the LXX)', correct:true, ctx:'Solomon\'s Temple housed the Ark of the Covenant. In the LXX, this book is the third of the four "Kingdoms."' },
+      { text:'Joshua' },
+      { text:'Nehemiah' },
+      { text:'Ezekiel' }
+    ]
+  },
+  {
+    id:'bt017', type:'trivia', difficulty:'medium', round:1,
+    stem:'On which mountain did Moses receive the Ten Commandments?',
+    choices:[
+      { text:'Mount Sinai', correct:true, ctx:'St. Catherine\'s Monastery still stands at the foot of Mount Sinai today — one of the oldest continuously-inhabited Christian monasteries in the world.' },
+      { text:'Mount Tabor' },
+      { text:'Mount Zion' },
+      { text:'Mount Carmel' }
+    ]
+  },
+  {
+    id:'bt018', type:'trivia', difficulty:'medium', round:1,
+    stem:'Who was the wife of Abraham and the mother of Isaac?',
+    choices:[
+      { text:'Sarah', correct:true, ctx:'Sarah laughed when she was told she would have a son in her old age — and so Isaac\'s name (Yitzhak) means "he laughs."' },
+      { text:'Rebekah' },
+      { text:'Rachel' },
+      { text:'Hannah' }
+    ]
+  },
+  {
+    id:'bt019', type:'book', difficulty:'medium', round:1,
+    stem:'Which book of the Bible is set in Babylon and tells of a man in a den of lions?',
+    choices:[
+      { text:'Daniel', correct:true, ctx:'Daniel was preserved among the lions because he prayed three times a day. The Church reads from Daniel during Holy Week.' },
+      { text:'Esther' },
+      { text:'Ezekiel' },
+      { text:'Jonah' }
+    ]
+  },
+  {
+    id:'bt020', type:'trivia', difficulty:'medium', round:1,
+    stem:'How many days did the prophet Jonah spend in the belly of the great fish?',
+    choices:[
+      { text:'Three', correct:true, ctx:'Christ Himself called this a sign — three days in the fish prefigured His three days in the tomb. The Church reads the Book of Jonah on Holy Saturday.' },
+      { text:'Seven' },
+      { text:'Forty' },
+      { text:'One' }
+    ]
+  },
+
+  // ════════════════════════════════════════════════════════════════
+  // ROUND 2 — WORDS & VOICES (~18 candidates, 10 sampled per session)
+  // Theme: who said it, who wrote it, identifying speakers and authors
+  // ════════════════════════════════════════════════════════════════
+  {
+    id:'bt021', type:'author', difficulty:'easy', round:2,
+    stem:'Who is traditionally credited with writing most of the Psalms?',
+    choices:[
+      { text:'King David', correct:true, ctx:'David, the shepherd-king and ancestor of Christ, composed his Psalms accompanied by the harp. Christ is called "Son of David" throughout the Gospels.' },
+      { text:'Moses' },
+      { text:'Solomon' },
+      { text:'Elijah' }
+    ]
+  },
+  {
+    id:'bt022', type:'author', difficulty:'easy', round:2,
+    stem:'Who wrote more letters in the New Testament than any other writer?',
+    choices:[
+      { text:'The Apostle Paul', correct:true, ctx:'Paul wrote at least thirteen epistles in the New Testament — and Orthodox tradition attributes the Letter to the Hebrews to him as well.' },
+      { text:'The Apostle Peter' },
+      { text:'The Apostle John' },
+      { text:'James the Brother of the Lord' }
+    ]
+  },
+  {
+    id:'bt023', type:'author', difficulty:'easy', round:2,
+    stem:'Which Gospel was written by "the disciple whom Jesus loved"?',
+    choices:[
+      { text:'John', correct:true, ctx:'St. John the Theologian wrote his Gospel last of the four — its eagle is one of the four living creatures around Christ\'s throne.' },
+      { text:'Matthew' },
+      { text:'Luke' },
+      { text:'Mark' }
+    ]
+  },
+  {
+    id:'bt024', type:'author', difficulty:'medium', round:2,
+    stem:'Which Evangelist was a physician and a companion of the Apostle Paul?',
+    choices:[
+      { text:'Luke', correct:true, ctx:'St. Luke is also traditionally honored as the first iconographer — the Church holds that he painted the first icon of the Theotokos.' },
+      { text:'Mark' },
+      { text:'John' },
+      { text:'Matthew' }
+    ]
+  },
+  {
+    id:'bt025', type:'author', difficulty:'medium', round:2,
+    stem:'Who is traditionally credited with writing the first five books of the Bible (the Pentateuch)?',
+    choices:[
+      { text:'Moses', correct:true, ctx:'These five books — Genesis, Exodus, Leviticus, Numbers, Deuteronomy — are called the Books of Moses or the Torah ("Teaching").' },
+      { text:'Joshua' },
+      { text:'Aaron' },
+      { text:'Abraham' }
+    ]
+  },
+  {
+    id:'bt026', type:'speaker', difficulty:'easy', round:2,
+    stem:'Who said, "Behold the Lamb of God, who takes away the sin of the world"?',
+    choices:[
+      { text:'St. John the Baptist', correct:true, ctx:'The Forerunner spoke these words when he saw Christ approaching the Jordan. We hear them in the Divine Liturgy at the Holy Gifts.' },
+      { text:'The Apostle Peter' },
+      { text:'Simeon the Elder' },
+      { text:'The Archangel Gabriel' }
+    ]
+  },
+  {
+    id:'bt027', type:'speaker', difficulty:'easy', round:2,
+    stem:'Who said, "Behold the handmaid of the Lord; let it be unto me according to your word"?',
+    choices:[
+      { text:'The Theotokos (Mary)', correct:true, ctx:'The Most Holy Theotokos answered Archangel Gabriel at the Annunciation with this great "yes" — the moment of the Incarnation.' },
+      { text:'Elizabeth' },
+      { text:'Anna the Prophetess' },
+      { text:'Sarah' }
+    ]
+  },
+  {
+    id:'bt028', type:'speaker', difficulty:'easy', round:2,
+    stem:'Who said, "I am the way, the truth, and the life"?',
+    choices:[
+      { text:'Jesus Christ', correct:true, ctx:'Christ said this to His disciples on the night before His Passion (John 14:6). He completed the saying: "No one comes to the Father except through Me."' },
+      { text:'The Apostle Paul' },
+      { text:'Moses' },
+      { text:'Isaiah' }
+    ]
+  },
+  {
+    id:'bt029', type:'speaker', difficulty:'medium', round:2,
+    stem:'Who said, "My Lord and my God!" upon seeing the Risen Christ?',
+    choices:[
+      { text:'The Apostle Thomas', correct:true, ctx:'Thomas confessed Christ\'s divinity when he saw the wounds — a confession the Church sings on Thomas Sunday, the second Sunday of Pascha.' },
+      { text:'The Apostle Peter' },
+      { text:'Mary Magdalene' },
+      { text:'The Apostle John' }
+    ]
+  },
+  {
+    id:'bt030', type:'speaker', difficulty:'medium', round:2,
+    stem:'Who, as a young boy, prayed, "Speak, Lord, for your servant hears"?',
+    choices:[
+      { text:'The Prophet Samuel', correct:true, ctx:'Samuel was raised in the Temple by Eli the priest. God called him while he slept, and he became one of the great prophets of Israel.' },
+      { text:'David' },
+      { text:'Daniel' },
+      { text:'Jeremiah' }
+    ]
+  },
+  {
+    id:'bt031', type:'verse', difficulty:'easy', round:2,
+    stem:'"In the beginning was the Word, and the Word was with God, and the Word was God." From which Gospel?',
+    choices:[
+      { text:'John', correct:true, ctx:'These opening verses of John\'s Gospel are read in the Divine Liturgy on the night of Pascha. The Word — Λόγος — is Christ Himself.' },
+      { text:'Matthew' },
+      { text:'Mark' },
+      { text:'Luke' }
+    ]
+  },
+  {
+    id:'bt032', type:'verse', difficulty:'easy', round:2,
+    stem:'"For God so loved the world that He gave His only-begotten Son…" From which Gospel?',
+    choices:[
+      { text:'John (3:16)', correct:true, ctx:'Christ spoke these words to Nicodemus, who came to Him by night. The verse is sometimes called "the Gospel in miniature."' },
+      { text:'Matthew' },
+      { text:'Luke' },
+      { text:'Romans' }
+    ]
+  },
+  {
+    id:'bt033', type:'verse', difficulty:'medium', round:2,
+    stem:'"Blessed are the poor in spirit, for theirs is the kingdom of heaven." Where is this from?',
+    choices:[
+      { text:'The Sermon on the Mount, Matthew 5', correct:true, ctx:'These are the first words of the Beatitudes — sung at every Divine Liturgy as part of the Third Antiphon.' },
+      { text:'The Psalms' },
+      { text:'The Sermon on the Plain, Luke 6' },
+      { text:'The Letter of James' }
+    ]
+  },
+  {
+    id:'bt034', type:'speaker', difficulty:'medium', round:2,
+    stem:'Who declared, "Truly this Man was the Son of God," at the foot of the Cross?',
+    choices:[
+      { text:'The Roman centurion (Longinus)', correct:true, ctx:'Tradition names him St. Longinus the Centurion. He later became a Christian martyr; his feast is October 16.' },
+      { text:'Joseph of Arimathea' },
+      { text:'Pontius Pilate' },
+      { text:'The Apostle Peter' }
+    ]
+  },
+  {
+    id:'bt035', type:'speaker', difficulty:'medium', round:2,
+    stem:'Who prayed, "My soul magnifies the Lord, and my spirit has rejoiced in God my Saviour" — the Magnificat?',
+    choices:[
+      { text:'The Theotokos', correct:true, ctx:'The Most Holy Mother of God prayed these words during her visit to Elizabeth. The Church sings the Magnificat at Matins as the Hymn of the Theotokos.' },
+      { text:'Elizabeth' },
+      { text:'Anna the Prophetess' },
+      { text:'Hannah, mother of Samuel' }
+    ]
+  },
+  {
+    id:'bt036', type:'author', difficulty:'medium', round:2,
+    stem:'Which prophet is traditionally credited with writing the Book of Lamentations?',
+    choices:[
+      { text:'Jeremiah', correct:true, ctx:'Jeremiah wept over the fall of Jerusalem to Babylon. His Lamentations are read on Holy Friday at the Royal Hours of the Crucifixion.' },
+      { text:'Isaiah' },
+      { text:'Ezekiel' },
+      { text:'Daniel' }
+    ]
+  },
+  {
+    id:'bt037', type:'author', difficulty:'medium', round:2,
+    stem:'Who wrote the Book of Acts?',
+    choices:[
+      { text:'The Evangelist Luke', correct:true, ctx:'Acts is the second part of Luke\'s Gospel — both addressed to "Theophilus." Together they tell of Christ and of the early Church.' },
+      { text:'The Apostle Peter' },
+      { text:'The Apostle Paul' },
+      { text:'The Evangelist John' }
+    ]
+  },
+  {
+    id:'bt038', type:'speaker', difficulty:'medium', round:2,
+    stem:'Who said, "Today salvation has come to this house" — to a tax collector who climbed a tree to see Him?',
+    choices:[
+      { text:'Jesus Christ, to Zacchaeus', correct:true, ctx:'Zacchaeus climbed a sycamore tree to see Christ pass by. The Sunday before Lent begins is called "Zacchaeus Sunday" in his honor.' },
+      { text:'The Apostle Peter, to Cornelius' },
+      { text:'The Apostle Paul, to the jailer' },
+      { text:'John the Baptist, to a soldier' }
+    ]
+  },
+
+  // ════════════════════════════════════════════════════════════════
+  // ROUND 3 — SEQUENCE & SUBSTANCE (~17 candidates, 10 sampled per session)
+  // Theme: ordering events, deeper verse identification, harder trivia
+  // Includes the deuterocanonical questions per dispatch
+  // ════════════════════════════════════════════════════════════════
+  {
+    id:'bt039', type:'sequence', difficulty:'medium', round:3,
+    stem:'Which of these came FIRST in time?',
+    choices:[
+      { text:'Creation', correct:true, ctx:'The order of salvation history: Creation → the Flood → the Exodus → the Babylonian Exile. Genesis tells the first; the prophets tell the last.' },
+      { text:'The Flood' },
+      { text:'The Exodus from Egypt' },
+      { text:'The Babylonian Exile' }
+    ]
+  },
+  {
+    id:'bt040', type:'sequence', difficulty:'medium', round:3,
+    stem:'Which of these patriarchs/figures lived FIRST?',
+    choices:[
+      { text:'Abraham', correct:true, ctx:'The chronological order is: Abraham → Moses → David → Christ. Christ is called "Son of David, Son of Abraham" in the very first verse of the Gospel of Matthew.' },
+      { text:'Moses' },
+      { text:'King David' },
+      { text:'St. John the Baptist' }
+    ]
+  },
+  {
+    id:'bt041', type:'sequence', difficulty:'medium', round:3,
+    stem:'Which of these events in the life of Christ came FIRST?',
+    choices:[
+      { text:'The Annunciation', correct:true, ctx:'The order: Annunciation (March 25) → Nativity (December 25) → Theophany / Baptism (January 6) → Crucifixion → Resurrection. The Annunciation is the moment of the Incarnation.' },
+      { text:'The Nativity' },
+      { text:'The Baptism in the Jordan' },
+      { text:'The Transfiguration' }
+    ]
+  },
+  {
+    id:'bt042', type:'sequence', difficulty:'hard', round:3,
+    stem:'Which of these events came FIRST during Holy and Bright Week?',
+    choices:[
+      { text:'The Crucifixion', correct:true, ctx:'The order is: Crucifixion (Holy Friday) → Resurrection (Pascha Sunday) → Ascension (forty days later) → Pentecost (fifty days from Pascha).' },
+      { text:'The Resurrection' },
+      { text:'The Ascension' },
+      { text:'Pentecost' }
+    ]
+  },
+  {
+    id:'bt043', type:'sequence', difficulty:'hard', round:3,
+    stem:'Which of these Old Testament stories took place FIRST?',
+    choices:[
+      { text:'Joseph in Egypt', correct:true, ctx:'Joseph (Genesis) came long before David (1 Kingdoms), Jonah (8th c. BC prophet), and Daniel (in Babylon). All are read during Holy Week.' },
+      { text:'David and Goliath' },
+      { text:'Jonah and the great fish' },
+      { text:'Daniel in the lions\' den' }
+    ]
+  },
+  {
+    id:'bt044', type:'book', difficulty:'hard', round:3,
+    stem:'Which deuterocanonical book of the Septuagint tells of a young woman who saved her people by killing a tyrant?',
+    choices:[
+      { text:'Judith (Ἰουδίθ)', correct:true, ctx:'Judith is in the Greek Orthodox Old Testament canon — one of the deuterocanonical books, treasured in the Christian East from the earliest times.' },
+      { text:'Esther' },
+      { text:'Ruth' },
+      { text:'Tobit' }
+    ]
+  },
+  {
+    id:'bt045', type:'book', difficulty:'hard', round:3,
+    stem:'Which deuterocanonical book features a young man named Tobias, an angel in disguise, and a great fish?',
+    choices:[
+      { text:'Tobit (Τωβίτ)', correct:true, ctx:'The Archangel Raphael appears in disguise to guide Tobias on his journey. The book is full of Orthodox themes — almsgiving, marriage, and angelic protection.' },
+      { text:'Judith' },
+      { text:'Wisdom of Solomon' },
+      { text:'Sirach' }
+    ]
+  },
+  {
+    id:'bt046', type:'book', difficulty:'hard', round:3,
+    stem:'Which book of wisdom — read at Vespers of the Forefeasts — proclaims, "The souls of the righteous are in the hand of God"?',
+    choices:[
+      { text:'The Wisdom of Solomon', correct:true, ctx:'Wisdom of Solomon is one of the deuterocanonical books read often in Orthodox feasts. Its verses on the righteous are read at the funerals of saints.' },
+      { text:'Proverbs' },
+      { text:'Ecclesiastes' },
+      { text:'Sirach' }
+    ]
+  },
+  {
+    id:'bt047', type:'verse', difficulty:'medium', round:3,
+    stem:'"Glory to God in the highest, and on earth peace, good will toward men!" Who first sang these words?',
+    choices:[
+      { text:'The angels at the Nativity of Christ', correct:true, ctx:'The angelic host sang this over the shepherds in Bethlehem (Luke 2). The Church begins the Great Doxology with these very words at every Matins.' },
+      { text:'The disciples at the Transfiguration' },
+      { text:'King David in the Psalms' },
+      { text:'The crowds on Palm Sunday' }
+    ]
+  },
+  {
+    id:'bt048', type:'verse', difficulty:'medium', round:3,
+    stem:'"Take, eat; this is My Body." When and where did Christ say these words?',
+    choices:[
+      { text:'At the Mystical (Last) Supper', correct:true, ctx:'These are the words of institution of the Eucharist, spoken by Christ at the Mystical Supper. We hear them in every Divine Liturgy.' },
+      { text:'After His Resurrection on the road to Emmaus' },
+      { text:'During the feeding of the five thousand' },
+      { text:'In the Sermon on the Mount' }
+    ]
+  },
+  {
+    id:'bt049', type:'trivia', difficulty:'medium', round:3,
+    stem:'In the Septuagint (the Greek Old Testament used by the Orthodox Church), what does the word "Εὐαγγέλιον" (Evangelion) mean?',
+    choices:[
+      { text:'"Good news" or "Gospel"', correct:true, ctx:'Εὐαγγέλιον = εὖ ("good") + ἀγγελία ("message"). It is where we get the English word "evangelist" — one who proclaims the good news.' },
+      { text:'"Holy book"' },
+      { text:'"Saviour"' },
+      { text:'"Messiah"' }
+    ]
+  },
+  {
+    id:'bt050', type:'trivia', difficulty:'hard', round:3,
+    stem:'How many days was Lazarus dead in the tomb before Christ raised him?',
+    choices:[
+      { text:'Four days', correct:true, ctx:'St. Lazarus was four days dead — already past the time when bodies decay. This is why his raising is the great sign before Pascha. The Church celebrates Lazarus Saturday before Holy Week.' },
+      { text:'Three days' },
+      { text:'One day' },
+      { text:'Seven days' }
+    ]
+  },
+  {
+    id:'bt051', type:'trivia', difficulty:'hard', round:3,
+    stem:'On the road to a city, who appeared in a great light to a man named Saul?',
+    choices:[
+      { text:'The Risen Christ, on the road to Damascus', correct:true, ctx:'Saul of Tarsus was on his way to persecute Christians when Christ appeared to him. He arose as the Apostle Paul — the great missionary of the Gentiles.' },
+      { text:'The Archangel Gabriel, on the road to Bethlehem' },
+      { text:'The Prophet Elijah, on Mount Carmel' },
+      { text:'St. John the Baptist, in the wilderness' }
+    ]
+  },
+  {
+    id:'bt052', type:'verse', difficulty:'medium', round:3,
+    stem:'"Suffer the little children to come unto Me; for of such is the kingdom of heaven." Christ said this when…?',
+    choices:[
+      { text:'When His disciples tried to keep children away from Him', correct:true, ctx:'Christ welcomed the little children, blessed them, and laid hands on them. The story is told in Matthew 19, Mark 10, and Luke 18.' },
+      { text:'When He fed the five thousand' },
+      { text:'When Lazarus was raised' },
+      { text:'At the Last Supper' }
+    ]
+  },
+  {
+    id:'bt053', type:'book', difficulty:'medium', round:3,
+    stem:'In which Gospel do we find the parable of the Prodigal Son?',
+    choices:[
+      { text:'Luke', correct:true, ctx:'Luke 15 contains three great parables of mercy: the Lost Sheep, the Lost Coin, and the Prodigal Son. The Sunday before Lent is called Prodigal Son Sunday.' },
+      { text:'Matthew' },
+      { text:'Mark' },
+      { text:'John' }
+    ]
+  },
+  {
+    id:'bt054', type:'trivia', difficulty:'hard', round:3,
+    stem:'Which is the longest book of the Bible by chapter count?',
+    choices:[
+      { text:'Psalms (150 chapters)', correct:true, ctx:'The Psalter has 150 Psalms (151 in the LXX, with the additional Psalm of David). The Orthodox Church reads the entire Psalter every week of the year.' },
+      { text:'Isaiah' },
+      { text:'Genesis' },
+      { text:'Matthew' }
+    ]
+  },
+  {
+    id:'bt055', type:'verse', difficulty:'hard', round:3,
+    stem:'"Lord, Lord, open to us!" — these words come from which parable of Christ?',
+    choices:[
+      { text:'The parable of the Ten Virgins (Matthew 25)', correct:true, ctx:'The five foolish virgins cried out at the closed door because they had no oil. The parable is read on Holy Tuesday: "Behold the Bridegroom comes at midnight…"' },
+      { text:'The parable of the Prodigal Son' },
+      { text:'The parable of the Sower' },
+      { text:'The parable of the Good Samaritan' }
+    ]
+  }
+];
+
+// ── State ──────────────────────────────────────────────────────────
+let currentRound = 1;          // 1, 2, or 3
+let roundQuestions = [];       // 10 questions for the current round
+let currentQuestionIdx = 0;    // 0..9 within the round
+let score = 0;                 // 0..30 across whole session
+let wrongAttempts = 0;         // total wrong picks across whole session
+let answered = false;          // lock during feedback delay
+let sessionQuestions = { 1:[], 2:[], 3:[] }; // pre-sampled per session
+
+// ── Helpers ────────────────────────────────────────────────────────
+function shuffle(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function showScreen(id){['screen-start','screen-game','screen-round-complete','screen-end'].forEach(s=>document.getElementById(s).classList.toggle('show',s===id));}
+
+function typeLabel(t){
+  switch(t){
+    case 'book':     return 'Identify the Book';
+    case 'author':   return 'Identify the Author';
+    case 'speaker':  return 'Who Said It?';
+    case 'verse':    return 'Verse Identification';
+    case 'sequence': return 'Order the Events';
+    case 'trivia':   return 'Bible Trivia';
+    default:         return 'Question';
+  }
+}
+
+// Sample 10 questions per round from the question bank
+function sampleQuestionsForSession(){
+  for(let r=1; r<=TOTAL_ROUNDS; r++){
+    const pool = QUESTION_BANK.filter(q => q.round === r);
+    const shuffled = shuffle(pool);
+    sessionQuestions[r] = shuffled.slice(0, QUESTIONS_PER_ROUND);
+  }
+}
+
+// ── Game flow ──────────────────────────────────────────────────────
+function startGame(){
+  currentRound = 1;
+  currentQuestionIdx = 0;
+  score = 0;
+  wrongAttempts = 0;
+  answered = false;
+  sampleQuestionsForSession();
+  roundQuestions = sessionQuestions[1];
+  renderRound();
+  showScreen('screen-game');
+}
+
+function renderRound(){
+  const meta = ROUND_META[currentRound];
+  document.getElementById('round-lbl').textContent = `Round ${currentRound} of ${TOTAL_ROUNDS}`;
+  document.getElementById('round-theme').textContent = meta.theme;
+  currentQuestionIdx = 0;
+  renderQuestion();
+}
+
+function renderQuestion(){
+  answered = false;
+  const q = roundQuestions[currentQuestionIdx];
+
+  document.getElementById('q-type').textContent = typeLabel(q.type);
+  document.getElementById('q-stem').textContent = q.stem;
+  document.getElementById('progress-lbl').textContent = `Question ${currentQuestionIdx+1} of ${QUESTIONS_PER_ROUND}`;
+  document.getElementById('score-num').textContent = score;
+
+  // Progress bar reflects total session progress (0..30)
+  const totalAnswered = (currentRound - 1) * QUESTIONS_PER_ROUND + currentQuestionIdx;
+  const pct = (totalAnswered / TOTAL_QUESTIONS) * 100;
+  document.getElementById('progress-bar').style.width = pct + '%';
+
+  // Clear feedback + ctx
+  const fb = document.getElementById('q-feedback');
+  fb.textContent = '';
+  fb.className = 'q-feedback';
+  const ctx = document.getElementById('q-ctx');
+  ctx.textContent = '';
+  ctx.classList.remove('show');
+
+  // Render the 4 MC choices, shuffled
+  const list = document.getElementById('mc-list');
+  list.innerHTML = '';
+  const shuffledChoices = shuffle(q.choices);
+  shuffledChoices.forEach((choice, idx) => {
+    const card = document.createElement('div');
+    card.className = 'mc-choice';
+    card.dataset.correct = choice.correct ? '1' : '0';
+    card.innerHTML = `<span>${choice.text}</span><span class="mc-mark"></span>`;
+    card.onclick = () => selectChoice(card, choice, q);
+    list.appendChild(card);
+  });
+}
+
+function selectChoice(cardEl, choice, q){
+  if(answered) return;
+  answered = true;
+
+  // Lock all cards
+  document.querySelectorAll('.mc-choice').forEach(c => c.classList.add('locked'));
+
+  const fb = document.getElementById('q-feedback');
+  const ctxEl = document.getElementById('q-ctx');
+
+  if(choice.correct){
+    score++;
+    cardEl.classList.add('correct-pick');
+    cardEl.querySelector('.mc-mark').textContent = '✓';
+    fb.textContent = '✦ Correct!';
+    fb.className = 'q-feedback ok';
+    if(choice.ctx){
+      ctxEl.textContent = choice.ctx;
+      ctxEl.classList.add('show');
+    }
+    document.getElementById('score-num').textContent = score;
+  } else {
+    wrongAttempts++;
+    cardEl.classList.add('wrong-pick');
+    cardEl.querySelector('.mc-mark').textContent = '✗';
+    fb.textContent = '✗ Not quite — see the answer below.';
+    fb.className = 'q-feedback no';
+    // Reveal the correct choice + dim others
+    document.querySelectorAll('.mc-choice').forEach(c => {
+      if(c === cardEl) return;
+      if(c.dataset.correct === '1'){
+        c.classList.add('reveal-correct');
+        c.querySelector('.mc-mark').textContent = '✓';
+        const correctChoice = q.choices.find(ch => ch.correct);
+        if(correctChoice && correctChoice.ctx){
+          ctxEl.textContent = correctChoice.ctx;
+          ctxEl.classList.add('show');
+        }
+      } else {
+        c.classList.add('dim');
+      }
+    });
+  }
+
+  // Auto-advance
+  setTimeout(() => {
+    currentQuestionIdx++;
+    if(currentQuestionIdx >= QUESTIONS_PER_ROUND){
+      onRoundComplete();
+    } else {
+      renderQuestion();
+    }
+  }, choice.correct ? 1700 : 2400);
+}
+
+function onRoundComplete(){
+  if(currentRound >= TOTAL_ROUNDS){
+    endGame();
+    return;
+  }
+  // Show between-round banner
+  const meta = ROUND_META[currentRound];
+  const nextMeta = ROUND_META[currentRound + 1];
+  document.getElementById('rc-glyph').textContent = meta.glyph;
+  document.getElementById('rc-banner').textContent = `Round ${currentRound} of ${TOTAL_ROUNDS} Complete`;
+  document.getElementById('rc-title').textContent = 'Take a breath.';
+  document.getElementById('rc-stats').textContent = `${score} / ${currentRound * QUESTIONS_PER_ROUND} correct so far`;
+  document.getElementById('rc-msg').textContent = meta.msg;
+  document.getElementById('rc-next-btn').textContent = `Begin Round ${currentRound + 1}: ${nextMeta.theme} ›`;
+  showScreen('screen-round-complete');
+}
+
+function nextRound(){
+  currentRound++;
+  roundQuestions = sessionQuestions[currentRound];
+  renderRound();
+  showScreen('screen-game');
+}
+
+async function endGame(){
+  showScreen('screen-end');
+  const pct = Math.round((score / TOTAL_QUESTIONS) * 100);
+  document.getElementById('result-pct').textContent = pct + '%';
+
+  // Win condition per dispatch: score >= 24 AND wrongAttempts <= 6
+  const won = score >= 24 && wrongAttempts <= 6;
+
+  let title = '', msg = '';
+  if(score === TOTAL_QUESTIONS){
+    title = 'Perfect Reading!';
+    msg = `${score}/${TOTAL_QUESTIONS} — every question right. The whole Scripture is written on your heart!`;
+  } else if(score >= 27){
+    title = 'A True Scholar!';
+    msg = `${score}/${TOTAL_QUESTIONS} — outstanding. The Word is your daily companion.`;
+  } else if(won){
+    title = 'Well Read!';
+    msg = `${score}/${TOTAL_QUESTIONS} — wonderful work. Keep walking the Scriptures!`;
+  } else if(score >= 18){
+    title = 'A Good Beginning';
+    msg = `${score}/${TOTAL_QUESTIONS} — solid knowledge. A little more reading and the next round will be yours.`;
+  } else {
+    title = 'Keep Reading!';
+    msg = 'The Bible is a deep treasure. Open it daily, and the answers will become familiar friends.';
+  }
+
+  document.getElementById('result-title').textContent = title;
+  document.getElementById('result-msg').textContent = msg;
+
+  // Award coins via canonical GameUtils helper — handles weekly cap, daily throttle
+  const result = await GameUtils.awardCoins(GAME_ID, won, 'Bible Trivia');
+  const coinAwardEl = document.getElementById('coin-award');
+
+  // Four-state result handling per Repair Q + canonical pattern
+  if(result.alreadyPlayed){
+    coinAwardEl.textContent = 'Already played today — come back tomorrow!';
+  } else if(result.weeklyCapReached && result.awarded === 0){
+    coinAwardEl.textContent = "This week's game-coin pool is full — come back Monday!";
+  } else if(result.awarded > 0 && result.weeklyCapReached){
+    coinAwardEl.textContent = `+${result.awarded} coins earned!${won?' (Win bonus!)':''} (final pool coins this week)`;
+    GameUtils.coinRain('coin-rain', result.awarded);
+  } else if(result.awarded > 0){
+    coinAwardEl.textContent = `+${result.awarded} coins earned!${won?' (Win bonus!)':''}`;
+    GameUtils.coinRain('coin-rain', result.awarded);
+  }
+}
+
+// ── Init ───────────────────────────────────────────────────────────
+(async () => {
+  const prof = await GameUtils.init();
+  if(!prof) return;
+  GameUtils.showCoinReminder(GAME_ID, 'coin-reminder');
+})();
+</script>
+</body>
+</html>

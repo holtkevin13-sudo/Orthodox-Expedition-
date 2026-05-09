@@ -1,4 +1,27 @@
-// Orthodox Expedition — Service Worker v16
+// Orthodox Expedition — Service Worker v17
+// v17: Repair Chat G — Streak auto-increment. profiles.streak now
+//      advances automatically when calendar weeks close (Mon→Mon
+//      transitions detected on next progress.html load). New file
+//      js/session-rollup.js mirrors the prayer-rollup.js
+//      Sunday-night-rollup pattern for the session-week side.
+//      Pattern A schema: ONE column added — profiles.last_settled_week_start
+//      (date, nullable; new on this version) acts as an idempotency
+//      pointer; NULL on first invocation initializes lazily to that
+//      day's Monday so pre-launch noise weeks aren't retroactively
+//      settled. Closed weeks settle as: 0 missed = clean +1; 1 missed
+//      = grace consumed (lazily persists weekly_session_grace.grace_used
+//      via Chat B's StreakGrace helper) +1; 2+ missed = broken,
+//      streak resets to 0. Ladder thresholds (Lane 2 LOCKED — 8/12/20/40
+//      → 250/400/750/1500 coins) fire on transition via the
+//      profiles.coins + activity_log pattern Lane 3 established
+//      (Operational Learning #4 — no log_session_streak_coins
+//      trigger exists; client bumps coins). Lightweight parchment
+//      toast surfaces on ladder hits. progress.html init wires the
+//      rollup before loadData so the freshly-incremented streak
+//      renders immediately. Migration:
+//      streak_auto_increment_pointer_20260508. Page-integrity audit
+//      preamble (Op Learning #1 — second corruption case discipline)
+//      ran clean across all 17 explorer-facing HTML files.
 // v16: Repair B — Streak Grace Mechanic. ADHD failure-mode prevention.
 //      One grace token per streak per calendar week (Mon-Sun, matching
 //      prayer_streak_weekly.week_start_date). Migrates progress.html's
@@ -82,7 +105,7 @@
 // v4: added week.html, prayers.html, day-state, pause-card, prayers, and config JSON
 // Version bump forces cache clear and fresh install
 
-const CACHE_NAME = 'orthodox-expedition-v16';
+const CACHE_NAME = 'orthodox-expedition-v17';
 const STATIC_ASSETS = [
   '/Orthodox-Expedition-/',
   '/Orthodox-Expedition-/index.html',
@@ -114,6 +137,7 @@ const STATIC_ASSETS = [
   '/Orthodox-Expedition-/js/pause-card.js',
   '/Orthodox-Expedition-/js/prayers.js',
   '/Orthodox-Expedition-/js/prayer-rollup.js',
+  '/Orthodox-Expedition-/js/session-rollup.js',
   '/Orthodox-Expedition-/js/streak-grace.js',
   '/Orthodox-Expedition-/js/daily-anchor-card.js',
   '/Orthodox-Expedition-/js/topic-00-day.js',

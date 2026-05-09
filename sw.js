@@ -1,4 +1,18 @@
-// Orthodox Expedition — Service Worker v15
+// Orthodox Expedition — Service Worker v16
+// v16: Repair B — Streak Grace Mechanic. ADHD failure-mode prevention.
+//      One grace token per streak per calendar week (Mon-Sun, matching
+//      prayer_streak_weekly.week_start_date). Migrates progress.html's
+//      prayer streak to the strict "both prayers required" semantic
+//      that prayers.js's getStreak already used; layers grace on top
+//      so a single missed prayer slot per week is silently absorbed.
+//      Adds js/streak-grace.js (pure functions + persistence helpers).
+//      DB additions: prayer_streak_weekly.grace_used BOOLEAN; new
+//      table weekly_session_grace mirroring (explorer_id,
+//      week_start_date) keying with matching RLS posture. Visual
+//      indicator: muted-gold 5px pip beside streak-card title when
+//      grace has been used in the current week. Never red, never
+//      "missed", never punitive. Both pools clear automatically
+//      every Monday because the new-week row defaults grace_used=false.
 // v15: Lane A — Daily Anchor Card ("Today We Celebrate") on home.html.
 //      Two new tables (daily_verses 35 rows, journal_prompts 30 rows)
 //      back a day-of-year rotation that pairs a Bible verse with a
@@ -68,7 +82,7 @@
 // v4: added week.html, prayers.html, day-state, pause-card, prayers, and config JSON
 // Version bump forces cache clear and fresh install
 
-const CACHE_NAME = 'orthodox-expedition-v15';
+const CACHE_NAME = 'orthodox-expedition-v16';
 const STATIC_ASSETS = [
   '/Orthodox-Expedition-/',
   '/Orthodox-Expedition-/index.html',
@@ -100,6 +114,7 @@ const STATIC_ASSETS = [
   '/Orthodox-Expedition-/js/pause-card.js',
   '/Orthodox-Expedition-/js/prayers.js',
   '/Orthodox-Expedition-/js/prayer-rollup.js',
+  '/Orthodox-Expedition-/js/streak-grace.js',
   '/Orthodox-Expedition-/js/daily-anchor-card.js',
   '/Orthodox-Expedition-/js/topic-00-day.js',
   '/Orthodox-Expedition-/js/quiz-runner.js',

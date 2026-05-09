@@ -16,6 +16,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/streak-grace.js"></script>
+<script src="js/session-rollup.js"></script>
 <style>
 :root {
   --gold:#c9922a;--gold-light:#f0c96e;--gold-bright:#ffd700;
@@ -507,6 +508,21 @@ async function loadData(userId){
       window.location.href = prof.role==='parent' ? 'parent.html' : 'admin.html';
       return;
     }
+
+    // Repair Chat G — Sunday-night session-streak rollup. Idempotent;
+    // safe on every page load. Internally guarded against non-explorer
+    // roles (admin viewing ?admin=1) and against same-day re-entry.
+    // Awaited BEFORE loadData so the freshly-incremented streak +
+    // ladder-bonus coins are reflected in the immediate render. Errors
+    // are swallowed: the page must still render even if rollup fails.
+    if(window.SessionRollup){
+      try {
+        await window.SessionRollup.run(sb, session.user.id);
+      } catch(rollupErr) {
+        console.warn('SessionRollup error (continuing):', rollupErr);
+      }
+    }
+
     await loadData(session.user.id);
     showApp();
   } catch(e) {

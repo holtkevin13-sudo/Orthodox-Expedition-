@@ -421,24 +421,6 @@ body::before{
 .req-fill.topics{background:linear-gradient(90deg,var(--burgundy),#e11d48);}
 .req-fill.done{background:linear-gradient(90deg,#16a34a,#4ade80);}
 
-/* ── CURRENT TOPIC CARD ────────────────────────────────────── */
-.current-topic-card{
-  background:rgba(244,232,193,0.03);
-  border:1px solid rgba(201,146,42,0.2);
-  border-radius:14px;padding:1.125rem;
-  margin-bottom:1.125rem;
-  cursor:pointer;transition:border-color 0.2s,background 0.2s;
-  text-decoration:none;display:block;
-}
-.current-topic-card:active{background:rgba(201,146,42,0.06);border-color:rgba(240,201,110,0.7);}
-.ct-eyebrow{font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.2em;color:rgba(240,201,110,0.7);text-transform:uppercase;margin-bottom:0.4rem;}
-.ct-title{font-family:'Cinzel',serif;color:var(--gold-light);font-size:0.95rem;font-weight:700;margin-bottom:0.25rem;}
-.ct-session{font-family:'Crimson Text',serif;color:rgba(244,232,193,0.5);font-size:0.82rem;font-style:italic;margin-bottom:0.75rem;}
-.ct-bar-bg{height:6px;background:rgba(255,255,255,0.06);border-radius:3px;overflow:hidden;margin-bottom:0.3rem;}
-.ct-bar-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--gold),var(--gold-bright));transition:width 1s cubic-bezier(0.4,0,0.2,1);width:0%;}
-.ct-progress-lbl{font-family:'Cinzel',serif;font-size:0.62rem;color:rgba(240,201,110,0.7);text-align:right;}
-.ct-arrow{float:right;color:rgba(240,201,110,0.7);font-size:0.8rem;margin-top:-1.2rem;}
-
 /* ── STREAK CARD ───────────────────────────────────────────── */
 .streak-card{
   background:rgba(244,232,193,0.03);
@@ -1115,20 +1097,7 @@ body::before{
       <button class="announcement-dismiss" onclick="dismissAnnouncement()">✕</button>
     </div>
 
-    <!-- TODAY CARD — HERO (B1.a, ADHD-first: ONE clear next action above the fold) -->
-    <div class="today-card fade-up" id="today-card">
-      <div class="today-eyebrow">✦ Today's Expedition</div>
-      <div class="today-items" id="today-items"></div>
-    </div>
-
-    <!-- DAILY ANCHOR CARD — Lane A "Today We Celebrate"
-         Liturgical season + feast/saint + Bible verse + reflection prompt.
-         Renders into .daily-anchor-card by loadDailyAnchorCard() in the
-         script section below. Hidden until populated to avoid an empty
-         frame flash. -->
-    <div class="daily-anchor-card fade-up" id="daily-anchor-card" style="display:none;"></div>
-
-    <!-- RANK HERO -->
+    <!-- RANK HERO (Repair N: section moved to top of stack per ADHD-first reorder) -->
     <div class="rank-hero fade-up" id="rank-hero">
       <div class="rank-hero-bg"></div>
       <div class="rank-hero-glow" id="rank-glow"></div>
@@ -1165,6 +1134,23 @@ body::before{
       </div>
     </div>
 
+    <!-- DAILY ANCHOR CARD — Lane A "Today We Celebrate"
+         Liturgical season + feast/saint + Bible verse + reflection prompt.
+         Renders into .daily-anchor-card by loadDailyAnchorCard() in the
+         script section below. Hidden until populated to avoid an empty
+         frame flash. -->
+    <div class="daily-anchor-card fade-up" id="daily-anchor-card" style="display:none;"></div>
+
+    <!-- TODAY CARD — HERO (B1.a, ADHD-first: ONE clear next action;
+         Repair N: now position 3 in the rank → liturgical → today → next-rank stack.
+         The renderTodayCard() function (defined in two lockstep copies in the script
+         section below) targets #today-items by id, so this DOM target moves with the
+         section without requiring any JS change.) -->
+    <div class="today-card fade-up" id="today-card">
+      <div class="today-eyebrow">✦ Today's Expedition</div>
+      <div class="today-items" id="today-items"></div>
+    </div>
+
     <!-- NEXT RANK -->
     <div class="next-rank-card fade-up" id="next-rank-card">
       <div class="next-rank-header">
@@ -1193,16 +1179,8 @@ body::before{
         <div class="req-bar"><div class="req-fill topics" id="req-topics-fill"></div></div>
       </div>
     </div>
-
-    <!-- CURRENT TOPIC -->
-    <a class="current-topic-card fade-up" id="current-topic-card" href="curriculum.html">
-      <div class="ct-eyebrow">Currently Exploring</div>
-      <div class="ct-title" id="ct-title">Topic 0 — Foundations</div>
-      <div class="ct-session" id="ct-session">Session 0.1 · What is Orthodox Christianity?</div>
-      <div class="ct-bar-bg"><div class="ct-bar-fill" id="ct-bar"></div></div>
-      <div class="ct-progress-lbl" id="ct-progress">0 of 6 sessions complete</div>
-      <div class="ct-arrow">›</div>
-    </a>
+    <!-- Repair N: CURRENT TOPIC section removed (Currently Exploring card on
+         curriculum.html now serves this role; redundant on home.html). -->
 
     <!-- DESTINATION CARDS — Bazaar & Games (demoted below the fold per B1.a) -->
     <div class="destination-row fade-up">
@@ -1278,7 +1256,6 @@ const RANKS = [
 let profile = null;
 let earnedBadges = [];
 let allBadges = [];
-let currentTopicData = null;
 let prevRankId = null;
 
 // ── AUTH ──────────────────────────────────────────────────────
@@ -1367,8 +1344,8 @@ async function loadData(userId){
   const progressRows  = sessionsRes.data || [];
   // B1.c — "completed" means FULLY complete: all three M/W/F days done.
   // A bare session_progress row (legacy single-day model) does NOT count as complete.
-  // This semantic is shared by renderTodayCard (next-session lookup) and renderCurrentTopic
-  // (topic progress count + next-session label). checkNotifications ignores the param.
+  // This semantic is consumed by renderTodayCard (next-session lookup).
+  // checkNotifications ignores the param.
   const completed     = progressRows
     .filter(s => s.day_1_completed_at && s.day_2_completed_at && s.day_3_completed_at)
     .map(s => s.session_id);
@@ -1410,9 +1387,6 @@ function renderAll(mastery, completed, topics){
 
   // Streak
   renderStreak(p.streak);
-
-  // Current topic
-  renderCurrentTopic(mastery, completed, topics);
 
   // Badges
   renderBadges();
@@ -1488,35 +1462,6 @@ function renderStreak(streak){
     }
   }
   if(numEl) numEl.textContent=streak;
-}
-
-function renderCurrentTopic(mastery, completed, topics){
-  // Find the first topic that is available or in progress
-  const available = mastery.filter(m=>m.status==='available'||m.status==='pending');
-  if(!available.length) return;
-
-  const current = available[0];
-  const topic   = topics.find(t=>t.id===current.topic_id);
-  if(!topic) return;
-
-  // Get sessions for this topic
-  sb.from('sessions').select('id,title,order_index').eq('topic_id',topic.id).order('order_index')
-    .then(({data:sessions})=>{
-      if(!sessions||!sessions.length) return;
-      const done = sessions.filter(s=>completed.includes(s.id)).length;
-      const total = sessions.length;
-      const pct = total>0?(done/total)*100:0;
-
-      // Next session to do
-      const next = sessions.find(s=>!completed.includes(s.id));
-
-      document.getElementById('ct-title').textContent   = `Topic ${topic.id} — ${topic.title}`;
-      document.getElementById('ct-session').textContent = next ? `Session ${next.id} · ${next.title}` : 'All sessions complete!';
-      document.getElementById('ct-progress').textContent = `${done} of ${total} sessions complete`;
-      requestAnimationFrame(()=>setTimeout(()=>{
-        document.getElementById('ct-bar').style.width=pct+'%';
-      },200));
-    });
 }
 
 function renderBadges(){

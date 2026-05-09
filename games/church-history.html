@@ -1,0 +1,1033 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Church History — Orthodox Expedition</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="game-utils.js"></script>
+<style>
+:root{
+  --gold:#c9922a;--gold-light:#f0c96e;--gold-bright:#ffd700;
+  --parchment:#f4e8c1;
+  --burgundy:#6b1a1a;--byzantine:#2c1654;--byzantine-light:#4a2a7a;
+  --green:#16a34a;--green-light:#22c55e;
+  --red:#dc2626;
+  --bg:#0e0800;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{min-height:100%;overflow-x:hidden;}
+body{
+  font-family:'Crimson Text',serif;
+  background:var(--bg);
+  background-image:radial-gradient(ellipse at 50% 0%,rgba(107,26,26,0.5) 0%,transparent 55%),radial-gradient(ellipse at 100% 100%,rgba(44,22,84,0.35) 0%,transparent 50%);
+  min-height:100vh;padding:1.25rem 1rem 2rem;
+}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(201,146,42,0.02) 1px,transparent 1px),linear-gradient(90deg,rgba(201,146,42,0.02) 1px,transparent 1px);background-size:44px 44px;pointer-events:none;}
+
+#coin-rain{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999;overflow:hidden;}
+@keyframes coinFall{0%{transform:translateY(0) rotate(0deg);opacity:1;}85%{opacity:1;}100%{transform:translateY(110vh) rotate(540deg) scale(0.4);opacity:0;}}
+
+.back-btn{background:none;border:1px solid rgba(201,146,42,0.2);border-radius:8px;padding:0.4rem 0.875rem;font-family:'Cinzel',serif;font-size:0.65rem;color:rgba(201,146,42,0.45);cursor:pointer;min-height:40px;margin-bottom:1.25rem;display:inline-block;}
+
+/* Persistent home/close × button — Chat L pattern, visible at all times */
+.home-btn{position:fixed;top:0.875rem;right:0.875rem;width:36px;height:36px;border-radius:50%;background:rgba(14,8,0,0.85);border:1px solid rgba(201,146,42,0.35);color:rgba(240,201,110,0.85);font-family:'Cinzel',serif;font-size:1.1rem;line-height:1;cursor:pointer;z-index:50;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);transition:all 0.2s;}
+.home-btn:hover{background:rgba(107,26,26,0.4);border-color:var(--gold);color:var(--gold-light);}
+
+.screen{display:none;max-width:440px;margin:0 auto;text-align:center;}
+.screen.show{display:block;}
+
+/* START */
+.game-icon{font-size:3rem;margin-bottom:0.5rem;}
+.game-title{font-family:'Cinzel Decorative',serif;font-size:clamp(1.1rem,4vw,1.4rem);color:var(--gold-light);text-shadow:0 0 20px rgba(201,146,42,0.4);margin-bottom:0.25rem;}
+.game-sub{font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.2em;color:rgba(201,146,42,0.4);text-transform:uppercase;margin-bottom:1rem;}
+.game-desc{font-size:0.85rem;color:rgba(244,232,193,0.45);font-style:italic;line-height:1.6;margin-bottom:1rem;max-width:340px;margin-left:auto;margin-right:auto;}
+.coin-info{display:inline-flex;align-items:center;gap:0.5rem;background:rgba(201,146,42,0.08);border:1px solid rgba(201,146,42,0.2);border-radius:20px;padding:0.4rem 1rem;font-family:'Cinzel',serif;font-size:0.7rem;color:rgba(201,146,42,0.6);margin-bottom:1rem;}
+#coin-reminder{margin-bottom:1.25rem;min-height:30px;}
+.start-btn{padding:0.9rem 2.5rem;min-height:52px;background:linear-gradient(135deg,var(--gold),var(--gold-bright));border:none;border-radius:13px;font-family:'Cinzel',serif;font-size:0.85rem;letter-spacing:0.1em;color:var(--bg);font-weight:700;cursor:pointer;}
+
+.round-preview{display:grid;grid-template-columns:repeat(3,1fr);gap:0.5rem;margin:0.5rem auto 1rem;max-width:360px;}
+.round-pill{background:rgba(44,22,84,0.25);border:1px solid rgba(201,146,42,0.18);border-radius:10px;padding:0.5rem 0.4rem;}
+.round-pill-num{font-family:'Cinzel',serif;font-size:0.55rem;letter-spacing:0.18em;color:rgba(201,146,42,0.4);text-transform:uppercase;margin-bottom:0.15rem;}
+.round-pill-name{font-family:'Cinzel Decorative',serif;font-size:0.72rem;color:rgba(240,201,110,0.75);}
+
+/* GAME */
+.round-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:0.5rem;}
+.round-lbl{font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.18em;color:rgba(201,146,42,0.45);text-transform:uppercase;}
+.round-theme{font-family:'Cinzel Decorative',serif;font-size:0.78rem;color:rgba(240,201,110,0.8);}
+
+.progress-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:0.5rem;}
+.progress-lbl{font-family:'Cinzel',serif;font-size:0.62rem;color:rgba(201,146,42,0.4);letter-spacing:0.05em;}
+.score-num{font-family:'Cinzel Decorative',serif;font-size:1.35rem;color:var(--gold-bright);text-shadow:0 0 10px rgba(255,215,0,0.3);}
+.progress-bar-wrap{width:100%;height:5px;background:rgba(255,255,255,0.05);border-radius:3px;overflow:hidden;margin-bottom:1rem;}
+.progress-bar{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--gold),var(--gold-bright));transition:width 0.4s ease;}
+
+/* Question card — parchment-toned */
+.q-card{
+  width:100%;
+  background:linear-gradient(160deg,rgba(44,22,84,0.96),rgba(18,8,40,0.99) 50%,rgba(107,26,26,0.96));
+  border:1.5px solid rgba(201,146,42,0.3);border-radius:16px;
+  padding:1.25rem 1rem;margin-bottom:1rem;
+  position:relative;overflow:hidden;
+}
+.q-type{font-family:'Cinzel',serif;font-size:0.55rem;letter-spacing:0.22em;color:rgba(201,146,42,0.4);text-transform:uppercase;margin-bottom:0.5rem;}
+.q-stem{font-family:'Crimson Text',serif;font-size:1.02rem;color:var(--parchment);line-height:1.4;text-shadow:0 0 6px rgba(255,215,0,0.08);}
+.q-stem em{font-style:italic;color:rgba(240,201,110,0.92);}
+
+/* MC choices — vertical stack for saint names + place names */
+.mc-list{display:flex;flex-direction:column;gap:0.55rem;margin-bottom:0.5rem;}
+.mc-choice{
+  background:rgba(44,22,84,0.32);border:1.5px solid rgba(201,146,42,0.22);
+  border-radius:11px;padding:0.75rem 0.875rem;
+  font-family:'Crimson Text',serif;font-size:0.92rem;color:rgba(244,232,193,0.85);
+  cursor:pointer;transition:all 0.18s;text-align:left;min-height:48px;
+  display:flex;align-items:center;line-height:1.35;position:relative;
+}
+.mc-choice:hover:not(.locked){background:rgba(44,22,84,0.5);border-color:rgba(201,146,42,0.5);color:var(--parchment);}
+.mc-choice:active:not(.locked){transform:scale(0.98);}
+.mc-choice.locked{cursor:not-allowed;}
+.mc-choice.correct-pick{background:rgba(22,163,74,0.18);border-color:rgba(22,163,74,0.7);color:rgba(187,247,208,0.95);animation:flashGreen 0.5s ease;}
+.mc-choice.wrong-pick{background:rgba(220,38,38,0.14);border-color:rgba(220,38,38,0.55);color:rgba(252,165,165,0.85);animation:shakeRed 0.4s ease;}
+.mc-choice.reveal-correct{background:rgba(22,163,74,0.12);border-color:rgba(22,163,74,0.55);color:rgba(187,247,208,0.85);}
+.mc-choice.dim{opacity:0.4;}
+.mc-mark{position:absolute;right:0.75rem;font-family:'Cinzel',serif;font-weight:700;font-size:1rem;}
+.mc-choice.correct-pick .mc-mark{color:rgba(134,239,172,0.95);}
+.mc-choice.wrong-pick .mc-mark{color:rgba(252,165,165,0.95);}
+.mc-choice.reveal-correct .mc-mark{color:rgba(134,239,172,0.85);}
+@keyframes flashGreen{0%,100%{box-shadow:none;}50%{box-shadow:0 0 18px rgba(22,163,74,0.45);}}
+@keyframes shakeRed{0%,100%{transform:translateX(0);}25%{transform:translateX(-6px);}75%{transform:translateX(6px);}}
+
+.q-feedback{font-family:'Cinzel',serif;font-size:0.72rem;text-align:center;min-height:1.2rem;margin-top:0.4rem;}
+.q-feedback.ok{color:rgba(134,239,172,0.85);}
+.q-feedback.no{color:rgba(252,165,165,0.75);}
+
+.q-ctx{font-family:'Crimson Text',serif;font-size:0.82rem;font-style:italic;color:rgba(240,201,110,0.75);line-height:1.45;text-align:center;margin-top:0.4rem;min-height:1rem;padding:0 0.25rem;opacity:0;transition:opacity 0.4s ease;}
+.q-ctx.show{opacity:1;}
+
+/* ROUND-COMPLETE banner */
+.round-complete-card{
+  background:linear-gradient(160deg,rgba(44,22,84,0.85),rgba(107,26,26,0.85));
+  border:2px solid rgba(201,146,42,0.45);border-radius:18px;
+  padding:1.75rem 1.25rem;margin-top:2rem;
+  box-shadow:0 0 36px rgba(201,146,42,0.18);
+}
+.rc-glyph{font-size:2.4rem;margin-bottom:0.5rem;}
+.rc-banner{font-family:'Cinzel',serif;font-size:0.62rem;letter-spacing:0.22em;color:rgba(201,146,42,0.55);text-transform:uppercase;margin-bottom:0.4rem;}
+.rc-title{font-family:'Cinzel Decorative',serif;font-size:1.15rem;color:var(--gold-light);margin-bottom:0.5rem;}
+.rc-stats{font-family:'Cinzel',serif;font-size:0.85rem;color:rgba(244,232,193,0.7);margin-bottom:0.5rem;}
+.rc-msg{font-size:0.88rem;color:rgba(244,232,193,0.55);font-style:italic;line-height:1.5;margin-bottom:1.25rem;}
+.rc-next-btn{padding:0.85rem 2.25rem;min-height:50px;background:linear-gradient(135deg,var(--gold),var(--gold-bright));border:none;border-radius:12px;font-family:'Cinzel',serif;font-size:0.82rem;letter-spacing:0.08em;color:var(--bg);font-weight:700;cursor:pointer;}
+
+/* END */
+.result-ring{width:115px;height:115px;border-radius:50%;background:linear-gradient(135deg,rgba(44,22,84,0.9),rgba(107,26,26,0.9));border:3px solid var(--gold);display:flex;flex-direction:column;align-items:center;justify-content:center;margin:0 auto 1rem;box-shadow:0 0 30px rgba(201,146,42,0.25);}
+.result-pct{font-family:'Cinzel Decorative',serif;font-size:1.85rem;color:var(--gold-bright);line-height:1;}
+.result-lbl{font-family:'Cinzel',serif;font-size:0.55rem;color:rgba(201,146,42,0.55);letter-spacing:0.1em;margin-top:0.15rem;}
+.result-title{font-family:'Cinzel Decorative',serif;font-size:1.2rem;color:var(--gold-light);margin-bottom:0.4rem;}
+.result-msg{font-size:0.85rem;color:rgba(244,232,193,0.5);font-style:italic;margin-bottom:0.6rem;line-height:1.5;max-width:340px;margin-left:auto;margin-right:auto;}
+.coin-award{font-family:'Cinzel',serif;font-size:0.85rem;color:var(--gold-bright);margin-bottom:1.25rem;text-shadow:0 0 10px rgba(255,215,0,0.3);min-height:1.2rem;}
+.end-btns{display:flex;gap:0.5rem;justify-content:center;flex-wrap:wrap;}
+.play-again-btn{padding:0.75rem 1.75rem;min-height:48px;background:linear-gradient(135deg,var(--gold),var(--gold-bright));border:none;border-radius:11px;font-family:'Cinzel',serif;font-size:0.78rem;color:var(--bg);font-weight:700;cursor:pointer;}
+.back-games-btn{padding:0.75rem 1.25rem;min-height:48px;background:transparent;border:1px solid rgba(201,146,42,0.25);border-radius:11px;font-family:'Cinzel',serif;font-size:0.72rem;color:rgba(201,146,42,0.5);cursor:pointer;}
+</style>
+</head>
+<body>
+<div id="coin-rain"></div>
+<button class="home-btn" onclick="window.location.href='../home.html'" aria-label="Close to home">×</button>
+<button class="back-btn" onclick="window.location.href='../games.html'">← Games</button>
+
+<!-- START -->
+<div class="screen show" id="screen-start">
+  <div class="game-icon">📜</div>
+  <div class="game-title">Church History</div>
+  <div class="game-sub">Session Game · All Topics</div>
+  <div class="game-desc">Two thousand years of the Orthodox Church — from Pentecost to the saints of our own time. Three rounds across the long road of the faithful.</div>
+  <div class="round-preview">
+    <div class="round-pill"><div class="round-pill-num">Round 1</div><div class="round-pill-name">Beginnings &amp; Builders</div></div>
+    <div class="round-pill"><div class="round-pill-num">Round 2</div><div class="round-pill-name">Empire, Schism &amp; Fall</div></div>
+    <div class="round-pill"><div class="round-pill-num">Round 3</div><div class="round-pill-name">Steppes, Seas &amp; Saints of Today</div></div>
+  </div>
+  <div class="coin-info">⚔ 10 coins for playing · 20 for winning</div>
+  <div id="coin-reminder"></div>
+  <button class="start-btn" onclick="startGame()">Begin the Journey ›</button>
+</div>
+
+<!-- GAME -->
+<div class="screen" id="screen-game">
+  <div class="round-row">
+    <div class="round-lbl" id="round-lbl">Round 1 of 3</div>
+    <div class="round-theme" id="round-theme">Beginnings &amp; Builders</div>
+  </div>
+  <div class="progress-row">
+    <div class="progress-lbl" id="progress-lbl">Question 1 of 10</div>
+    <div class="score-num" id="score-num">0</div>
+  </div>
+  <div class="progress-bar-wrap"><div class="progress-bar" id="progress-bar" style="width:0%"></div></div>
+
+  <div class="q-card">
+    <div class="q-type" id="q-type">Identify the Saint</div>
+    <div class="q-stem" id="q-stem">Loading...</div>
+  </div>
+
+  <div class="mc-list" id="mc-list"></div>
+
+  <div class="q-feedback" id="q-feedback"></div>
+  <div class="q-ctx" id="q-ctx"></div>
+</div>
+
+<!-- ROUND COMPLETE -->
+<div class="screen" id="screen-round-complete">
+  <div class="round-complete-card">
+    <div class="rc-glyph" id="rc-glyph">✠</div>
+    <div class="rc-banner" id="rc-banner">Round 1 Complete</div>
+    <div class="rc-title" id="rc-title">Take a breath.</div>
+    <div class="rc-stats" id="rc-stats">7 / 10 correct so far</div>
+    <div class="rc-msg" id="rc-msg">The empire rises…</div>
+    <button class="rc-next-btn" onclick="nextRound()" id="rc-next-btn">Begin Round 2 ›</button>
+  </div>
+</div>
+
+<!-- END -->
+<div class="screen" id="screen-end">
+  <div class="result-ring">
+    <div class="result-pct" id="result-pct">0%</div>
+    <div class="result-lbl">correct</div>
+  </div>
+  <div class="result-title" id="result-title">Well done!</div>
+  <div class="result-msg" id="result-msg"></div>
+  <div class="coin-award" id="coin-award"></div>
+  <div class="end-btns">
+    <button class="play-again-btn" onclick="startGame()">Play Again</button>
+    <button class="back-games-btn" onclick="window.location.href='../games.html'">Games</button>
+  </div>
+</div>
+
+<script>
+const GAME_ID = 'church-history';
+const QUESTIONS_PER_ROUND = 10;
+const TOTAL_ROUNDS = 3;
+const TOTAL_QUESTIONS = QUESTIONS_PER_ROUND * TOTAL_ROUNDS;
+
+const ROUND_META = {
+  1: { theme: 'Beginnings & Builders',          glyph: '✠', msg: 'You have stood with the Apostles and the Fathers. Now we walk into the Empire — the centuries of golden domes, councils, and the great break with Rome…' },
+  2: { theme: 'Empire, Schism & Fall',          glyph: '☩', msg: 'You have watched Constantinople fall — but the Church did not. Now we follow her north into Russia, east into Asia, and west to Alaska, where she still lives today…' },
+  3: { theme: 'Steppes, Seas & Saints of Today', glyph: '✦', msg: 'From Pentecost to today — the same Church, the same faith, the same family.' }
+};
+
+/**
+ * QUESTION_BANK — 55 questions tagged by type, difficulty, and round-eligibility.
+ * Spans 2,000 years: Apostolic age → Byzantine flowering → Schism → Fall → Russia → Alaska → Modern saints.
+ *
+ * Content guardrails (per Chat U dispatch):
+ *  - Great Schism (1054) framed as broken unity, NOT anti-Catholic triumphalism.
+ *  - Greek + Russian + American Orthodox traditions honored equally.
+ *  - Council Timeline (7 Ecumenical Councils) and Heresy Hunter (heresies) NOT duplicated;
+ *    early-Church questions touch the councils only as date/era anchors.
+ *  - Age-appropriate (10-year-old): emphasizes saints' faith and witness, never gore.
+ *  - Joyful framing — the Big Picture is meant to give the explorer a sense of belonging
+ *    to a vast living family.
+ *
+ * type:       'date' | 'saint' | 'geography' | 'sequence' | 'era' | 'trivia'
+ * difficulty: 'easy' | 'medium' | 'hard'
+ * round:      1 | 2 | 3 (which round this question is eligible for)
+ *
+ * Each correct choice carries `ctx` — the catechetical micro-context shown after a correct tap.
+ */
+const QUESTION_BANK = [
+  // ════════════════════════════════════════════════════════════════
+  // ROUND 1 — BEGINNINGS & BUILDERS (18 candidates, 10 sampled per session)
+  // Theme: Pentecost (~33 AD) through the great Fathers (4th century).
+  // ════════════════════════════════════════════════════════════════
+  {
+    id:'ch001', type:'trivia', difficulty:'easy', round:1,
+    stem:'What feast marks the day the Holy Spirit came down upon the Apostles, the birthday of the Church?',
+    choices:[
+      { text:'Pentecost (Πεντηκοστή)', correct:true, ctx:'Pentecost — fifty days after Pascha — is when the Holy Spirit descended on the Apostles in Jerusalem as tongues of fire. The Church calls this her birthday.' },
+      { text:'Theophany' },
+      { text:'Annunciation' },
+      { text:'Transfiguration' }
+    ]
+  },
+  {
+    id:'ch002', type:'date', difficulty:'easy', round:1,
+    stem:'Pentecost — the descent of the Holy Spirit on the Apostles — happened around what year?',
+    choices:[
+      { text:'About 33 AD', correct:true, ctx:'Pentecost happened about 50 days after the Resurrection of Christ, around the year 33 AD. From that day, the Church has never stopped celebrating the Liturgy.' },
+      { text:'About 100 AD' },
+      { text:'About 313 AD' },
+      { text:'About 1 AD' }
+    ]
+  },
+  {
+    id:'ch003', type:'geography', difficulty:'easy', round:1,
+    stem:'In what city did the Apostles receive the Holy Spirit at Pentecost?',
+    choices:[
+      { text:'Jerusalem', correct:true, ctx:'The Apostles were gathered in an upper room in Jerusalem when the Holy Spirit came as a mighty wind and tongues of fire. From Jerusalem, the faith spread outward to the whole world.' },
+      { text:'Rome' },
+      { text:'Antioch' },
+      { text:'Constantinople' }
+    ]
+  },
+  {
+    id:'ch004', type:'saint', difficulty:'easy', round:1,
+    stem:'Which Apostle is called "the First-Called" (Πρωτόκλητος)?',
+    choices:[
+      { text:'St. Andrew', correct:true, ctx:'St. Andrew was the first disciple Christ called, before even his brother Peter. Tradition says he preached in Greece, around the Black Sea, and as far as the lands that became Russia.' },
+      { text:'St. Peter' },
+      { text:'St. John' },
+      { text:'St. Matthew' }
+    ]
+  },
+  {
+    id:'ch005', type:'geography', difficulty:'medium', round:1,
+    stem:'According to ancient tradition, where did the Apostle Thomas bring the Gospel?',
+    choices:[
+      { text:'India', correct:true, ctx:'St. Thomas — the same Apostle who once doubted and then cried "My Lord and my God!" — sailed all the way to India. Christians along the Malabar Coast still call themselves "St. Thomas Christians" to this day.' },
+      { text:'Spain' },
+      { text:'Ireland' },
+      { text:'China' }
+    ]
+  },
+  {
+    id:'ch006', type:'saint', difficulty:'medium', round:1,
+    stem:'Which Evangelist is honored as the founder of the Church of Alexandria in Egypt?',
+    choices:[
+      { text:'St. Mark', correct:true, ctx:'St. Mark the Evangelist, who wrote the second Gospel, brought the faith to Alexandria in Egypt. The Coptic Orthodox Church there still traces its line back to him.' },
+      { text:'St. Luke' },
+      { text:'St. Matthew' },
+      { text:'St. John' }
+    ]
+  },
+  {
+    id:'ch007', type:'trivia', difficulty:'easy', round:1,
+    stem:'In what city were the followers of Christ first called "Christians" (Χριστιανοί)?',
+    choices:[
+      { text:'Antioch', correct:true, ctx:'The book of Acts tells us: "The disciples were first called Christians in Antioch" (Acts 11:26). Antioch — in modern-day Turkey — was one of the first great centers of the early Church.' },
+      { text:'Jerusalem' },
+      { text:'Athens' },
+      { text:'Rome' }
+    ]
+  },
+  {
+    id:'ch008', type:'date', difficulty:'medium', round:1,
+    stem:'In what year was the Edict of Milan signed, ending the persecution of Christians?',
+    choices:[
+      { text:'313 AD', correct:true, ctx:'In 313 AD, Emperor Constantine and his co-emperor Licinius issued the Edict of Milan, making Christianity legal across the Roman Empire. The Church remembers Constantine as Saint Constantine the Great.' },
+      { text:'33 AD' },
+      { text:'325 AD' },
+      { text:'410 AD' }
+    ]
+  },
+  {
+    id:'ch009', type:'saint', difficulty:'easy', round:1,
+    stem:'Who was the first Christian Roman emperor, called "the Great" by the Church?',
+    choices:[
+      { text:'St. Constantine the Great', correct:true, ctx:'St. Constantine saw a vision of the Cross with the words "By this, conquer." He ended the persecutions and founded the city of Constantinople. He and his mother St. Helen are commemorated together on May 21.' },
+      { text:'St. Justinian' },
+      { text:'St. Theodosius' },
+      { text:'St. Marcian' }
+    ]
+  },
+  {
+    id:'ch010', type:'saint', difficulty:'easy', round:1,
+    stem:'Whose finding of the True Cross in Jerusalem is celebrated by the Church?',
+    choices:[
+      { text:'St. Helen, mother of Constantine', correct:true, ctx:'St. Helen traveled to Jerusalem in old age and discovered the True Cross of Christ. The Exaltation of the Holy Cross on September 14 remembers this great gift to the Church.' },
+      { text:'St. Mary of Egypt' },
+      { text:'Empress Theodora' },
+      { text:'St. Macrina' }
+    ]
+  },
+  {
+    id:'ch011', type:'saint', difficulty:'medium', round:1,
+    stem:'Who is the great archbishop of Alexandria who defended the truth that Christ is fully God?',
+    choices:[
+      { text:'St. Athanasius the Great', correct:true, ctx:'St. Athanasius was exiled five times for defending the faith. We owe him the Nicene Creed and the famous saying that "God became man so that man might become god" by grace.' },
+      { text:'St. John Chrysostom' },
+      { text:'St. Cyril of Jerusalem' },
+      { text:'St. Ignatius of Antioch' }
+    ]
+  },
+  {
+    id:'ch012', type:'saint', difficulty:'medium', round:1,
+    stem:'Which saint, archbishop of Constantinople, is called "the Golden-Mouthed" for his preaching?',
+    choices:[
+      { text:'St. John Chrysostom', correct:true, ctx:'Chrysostom (Χρυσόστομος) means "golden-mouthed." Born in Antioch, he became archbishop of Constantinople. The Divine Liturgy we celebrate most Sundays is named after him.' },
+      { text:'St. Basil the Great' },
+      { text:'St. Gregory the Theologian' },
+      { text:'St. Athanasius' }
+    ]
+  },
+  {
+    id:'ch013', type:'saint', difficulty:'medium', round:1,
+    stem:'Which 4th-century saint is given the title "the Theologian" by the Church?',
+    choices:[
+      { text:'St. Gregory the Theologian (of Nazianzus)', correct:true, ctx:'Only three saints in the Orthodox Church are given the title "the Theologian": St. John the Evangelist, St. Gregory of Nazianzus, and St. Symeon the New Theologian. St. Gregory was a master poet and a friend of St. Basil.' },
+      { text:'St. Athanasius' },
+      { text:'St. Cyprian' },
+      { text:'St. Ambrose' }
+    ]
+  },
+  {
+    id:'ch014', type:'trivia', difficulty:'medium', round:1,
+    stem:'Which three saints are honored together as the "Three Holy Hierarchs"?',
+    choices:[
+      { text:'Sts. Basil the Great, Gregory the Theologian, and John Chrysostom', correct:true, ctx:'These three giants of the 4th century are commemorated together on January 30. The Church teaches us that none of the three is greater than the others — all preached one and the same Christ.' },
+      { text:'Sts. Peter, Paul, and Andrew' },
+      { text:'Sts. Athanasius, Cyril, and John of Damascus' },
+      { text:'Sts. Constantine, Helen, and Justinian' }
+    ]
+  },
+  {
+    id:'ch015', type:'era', difficulty:'medium', round:1,
+    stem:'In which century did the great Cappadocian Fathers (St. Basil, the two Gregorys) live?',
+    choices:[
+      { text:'The 4th century', correct:true, ctx:'The 4th century is sometimes called the Golden Age of the Fathers. After Constantine ended the persecutions, the Church could finally write, teach, and build openly — and the great theologians of Cappadocia rose up.' },
+      { text:'The 1st century' },
+      { text:'The 7th century' },
+      { text:'The 11th century' }
+    ]
+  },
+  {
+    id:'ch016', type:'sequence', difficulty:'easy', round:1,
+    stem:'Which came FIRST?',
+    choices:[
+      { text:'Pentecost (~33 AD)', correct:true, ctx:'Pentecost came almost three centuries before the Edict of Milan. The Church grew silently and bravely through long years of persecution before her freedom came.' },
+      { text:'The Edict of Milan (313 AD)' },
+      { text:'The Council of Nicaea (325 AD)' },
+      { text:'The reign of Constantine' }
+    ]
+  },
+  {
+    id:'ch017', type:'trivia', difficulty:'medium', round:1,
+    stem:'What language was the Septuagint — the Old Testament used by the early Church — written in?',
+    choices:[
+      { text:'Greek', correct:true, ctx:'The Septuagint (LXX) was the Greek translation of the Hebrew Scriptures, made about 200 years before Christ. It is the Old Testament that the Apostles quoted, and the Orthodox Church has used it ever since.' },
+      { text:'Hebrew' },
+      { text:'Latin' },
+      { text:'Aramaic' }
+    ]
+  },
+  {
+    id:'ch018', type:'geography', difficulty:'medium', round:1,
+    stem:'St. Basil the Great was bishop of Caesarea in which region of Asia Minor?',
+    choices:[
+      { text:'Cappadocia', correct:true, ctx:'Cappadocia, in the heart of modern-day Turkey, is famous for its strange rock formations and its hidden cave-churches. From this rugged land came three of the greatest Fathers of the Church.' },
+      { text:'Galilee' },
+      { text:'Macedonia' },
+      { text:'Egypt' }
+    ]
+  },
+
+  // ════════════════════════════════════════════════════════════════
+  // ROUND 2 — EMPIRE, SCHISM & FALL (18 candidates, 10 sampled per session)
+  // Theme: 5th–15th centuries. Justinian to 1453. The councils touched only as
+  // era-anchors so as NOT to duplicate Council Timeline or Heresy Hunter.
+  // ════════════════════════════════════════════════════════════════
+  {
+    id:'ch101', type:'date', difficulty:'medium', round:2,
+    stem:'In what year was Hagia Sophia (Ἁγία Σοφία) consecrated in Constantinople?',
+    choices:[
+      { text:'537 AD', correct:true, ctx:'When Hagia Sophia — the Church of Holy Wisdom — was consecrated in 537, the Emperor Justinian is said to have cried out, "Solomon, I have outdone thee!" For nearly a thousand years she was the largest church in the world.' },
+      { text:'325 AD' },
+      { text:'843 AD' },
+      { text:'988 AD' }
+    ]
+  },
+  {
+    id:'ch102', type:'geography', difficulty:'easy', round:2,
+    stem:'In which city does the great church of Hagia Sophia stand?',
+    choices:[
+      { text:'Constantinople (now Istanbul)', correct:true, ctx:'Constantinople — "the City of Constantine" — was the capital of the Christian Empire for over a thousand years. Hagia Sophia still stands there today, in the city now called Istanbul.' },
+      { text:'Rome' },
+      { text:'Athens' },
+      { text:'Jerusalem' }
+    ]
+  },
+  {
+    id:'ch103', type:'saint', difficulty:'medium', round:2,
+    stem:'Which Christian emperor built Hagia Sophia and is honored as a saint by the Church?',
+    choices:[
+      { text:'St. Justinian the Great', correct:true, ctx:'St. Justinian and his wife St. Theodora ruled together in the 6th century. He built Hagia Sophia, gathered the laws of the Empire, and is commemorated on November 14.' },
+      { text:'St. Constantine' },
+      { text:'St. Theodosius' },
+      { text:'St. Heraclius' }
+    ]
+  },
+  {
+    id:'ch104', type:'date', difficulty:'medium', round:2,
+    stem:'In what year did the Church celebrate the final restoration of the holy icons — the first "Sunday of Orthodoxy"?',
+    choices:[
+      { text:'843 AD', correct:true, ctx:'After more than a hundred years of conflict, in 843 AD Empress Theodora restored the veneration of the icons. The Church has celebrated the "Triumph of Orthodoxy" on the first Sunday of Great Lent ever since.' },
+      { text:'325 AD' },
+      { text:'537 AD' },
+      { text:'1054 AD' }
+    ]
+  },
+  {
+    id:'ch105', type:'trivia', difficulty:'medium', round:2,
+    stem:'The "Sunday of Orthodoxy" celebrates the restoration of what?',
+    choices:[
+      { text:'The veneration of the holy icons', correct:true, ctx:'For decades, some had tried to ban icons from the Church. When the icons were finally restored, the people carried them in procession through the streets — the very same procession Orthodox parishes still hold each year on the first Sunday of Lent.' },
+      { text:'The right to read Scripture' },
+      { text:'The Greek language in the Liturgy' },
+      { text:'Easter on a fixed date' }
+    ]
+  },
+  {
+    id:'ch106', type:'saint', difficulty:'medium', round:2,
+    stem:'Which two brother-saints are called the "Apostles to the Slavs"?',
+    choices:[
+      { text:'Sts. Cyril and Methodius', correct:true, ctx:'In the 9th century, two brothers from Thessaloniki — Sts. Cyril and Methodius — brought the Gospel to the Slavic peoples. They created an alphabet for the Slavs (the Glagolitic, ancestor of today\'s Cyrillic) so the Liturgy could be prayed in their own tongue.' },
+      { text:'Sts. Peter and Andrew' },
+      { text:'Sts. Boris and Gleb' },
+      { text:'Sts. Constantine and Helen' }
+    ]
+  },
+  {
+    id:'ch107', type:'era', difficulty:'medium', round:2,
+    stem:'In which century did Sts. Cyril and Methodius bring the faith to the Slavs?',
+    choices:[
+      { text:'The 9th century', correct:true, ctx:'They began their mission to the Slavs in the 860s, more than a hundred years before the Baptism of Rus. Without their alphabet, Russia, Bulgaria, Serbia, and many other lands could never have prayed the Liturgy in their own language.' },
+      { text:'The 5th century' },
+      { text:'The 11th century' },
+      { text:'The 14th century' }
+    ]
+  },
+  {
+    id:'ch108', type:'trivia', difficulty:'hard', round:2,
+    stem:'What did Sts. Cyril and Methodius create so the Slavs could pray the Liturgy in their own language?',
+    choices:[
+      { text:'An alphabet for the Slavic peoples', correct:true, ctx:'They created the Glagolitic alphabet first; their disciples later developed the Cyrillic alphabet (Кириллица), naming it in honor of St. Cyril. Russian, Serbian, Bulgarian, and Ukrainian still use Cyrillic today.' },
+      { text:'A new musical scale' },
+      { text:'A printing press' },
+      { text:'A calendar' }
+    ]
+  },
+  {
+    id:'ch109', type:'date', difficulty:'medium', round:2,
+    stem:'In what year was the Baptism of Rus\' — when the Slavic peoples around Kiev embraced Christianity?',
+    choices:[
+      { text:'988 AD', correct:true, ctx:'In 988, Prince Vladimir of Kiev was baptized, and the people of Rus\' followed him into the waters of the Dnieper River. From that moment, Russia and Ukraine have been Orthodox lands.' },
+      { text:'843 AD' },
+      { text:'1054 AD' },
+      { text:'1240 AD' }
+    ]
+  },
+  {
+    id:'ch110', type:'saint', difficulty:'medium', round:2,
+    stem:'Which prince led his people into the Orthodox faith at the Baptism of Rus\'?',
+    choices:[
+      { text:'St. Vladimir of Kiev', correct:true, ctx:'St. Vladimir sent envoys to many lands to find the true faith. When they came to Hagia Sophia in Constantinople, they wrote home: "We did not know whether we were in heaven or on earth." Vladimir was baptized, and so were his people.' },
+      { text:'St. Boris' },
+      { text:'St. Sergius' },
+      { text:'St. Alexander Nevsky' }
+    ]
+  },
+  {
+    id:'ch111', type:'geography', difficulty:'medium', round:2,
+    stem:'In what city did the Baptism of Rus\' take place in 988?',
+    choices:[
+      { text:'Kiev', correct:true, ctx:'Kiev — on the great Dnieper River — was the heart of medieval Rus\'. The city is sometimes called "the Mother of Russian Cities," and her Baptism marks the beginning of a thousand years of Orthodox life among the Slavs.' },
+      { text:'Moscow' },
+      { text:'Novgorod' },
+      { text:'St. Petersburg' }
+    ]
+  },
+  {
+    id:'ch112', type:'date', difficulty:'medium', round:2,
+    stem:'In what year did the Great Schism formally divide the ancient Church?',
+    choices:[
+      { text:'1054 AD', correct:true, ctx:'In 1054, after centuries of mounting differences between East and West, formal communion was broken between the Church of Constantinople and the Church of Rome. The Orthodox Church remained where she had always been — the same faith, the same Liturgy, the same Creed.' },
+      { text:'843 AD' },
+      { text:'1204 AD' },
+      { text:'1453 AD' }
+    ]
+  },
+  {
+    id:'ch113', type:'trivia', difficulty:'medium', round:2,
+    stem:'The Great Schism of 1054 was the formal break between which two ancient parts of the Church?',
+    choices:[
+      { text:'The Church of the East (Constantinople) and the Church of the West (Rome)', correct:true, ctx:'For a thousand years, the Church had been one — even when far-apart bishops sometimes disagreed. The break of 1054 was a great sorrow. The Orthodox Church kept the faith of the seven Ecumenical Councils unchanged.' },
+      { text:'Greek and Slavic Christians' },
+      { text:'Egyptian and Syrian Christians' },
+      { text:'Armenian and Georgian Christians' }
+    ]
+  },
+  {
+    id:'ch114', type:'geography', difficulty:'medium', round:2,
+    stem:'Mt. Athos, the great monastic peninsula called "the Holy Mountain," is found in which country?',
+    choices:[
+      { text:'Greece', correct:true, ctx:'Mt. Athos is a long, thin peninsula in northern Greece dedicated entirely to monasticism. Twenty monasteries and many smaller skeetes live there in continuous prayer — and have for over a thousand years.' },
+      { text:'Russia' },
+      { text:'Romania' },
+      { text:'Bulgaria' }
+    ]
+  },
+  {
+    id:'ch115', type:'trivia', difficulty:'medium', round:2,
+    stem:'What is Mt. Athos famous for?',
+    choices:[
+      { text:'It is the great monastic center of the Orthodox world', correct:true, ctx:'Monks have prayed on Mt. Athos since at least the 9th century. The Great Lavra was founded there by St. Athanasius the Athonite in 963. Today, twenty monasteries from many lands still flourish on the Holy Mountain.' },
+      { text:'It is where Pentecost happened' },
+      { text:'It is the burial place of Constantine' },
+      { text:'It is the site of the first Ecumenical Council' }
+    ]
+  },
+  {
+    id:'ch116', type:'date', difficulty:'medium', round:2,
+    stem:'In what year did the city of Constantinople fall to the Ottoman Turks?',
+    choices:[
+      { text:'1453 AD', correct:true, ctx:'On May 29, 1453, after a long siege, Constantinople fell. The last Liturgy was celebrated in Hagia Sophia that very morning. But the Church did not fall — she lived on in every Orthodox land, and lives on still.' },
+      { text:'1054 AD' },
+      { text:'1204 AD' },
+      { text:'1683 AD' }
+    ]
+  },
+  {
+    id:'ch117', type:'trivia', difficulty:'medium', round:2,
+    stem:'After the fall of Constantinople in 1453, which city was sometimes called "the Third Rome"?',
+    choices:[
+      { text:'Moscow', correct:true, ctx:'The first "Rome" was old Rome; the second was Constantinople, "New Rome." After 1453, some called Moscow "the Third Rome" because it had become the largest free Orthodox capital. The phrase was meant as a sacred responsibility, not as a boast.' },
+      { text:'Athens' },
+      { text:'Kiev' },
+      { text:'Antioch' }
+    ]
+  },
+  {
+    id:'ch118', type:'sequence', difficulty:'medium', round:2,
+    stem:'Which came FIRST?',
+    choices:[
+      { text:'The Baptism of Rus\' (988 AD)', correct:true, ctx:'The Baptism of Rus\' came almost five hundred years before the Fall of Constantinople. By the time the City fell in 1453, Russia had been Orthodox for nearly five centuries.' },
+      { text:'The Great Schism (1054 AD)' },
+      { text:'The Fall of Constantinople (1453 AD)' },
+      { text:'The Council of Florence' }
+    ]
+  },
+
+  // ════════════════════════════════════════════════════════════════
+  // ROUND 3 — STEPPES, SEAS & SAINTS OF TODAY (19 candidates, 10 sampled per session)
+  // Theme: 16th–21st centuries. Russia, Mt. Athos, Alaska, modern saints.
+  // ════════════════════════════════════════════════════════════════
+  {
+    id:'ch201', type:'saint', difficulty:'easy', round:3,
+    stem:'Which Russian wonderworker greeted every visitor with the words, "My joy, Christ is risen!"?',
+    choices:[
+      { text:'St. Seraphim of Sarov', correct:true, ctx:'St. Seraphim lived as a hermit in the Russian forest, where (it is said) a great bear came to take food from his hand. He greeted everyone — every day of the year — with the Paschal greeting, "My joy, Christ is risen!"' },
+      { text:'St. Sergius of Radonezh' },
+      { text:'St. Herman of Alaska' },
+      { text:'St. John of Kronstadt' }
+    ]
+  },
+  {
+    id:'ch202', type:'trivia', difficulty:'medium', round:3,
+    stem:'What animal famously came to St. Seraphim of Sarov in the Russian forest?',
+    choices:[
+      { text:'A bear', correct:true, ctx:'A great brown bear came to St. Seraphim in his forest hermitage. He fed it from his hand. The Church teaches that holy people, by drawing near to God, recover something of the harmony between humans and animals that Adam knew in Paradise.' },
+      { text:'A wolf' },
+      { text:'A deer' },
+      { text:'A lion' }
+    ]
+  },
+  {
+    id:'ch203', type:'date', difficulty:'medium', round:3,
+    stem:'In what year did the first Russian Orthodox missionaries arrive in Alaska?',
+    choices:[
+      { text:'1794', correct:true, ctx:'In September 1794, ten monks from Valaam Monastery — including a young monk named Herman — landed on Kodiak Island in Alaska. They were the first Orthodox missionaries to reach North America.' },
+      { text:'1700' },
+      { text:'1867' },
+      { text:'1917' }
+    ]
+  },
+  {
+    id:'ch204', type:'saint', difficulty:'easy', round:3,
+    stem:'Who is the first canonized Orthodox saint of North America?',
+    choices:[
+      { text:'St. Herman of Alaska', correct:true, ctx:'St. Herman (1756–1837) lived as a humble monk on Spruce Island in Alaska, defending the native Aleut people from mistreatment and teaching them the love of Christ. He was glorified in 1970, the first saint of America.' },
+      { text:'St. Innocent of Alaska' },
+      { text:'St. John Maximovitch' },
+      { text:'St. Tikhon of Moscow' }
+    ]
+  },
+  {
+    id:'ch205', type:'geography', difficulty:'medium', round:3,
+    stem:'On which Alaskan island did St. Herman live as a hermit, calling it "New Valaam"?',
+    choices:[
+      { text:'Spruce Island', correct:true, ctx:'St. Herman named his small Alaskan island "New Valaam" after the Russian monastery he had come from. Pilgrims still visit Spruce Island today to pray near his hermitage.' },
+      { text:'Kodiak Island' },
+      { text:'Sitka Island' },
+      { text:'Adak Island' }
+    ]
+  },
+  {
+    id:'ch206', type:'trivia', difficulty:'medium', round:3,
+    stem:'From which great Russian monastery did St. Herman travel to Alaska?',
+    choices:[
+      { text:'Valaam Monastery', correct:true, ctx:'Valaam Monastery sits on a series of islands in Lake Ladoga, in the cold north of Russia. From this monastery, ten monks were chosen for the long voyage to bring the Gospel to Alaska.' },
+      { text:'Optina Monastery' },
+      { text:'The Trinity-Sergius Lavra' },
+      { text:'The Solovki Monastery' }
+    ]
+  },
+  {
+    id:'ch207', type:'saint', difficulty:'hard', round:3,
+    stem:'Which saint is honored as the "Apostle to Alaska and Siberia," who translated the Gospels into Aleut?',
+    choices:[
+      { text:'St. Innocent of Alaska', correct:true, ctx:'St. Innocent (1797–1879) — born John Veniaminov — was a missionary priest who translated the Scriptures and prayer-book into Aleut, then served as bishop in Alaska before becoming Metropolitan of Moscow. His feast is March 31 and October 6.' },
+      { text:'St. Herman of Alaska' },
+      { text:'St. Tikhon of Moscow' },
+      { text:'St. Nicholas of Japan' }
+    ]
+  },
+  {
+    id:'ch208', type:'saint', difficulty:'medium', round:3,
+    stem:'Which Greek wonderworker, bishop and metropolitan, is called "the saint of Aegina"?',
+    choices:[
+      { text:'St. Nektarios of Aegina', correct:true, ctx:'St. Nektarios (1846–1920) was unjustly slandered for years and bore it without complaint. Late in life he founded a women\'s monastery on the island of Aegina. After his death, countless miracles were reported, and he is one of the most beloved saints of modern Greece.' },
+      { text:'St. Paisios' },
+      { text:'St. Porphyrios' },
+      { text:'St. Cosmas of Aetolia' }
+    ]
+  },
+  {
+    id:'ch209', type:'saint', difficulty:'medium', round:3,
+    stem:'Which Russian saint served as Archbishop of Shanghai and later of San Francisco?',
+    choices:[
+      { text:'St. John (Maximovitch) of Shanghai and San Francisco', correct:true, ctx:'St. John (1896–1966) was a tireless wonderworker who walked the streets of Shanghai gathering orphans, then served his last years in San Francisco. He prayed through the night and slept in a chair, never lying down. His relics rest in San Francisco today.' },
+      { text:'St. Tikhon of Moscow' },
+      { text:'St. Innocent of Alaska' },
+      { text:'St. Raphael of Brooklyn' }
+    ]
+  },
+  {
+    id:'ch210', type:'geography', difficulty:'medium', round:3,
+    stem:'In what American city did St. John Maximovitch end his life and where his relics rest today?',
+    choices:[
+      { text:'San Francisco', correct:true, ctx:'St. John Maximovitch reposed in 1966 in Seattle while traveling, but his cathedral and his relics are in San Francisco — the Holy Virgin "Joy of All Who Sorrow" Cathedral. Pilgrims come from around the world to venerate him there.' },
+      { text:'New York' },
+      { text:'Chicago' },
+      { text:'Boston' }
+    ]
+  },
+  {
+    id:'ch211', type:'saint', difficulty:'medium', round:3,
+    stem:'Which 20th-century elder of Mt. Athos is widely loved for his wisdom and counsels?',
+    choices:[
+      { text:'St. Paisios of Mt. Athos', correct:true, ctx:'St. Paisios (1924–1994) lived as a humble monk in a simple cell on the Holy Mountain. Thousands climbed the mountain to ask for his prayers and counsel. He was glorified by the Church in 2015 — within living memory.' },
+      { text:'St. Seraphim of Sarov' },
+      { text:'St. Sergius of Radonezh' },
+      { text:'St. John Climacus' }
+    ]
+  },
+  {
+    id:'ch212', type:'trivia', difficulty:'medium', round:3,
+    stem:'The Russian Revolution of 1917 led to the martyrdom of which Christian royal family?',
+    choices:[
+      { text:'The Romanov family', correct:true, ctx:'Tsar Nicholas II, Tsarina Alexandra, and their five children — Olga, Tatiana, Maria, Anastasia, and Alexei — were killed in 1918. The Church glorified them as the "Royal Passion-Bearers" for the Christian way they bore their suffering.' },
+      { text:'The Habsburg family' },
+      { text:'The Bourbon family' },
+      { text:'The Stuart family' }
+    ]
+  },
+  {
+    id:'ch213', type:'geography', difficulty:'medium', round:3,
+    stem:'In the 20th century, Orthodox Christianity grew rapidly on which continent, with many native bishops and faithful today?',
+    choices:[
+      { text:'Africa', correct:true, ctx:'Orthodox Christianity has flourished in Kenya, Uganda, Tanzania, the Congo, and many other African nations through native African priests, bishops, and parishes. The Patriarchate of Alexandria oversees this growing African Church.' },
+      { text:'Antarctica' },
+      { text:'Australia, only' },
+      { text:'No new continents' }
+    ]
+  },
+  {
+    id:'ch214', type:'sequence', difficulty:'medium', round:3,
+    stem:'Which came FIRST?',
+    choices:[
+      { text:'The Russian mission to Alaska (1794)', correct:true, ctx:'The Russian Orthodox mission reached Alaska in 1794 — more than a hundred years before the Russian Revolution of 1917. Orthodoxy had already taken deep root in North America long before Russia herself was tested.' },
+      { text:'The Russian Revolution (1917)' },
+      { text:'The glorification of St. Herman (1970)' },
+      { text:'The repose of St. Paisios (1994)' }
+    ]
+  },
+  {
+    id:'ch215', type:'sequence', difficulty:'medium', round:3,
+    stem:'Which saint lived FIRST in time?',
+    choices:[
+      { text:'St. Nektarios of Aegina', correct:true, ctx:'St. Nektarios was born in 1846 and reposed in 1920. St. Paisios was born in 1924 — four years after St. Nektarios reposed. The two never met on earth, but they pray for the Church together now.' },
+      { text:'St. Paisios of Mt. Athos' },
+      { text:'St. John of Shanghai and San Francisco' },
+      { text:'St. Porphyrios' }
+    ]
+  },
+  {
+    id:'ch216', type:'saint', difficulty:'medium', round:3,
+    stem:'Which Russian saint blessed Prince Dmitry before the Battle of Kulikovo and is called "the Builder of Russian Monasticism"?',
+    choices:[
+      { text:'St. Sergius of Radonezh', correct:true, ctx:'St. Sergius (14th century) founded the Holy Trinity Monastery north of Moscow, which became the heart of Russian monastic life. His friendship with the iconographer St. Andrei Rublev gave the world the famous icon of the Holy Trinity.' },
+      { text:'St. Seraphim of Sarov' },
+      { text:'St. Vladimir of Kiev' },
+      { text:'St. Alexander Nevsky' }
+    ]
+  },
+  {
+    id:'ch217', type:'trivia', difficulty:'easy', round:3,
+    stem:'In Orthodox tradition, what is a "name day"?',
+    choices:[
+      { text:'The feast day of the saint whose name you bear', correct:true, ctx:'In many Orthodox families, the name day is celebrated more than the birthday. On August 9, for example, anyone named Herman shares in the joy of St. Herman of Alaska — his patron saint and heavenly friend.' },
+      { text:'The day you were baptized' },
+      { text:'The day you first received Communion' },
+      { text:'The day of the family\'s patronal feast' }
+    ]
+  },
+  {
+    id:'ch218', type:'geography', difficulty:'medium', round:3,
+    stem:'The Greek Orthodox Archdiocese of America is headquartered in which great American city?',
+    choices:[
+      { text:'New York City', correct:true, ctx:'The Greek Orthodox Archdiocese of America has its headquarters in New York. Today, hundreds of Greek Orthodox parishes flourish across the United States — gathering Orthodox families from many backgrounds into one Church.' },
+      { text:'Washington, D.C.' },
+      { text:'Boston' },
+      { text:'Los Angeles' }
+    ]
+  },
+  {
+    id:'ch219', type:'era', difficulty:'medium', round:3,
+    stem:'St. Paisios of Mt. Athos lived in which century?',
+    choices:[
+      { text:'The 20th century', correct:true, ctx:'St. Paisios (1924–1994) lived in our own grandparents\' lifetime. The Church reminds us that saints are not only of the distant past — there are saints in every age, including our own.' },
+      { text:'The 4th century' },
+      { text:'The 11th century' },
+      { text:'The 17th century' }
+    ]
+  }
+];
+// END QUESTION_BANK — 55 questions total (18 R1, 18 R2, 19 R3)
+
+// ── State ──────────────────────────────────────────────────────────
+let currentRound = 1;
+let currentQuestionIdx = 0;
+let roundQuestions = [];
+let score = 0;
+let wrongAttempts = 0;            // for win condition
+let answered = false;             // lock during feedback delay
+let sessionQuestions = { 1:[], 2:[], 3:[] }; // pre-sampled per session
+
+// ── Helpers ────────────────────────────────────────────────────────
+function shuffle(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function showScreen(id){['screen-start','screen-game','screen-round-complete','screen-end'].forEach(s=>document.getElementById(s).classList.toggle('show',s===id));}
+
+function typeLabel(t){
+  switch(t){
+    case 'date':      return 'What Year?';
+    case 'saint':     return 'Identify the Saint';
+    case 'geography': return 'Where Did This Happen?';
+    case 'sequence':  return 'Which Came First?';
+    case 'era':       return 'Which Era?';
+    case 'trivia':    return 'Church History';
+    default:          return 'Question';
+  }
+}
+
+// Sample 10 questions per round from the question bank
+function sampleQuestionsForSession(){
+  for(let r=1; r<=TOTAL_ROUNDS; r++){
+    const pool = QUESTION_BANK.filter(q => q.round === r);
+    const shuffled = shuffle(pool);
+    sessionQuestions[r] = shuffled.slice(0, QUESTIONS_PER_ROUND);
+  }
+}
+
+// ── Game flow ──────────────────────────────────────────────────────
+function startGame(){
+  currentRound = 1;
+  currentQuestionIdx = 0;
+  score = 0;
+  wrongAttempts = 0;
+  answered = false;
+  sampleQuestionsForSession();
+  roundQuestions = sessionQuestions[1];
+  renderRound();
+  showScreen('screen-game');
+}
+
+function renderRound(){
+  const meta = ROUND_META[currentRound];
+  document.getElementById('round-lbl').textContent = `Round ${currentRound} of ${TOTAL_ROUNDS}`;
+  document.getElementById('round-theme').textContent = meta.theme;
+  currentQuestionIdx = 0;
+  renderQuestion();
+}
+
+function renderQuestion(){
+  answered = false;
+  const q = roundQuestions[currentQuestionIdx];
+
+  document.getElementById('q-type').textContent = typeLabel(q.type);
+  document.getElementById('q-stem').textContent = q.stem;
+  document.getElementById('progress-lbl').textContent = `Question ${currentQuestionIdx+1} of ${QUESTIONS_PER_ROUND}`;
+  document.getElementById('score-num').textContent = score;
+
+  // Progress bar reflects total session progress (0..30)
+  const totalAnswered = (currentRound - 1) * QUESTIONS_PER_ROUND + currentQuestionIdx;
+  const pct = (totalAnswered / TOTAL_QUESTIONS) * 100;
+  document.getElementById('progress-bar').style.width = pct + '%';
+
+  // Clear feedback + ctx
+  const fb = document.getElementById('q-feedback');
+  fb.textContent = '';
+  fb.className = 'q-feedback';
+  const ctx = document.getElementById('q-ctx');
+  ctx.textContent = '';
+  ctx.classList.remove('show');
+
+  // Render the 4 MC choices, shuffled
+  const list = document.getElementById('mc-list');
+  list.innerHTML = '';
+  const shuffledChoices = shuffle(q.choices);
+  shuffledChoices.forEach((choice, idx) => {
+    const card = document.createElement('div');
+    card.className = 'mc-choice';
+    card.dataset.correct = choice.correct ? '1' : '0';
+    card.innerHTML = `<span>${choice.text}</span><span class="mc-mark"></span>`;
+    card.onclick = () => selectChoice(card, choice, q);
+    list.appendChild(card);
+  });
+}
+
+function selectChoice(cardEl, choice, q){
+  if(answered) return;
+  answered = true;
+
+  // Lock all cards
+  document.querySelectorAll('.mc-choice').forEach(c => c.classList.add('locked'));
+
+  const fb = document.getElementById('q-feedback');
+  const ctxEl = document.getElementById('q-ctx');
+
+  if(choice.correct){
+    score++;
+    cardEl.classList.add('correct-pick');
+    cardEl.querySelector('.mc-mark').textContent = '✓';
+    fb.textContent = '✦ Correct!';
+    fb.className = 'q-feedback ok';
+    if(choice.ctx){
+      ctxEl.textContent = choice.ctx;
+      ctxEl.classList.add('show');
+    }
+    document.getElementById('score-num').textContent = score;
+  } else {
+    wrongAttempts++;
+    cardEl.classList.add('wrong-pick');
+    cardEl.querySelector('.mc-mark').textContent = '✗';
+    fb.textContent = '✗ Not quite — see the answer below.';
+    fb.className = 'q-feedback no';
+    // Reveal the correct choice + dim others
+    document.querySelectorAll('.mc-choice').forEach(c => {
+      if(c === cardEl) return;
+      if(c.dataset.correct === '1'){
+        c.classList.add('reveal-correct');
+        c.querySelector('.mc-mark').textContent = '✓';
+        const correctChoice = q.choices.find(ch => ch.correct);
+        if(correctChoice && correctChoice.ctx){
+          ctxEl.textContent = correctChoice.ctx;
+          ctxEl.classList.add('show');
+        }
+      } else {
+        c.classList.add('dim');
+      }
+    });
+  }
+
+  // Auto-advance
+  setTimeout(() => {
+    currentQuestionIdx++;
+    if(currentQuestionIdx >= QUESTIONS_PER_ROUND){
+      onRoundComplete();
+    } else {
+      renderQuestion();
+    }
+  }, choice.correct ? 1700 : 2400);
+}
+
+function onRoundComplete(){
+  if(currentRound >= TOTAL_ROUNDS){
+    endGame();
+    return;
+  }
+  // Show between-round banner
+  const meta = ROUND_META[currentRound];
+  const nextMeta = ROUND_META[currentRound + 1];
+  document.getElementById('rc-glyph').textContent = meta.glyph;
+  document.getElementById('rc-banner').textContent = `Round ${currentRound} of ${TOTAL_ROUNDS} Complete`;
+  document.getElementById('rc-title').textContent = 'Take a breath.';
+  document.getElementById('rc-stats').textContent = `${score} / ${currentRound * QUESTIONS_PER_ROUND} correct so far`;
+  document.getElementById('rc-msg').textContent = meta.msg;
+  document.getElementById('rc-next-btn').textContent = `Begin Round ${currentRound + 1}: ${nextMeta.theme} ›`;
+  showScreen('screen-round-complete');
+}
+
+function nextRound(){
+  currentRound++;
+  roundQuestions = sessionQuestions[currentRound];
+  renderRound();
+  showScreen('screen-game');
+}
+
+async function endGame(){
+  showScreen('screen-end');
+  const pct = Math.round((score / TOTAL_QUESTIONS) * 100);
+  document.getElementById('result-pct').textContent = pct + '%';
+
+  // Win condition per dispatch: score >= 24 AND wrongAttempts <= 6
+  const won = score >= 24 && wrongAttempts <= 6;
+
+  let title = '', msg = '';
+  if(score === TOTAL_QUESTIONS){
+    title = 'Master Pilgrim!';
+    msg = `${score}/${TOTAL_QUESTIONS} — you know the full road, from Pentecost to today.`;
+  } else if(score >= 27){
+    title = 'A True Historian!';
+    msg = `${score}/${TOTAL_QUESTIONS} — outstanding. The whole story of the Church is alive in your mind.`;
+  } else if(won){
+    title = 'Wise Traveler!';
+    msg = `${score}/${TOTAL_QUESTIONS} — you have walked the long road of the Church.`;
+  } else if(score >= 18){
+    title = 'Steady Steps';
+    msg = `${score}/${TOTAL_QUESTIONS} — your map of the Church is taking shape. Keep walking!`;
+  } else if(score >= 12){
+    title = 'Beginning Pilgrim';
+    msg = `${score}/${TOTAL_QUESTIONS} — keep walking; there is much more to see.`;
+  } else {
+    title = 'Welcome, Traveler';
+    msg = 'The road is long, and we walk it together. Open the lessons and the saints will become familiar friends.';
+  }
+
+  document.getElementById('result-title').textContent = title;
+  document.getElementById('result-msg').textContent = msg;
+
+  // Award coins via canonical GameUtils helper — handles weekly cap, daily throttle
+  const result = await GameUtils.awardCoins(GAME_ID, won, 'Church History');
+  const coinAwardEl = document.getElementById('coin-award');
+
+  // Four-state result handling per Repair Q + canonical pattern
+  if(result.alreadyPlayed){
+    coinAwardEl.textContent = 'Already played today — come back tomorrow!';
+  } else if(result.weeklyCapReached && result.awarded === 0){
+    coinAwardEl.textContent = "This week's game-coin pool is full — come back Monday!";
+  } else if(result.awarded > 0 && result.weeklyCapReached){
+    coinAwardEl.textContent = `+${result.awarded} coins earned!${won?' (Win bonus!)':''} (final pool coins this week)`;
+    GameUtils.coinRain('coin-rain', result.awarded);
+  } else if(result.awarded > 0){
+    coinAwardEl.textContent = `+${result.awarded} coins earned!${won?' (Win bonus!)':''}`;
+    GameUtils.coinRain('coin-rain', result.awarded);
+  }
+}
+
+// ── Init ───────────────────────────────────────────────────────────
+(async () => {
+  const prof = await GameUtils.init();
+  if(!prof) return;
+  GameUtils.showCoinReminder(GAME_ID, 'coin-reminder');
+})();
+</script>
+</body>
+</html>

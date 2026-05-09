@@ -129,6 +129,23 @@ body::before{
 }
 .back-btn:hover{color:var(--gold-light);}
 .back-spacer{min-width:60px;flex-shrink:0;}
+/* Persistent close/home button — top-right of every view (Repair L).
+   Always visible; on tap returns to home.html. Sized as a comfortable
+   tap target (44px) and color-matched to .back-btn for visual symmetry. */
+.close-btn{
+  background:none;border:none;cursor:pointer;
+  color:rgba(240,201,110,0.7);
+  font-size:1.5rem;line-height:1;
+  font-family:'Cinzel',serif;
+  padding:0.35rem 0.6rem;
+  text-decoration:none;letter-spacing:0;
+  min-width:60px;text-align:right;flex-shrink:0;
+  display:inline-flex;align-items:center;justify-content:flex-end;
+  min-height:44px;
+  transition:color 0.18s,transform 0.18s;
+}
+.close-btn:hover{color:var(--gold-light);}
+.close-btn:active{transform:scale(0.94);}
 .app-divider{
   color:rgba(240,201,110,0.65);letter-spacing:0.6rem;
   font-size:0.65rem;margin-top:0.3rem;
@@ -329,6 +346,18 @@ body::before{
   transition:all 0.18s;
 }
 .tools-btn:hover{background:rgba(201,146,42,0.1);color:var(--gold-light);}
+
+/* In the reading-header, the close button sits next to the tools button.
+   Use a compact 44x44 square shape that mirrors .tools-btn. */
+.reading-header .close-btn{
+  border:1px solid rgba(201,146,42,0.25);
+  border-radius:8px;
+  width:44px;height:44px;min-width:44px;
+  padding:0;
+  font-size:1.4rem;
+  text-align:center;justify-content:center;
+}
+.reading-header .close-btn:hover{background:rgba(201,146,42,0.1);}
 
 /* Optional Expedition banner (when source=expedition) */
 .expedition-banner{
@@ -898,9 +927,15 @@ body::before{
 #backToTop.visible{opacity:1;pointer-events:all;}
 #backToTop:hover{transform:translateY(-3px);background:rgba(201,146,42,0.2);}
 
-/* Fade-up animation for content blocks */
-.fade-up{opacity:0;transform:translateY(10px);animation:fadeUp 0.42s ease forwards;}
-@keyframes fadeUp{to{opacity:1;transform:translateY(0);}}
+/* Fade-up animation for content blocks
+   FIX (Repair L): default state is opacity:1 / no transform — so if the
+   animation never runs (or fails to replay on view re-show in iOS Safari),
+   content stays VISIBLE rather than stuck at opacity:0. The keyframes hold
+   the from-state via `from`, and we use no fill-mode so the element returns
+   to its NORMAL state (visible) after animation. setView() also force-restarts
+   these animations on view change for the entrance polish. */
+.fade-up{animation:fadeUp 0.42s ease;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px);} to{opacity:1;transform:translateY(0);}}
 .fade-up:nth-child(1){animation-delay:0.04s;}
 .fade-up:nth-child(2){animation-delay:0.10s;}
 .fade-up:nth-child(3){animation-delay:0.16s;}
@@ -1161,7 +1196,7 @@ button.reading-ref:focus-visible::after{
         <div class="app-header-row">
           <a class="back-btn" href="home.html">‹ Home</a>
           <div class="app-name">Holy Scriptures</div>
-          <div class="back-spacer"></div>
+          <a class="close-btn" href="home.html" aria-label="Close and return home" title="Return home">×</a>
         </div>
         <div class="app-divider liturgical-glyph">✦ ☩&#xFE0E; ✦</div>
       </header>
@@ -1206,7 +1241,7 @@ button.reading-ref:focus-visible::after{
         <div class="app-header-row">
           <a class="back-btn" href="#" onclick="goToBooks(event);return false;">‹ Books</a>
           <div class="app-name" id="chaptersBookName">Book</div>
-          <div class="back-spacer"></div>
+          <a class="close-btn" href="home.html" aria-label="Close and return home" title="Return home">×</a>
         </div>
         <div class="app-divider liturgical-glyph">✦ ☩&#xFE0E; ✦</div>
       </header>
@@ -1234,6 +1269,7 @@ button.reading-ref:focus-visible::after{
                   aria-label="Switch to a different book or passage">Holy Scriptures</button>
         </div>
         <button class="tools-btn" id="toolsBtn" onclick="openToolsMenu()" aria-label="Reading tools">⋯</button>
+        <a class="close-btn" href="home.html" aria-label="Close and return home" title="Return home">×</a>
       </header>
 
       <!-- Persistent jump-search — Nolan can navigate to a new passage at any time -->
@@ -1519,6 +1555,23 @@ function setView(v){
     el.classList.toggle('active', el.dataset.view === v);
   });
   currentView = v;
+
+  // BELT-AND-SUSPENDERS (Repair L): force-restart .fade-up animations on the
+  // now-active view. iOS Safari is known to leave CSS animations stuck when a
+  // parent toggles display:none → display:block, which previously blanked the
+  // chapters and books views on back-navigation. The CSS rule was already made
+  // safe (default opacity:1, animate from 0→1 with no fill-mode), but this also
+  // restores the entrance animation on every view show.
+  const active = document.querySelector('.view.active');
+  if (active) {
+    active.querySelectorAll('.fade-up').forEach(el => {
+      el.style.animation = 'none';
+      // Force a reflow so the browser registers the animation reset
+      void el.offsetWidth;
+      el.style.animation = '';
+    });
+  }
+
   // Scroll to top on view change for predictable position
   window.scrollTo({top:0,behavior:'instant'});
 }

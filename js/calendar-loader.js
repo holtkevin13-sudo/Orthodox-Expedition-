@@ -6,7 +6,7 @@
  *
  * Public API:
  *   await CalendarLoader.load(sb, dateString) → { row, error }
- *   CalendarLoader.todayKey() → 'YYYY-MM-DD' for the local wall-clock day
+ *   CalendarLoader.todayKey() → 'YYYY-MM-DD' for the day in America/New_York
  *
  * No DOM. No render logic. Just data access.
  */
@@ -20,11 +20,17 @@ const CalendarLoader = (() => {
   const cache = new Map();
 
   // ── DATE HELPER ─────────────────────────────────────────────────
-  // Returns 'YYYY-MM-DD' for the local wall-clock day. Important —
-  // calendar rows are anchored to local dates, not UTC.
+  // Returns 'YYYY-MM-DD' for the explorer's wall-clock day in
+  // America/New_York timezone — matches games/game-utils.js todayKey()
+  // (Chat Q convention). Defensive against iPad timezone drift; calendar
+  // rows are anchored to ET dates so this prevents off-by-one when the
+  // device locale isn't ET.
   function todayKey() {
-    const t = new Date();
-    return `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`;
+    const fmt = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'America/New_York',
+      year: 'numeric', month: '2-digit', day: '2-digit'
+    });
+    return fmt.format(new Date()); // 'YYYY-MM-DD'
   }
 
   // ── MAIN LOADER ─────────────────────────────────────────────────
@@ -42,7 +48,7 @@ const CalendarLoader = (() => {
     try {
       const { data, error } = await sb
         .from('liturgical_calendar')
-        .select('calendar_date, liturgical_season, feast_name, feast_rank, fast_status, sunday_name, saint_commemorations, notes')
+        .select('calendar_date, liturgical_season, feast_name, feast_rank, fast_status, sunday_name, saint_commemorations, notes, daily_readings')
         .eq('calendar_date', dateString)
         .maybeSingle();
 

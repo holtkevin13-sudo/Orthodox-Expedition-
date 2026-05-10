@@ -1012,7 +1012,7 @@ async function endGame(){
   if(result.alreadyPlayed){
     coinAwardEl.textContent = 'Already played today — come back tomorrow!';
   } else if(result.weeklyCapReached && result.awarded === 0){
-    coinAwardEl.textContent = "This week's game-coin pool is full — come back Monday!";
+    coinAwardEl.textContent = "This week's game-coin pool is full — come back Sunday!";
   } else if(result.awarded > 0 && result.weeklyCapReached){
     coinAwardEl.textContent = `+${result.awarded} coins earned!${won?' (Win bonus!)':''} (final pool coins this week)`;
     GameUtils.coinRain('coin-rain', result.awarded);

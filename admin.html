@@ -11,6 +11,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="email-utils.js"></script>
+<script src="js/week-utils.js"></script>
+<script src="js/pilgrimages.js"></script>
 <style>
 :root{
   --gold:#c9922a;--gold-light:#f0c96e;--gold-bright:#ffd700;
@@ -854,6 +856,15 @@ th{font-size:0.78rem !important;letter-spacing:0.06em !important;font-weight:600
       <p style="font-family:'Crimson Text',serif;font-size:0.92rem;color:rgba(244,232,193,0.65);font-style:italic;margin-top:0.6rem;line-height:1.5;">Run Saints Index after adding new icons to the Companion repo.</p>
     </div>
 
+    <!-- Pilgrimages (Dispatch 2 / Surface C) -->
+    <div class="section">
+      <div class="section-title">Pilgrimages</div>
+      <p style="font-family:'Crimson Text',serif;font-size:0.95rem;color:rgba(244,232,193,0.7);font-style:italic;margin-bottom:0.95rem;line-height:1.5;">Set the start and end dates for each pilgrimage. While Nolan is inside a pilgrimage window, his streak is preserved — missed days don't count against him, and the home page shows a quiet banner.</p>
+      <div id="pilgrimages-list">
+        <div class="empty" style="font-family:'Crimson Text',serif;font-size:0.92rem;color:rgba(244,232,193,0.5);font-style:italic;">Loading…</div>
+      </div>
+    </div>
+
     <!-- Explorer Stats -->
     <div class="section">
       <div class="section-title">Explorer Status</div>
@@ -1293,8 +1304,88 @@ async function loadAll(){
   explorerProfile = explorerRes.data || null;
   await loadPending();
   await loadActivityLog();
+  await loadPilgrimagesAdmin();
   renderDashboard();
   populateTopicSelect();
+}
+
+// ── PILGRIMAGES (Dispatch 2 / Surface C) ──────────────────────
+async function loadPilgrimagesAdmin(){
+  const list = document.getElementById('pilgrimages-list');
+  if(!list) return;
+  try {
+    const { data, error } = await sb.from('pilgrimages')
+      .select('id, program_year, name, location, target_window, status, start_date, end_date')
+      .order('program_year', { ascending: true });
+    if(error) throw error;
+    const rows = data || [];
+    if(!rows.length){
+      list.innerHTML = '<div class="empty" style="font-family:\'Crimson Text\',serif;font-size:0.92rem;color:rgba(244,232,193,0.5);font-style:italic;">No pilgrimages.</div>';
+      return;
+    }
+    const fmt = (s) => s || '';
+    list.innerHTML = rows.map(r => `
+      <div class="card" data-pilgrimage-id="${r.id}" style="margin-bottom:0.65rem;">
+        <div style="font-family:'Cinzel',serif;font-size:0.78rem;letter-spacing:0.12em;color:rgba(240,201,110,0.95);text-transform:uppercase;margin-bottom:0.25rem;">Year ${r.program_year} · ${r.status === 'cancelled' ? 'Cancelled' : 'Scope locked'}</div>
+        <div style="font-family:'Crimson Text',serif;font-size:1rem;color:rgba(244,232,193,0.95);margin-bottom:0.25rem;">${r.name || ''}</div>
+        <div style="font-family:'Crimson Text',serif;font-size:0.85rem;color:rgba(244,232,193,0.65);font-style:italic;margin-bottom:0.65rem;line-height:1.45;">${r.location || ''}</div>
+        ${r.target_window ? `<div style="font-family:'Crimson Text',serif;font-size:0.82rem;color:rgba(240,201,110,0.7);margin-bottom:0.65rem;">Target: ${r.target_window}</div>` : ''}
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Start date</label>
+            <input type="date" class="form-input pg-start" value="${fmt(r.start_date)}">
+          </div>
+          <div class="form-group">
+            <label class="form-label">End date</label>
+            <input type="date" class="form-input pg-end" value="${fmt(r.end_date)}">
+          </div>
+        </div>
+        <div style="display:flex;gap:0.5rem;align-items:center;">
+          <button class="btn btn-gold" onclick="savePilgrimage('${r.id}', this)">Save dates</button>
+          <span class="pg-feedback" style="font-family:'Crimson Text',serif;font-size:0.82rem;font-style:italic;color:rgba(244,232,193,0.55);"></span>
+        </div>
+      </div>
+    `).join('');
+  } catch(e) {
+    console.warn('loadPilgrimagesAdmin failed:', e);
+    list.innerHTML = '<div class="empty" style="font-family:\'Crimson Text\',serif;font-size:0.92rem;color:rgba(220,38,38,0.7);font-style:italic;">Failed to load pilgrimages.</div>';
+  }
+}
+
+async function savePilgrimage(id, btn){
+  const card = btn.closest('[data-pilgrimage-id]');
+  if(!card) return;
+  const startEl = card.querySelector('.pg-start');
+  const endEl   = card.querySelector('.pg-end');
+  const fb      = card.querySelector('.pg-feedback');
+  const startVal = startEl.value || null;
+  const endVal   = endEl.value   || null;
+  // Light validation: if both set, end >= start
+  if(startVal && endVal && endVal < startVal){
+    if(fb){ fb.textContent = 'End date must be after start date.'; fb.style.color = 'rgba(220,38,38,0.85)'; }
+    toast('End date must be after start date.', true);
+    return;
+  }
+  if(fb){ fb.textContent = 'Saving…'; fb.style.color = 'rgba(244,232,193,0.55)'; }
+  btn.disabled = true;
+  try {
+    const { error } = await sb.from('pilgrimages')
+      .update({ start_date: startVal, end_date: endVal })
+      .eq('id', id);
+    if(error) throw error;
+    if(fb){ fb.textContent = 'Saved ✓'; fb.style.color = 'rgba(134,239,172,0.85)'; }
+    toast('Pilgrimage dates saved.');
+    // Clear the Pilgrimages module cache so next page load re-reads.
+    if(window.Pilgrimages && typeof window.Pilgrimages.clearCache === 'function'){
+      window.Pilgrimages.clearCache();
+    }
+  } catch(e){
+    console.error('savePilgrimage failed:', e);
+    if(fb){ fb.textContent = 'Save failed.'; fb.style.color = 'rgba(220,38,38,0.85)'; }
+    toast('Save failed: ' + (e.message || 'unknown error'), true);
+  } finally {
+    btn.disabled = false;
+  }
 }
 
 // ── PENDING APPROVALS ─────────────────────────────────────────

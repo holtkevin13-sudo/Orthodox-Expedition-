@@ -444,7 +444,7 @@ async function endGame(){
   } else if(result.weeklyCapReached && result.awarded===0){
     // Cap blocked the award entirely. Frame Monday as the refresh moment,
     // matching the parchment-toned tone GameUtils.showCoinReminder uses.
-    coinAward.textContent='This week\'s game-coin pool is full — come back Monday!';
+    coinAward.textContent='This week\'s game-coin pool is full — come back Sunday!';
   } else if(result.awarded>0){
     const partialNote=result.weeklyCapReached?' (final pool coins this week)':'';
     coinAward.textContent=`+${result.awarded} coins earned!${won?' (Win bonus!)':''}${partialNote}`;

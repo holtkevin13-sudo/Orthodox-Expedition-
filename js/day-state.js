@@ -122,21 +122,26 @@ const DayState = (() => {
   }
 
   // ── PROGRAM-WEEK INDEX ───────────────────────────────────────────
-  // 1-based index of the Monday-anchored week from the launch date.
+  // 1-based index of the Sunday-anchored week from the launch date.
+  // Launch is Mon May 18, 2026 — the launch week's Sunday is May 17.
+  // Both today and launch get keyed to their week's Sunday, then we
+  // count weeks. The semantic is unchanged from the prior Monday-
+  // anchored implementation (week 1 still spans launch's calendar
+  // week); only the anchor day moves.
 
   function programWeekIndex(today, spine) {
     const launch = fromDateString(spine.launch_date);
-    // Find Monday of launch week.
-    const launchMonday = new Date(launch);
-    while (launchMonday.getDay() !== 1) {
-      launchMonday.setDate(launchMonday.getDate() - 1);
+    // Find Sunday of launch week.
+    const launchSunday = new Date(launch);
+    while (launchSunday.getDay() !== 0) {
+      launchSunday.setDate(launchSunday.getDate() - 1);
     }
-    // Find Monday of this week.
-    const thisMonday = new Date(today);
-    while (thisMonday.getDay() !== 1) {
-      thisMonday.setDate(thisMonday.getDate() - 1);
+    // Find Sunday of this week.
+    const thisSunday = new Date(today);
+    while (thisSunday.getDay() !== 0) {
+      thisSunday.setDate(thisSunday.getDate() - 1);
     }
-    const ms = thisMonday - launchMonday;
+    const ms = thisSunday - launchSunday;
     if (ms < 0) return 0; // pre-launch
     const days = Math.round(ms / (1000 * 60 * 60 * 24));
     return Math.floor(days / 7) + 1;

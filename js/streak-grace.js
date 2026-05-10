@@ -1,7 +1,7 @@
 /* ─────────────────────────────────────────────────────────────────
    Orthodox Expedition — Repair B
    js/streak-grace.js — Once-per-week grace tokens for streaks
-   May 8, 2026
+   May 8, 2026 (Sunday-anchor migration: Dispatch 2, May 10, 2026)
 
    PURPOSE
    ADHD failure-mode prevention. Without grace, a single missed prayer
@@ -10,15 +10,15 @@
    absorbs ordinary human imperfection without making Nolan feel like
    he failed.
 
-   TWO INDEPENDENT POOLS, ONE TOKEN EACH PER CALENDAR WEEK (Mon-Sun):
+   TWO INDEPENDENT POOLS, ONE TOKEN EACH PER CALENDAR WEEK (Sun-Sat):
      1. Prayer streak — covered by `prayer_streak_weekly.grace_used`
      2. Weekly session ladder — covered by the `weekly_session_grace`
         table (1 row per explorer per week, lazily created)
 
    WEEK BOUNDARY
-   Local-time Monday at 00:00, matching prayer_streak_weekly's existing
+   Sunday at 00:00 ET (per WeekUtils), matching prayer_streak_weekly's
    `week_start_date` keying. Both grace pools clear automatically every
-   Monday because new-week rows default `grace_used=false` (or simply
+   Sunday because new-week rows default `grace_used=false` (or simply
    don't exist yet, which reads as "untouched").
 
    READ-TIME / WRITE-TIME SPLIT
@@ -34,8 +34,8 @@
    without grace.
 
    PURE FUNCTIONS (testable, framework-free):
-     ymd(d)                          — local YYYY-MM-DD
-     getCurrentMonday(d)             — Monday at-or-before d, midnight
+     ymd(d)                          — local YYYY-MM-DD (ET)
+     getCurrentWeekStart(d)          — Sunday at-or-before d (ET)
      classifyDay(dayStatus)          — 'both' | 'half' | 'none'
      computePrayerStreak(byDay, today, lookbackDays)
                                      — { streak, weeksWithGrace[] }
@@ -60,15 +60,34 @@
    session ladder because there is currently NO existing per-week
    session-rollup table to extend. Symmetric (explorer_id,
    week_start_date) keying and RLS posture across both surfaces.
+
+   DISPATCH 2 NOTE
+   This file remains live for progress.html's day-streak pip rendering.
+   The canonical prayer streak (consumed by week.html and home.html) is
+   now Prayers.getStreak() in js/prayers.js, computing weekly intact
+   streaks per the locked architecture. computePrayerStreak() below
+   continues serving progress.html with the older strict-both-with-grace
+   daily-streak semantic until a future dispatch unifies. See
+   REPAIR_DISPATCH2_COMPLETION_SUMMARY.md for the migration plan.
    ─────────────────────────────────────────────────────────────── */
 
 (function () {
   'use strict';
 
   // ── DATE HELPERS ─────────────────────────────────────────────────
+  // Centralized via window.WeekUtils (js/week-utils.js). Sunday-anchored,
+  // ET-aware. Test/Node fallback below uses the same WeekUtils module.
 
-  /** YYYY-MM-DD in LOCAL time. Matches prayer-rollup.js's ymd() exactly. */
+  const _WU = (typeof window !== 'undefined' && window.WeekUtils)
+    ? window.WeekUtils
+    : (typeof require !== 'undefined' ? (function () {
+        try { return require('./week-utils.js'); } catch (e) { return null; }
+      })() : null);
+
+  /** YYYY-MM-DD in the ET calendar. Delegates to WeekUtils when present;
+   *  falls back to a host-local format if not (legacy callsites). */
   function ymd(d) {
+    if (_WU) return _WU.ymd(d);
     const y = d.getFullYear();
     const m = String(d.getMonth() + 1).padStart(2, '0');
     const day = String(d.getDate()).padStart(2, '0');
@@ -76,16 +95,17 @@
   }
 
   /**
-   * Returns the Date of the Monday at-or-before `d`, normalized to
-   * local-midnight. Sunday treated as END of the week (Sun → previous
-   * Mon). Identical to prayer-rollup.js's getCurrentMonday().
+   * Returns the Date of the Sunday at-or-before `d` (in ET), anchored
+   * at UTC-noon of that ET calendar day. Delegates to WeekUtils.
    */
-  function getCurrentMonday(d) {
+  function getCurrentWeekStart(d) {
+    if (_WU) return _WU.getWeekStart(d);
+    // Fallback (extremely unlikely to fire — week-utils is always loaded
+    // before this in the script tag order). Kept defensive for tests.
     const out = new Date(d);
     out.setHours(0, 0, 0, 0);
-    const dow = out.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
-    const diff = (dow === 0) ? -6 : 1 - dow;
-    out.setDate(out.getDate() + diff);
+    const dow = out.getDay();
+    if (dow !== 0) out.setDate(out.getDate() - dow);
     return out;
   }
 
@@ -142,7 +162,7 @@
     for (let i = 0; i < lookbackDays; i++) {
       const dKey = ymd(cursor);
       const cls = classifyDay(byDay[dKey]);
-      const weekKey = ymd(getCurrentMonday(cursor));
+      const weekKey = ymd(getCurrentWeekStart(cursor));
 
       if (i === 0) {
         // TODAY: never break. Increment only if both done.
@@ -188,13 +208,13 @@
   /**
    * Evaluate the active session's M/W/F state for the current calendar
    * week. Pure function; takes a session_progress row plus today's
-   * date and the week's Monday.
+   * date and the week's Sunday.
    *
    * INPUT
    *   progressRow  — { day_1_completed_at, day_2_completed_at,
    *                    day_3_completed_at } | null
    *   today        — Date
-   *   weekStart    — Date (Monday of current calendar week)
+   *   weekStart    — Date (Sunday of current calendar week)
    *
    * OUTPUT
    *   { missedDaysSoFar:    int (0-3),
@@ -206,15 +226,19 @@
    * slot (Mon, Wed, or Fri of `weekStart`) is strictly before today,
    * AND the corresponding day_N_completed_at is null/missing.
    *
+   * SLOT OFFSETS (Sunday-anchor): Sun=0, Mon=1, Tue=2, Wed=3, Thu=4,
+   * Fri=5, Sat=6. So Mon=offset 1, Wed=offset 3, Fri=offset 5 from
+   * weekStart.
+   *
    * Today itself is never counted as a miss — Nolan can still complete
    * it. (e.g., it's Wednesday at 3pm and the handout isn't done yet —
    * not a miss until Thursday.)
    */
   function evaluateSessionWeek(progressRow, today, weekStart) {
     const SLOTS = [
-      { dayOffset: 0, field: 'day_1_completed_at' }, // Mon
-      { dayOffset: 2, field: 'day_2_completed_at' }, // Wed
-      { dayOffset: 4, field: 'day_3_completed_at' }, // Fri
+      { dayOffset: 1, field: 'day_1_completed_at' }, // Mon (Sun + 1)
+      { dayOffset: 3, field: 'day_2_completed_at' }, // Wed (Sun + 3)
+      { dayOffset: 5, field: 'day_3_completed_at' }, // Fri (Sun + 5)
     ];
 
     const todayMidnight = new Date(today);
@@ -384,7 +408,7 @@
   const StreakGrace = {
     // Pure helpers
     ymd:                  ymd,
-    getCurrentMonday:     getCurrentMonday,
+    getCurrentWeekStart:  getCurrentWeekStart,
     classifyDay:          classifyDay,
     computePrayerStreak:  computePrayerStreak,
     evaluateSessionWeek:  evaluateSessionWeek,

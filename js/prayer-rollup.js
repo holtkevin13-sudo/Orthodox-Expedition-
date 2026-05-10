@@ -1,7 +1,7 @@
 /* ─────────────────────────────────────────────────────────────────
    Orthodox Expedition — Prayer System Lane 3
    js/prayer-rollup.js — Sunday-night weekly rollup
-   May 8, 2026
+   May 8, 2026 (Sunday-anchor migration: Dispatch 2, May 10, 2026)
 
    PURPOSE
    The per-routine reward is 0 coins (Lane 2 zeroed daily prayer
@@ -10,9 +10,9 @@
    week awards 5 × morning_count + 5 × evening_count, capped at
    70 coins/week (5×7 + 5×7).
 
-   When Nolan opens the app on a new Monday-or-later, any
+   When Nolan opens the app on a new Sunday-or-later, any
    prayer_streak_weekly row whose week_start_date < this week's
-   Monday and whose settled_at IS NULL is settled in-place:
+   Sunday and whose settled_at IS NULL is settled in-place:
      - profiles.coins + lifetime_coins bumped by coins_awarded
      - row.settled_at + coins_awarded set
    Then a quiet parchment celebration appears on screen for the
@@ -27,35 +27,30 @@
    be tone-deaf per orchestrator guidance.
 
    Public API: window.PrayerRollup.run(supabaseClient, profileId).
-   Helpers: getCurrentMonday(date), ymd(date) — also useful for the
+   Helpers: getCurrentWeekStart(date), ymd(date) — also useful for the
    prayers.html state machine when it UPSERTs the current week's row.
+   Both helpers delegate to window.WeekUtils (Dispatch 2 centralization).
    ─────────────────────────────────────────────────────────────── */
 
 (function () {
   'use strict';
 
   // ── DATE HELPERS ─────────────────────────────────────────────────
+  // Delegates to window.WeekUtils (js/week-utils.js). Sunday-anchored,
+  // ET-aware. The thin wrappers below preserve the existing public
+  // API shape so callers continue to work.
 
   /**
-   * Returns the Date of the Monday at-or-before `d`, normalized to
-   * local-midnight. Sunday is treated as the END of the week (so
-   * Sun → previous Mon), matching the Mon-fresh / Sun-end model.
+   * Returns the Date of the Sunday at-or-before `d` (in ET),
+   * anchored at UTC-noon of that ET calendar day.
    */
-  function getCurrentMonday(d) {
-    const out = new Date(d);
-    out.setHours(0, 0, 0, 0);
-    const dow = out.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
-    const diff = (dow === 0) ? -6 : 1 - dow;
-    out.setDate(out.getDate() + diff);
-    return out;
+  function getCurrentWeekStart(d) {
+    return window.WeekUtils.getWeekStart(d || new Date());
   }
 
-  /** YYYY-MM-DD in local time (date-only ISO suffix-safe). */
+  /** YYYY-MM-DD in the ET calendar. */
   function ymd(d) {
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    return y + '-' + m + '-' + day;
+    return window.WeekUtils.ymd(d);
   }
 
   // ── RUN ──────────────────────────────────────────────────────────
@@ -70,7 +65,7 @@
     if (!sb || !profileId) return { ok: false, reason: 'not-initialized', settled: 0 };
 
     const today = new Date();
-    const currentMondayKey = ymd(getCurrentMonday(today));
+    const currentWeekStartKey = ymd(getCurrentWeekStart(today));
 
     // 1. Find unsettled past-week rows for this explorer.
     let rows;
@@ -80,7 +75,7 @@
         .select('*')
         .eq('explorer_id', profileId)
         .is('settled_at', null)
-        .lt('week_start_date', currentMondayKey)
+        .lt('week_start_date', currentWeekStartKey)
         .order('week_start_date', { ascending: true });
       if (res.error) throw res.error;
       rows = res.data || [];
@@ -349,7 +344,7 @@
   // ── PUBLIC API ───────────────────────────────────────────────────
   window.PrayerRollup = {
     run: run,
-    getCurrentMonday: getCurrentMonday,
+    getCurrentWeekStart: getCurrentWeekStart,
     ymd: ymd,
   };
 })();

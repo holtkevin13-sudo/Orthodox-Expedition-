@@ -12,12 +12,14 @@
 <link rel="stylesheet" href="css/viewport.css">
 <link rel="stylesheet" href="css/contrast.css">
 <link rel="stylesheet" href="css/nav-polish.css">
+<link rel="stylesheet" href="css/welcome-flow.css">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>The Orthodox Expedition</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/prayer-rollup.js"></script>
 <script src="js/daily-anchor-card.js"></script>
+<script src="js/welcome-flow.js"></script>
 <script>
 function showAdminBar(){
   const bar = document.getElementById('admin-bar');
@@ -1547,6 +1549,21 @@ function closeRankup(){
     if(window.PrayerRollup){
       window.PrayerRollup.run(sb, session.user.id).catch(err => {
         console.warn('Prayer rollup (home) failed:', err);
+      });
+    }
+    // Repair S v2 — Welcome flow. Fires once per account on/after May 18,
+    // 2026 (America/New_York). Pre-launch: silent no-op, no Supabase calls.
+    // State lives in profiles.onboarding_state.welcome_completed_at.
+    // Fire-and-forget; failures are non-fatal (the module logs its own
+    // console.warn). Placed AFTER showApp() so the today-card is already
+    // painted under the modal.
+    if(window.WelcomeFlow){
+      window.WelcomeFlow.maybeShowWelcome({
+        sb: sb,
+        profileId: session.user.id,
+        name: profile && profile.name
+      }).catch(err => {
+        console.warn('Welcome flow (home) failed:', err);
       });
     }
   } catch(e) {

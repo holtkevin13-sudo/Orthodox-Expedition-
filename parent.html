@@ -1131,15 +1131,16 @@ function twISODate(d){
   return `${y}-${m}-${dd}`;
 }
 
-function twGetCurrentMonday(){
-  // Local-time Monday-of-this-week. Mon-Sun semantics matches Lane 3 prayer streak boundary.
+function twGetCurrentWeekStart(){
+  // Sunday at-or-before today (ET when WeekUtils loaded; local fallback
+  // otherwise). Sun-Sat semantics matches Lane 3 prayer streak boundary
+  // post-Dispatch 2.
+  if (window.WeekUtils) return window.WeekUtils.getWeekStart(new Date());
   const today = new Date();
   today.setHours(0,0,0,0);
   const dow = today.getDay(); // 0=Sun..6=Sat
-  const offset = (dow === 0) ? -6 : (1 - dow);
-  const mon = new Date(today);
-  mon.setDate(mon.getDate() + offset);
-  return mon;
+  if (dow !== 0) today.setDate(today.getDate() - dow);
+  return today;
 }
 
 function twComputeWeek(){
@@ -1176,10 +1177,10 @@ async function loadThisWeek(){
     return;
   }
 
-  const monday = twGetCurrentMonday();
-  const sunday = new Date(monday); sunday.setDate(sunday.getDate() + 6);
-  const mondayISO = twISODate(monday);
-  const sundayISO = twISODate(sunday);
+  const weekStart = twGetCurrentWeekStart();
+  const weekEnd = new Date(weekStart); weekEnd.setDate(weekEnd.getDate() + 6);
+  const weekStartISO = twISODate(weekStart);
+  const weekEndISO = twISODate(weekEnd);
   const week = twComputeWeek();
 
   // Current Topic 00 session id; pre-launch shows 00.1; post-Topic-00 shows none
@@ -1232,24 +1233,24 @@ async function loadThisWeek(){
         .eq('explorer_id', selectedChild.id)
         .eq('prizes.is_active', true),
 
-      // 6. Liturgical calendar — current Mon-Sun window
+      // 6. Liturgical calendar — current Sun-Sat window
       sb.from('liturgical_calendar')
         .select('calendar_date,liturgical_season,feast_name,feast_rank,fast_status,sunday_name,saint_commemorations')
-        .gte('calendar_date', mondayISO)
-        .lte('calendar_date', sundayISO)
+        .gte('calendar_date', weekStartISO)
+        .lte('calendar_date', weekEndISO)
         .order('calendar_date'),
 
       // 7. Prayer streak this week (Lane 3)
       sb.from('prayer_streak_weekly')
         .select('morning_count,evening_count,settled_at')
         .eq('explorer_id', selectedChild.id)
-        .eq('week_start_date', mondayISO).maybeSingle(),
+        .eq('week_start_date', weekStartISO).maybeSingle(),
 
       // 8. Activity log this week (sum positive amounts → "+N coins this week")
       sb.from('activity_log')
         .select('amount')
         .eq('explorer_id', selectedChild.id)
-        .gte('created_at', monday.toISOString()),
+        .gte('created_at', weekStart.toISOString()),
 
       // 9. Ranks (for current rank + distance to next)
       sb.from('ranks')
@@ -1260,7 +1261,7 @@ async function loadThisWeek(){
     const results = await Promise.all(queries);
 
     twData = {
-      week, sessionId, monday, sunday, mondayISO, sundayISO,
+      week, sessionId, weekStart, weekEnd, weekStartISO, weekEndISO,
       session:        results[0]?.data || null,
       progress:       results[1]?.data || null,
       journals:       results[2]?.data || [],
@@ -1314,7 +1315,7 @@ function renderThisWeek(){
     ? 'The expedition begins Monday, May 18, 2026'
     : isPostTopic00
       ? 'Topic 00 complete'
-      : `Week ${d.week} of 15 · ${TW_MONTH_NAMES[d.monday.getMonth()]} ${d.monday.getDate()} → ${TW_MONTH_NAMES[d.sunday.getMonth()]} ${d.sunday.getDate()}`;
+      : `Week ${d.week} of 15 · ${TW_MONTH_NAMES[d.weekStart.getMonth()]} ${d.weekStart.getDate()} → ${TW_MONTH_NAMES[d.weekEnd.getMonth()]} ${d.weekEnd.getDate()}`;
 
   const banner = `
     <div class="tw-banner">
@@ -1515,7 +1516,7 @@ function renderThisWeek(){
 
   const litRowsHTML = [];
   for(let i=0; i<7; i++){
-    const dayDate = new Date(d.monday); dayDate.setDate(dayDate.getDate() + i);
+    const dayDate = new Date(d.weekStart); dayDate.setDate(dayDate.getDate() + i);
     const iso = twISODate(dayDate);
     const fmt = twFmtDayCell(dayDate);
     const row = litLookup[iso];

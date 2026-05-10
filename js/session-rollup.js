@@ -1,7 +1,7 @@
 /* ─────────────────────────────────────────────────────────────────
    Orthodox Expedition — Repair Chat G
-   js/session-rollup.js — Sunday-night weekly session-streak rollup
-   May 8, 2026
+   js/session-rollup.js — Sunday-evening weekly session-streak rollup
+   May 8, 2026 (Sunday-anchor migration: Dispatch 2, May 10, 2026)
 
    PURPOSE
    profiles.streak (the weekly session ladder counter) had no
@@ -12,7 +12,7 @@
    streak NUMBER never moved on its own when a week settled. This
    file fixes that.
 
-   When Nolan opens the app on a new Monday-or-later, every calendar
+   When Nolan opens the app on a new Sunday-or-later, every calendar
    week that closed since the last settle is processed in
    chronological order:
      - 0 missed M/W/F days  → week counted; streak += 1
@@ -25,6 +25,17 @@
    bump + activity_log insert pattern Lane 3 established. (No
    log_session_streak_coins trigger exists; client bumps coins
    directly per Operational Learning #4.)
+
+   PILGRIMAGE INTEGRATION (Dispatch 2, Surface C)
+   When Nolan is on pilgrimage during M, W, or F of a week, that
+   slot is excluded from the miss count entirely — neither counted
+   toward nor against the threshold. The threshold scales:
+     - 3 active session days → ≥2 misses breaks the week
+     - 2 active session days → ≥2 misses breaks the week (1 grace ok)
+     - 1 active session day  → 1 miss breaks the week (no grace
+                               available — too few slots to spend it)
+     - 0 active session days → settlement skipped; streak inherited
+   This preserves the streak across spiritual journeys.
 
    SCHEMA-TOUCHING SCOPE (Operational Learning #12 — explicit in/out)
      IN  : reads session_progress.day_{1,2,3}_completed_at;
@@ -46,15 +57,15 @@
    IDEMPOTENCY (Pattern A — single pointer on profiles)
    The settle scan advances `last_settled_week_start` after the walk
    completes. On NULL (never-settled), the first invocation
-   INITIALIZES the pointer to today's Monday and returns — no
-   retroactive settlement of pre-launch noise weeks. On any
+   INITIALIZES the pointer to today's week-start (Sunday) and returns
+   — no retroactive settlement of pre-launch noise weeks. On any
    subsequent call, weeks strictly between the pointer and the
-   current calendar Monday are settled in order; running twice on
-   the same Monday is a no-op (the pointer is already at
-   currentMonday).
+   current calendar week-start are settled in order; running twice on
+   the same Sunday is a no-op (the pointer is already at
+   currentWeekStart).
 
    RACE-SAFETY
-   Two tabs racing on the same Monday will both compute the same
+   Two tabs racing on the same Sunday will both compute the same
    final state from the same starting pointer; the last-writer-wins
    update lands the correct value. Ladder coin awards CAN double-fire
    under simultaneous tabs (activity_log is a record, not a guard) —
@@ -66,9 +77,9 @@
    rows exist; if rollup ran on past weeks before then, every week
    would settle as broken (3 misses) and reset streak to 0 (which
    is already 0). The NULL-pointer init avoids this entirely:
-   first invocation sets last_settled_week_start = currentMonday
+   first invocation sets last_settled_week_start = currentWeekStart
    and returns without touching streak. Going forward the rollup
-   walks one week at a time as Mondays pass.
+   walks one week at a time as Sundays pass.
 
    PUBLIC API
      window.SessionRollup.run(sb, profileId)
@@ -84,40 +95,25 @@
   'use strict';
 
   // ── DATE HELPERS ─────────────────────────────────────────────────
-  // Inlined for self-containment (matched character-for-character
-  // against prayer-rollup.js / streak-grace.js helpers); intentionally
-  // not require()'d so a load-order glitch on streak-grace.js doesn't
-  // break this file.
+  // Centralized via window.WeekUtils (js/week-utils.js). Sunday-anchored,
+  // ET-aware. Thin wrappers preserve the existing public API shape.
 
   /**
-   * Returns the Date of the Monday at-or-before `d`, normalized to
-   * local-midnight. Sunday is treated as the END of the week
-   * (Sun → previous Mon), matching the Mon-fresh / Sun-end model
-   * used everywhere else in the codebase.
+   * Returns the Date of the Sunday at-or-before `d` (in ET), anchored
+   * at UTC-noon of that ET calendar day.
    */
-  function getCurrentMonday(d) {
-    const out = new Date(d);
-    out.setHours(0, 0, 0, 0);
-    const dow = out.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
-    const diff = (dow === 0) ? -6 : 1 - dow;
-    out.setDate(out.getDate() + diff);
-    return out;
+  function getCurrentWeekStart(d) {
+    return window.WeekUtils.getWeekStart(d || new Date());
   }
 
-  /** YYYY-MM-DD in local time (date-only ISO suffix-safe). */
+  /** YYYY-MM-DD in the ET calendar. */
   function ymd(d) {
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    return y + '-' + m + '-' + day;
+    return window.WeekUtils.ymd(d);
   }
 
-  /** Add N days; returns a fresh Date at local-midnight. */
+  /** Add N days; returns a Date anchored UTC-noon of target ET day. */
   function addDays(d, n) {
-    const out = new Date(d);
-    out.setDate(out.getDate() + n);
-    out.setHours(0, 0, 0, 0);
-    return out;
+    return window.WeekUtils.addDays(d, n);
   }
 
   // ── LADDER THRESHOLDS — Lane 2 LOCKED. DO NOT change these.
@@ -164,6 +160,28 @@
     const weekEnd = addDays(weekStart, 7);
     const weekEndIso = weekEnd.toISOString();
 
+    // Dispatch 2: build the M/W/F calendar dates for this week and
+    // check pilgrimage active-on for each. Sunday-anchor offsets:
+    //   Mon = weekStart + 1, Wed = weekStart + 3, Fri = weekStart + 5.
+    const W = window.WeekUtils;
+    const monKey = W ? W.ymd(addDays(weekStart, 1)) : null;
+    const wedKey = W ? W.ymd(addDays(weekStart, 3)) : null;
+    const friKey = W ? W.ymd(addDays(weekStart, 5)) : null;
+    let mPilgrim = false, wPilgrim = false, fPilgrim = false;
+    if (window.Pilgrimages && monKey && wedKey && friKey) {
+      try {
+        const [mP, wP, fP] = await Promise.all([
+          window.Pilgrimages.isActiveOn(sb, monKey),
+          window.Pilgrimages.isActiveOn(sb, wedKey),
+          window.Pilgrimages.isActiveOn(sb, friKey),
+        ]);
+        mPilgrim = !!mP; wPilgrim = !!wP; fPilgrim = !!fP;
+      } catch (_e) {
+        // Best-effort: pilgrimage detection failure → fall back to
+        // standard threshold (no exclusions). Don't block settlement.
+      }
+    }
+
     let rows;
     try {
       const res = await sb
@@ -192,11 +210,22 @@
       if (d2 && d2 >= weekStart && d2 < weekEnd) wFilled = true;
       if (d3 && d3 >= weekStart && d3 < weekEnd) fFilled = true;
     }
+    // Pilgrimage exclusion: a pilgrim slot is neither counted toward
+    // nor against the threshold. activeSlots = total - pilgrimage slots.
+    const pilgrimSlots = (mPilgrim ? 1 : 0) + (wPilgrim ? 1 : 0) + (fPilgrim ? 1 : 0);
+    const activeSlots = 3 - pilgrimSlots;
+    // missed = active slots not filled (a pilgrim slot is never "missed")
+    let missed = 0;
+    if (!mPilgrim && !mFilled) missed++;
+    if (!wPilgrim && !wFilled) missed++;
+    if (!fPilgrim && !fFilled) missed++;
     const filled = (mFilled ? 1 : 0) + (wFilled ? 1 : 0) + (fFilled ? 1 : 0);
     return {
       mFilled: mFilled, wFilled: wFilled, fFilled: fFilled,
+      mPilgrim: mPilgrim, wPilgrim: wPilgrim, fPilgrim: fPilgrim,
+      activeSlots: activeSlots,
       filled: filled,
-      missed: 3 - filled,
+      missed: missed,
     };
   }
 
@@ -293,8 +322,8 @@
     }
 
     const today = new Date();
-    const currentMonday = getCurrentMonday(today);
-    const currentMondayKey = ymd(currentMonday);
+    const currentWeekStart = getCurrentWeekStart(today);
+    const currentWeekStartKey = ymd(currentWeekStart);
 
     // 1. Read current state.
     let profile;
@@ -323,13 +352,13 @@
     }
 
     // 2. NULL pointer = first-ever invocation. Initialize to current
-    //    Monday so pre-launch noise weeks aren't retroactively
+    //    week-start so pre-launch noise weeks aren't retroactively
     //    settled. No streak change.
     if (!profile.last_settled_week_start) {
       try {
         const init = await sb
           .from('profiles')
-          .update({ last_settled_week_start: currentMondayKey })
+          .update({ last_settled_week_start: currentWeekStartKey })
           .eq('id', profileId);
         if (init.error) throw init.error;
       } catch (e) {
@@ -339,16 +368,16 @@
       return { ok: true, reason: 'initialized', settled: 0, transitions: [], ladderHits: [] };
     }
 
-    // 3. Pointer at-or-after currentMonday → no past weeks to settle.
-    //    Same-day re-entry, second tab, or fresh-on-Monday-after-init.
+    // 3. Pointer at-or-after currentWeekStart → no past weeks to settle.
+    //    Same-day re-entry, second tab, or fresh-on-Sunday-after-init.
     const lastSettled = new Date(profile.last_settled_week_start + 'T00:00:00');
-    if (lastSettled >= currentMonday) {
+    if (lastSettled >= currentWeekStart) {
       return { ok: true, reason: 'already-current', settled: 0, transitions: [], ladderHits: [] };
     }
 
-    // 4. Walk weeks chronologically from the first unsettled Monday up
-    //    to (but not including) currentMonday. Each iteration settles
-    //    exactly one Monday-keyed calendar week.
+    // 4. Walk weeks chronologically from the first unsettled week-start
+    //    up to (but not including) currentWeekStart. Each iteration
+    //    settles exactly one Sunday-keyed calendar week.
     let cursor = addDays(lastSettled, 7);
     let runningStreak = profile.streak || 0;
     const transitions = [];
@@ -357,7 +386,7 @@
     // Safety cap. ~60 weeks > 1 year — protects against pathological
     // dormancy (or a wonky pointer value) creating a runaway loop.
     let safety = 0;
-    while (cursor < currentMonday && safety < 60) {
+    while (cursor < currentWeekStart && safety < 60) {
       safety++;
       const weekStartKey = ymd(cursor);
       let evaluation;
@@ -373,7 +402,25 @@
 
       const before = runningStreak;
       let kind;
-      if (evaluation.missed >= 2) {
+      // Pilgrimage-aware threshold:
+      //   activeSlots = 3 - pilgrim slots
+      //   activeSlots == 0 → all 3 M/W/F days inside pilgrimage; preserve
+      //                      streak (no change). kind = 'pilgrimage_preserved'
+      //   activeSlots == 1 → 1 miss breaks (no grace — too few slots)
+      //   activeSlots >= 2 → standard: 0 misses clean, 1 miss grace, 2+ broken
+      if (evaluation.activeSlots === 0) {
+        // Streak walks with the pilgrim. No change.
+        kind = 'pilgrimage_preserved';
+        // runningStreak unchanged
+      } else if (evaluation.activeSlots === 1) {
+        if (evaluation.missed === 0) {
+          runningStreak = before + 1;
+          kind = 'counted_clean';
+        } else {
+          runningStreak = 0;
+          kind = 'broken';
+        }
+      } else if (evaluation.missed >= 2) {
         runningStreak = 0;
         kind = 'broken';
       } else {
@@ -386,7 +433,9 @@
           // useful for parent.html historical views and admin audits).
           await persistSessionGraceFor(sb, profileId, weekStartKey);
         }
-        // Ladder hit on the new value?
+      }
+      // Ladder hit on the new value (only when streak actually advanced)
+      if (kind === 'counted_clean' || kind === 'counted_with_grace') {
         for (let li = 0; li < LADDER.length; li++) {
           if (LADDER[li].atStreak === runningStreak) {
             const result = await awardLadderBonus(sb, profileId, LADDER[li]);
@@ -405,6 +454,7 @@
       transitions.push({
         weekStart: weekStartKey,
         missed:    evaluation.missed,
+        activeSlots: evaluation.activeSlots,
         before:    before,
         after:     runningStreak,
         kind:      kind,
@@ -419,7 +469,7 @@
         .from('profiles')
         .update({
           streak: runningStreak,
-          last_settled_week_start: currentMondayKey,
+          last_settled_week_start: currentWeekStartKey,
         })
         .eq('id', profileId);
       if (wr.error) throw wr.error;
@@ -572,9 +622,9 @@
   // ── PUBLIC API ───────────────────────────────────────────────────
   if (typeof window !== 'undefined') {
     window.SessionRollup = {
-      run:              run,
-      getCurrentMonday: getCurrentMonday,
-      ymd:              ymd,
+      run:                 run,
+      getCurrentWeekStart: getCurrentWeekStart,
+      ymd:                 ymd,
     };
   }
 })();

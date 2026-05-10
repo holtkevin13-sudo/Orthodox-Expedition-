@@ -89,6 +89,76 @@ const CalendarCard = (() => {
     return saints.map(s => `<li>${esc(s)}</li>`).join('');
   }
 
+  // ── DAILY READINGS ──────────────────────────────────────────────
+  // Optional block: epistle / gospel / matins gospel references.
+  // Renders nothing if daily_readings is empty/null/missing — backward-
+  // compatible for dates outside the populated overlap window.
+  // Display-only this dispatch; tap-to-deep-link is Dispatch 3 territory.
+  function renderReadingsBlock(daily) {
+    if (!daily || typeof daily !== 'object') return '';
+    const ep = daily.epistle && daily.epistle.reference ? daily.epistle.reference : null;
+    const gp = daily.gospel && daily.gospel.reference ? daily.gospel.reference : null;
+    const mg = daily.matins_gospel && daily.matins_gospel.reference ? daily.matins_gospel.reference : null;
+    if (!ep && !gp && !mg) return '';
+
+    // One reading row: small Cinzel eyebrow label + Crimson Text reference.
+    function row(label, ref, dim) {
+      if (!ref) return '';
+      const opacity = dim ? 0.62 : 0.88;
+      return `
+        <div class="lc-reading" style="
+          display:flex;
+          justify-content:space-between;
+          align-items:baseline;
+          gap:0.75rem;
+          padding:0.35rem 0;
+        ">
+          <div class="lc-reading-label" style="
+            font-family:'Cinzel',serif;
+            font-size:0.62rem;
+            letter-spacing:0.18em;
+            color:rgba(201,146,42,0.6);
+            text-transform:uppercase;
+            font-weight:600;
+            white-space:nowrap;
+          ">${esc(label)}</div>
+          <div class="lc-reading-ref" style="
+            font-family:'Crimson Text',serif;
+            font-style:italic;
+            font-size:0.92rem;
+            color:rgba(244,232,193,${opacity});
+            text-align:right;
+            line-height:1.35;
+          ">${esc(ref)}</div>
+        </div>
+      `;
+    }
+
+    return `
+      <div class="lc-readings" style="
+        margin-bottom:0.75rem;
+        padding:0.6rem 1rem 0.5rem;
+        border:1px solid rgba(201,146,42,0.18);
+        border-radius:8px;
+        background:rgba(27,42,74,0.18);
+      ">
+        <div class="lc-readings-eyebrow" style="
+          font-family:'Cinzel',serif;
+          font-size:0.65rem;
+          letter-spacing:0.18em;
+          color:rgba(201,146,42,0.6);
+          text-transform:uppercase;
+          margin-bottom:0.3rem;
+          text-align:center;
+          font-weight:600;
+        ">Today's Readings</div>
+        ${row('Gospel', gp, false)}
+        ${row('Epistle', ep, false)}
+        ${row('Matins Gospel', mg, true)}
+      </div>
+    `;
+  }
+
   // ── MAIN RENDER ─────────────────────────────────────────────────
   function render(row) {
     if (!row) {
@@ -215,8 +285,13 @@ const CalendarCard = (() => {
       ">${esc(row.notes)}</div>
     ` : '';
 
+    // ── DAILY READINGS BLOCK ────────────────────────────────────
+    // Optional — renders empty string when row.daily_readings is
+    // missing or empty (out-of-overlap dates, pre-populate state).
+    const readingsBlock = renderReadingsBlock(row.daily_readings);
+
     // ── ASSEMBLE ────────────────────────────────────────────────
-    const allBlocks = `${feastBlock}${seasonBlock}${fastBlock}${saintsBlock}${notesBlock}`;
+    const allBlocks = `${feastBlock}${seasonBlock}${fastBlock}${saintsBlock}${readingsBlock}${notesBlock}`;
     if (!allBlocks.trim()) return '';
 
     return `
@@ -230,7 +305,7 @@ const CalendarCard = (() => {
   // ── PUBLIC API ──────────────────────────────────────────────────
   return {
     render,
-    _internals: { esc, fastLabel, feastTier, renderSaintsList },
+    _internals: { esc, fastLabel, feastTier, renderSaintsList, renderReadingsBlock },
   };
 })();
 

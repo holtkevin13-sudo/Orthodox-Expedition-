@@ -795,19 +795,19 @@ const state = {
 
   // 5. Load this week's streak counter row (or fall back to zeros)
   if(state.profileId){
-    const monday = window.PrayerRollup
-      ? window.PrayerRollup.getCurrentMonday(new Date())
-      : computeMonday(new Date());
-    const mondayKey = window.PrayerRollup
-      ? window.PrayerRollup.ymd(monday)
-      : ymdLocal(monday);
-    state.thisWeek.week_start_date = mondayKey;
+    const weekStart = window.PrayerRollup
+      ? window.PrayerRollup.getCurrentWeekStart(new Date())
+      : computeWeekStart(new Date());
+    const weekStartKey = window.PrayerRollup
+      ? window.PrayerRollup.ymd(weekStart)
+      : ymdLocal(weekStart);
+    state.thisWeek.week_start_date = weekStartKey;
     try{
       const { data, error } = await sb
         .from('prayer_streak_weekly')
         .select('*')
         .eq('explorer_id', state.profileId)
-        .eq('week_start_date', mondayKey)
+        .eq('week_start_date', weekStartKey)
         .maybeSingle();
       if(error) throw error;
       if(data){
@@ -1170,18 +1170,18 @@ async function recordRoutineCompletion(kind, missionKey){
   }
 
   // UPSERT this week's streak counter (+1 to morning_count or evening_count).
-  const monday = window.PrayerRollup
-    ? window.PrayerRollup.getCurrentMonday(new Date())
-    : computeMonday(new Date());
-  const mondayKey = window.PrayerRollup
-    ? window.PrayerRollup.ymd(monday)
-    : ymdLocal(monday);
+  const weekStart = window.PrayerRollup
+    ? window.PrayerRollup.getCurrentWeekStart(new Date())
+    : computeWeekStart(new Date());
+  const weekStartKey = window.PrayerRollup
+    ? window.PrayerRollup.ymd(weekStart)
+    : ymdLocal(weekStart);
 
   const existRes = await sb
     .from('prayer_streak_weekly')
     .select('*')
     .eq('explorer_id', state.profileId)
-    .eq('week_start_date', mondayKey)
+    .eq('week_start_date', weekStartKey)
     .maybeSingle();
   if(existRes.error){
     console.warn('Prayer: streak read failed:', existRes.error);
@@ -1207,7 +1207,7 @@ async function recordRoutineCompletion(kind, missionKey){
   } else {
     const insertRow = {
       explorer_id:     state.profileId,
-      week_start_date: mondayKey,
+      week_start_date: weekStartKey,
       morning_count:   kind === 'morning' ? 1 : 0,
       evening_count:   kind === 'evening' ? 1 : 0,
     };
@@ -1221,7 +1221,7 @@ async function recordRoutineCompletion(kind, missionKey){
         .from('prayer_streak_weekly')
         .select('*')
         .eq('explorer_id', state.profileId)
-        .eq('week_start_date', mondayKey)
+        .eq('week_start_date', weekStartKey)
         .maybeSingle();
       if(retry.data){
         const incField = (kind === 'morning') ? 'morning_count' : 'evening_count';
@@ -1533,16 +1533,19 @@ function escapeHtml(s){
     .replace(/'/g,'&#39;');
 }
 
-// Local-time fallbacks (kept identical to prayer-rollup.js for parity).
-function computeMonday(d){
+// Sunday-anchor week helpers (Dispatch 2). Fallback path mirrors
+// WeekUtils.getWeekStart / WeekUtils.ymd in case window.WeekUtils
+// hasn't loaded — ET-aware and stable across timezones.
+function computeWeekStart(d){
+  if (window.WeekUtils) return window.WeekUtils.getWeekStart(d);
   const out = new Date(d);
   out.setHours(0,0,0,0);
   const dow = out.getDay();
-  const diff = (dow === 0) ? -6 : 1 - dow;
-  out.setDate(out.getDate() + diff);
+  if (dow !== 0) out.setDate(out.getDate() - dow);
   return out;
 }
 function ymdLocal(d){
+  if (window.WeekUtils) return window.WeekUtils.ymd(d);
   return d.getFullYear() + '-' +
     String(d.getMonth()+1).padStart(2,'0') + '-' +
     String(d.getDate()).padStart(2,'0');

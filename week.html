@@ -5,6 +5,7 @@
 <link rel="stylesheet" href="css/viewport.css">
 <link rel="stylesheet" href="css/contrast.css">
 <link rel="stylesheet" href="css/nav-polish.css">
+<link rel="stylesheet" href="css/welcome-flow.css">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>This Week — The Orthodox Expedition</title>
 <link rel="manifest" href="manifest.json">
@@ -423,6 +424,7 @@ body::before{
 <script src="js/calendar-card.js"></script>
 <script src="js/name-day-banner.js"></script>
 <script src="js/topic-00-day.js"></script>
+<script src="js/welcome-flow.js"></script>
 <script>
 (async function main(){
   // ── LOAD THE PROGRAM SPINE ────────────────────────
@@ -786,6 +788,22 @@ body::before{
   // Runs after the page is rendered so the underlying content is already
   // painted under the overlay. No-ops pre-launch and after the flag is set.
   maybeMountLaunchCelebration();
+
+  // ── REPAIR S v2 — WEEKLY INTRO MODAL ───────────────
+  // Fires once per Topic-00 week (1–4) on/after May 18, 2026 (ET).
+  // Pre-launch: silent no-op, no Supabase calls. State lives in
+  // profiles.onboarding_state.week_intros_seen[N]. Layered on top of
+  // whichever render branch above just wrote to root. Fire-and-forget;
+  // the module logs its own console.warn on failure.
+  if (window.WelcomeFlow && profileId) {
+    window.WelcomeFlow.maybeShowWeekIntro({
+      sb: sb,
+      profileId: profileId
+      // weekNum omitted — module derives from today's date in ET.
+    }).catch(function (err) {
+      console.warn('Week intro flow failed:', err);
+    });
+  }
 
   // ── RENDER FUNCTIONS ──────────────────────────────
   function renderPreLaunch(s){

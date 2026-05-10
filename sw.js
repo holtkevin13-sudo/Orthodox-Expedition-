@@ -1,4 +1,44 @@
-// Orthodox Expedition — Service Worker v17
+// Orthodox Expedition — Service Worker v20
+// v20: Dispatch 2 — Sunday-anchor migration + prayer streak alignment
+//      + pilgrimage integration. Week boundaries flipped from
+//      Monday-anchored to Sunday-anchored across the codebase: new
+//      js/week-utils.js centralizes the helper (ET-aware, UTC-noon
+//      anchor pattern), and js/prayer-rollup.js, js/streak-grace.js,
+//      js/session-rollup.js, js/day-state.js, prayers.html, parent.html,
+//      progress.html, games/game-utils.js all delegate to it. Public
+//      API renames: PrayerRollup.getCurrentMonday → getCurrentWeekStart
+//      (similarly for SessionRollup and StreakGrace); GameUtils
+//      getCurrentMondayET → getCurrentWeekStartET. profiles.last_game_week_start
+//      retains its column name; semantics flip to Sunday-key.
+//      Surface B: Prayers.getStreak() rewritten per locked architecture
+//      (consecutive intact SETTLED weeks; 5/7 either-prayer threshold
+//      with 1 grace per week saving 4/7; pilgrimage days excluded from
+//      threshold; current in-progress week never counts and never
+//      breaks). renderPanel copy flips "X days" → "X weeks of faithful
+//      prayer". home.html's lockstep renderPrayerStreak copies delegate
+//      to Prayers.getStreak() (legacy daily-EITHER fallback retained).
+//      New helper Prayers.getFullCrownEligibility(weekStart) added but
+//      unwired (Dispatch 5 will consume it for Sunday Celebration).
+//      Surface C: pilgrimages table extended with start_date + end_date
+//      (date, nullable) via migration pilgrimage_window_columns_20260510.
+//      New js/pilgrimages.js provides isActiveOn / isActiveToday /
+//      getMostRecentEnded helpers with module-scope caching. Streak
+//      math integrates Pilgrimages.isActiveOn — pilgrimage M/W/F slots
+//      are excluded from threshold; activeSlots=0 preserves streak.
+//      admin.html gains a Pilgrimages section (date pickers per row,
+//      cache invalidation on save). home.html surfaces a quiet
+//      parchment banner when pilgrimage active today, and a one-time
+//      "Welcome home" banner the day after pilgrimage ends (localStorage
+//      flag oe_welcome_home_<id>). New static assets: js/week-utils.js,
+//      js/pilgrimages.js. STATIC_ASSETS unchanged for files that were
+//      already cached but updated in place; cache version bump triggers
+//      re-fetch.
+// v19: Repair Chat S — calendar-ribbon refactor + family-month-view bracket
+//      (Dispatch 1 surface — added liturgical_calendar.daily_readings jsonb
+//      column populated for May 8 — Aug 31 launch month; calendar-loader.js
+//      + calendar-card.js extended to surface readings).
+// v18: liturgical_calendar populate + name-day-banner.js + calendar-loader.js +
+//      calendar-card.js initial wiring.
 // v17: Repair Chat G — Streak auto-increment. profiles.streak now
 //      advances automatically when calendar weeks close (Mon→Mon
 //      transitions detected on next progress.html load). New file
@@ -105,7 +145,7 @@
 // v4: added week.html, prayers.html, day-state, pause-card, prayers, and config JSON
 // Version bump forces cache clear and fresh install
 
-const CACHE_NAME = 'orthodox-expedition-v19';
+const CACHE_NAME = 'orthodox-expedition-v20';
 const STATIC_ASSETS = [
   '/Orthodox-Expedition-/',
   '/Orthodox-Expedition-/index.html',
@@ -134,6 +174,8 @@ const STATIC_ASSETS = [
   '/Orthodox-Expedition-/css/contrast.css',
   '/Orthodox-Expedition-/css/nav-polish.css',
   '/Orthodox-Expedition-/css/welcome-flow.css',
+  '/Orthodox-Expedition-/js/week-utils.js',
+  '/Orthodox-Expedition-/js/pilgrimages.js',
   '/Orthodox-Expedition-/js/day-state.js',
   '/Orthodox-Expedition-/js/pause-card.js',
   '/Orthodox-Expedition-/js/prayers.js',

@@ -17,6 +17,9 @@
 <title>The Orthodox Expedition</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/week-utils.js"></script>
+<script src="js/pilgrimages.js"></script>
+<script src="js/prayers.js"></script>
 <script src="js/prayer-rollup.js"></script>
 <script src="js/daily-anchor-card.js"></script>
 <script src="js/welcome-flow.js"></script>
@@ -171,28 +174,28 @@ function renderTodayCard(mastery, completed, topics, allSessions, missions, miss
 }
 
 // ── PRAYER STREAK ─────────────────────────────────────────────
-function renderPrayerStreak(missions, missionComps){
-  const prayerMissions = missions.filter(m=>
-    m.type==='daily' && (m.name.toLowerCase().includes('prayer') || m.name.toLowerCase().includes('pray'))
-  );
-  if(!prayerMissions.length) return;
-
-  // Count consecutive days with morning or evening prayer completed
-  let streak = 0;
-  const now = new Date();
-  for(let i=0; i<30; i++){
-    const d = new Date(now);
-    d.setDate(d.getDate()-i);
-    const key = d.toISOString().slice(0,10);
-    const hasAny = prayerMissions.some(m=>
-      missionComps.some(c=>c.mission_id===m.id && c.day_key===key)
-    );
-    if(hasAny) streak++;
-    else if(i>0) break; // Break on first gap after today
-  }
-
+// Dispatch 2: delegates to Prayers.getStreak() (single source of truth)
+// when the Prayers module is loaded. Falls back to the legacy "EITHER
+// prayer, daily streak" inline computation otherwise. The DOM elements
+// #prayer-num / #prayer-dots don't currently exist on home.html — this
+// function is defensive wiring for when they are reintroduced.
+async function renderPrayerStreak(missions, missionComps){
   const numEl = document.getElementById('prayer-num');
   const dotsEl = document.getElementById('prayer-dots');
+  if(!numEl && !dotsEl) return; // no DOM target
+
+  let streak = 0;
+  if (window.Prayers && typeof window.Prayers.getStreak === 'function') {
+    try {
+      streak = await window.Prayers.getStreak();
+    } catch(e) {
+      console.warn('renderPrayerStreak: Prayers.getStreak failed; falling back', e);
+      streak = legacyDailyEitherStreak(missions, missionComps);
+    }
+  } else {
+    streak = legacyDailyEitherStreak(missions, missionComps);
+  }
+
   if(numEl) numEl.textContent = streak;
   if(dotsEl){
     dotsEl.innerHTML = '';
@@ -203,6 +206,28 @@ function renderPrayerStreak(missions, missionComps){
       dotsEl.appendChild(d);
     }
   }
+}
+
+// Legacy fallback — daily-EITHER streak. Kept for the hopefully-never
+// case where Prayers isn't loaded.
+function legacyDailyEitherStreak(missions, missionComps){
+  const prayerMissions = missions.filter(m=>
+    m.type==='daily' && (m.name.toLowerCase().includes('prayer') || m.name.toLowerCase().includes('pray'))
+  );
+  if(!prayerMissions.length) return 0;
+  let streak = 0;
+  const now = new Date();
+  for(let i=0; i<30; i++){
+    const d = new Date(now);
+    d.setDate(d.getDate()-i);
+    const key = d.toISOString().slice(0,10);
+    const hasAny = prayerMissions.some(m=>
+      missionComps.some(c=>c.mission_id===m.id && c.day_key===key)
+    );
+    if(hasAny) streak++;
+    else if(i>0) break;
+  }
+  return streak;
 }
 
 // ── DISMISS RANKUP ────────────────────────────────────────────
@@ -587,6 +612,30 @@ body::before{
 .admin-bar-label{font-family:'Cinzel',serif;font-size:0.62rem;letter-spacing:0.15em;color:rgba(240,201,110,0.85);text-transform:uppercase;}
 .admin-bar-btn{background:none;border:1px solid rgba(201,146,42,0.3);border-radius:6px;padding:0.25rem 0.75rem;font-family:'Cinzel',serif;font-size:0.6rem;color:rgba(240,201,110,0.85);cursor:pointer;min-height:32px;transition:all 0.2s;}
 .admin-bar.show ~ .page{padding-top:calc(2.5rem + 1.25rem);}
+
+/* ── PILGRIMAGE BANNER (Dispatch 2 / Surface C) ───────────────── */
+/* Quiet, reassuring. Not alarming. Parchment-tinted gold border.
+   Sits above today-card to be the first thing Nolan sees when he's
+   on pilgrimage — "your streak walks with you." */
+.hp-pilgrimage-banner{
+  display:flex;align-items:center;gap:0.875rem;
+  background:linear-gradient(135deg,rgba(244,232,193,0.10),rgba(232,213,160,0.06));
+  border:1.5px solid rgba(201,146,42,0.45);
+  border-radius:14px;padding:0.95rem 1.1rem;
+  margin-bottom:1rem;
+  box-shadow:0 4px 16px rgba(0,0,0,0.25),inset 0 1px 0 rgba(244,232,193,0.06);
+}
+.hp-pb-icon{font-size:1.65rem;flex-shrink:0;line-height:1;}
+.hp-pb-text{flex:1;min-width:0;}
+.hp-pb-title{
+  font-family:'Cinzel',serif;font-size:0.78rem;letter-spacing:0.14em;
+  color:rgba(240,201,110,0.95);text-transform:uppercase;
+  margin-bottom:0.3rem;
+}
+.hp-pb-detail{
+  font-family:'Crimson Text',serif;font-size:0.92rem;line-height:1.4;
+  color:rgba(244,232,193,0.85);font-style:italic;
+}
 
 /* ── TODAY CARD ──────────────────────────────────────────────── */
 /* B1.a — hero treatment: this card is the ONE clear next action above the fold.
@@ -1143,6 +1192,17 @@ body::before{
          frame flash. -->
     <div class="daily-anchor-card fade-up" id="daily-anchor-card" style="display:none;"></div>
 
+    <!-- PILGRIMAGE BANNER (Dispatch 2 / Surface C) — surfaced when
+         Pilgrimages.isActiveToday returns truthy. Quiet parchment palette,
+         not alarming, sits above the today-card so Nolan sees it first. -->
+    <div class="hp-pilgrimage-banner" id="hp-pilgrimage-banner" hidden>
+      <div class="hp-pb-icon" id="hp-pb-icon">🚶</div>
+      <div class="hp-pb-text">
+        <div class="hp-pb-title" id="hp-pb-title"></div>
+        <div class="hp-pb-detail" id="hp-pb-detail"></div>
+      </div>
+    </div>
+
     <!-- TODAY CARD — HERO (B1.a, ADHD-first: ONE clear next action;
          Repair N: now position 3 in the rank → liturgical → today → next-rank stack.
          The renderTodayCard() function (defined in two lockstep copies in the script
@@ -1359,9 +1419,14 @@ async function loadData(userId){
   renderAll(mastery, completed, topics);
   checkNotifications(mastery, completed);
   renderTodayCard(mastery, completed, topics, allSessions, missions, missionComps, today, progressRows);
+  // Initialize Prayers module (Surface B): canonical streak source.
+  if (window.Prayers && typeof window.Prayers.init === 'function') {
+    try { await window.Prayers.init(sb, profile.id); } catch(_e) { /* graceful */ }
+  }
   renderPrayerStreak(missions, missionComps);
   loadAnnouncement();
   loadDailyAnchorCard();
+  loadPilgrimageBanner();
 }
 
 // ── RENDER ────────────────────────────────────────────────────
@@ -1750,28 +1815,28 @@ function renderTodayCard(mastery, completed, topics, allSessions, missions, miss
 }
 
 // ── PRAYER STREAK ─────────────────────────────────────────────
-function renderPrayerStreak(missions, missionComps){
-  const prayerMissions = missions.filter(m=>
-    m.type==='daily' && (m.name.toLowerCase().includes('prayer') || m.name.toLowerCase().includes('pray'))
-  );
-  if(!prayerMissions.length) return;
-
-  // Count consecutive days with morning or evening prayer completed
-  let streak = 0;
-  const now = new Date();
-  for(let i=0; i<30; i++){
-    const d = new Date(now);
-    d.setDate(d.getDate()-i);
-    const key = d.toISOString().slice(0,10);
-    const hasAny = prayerMissions.some(m=>
-      missionComps.some(c=>c.mission_id===m.id && c.day_key===key)
-    );
-    if(hasAny) streak++;
-    else if(i>0) break; // Break on first gap after today
-  }
-
+// Dispatch 2: delegates to Prayers.getStreak() (single source of truth)
+// when the Prayers module is loaded. Falls back to the legacy "EITHER
+// prayer, daily streak" inline computation otherwise. The DOM elements
+// #prayer-num / #prayer-dots don't currently exist on home.html — this
+// function is defensive wiring for when they are reintroduced.
+async function renderPrayerStreak(missions, missionComps){
   const numEl = document.getElementById('prayer-num');
   const dotsEl = document.getElementById('prayer-dots');
+  if(!numEl && !dotsEl) return; // no DOM target
+
+  let streak = 0;
+  if (window.Prayers && typeof window.Prayers.getStreak === 'function') {
+    try {
+      streak = await window.Prayers.getStreak();
+    } catch(e) {
+      console.warn('renderPrayerStreak: Prayers.getStreak failed; falling back', e);
+      streak = legacyDailyEitherStreak(missions, missionComps);
+    }
+  } else {
+    streak = legacyDailyEitherStreak(missions, missionComps);
+  }
+
   if(numEl) numEl.textContent = streak;
   if(dotsEl){
     dotsEl.innerHTML = '';
@@ -1782,6 +1847,28 @@ function renderPrayerStreak(missions, missionComps){
       dotsEl.appendChild(d);
     }
   }
+}
+
+// Legacy fallback — daily-EITHER streak. Kept for the hopefully-never
+// case where Prayers isn't loaded.
+function legacyDailyEitherStreak(missions, missionComps){
+  const prayerMissions = missions.filter(m=>
+    m.type==='daily' && (m.name.toLowerCase().includes('prayer') || m.name.toLowerCase().includes('pray'))
+  );
+  if(!prayerMissions.length) return 0;
+  let streak = 0;
+  const now = new Date();
+  for(let i=0; i<30; i++){
+    const d = new Date(now);
+    d.setDate(d.getDate()-i);
+    const key = d.toISOString().slice(0,10);
+    const hasAny = prayerMissions.some(m=>
+      missionComps.some(c=>c.mission_id===m.id && c.day_key===key)
+    );
+    if(hasAny) streak++;
+    else if(i>0) break;
+  }
+  return streak;
 }
 
 // ── DISMISS RANKUP ────────────────────────────────────────────
@@ -1811,6 +1898,55 @@ function dismissAnnouncement(){
   const text = document.getElementById('announcement-text').textContent;
   localStorage.setItem('announcement-dismissed', text);
   document.getElementById('announcement-banner').classList.remove('show');
+}
+
+// ── PILGRIMAGE BANNER (Dispatch 2 / Surface C) ───────────────
+// On page load, if Pilgrimages.isActiveToday returns truthy: render
+// the banner with name + window + "your streak walks with you."
+// Otherwise: if a pilgrimage ended yesterday AND a per-pilgrimage
+// localStorage flag is unset, render the one-time "Welcome home"
+// variant and set the flag.
+async function loadPilgrimageBanner(){
+  try {
+    if (!window.Pilgrimages || !window.WeekUtils) return;
+    const banner   = document.getElementById('hp-pilgrimage-banner');
+    const iconEl   = document.getElementById('hp-pb-icon');
+    const titleEl  = document.getElementById('hp-pb-title');
+    const detailEl = document.getElementById('hp-pb-detail');
+    if (!banner || !titleEl || !detailEl) return;
+
+    // (1) Active pilgrimage today?
+    const active = await window.Pilgrimages.isActiveToday(sb);
+    if (active) {
+      iconEl.textContent = '🚶';
+      titleEl.textContent = 'On Pilgrimage — ' + (active.name || '');
+      const fmtRange = (s, e) => {
+        if (!s || !e) return '';
+        return s + ' to ' + e + '.';
+      };
+      detailEl.textContent = fmtRange(active.start_date, active.end_date) +
+        ' Your streak walks with you.';
+      banner.hidden = false;
+      return;
+    }
+
+    // (2) Welcome home? (one-time, day after end_date)
+    const ended = await window.Pilgrimages.getMostRecentEnded(sb);
+    if (ended && ended.id) {
+      const flagKey = 'oe_welcome_home_' + ended.id;
+      if (!localStorage.getItem(flagKey)) {
+        iconEl.textContent = '✦';
+        titleEl.textContent = 'Welcome Home';
+        detailEl.textContent = 'Welcome home, ' +
+          (profile && profile.name ? profile.name : 'pilgrim') +
+          '. Your streak walks with you.';
+        banner.hidden = false;
+        try { localStorage.setItem(flagKey, '1'); } catch(_e) { /* graceful */ }
+      }
+    }
+  } catch (e) {
+    console.warn('loadPilgrimageBanner failed (graceful):', e);
+  }
 }
 
 // ── DAILY ANCHOR CARD (Lane A) ────────────────────────────────

@@ -5,9 +5,10 @@
  *
  * ─── Repair Q (May 9, 2026 — Item 14) ────────────────────────────
  * Added a 150-coin/week aggregate cap on coins earned across all 8 coin-
- * awarding games, boundaried Monday–Sunday in America/New_York. The cap
- * layers ON TOP of the existing per-game daily throttle (max 30/game/day
- * via hasPlayedToday) — both checks fire on every play. Once reached,
+ * awarding games, boundaried Sunday–Saturday in America/New_York
+ * (Sunday-anchor migration: Dispatch 2, May 10, 2026). The cap layers
+ * ON TOP of the existing per-game daily throttle (max 30/game/day via
+ * hasPlayedToday) — both checks fire on every play. Once reached,
  * awardCoins returns { awarded: 0, weeklyCapReached: true } and no DB
  * write occurs.
  *
@@ -27,6 +28,14 @@
  * construction is untouched per the "do not modify the per-game daily
  * throttle" constraint. Residual ~4hr UTC slop in the daily throttle
  * window is acceptable — false-positive throttle, not false-negative.)
+ *
+ * Dispatch 2 note (May 10, 2026): the helper formerly named
+ * getCurrentMondayET is now getCurrentWeekStartET, returning the
+ * Sunday at-or-before today (ET). The profile column
+ * last_game_week_start retains its name for back-compat; semantics
+ * flip from Monday-key to Sunday-key. Pre-launch test data on this
+ * column is wiped at the May 17 pristine reset, so no mid-stream
+ * divergence ships to production.
  */
 
 const SUPABASE_URL = 'https://ksfnsryfmkafwirzgjoe.supabase.co';
@@ -81,19 +90,19 @@ const GameUtils = (() => {
     return fmt.format(new Date()); // "YYYY-MM-DD" in NY local time
   }
 
-  // ── CURRENT MONDAY (ET) ───────────────────────────────────────
-  // Repair Q: returns YYYY-MM-DD of the current ET-week's Monday. The
-  // weekday math runs on the ET calendar date (built from todayKey()),
-  // so it's stable regardless of the device's local timezone.
-  function getCurrentMondayET() {
+  // ── CURRENT WEEK-START (ET, Sunday) ───────────────────────────
+  // Dispatch 2: returns YYYY-MM-DD of the current ET-week's Sunday.
+  // The weekday math runs on the ET calendar date (built from
+  // todayKey()), so it's stable regardless of the device's local
+  // timezone.
+  function getCurrentWeekStartET() {
     const todayET = todayKey(); // "YYYY-MM-DD" in ET
     const [y, m, d] = todayET.split('-').map(Number);
     // Anchor as UTC-noon to neutralize any local-tz parsing interference;
     // we only care about the calendar weekday of the ET date.
     const date = new Date(Date.UTC(y, m - 1, d, 12, 0, 0));
     const dow = date.getUTCDay(); // 0=Sun, 1=Mon, ..., 6=Sat
-    const diff = (dow === 0) ? -6 : 1 - dow;
-    date.setUTCDate(date.getUTCDate() + diff);
+    if (dow !== 0) date.setUTCDate(date.getUTCDate() - dow);
     const yy = date.getUTCFullYear();
     const mm = String(date.getUTCMonth() + 1).padStart(2, '0');
     const dd = String(date.getUTCDate()).padStart(2, '0');
@@ -106,9 +115,9 @@ const GameUtils = (() => {
   // 0 if last_game_week_start is NULL or stale; profile's stored value
   // otherwise. Used by both awardCoins (write path) and the public
   // getRemainingWeeklyGameCoins helper (read path).
-  function effectiveWeeklyUsed(currentMondayKey) {
+  function effectiveWeeklyUsed(currentWeekStartKey) {
     if (!profile) return 0;
-    if (profile.last_game_week_start !== currentMondayKey) return 0;
+    if (profile.last_game_week_start !== currentWeekStartKey) return 0;
     return profile.weekly_game_coins_used || 0;
   }
 
@@ -131,7 +140,7 @@ const GameUtils = (() => {
   // happens inside awardCoins on the next play.
   function getRemainingWeeklyGameCoins() {
     if (!profile) return WEEKLY_GAME_COIN_CAP;
-    const used = effectiveWeeklyUsed(getCurrentMondayET());
+    const used = effectiveWeeklyUsed(getCurrentWeekStartET());
     const remaining = WEEKLY_GAME_COIN_CAP - used;
     return remaining < 0 ? 0 : remaining;
   }
@@ -153,9 +162,9 @@ const GameUtils = (() => {
     const alreadyPlayed = await hasPlayedToday(gameId);
     if (alreadyPlayed) return { awarded: 0, alreadyPlayed: true, won: !!won, weeklyCapReached: false };
 
-    // Repair Q: weekly cap rollover-aware check.
-    const currentMondayKey = getCurrentMondayET();
-    const usedThisWeek = effectiveWeeklyUsed(currentMondayKey);
+    // Repair Q: weekly cap rollover-aware check. (Dispatch 2: Sunday-anchored.)
+    const currentWeekStartKey = getCurrentWeekStartET();
+    const usedThisWeek = effectiveWeeklyUsed(currentWeekStartKey);
     const remaining = WEEKLY_GAME_COIN_CAP - usedThisWeek;
 
     // Cap-check branch: full block, no DB write.
@@ -201,14 +210,14 @@ const GameUtils = (() => {
 
     // Atomic-shape UPDATE: bumps coins/lifetime AND sets the weekly-cap
     // pointer columns in the same statement. last_game_week_start is set
-    // unconditionally to currentMondayKey so a stale prior-week pointer
+    // unconditionally to currentWeekStartKey so a stale prior-week pointer
     // is brought forward as part of the award write (the rollover).
     await Promise.all([
       sb.from('profiles').update({
         coins:                   newCoins,
         lifetime_coins:          newLifetime,
         weekly_game_coins_used:  newWeeklyUsed,
-        last_game_week_start:    currentMondayKey,
+        last_game_week_start:    currentWeekStartKey,
       }).eq('id', profile.id),
       sb.from('activity_log').insert(logEntries),
     ]);
@@ -216,7 +225,7 @@ const GameUtils = (() => {
     profile.coins                  = newCoins;
     profile.lifetime_coins         = newLifetime;
     profile.weekly_game_coins_used = newWeeklyUsed;
-    profile.last_game_week_start   = currentMondayKey;
+    profile.last_game_week_start   = currentWeekStartKey;
 
     return {
       awarded:          total,
@@ -264,7 +273,7 @@ const GameUtils = (() => {
   // showCoinReminder renders the pre-game status pill. Three states,
   // with cap-reached taking precedence over already-played-today (because
   // "come back tomorrow" is misleading when the user is capped — they
-  // need to wait until Monday for the pool to refresh).
+  // need to wait until Sunday for the pool to refresh).
   function showCoinReminder(gameId, containerId) {
     const el = document.getElementById(containerId);
     if (!el) return;
@@ -275,13 +284,13 @@ const GameUtils = (() => {
       if (capReached) {
         // Repair Q: gentle cap-reached state. Same parchment palette as
         // the already-played pill (muted gold + cream), never red, never
-        // punitive. Frames Monday as the refresh moment.
+        // punitive. Frames Sunday as the refresh moment.
         el.innerHTML = `
           <div style="display:flex;align-items:center;justify-content:center;gap:0.4rem;
           background:rgba(201,146,42,0.08);border:1px solid rgba(201,146,42,0.2);
           border-radius:8px;padding:0.4rem 0.75rem;
           font-family:'Cinzel',serif;font-size:0.62rem;color:rgba(201,146,42,0.5);">
-            ✦ This week's game-coin pool is full — come back Monday for a fresh pool!
+            ✦ This week's game-coin pool is full — come back Sunday for a fresh pool!
           </div>`;
       } else if (already) {
         el.innerHTML = `

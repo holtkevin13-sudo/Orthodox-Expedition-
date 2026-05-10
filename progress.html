@@ -447,21 +447,21 @@ async function loadData(userId){
   // ── Repair B — Grace evaluation + pip rendering ───────────────
   if (window.StreakGrace) {
     const today = new Date();
-    const currentMondayKey = window.StreakGrace.ymd(window.StreakGrace.getCurrentMonday(today));
+    const currentWeekStartKey = window.StreakGrace.ymd(window.StreakGrace.getCurrentWeekStart(today));
 
     // Prayer grace pip — render from a) DB-persisted flag OR b) this
     // walk's freshly-detected consumption. Persist write-back lazily.
     const prayerGraceUsedThisWalk =
-      (prayerResult && prayerResult.weeksWithGrace || []).indexOf(currentMondayKey) !== -1;
+      (prayerResult && prayerResult.weeksWithGrace || []).indexOf(currentWeekStartKey) !== -1;
     let prayerPipShouldShow = prayerGraceUsedThisWalk;
     try {
       // Read-then-write keeps the pip authoritative even if walk missed
       // it (e.g., a settled past week we don't re-walk).
-      const persistedFlag = await window.StreakGrace.readPrayerGraceFlag(sb, userId, currentMondayKey);
+      const persistedFlag = await window.StreakGrace.readPrayerGraceFlag(sb, userId, currentWeekStartKey);
       prayerPipShouldShow = prayerPipShouldShow || persistedFlag;
       if (prayerGraceUsedThisWalk && !persistedFlag) {
         // Best-effort write; don't block UI on it.
-        window.StreakGrace.persistPrayerGrace(sb, userId, currentMondayKey);
+        window.StreakGrace.persistPrayerGrace(sb, userId, currentWeekStartKey);
       }
     } catch(e) { /* graceful fallback — pip just won't show */ }
     const prayerPip = document.getElementById('prayer-grace-pip');
@@ -476,17 +476,17 @@ async function loadData(userId){
     let sessionPipShouldShow = false;
     if (currentSession) {
       const currentProgress = progressRows.find(p => p.session_id === currentSession.id) || null;
-      const weekStart = window.StreakGrace.getCurrentMonday(today);
+      const weekStart = window.StreakGrace.getCurrentWeekStart(today);
       const sessionEval = window.StreakGrace.evaluateSessionWeek(currentProgress, today, weekStart);
       sessionPipShouldShow = sessionEval.graceShouldBeUsed;
       if (sessionPipShouldShow) {
         // Best-effort persist.
-        window.StreakGrace.persistSessionGrace(sb, userId, currentMondayKey);
+        window.StreakGrace.persistSessionGrace(sb, userId, currentWeekStartKey);
       }
     }
     // OR persisted flag (e.g., catch-up on a previously-detected miss)
     try {
-      const persistedSessionFlag = await window.StreakGrace.readSessionGraceFlag(sb, userId, currentMondayKey);
+      const persistedSessionFlag = await window.StreakGrace.readSessionGraceFlag(sb, userId, currentWeekStartKey);
       sessionPipShouldShow = sessionPipShouldShow || persistedSessionFlag;
     } catch(e) { /* graceful */ }
     const sessionPip = document.getElementById('session-grace-pip');

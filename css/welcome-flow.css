@@ -1,0 +1,386 @@
+/* Orthodox Expedition — Welcome Flow + Weekly Intro Modal Styling
+   Repair Chat S — May 9, 2026
+
+   Surfaces both home.html (welcome flow) and week.html (weekly intro).
+   Reuses Byzantine palette + Cinzel/Crimson Text fonts already loaded
+   by both pages. No new tokens introduced.
+
+   Notes on layering and isolation:
+     - .oe-welcome-overlay sits at z-index 9999 (above the bottom-nav,
+       which welcome-flow.js also hides explicitly via inline style).
+     - The overlay locks body scroll while open (set by welcome-flow.js).
+     - Safe-area insets handled so the modal works in PWA standalone mode
+       on iPad with notched / rounded screens.
+
+   iOS emoji defense (Repair N convention):
+     - .oe-cross applies font-variant-emoji:text so U+2626 ORTHODOX CROSS
+       renders as a typographic glyph rather than Apple Color Emoji pink.
+       Pair with U+FE0E TEXT VARIATION SELECTOR in the source string.
+*/
+
+.oe-welcome-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(11, 14, 22, 0.965);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: env(safe-area-inset-top, 0);
+  padding-right: env(safe-area-inset-right, 0);
+  padding-bottom: env(safe-area-inset-bottom, 0);
+  padding-left: env(safe-area-inset-left, 0);
+  -webkit-tap-highlight-color: transparent;
+  font-family: 'Crimson Text', 'Times New Roman', serif;
+  color: #F5ECD7;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* Soft fade-in */
+  animation: oeWelcomeFadeIn 220ms ease-out;
+}
+
+@keyframes oeWelcomeFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.oe-welcome-panel {
+  width: 100%;
+  height: 100%;
+  max-width: 720px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem 1.25rem;
+  box-sizing: border-box;
+  gap: 1.25rem;
+  position: relative;
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   Video panel
+   ───────────────────────────────────────────────────────────────── */
+.oe-video-panel {
+  gap: 1.25rem;
+}
+
+.oe-video-wrap {
+  width: 100%;
+  max-width: 640px;
+  aspect-ratio: 16 / 9;
+  background: #000;
+  border: 2px solid #C9A84C;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow:
+    0 8px 28px rgba(0, 0, 0, 0.55),
+    0 0 0 1px rgba(201, 168, 76, 0.25);
+  position: relative;
+}
+
+.oe-video-iframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
+  background: #000;
+}
+
+.oe-video-fallback,
+.oe-video-hint {
+  text-align: center;
+  font-family: 'Crimson Text', serif;
+  font-size: 0.95rem;
+  color: rgba(245, 236, 215, 0.78);
+  font-style: italic;
+  padding: 0 0.5rem;
+}
+
+.oe-video-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  font-size: 1.05rem;
+}
+
+.oe-video-hint {
+  margin-top: 0.25rem;
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   CTA buttons (shared)
+   ───────────────────────────────────────────────────────────────── */
+.oe-cta {
+  font-family: 'Cinzel', 'Times New Roman', serif;
+  font-weight: 600;
+  font-size: 1.05rem;
+  letter-spacing: 0.04em;
+  padding: 0.85rem 1.6rem;
+  border: 1px solid #C9A84C;
+  border-radius: 4px;
+  background: linear-gradient(180deg, #1B2A4A 0%, #15203a 100%);
+  color: #F5ECD7;
+  cursor: pointer;
+  min-width: 9rem;
+  min-height: 44px; /* iOS Human Interface Guidelines tap target */
+  transition:
+    opacity 200ms ease,
+    transform 100ms ease,
+    box-shadow 200ms ease;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.oe-cta:focus-visible {
+  outline: 2px solid #C9A84C;
+  outline-offset: 2px;
+}
+
+.oe-cta-primary {
+  border-color: #C9A84C;
+  color: #F5ECD7;
+  box-shadow: 0 2px 8px rgba(201, 168, 76, 0.18);
+}
+
+.oe-cta-primary:not(:disabled):hover {
+  box-shadow: 0 4px 14px rgba(201, 168, 76, 0.28);
+}
+
+.oe-cta-secondary {
+  background: transparent;
+  color: rgba(245, 236, 215, 0.82);
+  border-color: rgba(201, 168, 76, 0.55);
+  box-shadow: none;
+}
+
+.oe-cta:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.oe-cta-disabled,
+.oe-cta:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   Skip button (top-right, shared)
+   ───────────────────────────────────────────────────────────────── */
+.oe-skip {
+  position: absolute;
+  top: max(env(safe-area-inset-top, 0), 1rem);
+  right: 1rem;
+  background: transparent;
+  color: rgba(245, 236, 215, 0.72);
+  font-family: 'Cinzel', serif;
+  font-size: 0.9rem;
+  letter-spacing: 0.04em;
+  border: 1px solid rgba(201, 168, 76, 0.42);
+  border-radius: 4px;
+  padding: 0.45rem 0.9rem;
+  min-height: 36px;
+  min-width: 4.5rem;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+  transition: opacity 200ms ease, color 200ms ease, border-color 200ms ease;
+  z-index: 2;
+}
+
+.oe-skip:not(:disabled):hover {
+  color: #F5ECD7;
+  border-color: rgba(201, 168, 76, 0.7);
+}
+
+.oe-skip:focus-visible {
+  outline: 2px solid #C9A84C;
+  outline-offset: 2px;
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   Cards panel (welcome flow only)
+   ───────────────────────────────────────────────────────────────── */
+.oe-cards-panel {
+  position: relative;
+  gap: 1rem;
+}
+
+.oe-card-stage {
+  width: 100%;
+  max-width: 560px;
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+  /* Disable native zoom on tap (PWA on iPad) */
+  touch-action: pan-y;
+}
+
+.oe-card {
+  width: 100%;
+  background:
+    linear-gradient(180deg,
+      rgba(27, 42, 74, 0.98) 0%,
+      rgba(20, 33, 58, 0.98) 100%);
+  border: 1px solid rgba(201, 168, 76, 0.55);
+  border-radius: 10px;
+  padding: 1.85rem 1.6rem;
+  box-shadow:
+    0 6px 20px rgba(0, 0, 0, 0.45),
+    inset 0 0 0 1px rgba(201, 168, 76, 0.08);
+  /* Subtle entry animation per card */
+  animation: oeCardSlide 280ms ease-out;
+}
+
+@keyframes oeCardSlide {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.oe-card-headline {
+  font-family: 'Cinzel', serif;
+  font-weight: 600;
+  font-size: 1.5rem;
+  color: #C9A84C;
+  margin: 0 0 0.5rem 0;
+  letter-spacing: 0.03em;
+  text-align: center;
+  line-height: 1.25;
+}
+
+.oe-card-subheadline {
+  font-family: 'Crimson Text', serif;
+  font-style: italic;
+  font-size: 1rem;
+  color: rgba(245, 236, 215, 0.7);
+  text-align: center;
+  margin-bottom: 1.1rem;
+}
+
+.oe-card-list {
+  margin: 0;
+  padding-left: 0;
+  list-style: none;
+}
+
+.oe-card-list li {
+  font-family: 'Crimson Text', serif;
+  font-size: 1rem;
+  line-height: 1.5;
+  color: #F5ECD7;
+  margin-bottom: 0.6rem;
+  padding-left: 1.4rem;
+  position: relative;
+}
+
+.oe-card-list li::before {
+  content: '\2726'; /* black four-pointed star */
+  position: absolute;
+  left: 0;
+  top: 0;
+  color: #C9A84C;
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.oe-card-body {
+  font-family: 'Crimson Text', serif;
+  font-size: 1.15rem;
+  text-align: center;
+  color: #F5ECD7;
+  margin: 0.75rem 0 0 0;
+  line-height: 1.5;
+  letter-spacing: 0.01em;
+}
+
+/* iOS emoji defense — keep ☦ rendered as a typographic glyph rather
+   than Apple Color Emoji's pink rendering. Paired with U+FE0E in the
+   source string (welcome-flow.js Card 4 body).
+*/
+.oe-cross {
+  font-variant-emoji: text;
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   Page indicator (4 dots)
+   ───────────────────────────────────────────────────────────────── */
+.oe-card-indicator {
+  display: flex;
+  gap: 0.55rem;
+  justify-content: center;
+  align-items: center;
+}
+
+.oe-card-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: rgba(201, 168, 76, 0.28);
+  display: inline-block;
+  transition: background 200ms ease, transform 200ms ease;
+}
+
+.oe-card-dot-active {
+  background: #C9A84C;
+  transform: scale(1.15);
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   Card nav row (Back / Next)
+   ───────────────────────────────────────────────────────────────── */
+.oe-card-nav-row {
+  display: flex;
+  gap: 0.75rem;
+  width: 100%;
+  max-width: 560px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.oe-card-nav-row .oe-cta {
+  flex: 1 1 auto;
+  max-width: 16rem;
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   Responsive — iPad portrait/landscape, iPhone safety
+   ───────────────────────────────────────────────────────────────── */
+@media (max-height: 600px) {
+  /* iPad landscape squeeze + iPhone landscape */
+  .oe-welcome-panel { padding: 1rem 1.25rem; gap: 0.85rem; }
+  .oe-card { padding: 1.1rem 1.25rem; }
+  .oe-card-headline { font-size: 1.25rem; margin-bottom: 0.35rem; }
+  .oe-card-subheadline { font-size: 0.95rem; margin-bottom: 0.7rem; }
+  .oe-card-list li { font-size: 0.95rem; margin-bottom: 0.4rem; }
+  .oe-card-body { font-size: 1.05rem; }
+  .oe-video-wrap { max-width: 480px; }
+}
+
+@media (max-width: 460px) {
+  /* iPhone-narrow safety */
+  .oe-card-headline { font-size: 1.25rem; }
+  .oe-card-list li { font-size: 0.95rem; }
+  .oe-cta {
+    font-size: 0.95rem;
+    padding: 0.75rem 1.1rem;
+    min-width: 7rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .oe-welcome-overlay,
+  .oe-card {
+    animation: none;
+  }
+  .oe-cta { transition: none; }
+}

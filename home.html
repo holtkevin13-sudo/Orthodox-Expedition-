@@ -1985,7 +1985,15 @@ async function loadDailyAnchorCard(){
     if (typeof DailyAnchorCard === 'undefined') return; // defensive
 
     const now = new Date();
-    const localISO = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+    // Date string for liturgical_calendar lookup. Prefers
+    // WeekUtils.todayKey() (America/New_York via Intl) when available
+    // — matches the rest of the app's ET convention (Op Learning #7)
+    // and is iPad-timezone-defensive. Falls back to raw local-Date
+    // formatting if WeekUtils hasn't loaded for any reason (Florida is
+    // ET so the fallback produces the same value here in practice).
+    const localISO = (typeof WeekUtils !== 'undefined' && WeekUtils && typeof WeekUtils.todayKey === 'function')
+      ? WeekUtils.todayKey()
+      : `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
     const doy = (() => {
       // Day-of-year in local wall clock — matches Postgres EXTRACT(DOY)
       const start = new Date(now.getFullYear(), 0, 0);
@@ -1995,7 +2003,7 @@ async function loadDailyAnchorCard(){
 
     const [calRes, versesRes, promptsRes] = await Promise.all([
       sb.from('liturgical_calendar')
-        .select('calendar_date,liturgical_season,feast_name,feast_rank,sunday_name,saint_commemorations')
+        .select('calendar_date,liturgical_season,feast_name,feast_rank,sunday_name,saint_commemorations,daily_readings')
         .eq('calendar_date', localISO).maybeSingle(),
       sb.from('daily_verses')
         .select('reference,text,bible_book_code,bible_chapter')

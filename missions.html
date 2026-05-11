@@ -265,6 +265,271 @@ body::before{
 .admin-bar-label{font-family:'Cinzel',serif;font-size:0.62rem;letter-spacing:0.15em;color:rgba(201,146,42,0.6);text-transform:uppercase;}
 .admin-bar-btn{background:none;border:1px solid rgba(201,146,42,0.3);border-radius:6px;padding:0.25rem 0.75rem;font-family:'Cinzel',serif;font-size:0.6rem;color:rgba(201,146,42,0.6);cursor:pointer;min-height:32px;transition:all 0.2s;}
 .admin-bar.show ~ .page{padding-top:calc(2.5rem + 1.25rem);}
+
+/* ═══════════════════════════════════════════════════════════════
+   DAILY HUB — Dispatch 4b (Missions.mount renders into #daily-hub)
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Eyebrow ─────────────────────────────────────────────────── */
+.mh-eyebrow{
+  display:flex;align-items:baseline;justify-content:space-between;
+  gap:0.6rem;margin-bottom:0.85rem;
+}
+.mh-eyebrow-title{
+  font-family:'Cinzel',serif;font-weight:700;
+  font-size:1.05rem;letter-spacing:0.04em;
+  color:var(--gold-light);
+}
+.mh-eyebrow-day{
+  font-family:'Crimson Text',serif;font-style:italic;
+  font-size:0.85rem;color:rgba(240,201,110,0.6);
+}
+
+/* ── Pilgrimage banner ──────────────────────────────────────── */
+.mh-pilgrimage-banner{
+  display:flex;align-items:center;gap:0.75rem;
+  background:linear-gradient(180deg,var(--parchment) 0%,var(--parchment-dark) 100%);
+  border:1.5px solid var(--gold);border-radius:12px;
+  padding:0.85rem 1rem;margin-bottom:0.85rem;color:var(--ink);
+  box-shadow:0 3px 10px rgba(27,42,74,0.15);
+}
+.mh-pb-icon{font-size:1.5rem;line-height:1;flex-shrink:0;}
+.mh-pb-text{flex:1;min-width:0;}
+.mh-pb-title{
+  font-family:'Cinzel',serif;font-weight:600;
+  font-size:0.92rem;letter-spacing:0.03em;
+  margin-bottom:0.18rem;
+}
+.mh-pb-detail{
+  font-family:'Crimson Text',serif;font-style:italic;
+  font-size:0.85rem;line-height:1.4;color:#5a3e0e;
+}
+
+/* ── Reading mission card (top, prominent) ──────────────────── */
+.mh-reading-card{
+  background:rgba(201,146,42,0.05);
+  border:1.5px solid rgba(201,146,42,0.4);
+  border-radius:14px;padding:1.1rem 1rem;margin-bottom:0.85rem;
+  box-shadow:0 3px 14px rgba(27,42,74,0.18);
+  position:relative;
+}
+.mh-reading-card.mh-card-prominent{
+  border-color:var(--gold);
+  background:linear-gradient(180deg,rgba(201,146,42,0.08) 0%,rgba(44,22,84,0.08) 100%);
+}
+.mh-card-eyebrow{
+  font-family:'Cinzel',serif;font-weight:600;
+  font-size:0.7rem;letter-spacing:0.18em;text-transform:uppercase;
+  color:var(--gold-light);
+  margin-bottom:0.7rem;
+}
+.mh-reading-pilgrimage{
+  display:flex;align-items:center;gap:0.7rem;
+  padding:0.5rem 0;
+}
+.mh-rp-icon{font-size:1.3rem;color:var(--gold);}
+.mh-rp-text{
+  font-family:'Crimson Text',serif;font-style:italic;
+  color:rgba(244,232,193,0.8);
+}
+.mh-reading-done-mini{
+  display:flex;align-items:center;gap:0.65rem;
+  padding:0.3rem 0;
+}
+.mh-rdm-check{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:1.6rem;height:1.6rem;border-radius:50%;
+  background:rgba(22,163,74,0.18);
+  color:rgba(134,239,172,0.9);
+  font-weight:700;font-size:0.9rem;
+  border:1px solid rgba(22,163,74,0.35);
+}
+.mh-rdm-text{
+  font-family:'Cinzel',serif;font-weight:600;
+  font-size:0.9rem;color:rgba(244,232,193,0.85);
+}
+
+/* ── Mission row (generic + session variant) ─────────────────── */
+.mh-row{
+  display:flex;align-items:center;gap:0.7rem;
+  padding:0.85rem 0.95rem;margin-bottom:0.55rem;
+  background:rgba(244,232,193,0.045);
+  border:1px solid rgba(201,146,42,0.22);
+  border-radius:12px;
+  text-decoration:none;color:inherit;
+  position:relative;
+  transition:background 180ms ease, border-color 180ms ease, transform 120ms ease;
+}
+.mh-row:active{transform:scale(0.99);}
+.mh-row:hover{background:rgba(201,146,42,0.07);}
+.mh-row-icon{
+  width:2.4rem;height:2.4rem;flex-shrink:0;
+  display:inline-flex;align-items:center;justify-content:center;
+  background:linear-gradient(180deg,var(--parchment) 0%,var(--parchment-dark) 100%);
+  border:1.5px solid var(--gold);border-radius:50%;
+  font-size:1.15rem;line-height:1;
+}
+.mh-row-body{flex:1;min-width:0;}
+.mh-row-name{
+  font-family:'Cinzel',serif;font-weight:600;
+  font-size:0.92rem;letter-spacing:0.02em;
+  color:rgba(244,232,193,0.92);
+}
+.mh-row-sub{
+  font-family:'Crimson Text',serif;font-style:italic;
+  font-size:0.82rem;color:rgba(240,201,110,0.62);
+  margin-top:0.12rem;line-height:1.35;
+}
+.mh-row-coins{
+  font-family:'Cinzel',serif;font-weight:700;
+  font-size:0.78rem;color:rgba(201,146,42,0.7);
+  flex-shrink:0;
+}
+.mh-row-indicator{
+  width:1.6rem;height:1.6rem;flex-shrink:0;
+  display:inline-flex;align-items:center;justify-content:center;
+  border-radius:50%;
+  font-weight:700;font-size:0.92rem;
+}
+.mh-ri-pending{
+  color:rgba(167,139,250,0.55);
+  border:1.5px solid rgba(167,139,250,0.35);
+}
+.mh-ri-done{
+  color:rgba(134,239,172,0.95);
+  background:rgba(22,163,74,0.18);
+  border:1.5px solid rgba(22,163,74,0.45);
+}
+.mh-ri-pilgrimage{
+  color:var(--gold-light);
+  background:rgba(201,146,42,0.12);
+  border:1.5px solid rgba(201,146,42,0.5);
+}
+.mh-ri-na{
+  color:rgba(240,201,110,0.35);
+  border:1.5px dashed rgba(240,201,110,0.3);
+}
+.mh-state-complete{
+  background:rgba(22,163,74,0.07);
+  border-color:rgba(22,163,74,0.25);
+}
+.mh-state-complete .mh-row-name{color:rgba(134,239,172,0.82);}
+.mh-state-pilgrimage{
+  background:rgba(201,146,42,0.06);
+  border-color:rgba(201,146,42,0.32);
+}
+.mh-state-not_applicable{
+  background:rgba(244,232,193,0.025);
+  border-color:rgba(201,146,42,0.12);
+  opacity:0.72;
+}
+
+/* Session row: day-rail mini below the session sub-line ─────── */
+.mh-row-session .mh-row-body{padding-right:0.25rem;}
+.mh-day-rail{
+  display:flex;gap:0.95rem;margin-top:0.5rem;align-items:center;
+}
+.mh-day-pair{
+  display:inline-flex;flex-direction:column;align-items:center;gap:0.18rem;
+}
+.mh-day-dot{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:1.15rem;height:1.15rem;border-radius:50%;
+  font-size:0.65rem;font-weight:700;line-height:1;
+}
+.mh-day-dot-label{
+  font-family:'Cinzel',serif;font-size:0.55rem;letter-spacing:0.08em;
+  color:rgba(240,201,110,0.45);text-transform:uppercase;
+}
+.mh-day-done{
+  background:rgba(22,163,74,0.25);
+  color:rgba(134,239,172,0.95);
+  border:1px solid rgba(22,163,74,0.5);
+}
+.mh-day-today{
+  background:linear-gradient(135deg,var(--gold) 0%,var(--gold-bright) 100%);
+  color:var(--ink);
+  border:1px solid var(--gold-bright);
+  box-shadow:0 0 6px rgba(255,215,0,0.4);
+}
+.mh-day-catch-up{
+  background:rgba(124,58,237,0.2);
+  color:rgba(167,139,250,0.95);
+  border:1px solid rgba(124,58,237,0.55);
+  animation:mhCatchUpPulse 2.2s ease-in-out infinite;
+}
+.mh-day-future{
+  background:transparent;
+  border:1.25px solid rgba(201,146,42,0.28);
+  color:rgba(201,146,42,0.45);
+}
+@keyframes mhCatchUpPulse{
+  0%,100%{box-shadow:0 0 0 rgba(124,58,237,0);}
+  50%{box-shadow:0 0 8px rgba(124,58,237,0.45);}
+}
+.mh-session-complete .mh-row-name{color:rgba(134,239,172,0.82);}
+
+/* ── Progress + celebration ─────────────────────────────────── */
+.mh-progress{
+  margin-top:0.85rem;padding:0.95rem 1rem;
+  background:rgba(244,232,193,0.04);
+  border:1px solid rgba(201,146,42,0.2);
+  border-radius:12px;
+}
+.mh-progress-row{
+  display:flex;align-items:baseline;justify-content:space-between;
+  margin-bottom:0.5rem;
+}
+.mh-progress-label{
+  font-family:'Cinzel',serif;font-weight:600;
+  font-size:0.78rem;letter-spacing:0.12em;text-transform:uppercase;
+  color:rgba(240,201,110,0.7);
+}
+.mh-progress-count{
+  font-family:'Cinzel',serif;font-size:0.95rem;
+  color:rgba(244,232,193,0.88);
+}
+.mh-pc-num{
+  font-family:'Cinzel Decorative',serif;font-weight:700;
+  font-size:1.15rem;color:var(--gold-light);
+  display:inline-block;min-width:1.1ch;text-align:right;
+}
+.mh-pc-total{font-weight:600;color:rgba(244,232,193,0.85);}
+.mh-progress-bar{
+  height:7px;border-radius:4px;
+  background:rgba(244,232,193,0.08);
+  overflow:hidden;border:1px solid rgba(201,146,42,0.18);
+}
+.mh-progress-fill{
+  height:100%;
+  background:linear-gradient(90deg,var(--gold) 0%,var(--gold-bright) 100%);
+  box-shadow:0 0 6px rgba(255,215,0,0.35);
+  transition:width 500ms ease;
+  width:0%;
+}
+.mh-celebration-line{
+  margin-top:0.75rem;
+  font-family:'Crimson Text',serif;font-style:italic;
+  font-size:0.95rem;text-align:center;line-height:1.4;
+  color:var(--gold-light);
+}
+.mh-celebration-rest{color:rgba(240,201,110,0.75);}
+
+/* ── 10/10 polish #1: micro-celebration on row complete ──────── */
+@keyframes mhRowCelebrate{
+  0%   { background:rgba(244,232,193,0.045); }
+  35%  { background:rgba(201,146,42,0.32); box-shadow:0 0 18px rgba(255,215,0,0.45); }
+  100% { background:rgba(22,163,74,0.07); box-shadow:0 0 0 rgba(0,0,0,0); }
+}
+.mh-row-celebrate, .mh-reading-card.mh-row-celebrate{
+  animation:mhRowCelebrate 700ms ease-out;
+}
+
+.mh-empty{
+  text-align:center;padding:1.5rem;
+  font-family:'Crimson Text',serif;font-style:italic;
+  color:rgba(244,232,193,0.5);
+}
 </style>
 </head>
 <body>
@@ -321,14 +586,14 @@ body::before{
       </button>
     </div>
 
-    <!-- DAILY PANEL -->
+    <!-- DAILY PANEL — Dispatch 4b daily-hub mount point.
+         Old "ps-daily" progress bar + #daily-list inline mission cards
+         are absorbed by js/missions.js's hub render (the hub renders
+         its own progress + celebration block at the bottom). The
+         tabs themselves and the Weekly/Special panels below remain
+         intact (Pause #6 = B). -->
     <div class="tab-panel show" id="panel-daily">
-      <div class="progress-summary">
-        <span class="ps-label">Today</span>
-        <div class="ps-bar-wrap"><div class="ps-bar"><div class="ps-fill" id="ps-daily"></div></div></div>
-        <span class="ps-val" id="ps-daily-lbl">0 / 0</span>
-      </div>
-      <div id="daily-list"></div>
+      <div id="daily-hub"></div>
     </div>
 
     <!-- WEEKLY PANEL -->
@@ -369,13 +634,26 @@ body::before{
   </a>
   <a class="nav-item" href="bible-reader.html">
     <span class="nav-mark">☦&#xFE0E;</span>
-    <span class="nav-label">Holy Scriptures</span>
+    <span class="nav-label">Scriptures</span>
   </a>
   <a class="nav-item" href="journal.html">
     <span class="nav-mark">✎</span>
     <span class="nav-label">Field Manual</span>
   </a>
 </nav>
+
+<!-- Dispatch 4b — daily-hub module dependencies.
+     Order matters: week-utils → pilgrimages → lane modules →
+     daily-anchor-card + reading-quest → missions (consumer). -->
+<script src="js/week-utils.js"></script>
+<script src="js/pilgrimages.js"></script>
+<script src="js/streak-grace.js"></script>
+<script src="js/prayers.js"></script>
+<script src="js/reading.js"></script>
+<script src="js/memorization.js"></script>
+<script src="js/daily-anchor-card.js"></script>
+<script src="js/reading-quest.js"></script>
+<script src="js/missions.js"></script>
 
 <script>
 // ── SUPABASE ──────────────────────────────────────────────────
@@ -509,23 +787,51 @@ function isSpecialDone(mission){
 }
 
 // ── DAILY ─────────────────────────────────────────────────────
+// Dispatch 4b: the Daily tab is now the daily-hub. We delegate to
+// js/missions.js (window.Missions.mount), which renders:
+//   • Eyebrow + day label
+//   • Pilgrimage banner (if active)
+//   • Reading mission card (state machine: pilgrimage / pending /
+//     read-not-answered / complete / complete-no-question)
+//   • Prayer, memorization rows
+//   • Session row with M/W/F day-rail (Pause #1 = B) — M/W/F only
+//   • Reflection row — T/Th only
+//   • Progress + celebration line
+// Weekly + Special tabs are untouched (Pause #6 = B).
 function renderDaily(){
-  const missions = allMissions.filter(m=>m.type==='daily');
-  const done = missions.filter(m=>isDailyDone(m.id)).length;
-  const total = missions.length;
-  const pct = total>0?(done/total)*100:0;
-
-  document.getElementById('ps-daily').style.width = pct+'%';
-  document.getElementById('ps-daily-lbl').textContent = `${done} / ${total}`;
-
-  const list = document.getElementById('daily-list');
-  list.innerHTML='';
-  if(!missions.length){list.innerHTML='<div class="empty-state">No daily missions found.</div>';return;}
-  missions.forEach(m=>{
-    const done = isDailyDone(m.id);
-    list.appendChild(buildCard(m, done?'done':'available', ()=>completeDailyMission(m)));
+  if (!window.Missions || typeof window.Missions.mount !== 'function') {
+    const hub = document.getElementById('daily-hub');
+    if (hub) hub.innerHTML = '<div class="empty-state">Missions hub not loaded.</div>';
+    return;
+  }
+  const hub = document.getElementById('daily-hub');
+  if (!hub) return;
+  // Fire-and-forget; mount is async and self-contained. State is
+  // refreshed via visibilitychange/pageshow handlers below.
+  window.Missions.mount(hub, {
+    sb,
+    explorerId: profile && profile.id,
+    familyId:   profile && profile.family_id,
+    profile,
   });
 }
+
+// ── DAILY HUB REFRESH ON VISIBILITY ─────────────────────────────
+// 10/10 polish #1: when Nolan returns to Missions (e.g. after
+// completing prayers on prayers.html and tapping back), refresh
+// the hub so newly-complete rows can micro-celebrate via the
+// count-up animation + gold-flash inside Missions.mount.
+(function wireMissionsRefresh(){
+  function maybeRefresh(){
+    if (document.visibilityState !== 'visible') return;
+    if (activeTab !== 'daily') return;
+    if (window.Missions && typeof window.Missions.refresh === 'function') {
+      window.Missions.refresh();
+    }
+  }
+  document.addEventListener('visibilitychange', maybeRefresh);
+  window.addEventListener('pageshow', maybeRefresh);
+})();
 
 // ── WEEKLY ────────────────────────────────────────────────────
 function renderWeekly(){
@@ -778,19 +1084,36 @@ function coinRain(amount){
 }
 
 // ── TAB BADGES ────────────────────────────────────────────────
-function updateTabBadges(){
-  const daily   = allMissions.filter(m=>m.type==='daily');
+// Dispatch 4b: the Daily badge now reflects pending lanes from the
+// new daily-hub (reading, prayer, memo, session/journal) rather
+// than the legacy "daily" missions table rows. Weekly + Special
+// badges are unchanged.
+async function updateTabBadges(){
   const selfW   = allMissions.filter(m=>m.type==='weekly');
   const verifyW = allMissions.filter(m=>m.type==='weekly_verified');
   const special = allMissions.filter(m=>['special','field_visit'].includes(m.type));
 
-  const dailyPending   = daily.filter(m=>!isDailyDone(m.id)).length;
   const weeklyPending  = [...selfW,...verifyW].filter(m=>!isWeeklyDone(m.id)).length;
   const specialPending = special.filter(m=>isSpecialPending(m.id)).length;
 
-  setBadge('daily',   dailyPending);
   setBadge('weekly',  weeklyPending);
   setBadge('special', specialPending);
+
+  // Daily badge from hub state (graceful: 0 if Missions unavailable)
+  let dailyPending = 0;
+  try {
+    if (window.Missions && typeof window.Missions.loadTodaysState === 'function'
+        && profile && profile.id && profile.family_id) {
+      const st = await window.Missions.loadTodaysState(sb, profile.id, profile.family_id);
+      dailyPending = Math.max(0, (st.totalCount || 0) - (st.completedCount || 0));
+      // On pilgrimage, the hub renders all rows as "rest" — no
+      // pending state to surface to the badge.
+      if (st.pilgrimage) dailyPending = 0;
+    }
+  } catch (e) {
+    console.warn('updateTabBadges (daily) failed (graceful):', e);
+  }
+  setBadge('daily', dailyPending);
 }
 
 function setBadge(tab, count){

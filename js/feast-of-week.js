@@ -123,9 +123,23 @@
     const majors = withFeast.filter(r => r.feast_rank === 'major').sort(byDateAsc);
     if (majors.length > 0) return majors[0];
 
-    // (3) The Sunday's feast (any rank, including 'minor').
-    const sunday = withFeast.find(r => _dowOf(r.calendar_date) === 0);
-    if (sunday) return sunday;
+    // (3) The Sunday's feast (any rank, including 'minor'), OR the
+    //     Sunday's sunday_name when feast_name is null. The latter
+    //     surfaces e.g. "2nd Sunday of Matthew" for a week with no
+    //     named feast on Sunday — more liturgically honest than
+    //     skipping to a Monday minor saint. Inspects ALL rows (not
+    //     just withFeast) so a feast_name=null Sunday isn't filtered
+    //     out before we get the chance to look at sunday_name.
+    const sundayRow = rows.find(r => _dowOf(r.calendar_date) === 0);
+    if (sundayRow) {
+      if (sundayRow.feast_name) return sundayRow;
+      if (sundayRow.sunday_name) {
+        return Object.assign({}, sundayRow, {
+          feast_name: sundayRow.sunday_name,
+          feast_rank: sundayRow.feast_rank || 'minor',
+        });
+      }
+    }
 
     // (4) Earliest 'minor' feast otherwise.
     const minors = withFeast.filter(r => r.feast_rank === 'minor').sort(byDateAsc);

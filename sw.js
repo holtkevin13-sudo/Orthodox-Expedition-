@@ -1,4 +1,16 @@
 // Orthodox Expedition — Service Worker v27
+// v29: Chat 5 — Family Devotional Thread. New family_messages table
+//      (family-scoped RLS via is_admin() + current_user_family_id();
+//      BEFORE UPDATE trigger locks all columns except read_at). New
+//      admin.html "Family Devotional Thread" section below Weekly
+//      Verses (compose + upcoming/recent list with delete for
+//      unread/future). New home.html #hp-devotional-message mount
+//      between pilgrimage banner and home dashboard; renders the
+//      oldest unread message visible today with a single ~2s gold-
+//      glow on first DOM mount (honors prefers-reduced-motion);
+//      writes read_at silently. NOTE: Chats 1 and 7 were parallel —
+//      if either deployed first, bump from their live version, not
+//      from v28.
 // v27: Dispatch 5 — Sunday Celebration Overlay. The canonical weekly
 //      reverent moment. When Nolan opens the app on Sunday (or any
 //      later day before this week's celebration is dismissed), a

@@ -2726,6 +2726,28 @@ document.addEventListener('DOMContentLoaded', () => {
     }, { passive: true });
   }
 
+  // ── Dispatch 3b · Reading Quest signal ────────────────────────
+  // When the user arrives at bible-reader via the daily-anchor-card
+  // gospel link (URL carries ?source=expedition), record a local-
+  // Storage flag on pagehide so home.html's ReadingQuest module can
+  // surface the question card on return. Self-contained ET date
+  // helper to avoid pulling in WeekUtils for one date string
+  // (Op Learning #7: ET via Intl.DateTimeFormat, never raw Date).
+  (function wireReadingQuestSignal(){
+    var fromExpedition = new URLSearchParams(window.location.search).get('source') === 'expedition';
+    if (!fromExpedition) return;
+    function todayKeyET(){
+      var p = new Intl.DateTimeFormat('en-US', {
+        timeZone:'America/New_York', year:'numeric', month:'2-digit', day:'2-digit'
+      }).formatToParts(new Date()).reduce(function(o,x){ o[x.type]=x.value; return o; }, {});
+      return p.year + '-' + p.month + '-' + p.day;
+    }
+    window.addEventListener('pagehide', function(){
+      try { localStorage.setItem('oe_bible_reader_visited_' + todayKeyET(), '1'); }
+      catch(_e) { /* graceful */ }
+    });
+  })();
+
   // Books load + initial route
   loadBooks().then(() => {
     applyRouteFromUrl(true);

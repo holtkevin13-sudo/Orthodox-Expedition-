@@ -339,6 +339,112 @@ body::before{
   min-height:32px;transition:all 0.2s;
 }
 .admin-bar.show ~ #app .page{padding-top:calc(2.5rem + 1.25rem);}
+
+/* ═══════════════════════════════════════════════════════════════
+   FEAST OF THE WEEK — Dispatch 4b (FeastOfWeek.mount renders here)
+   ═══════════════════════════════════════════════════════════════ */
+#feast-of-week-mount{margin-bottom:1.1rem;}
+.fw-card{
+  background:linear-gradient(180deg,rgba(201,146,42,0.12) 0%,rgba(44,22,84,0.14) 100%);
+  border:1.5px solid var(--gold,#c9922a);
+  border-radius:14px;
+  padding:1rem 1.05rem;
+  box-shadow:0 4px 16px rgba(27,42,74,0.18);
+  position:relative;
+}
+.fw-card.fw-rank-great{
+  border-color:var(--gold-bright,#ffd700);
+  box-shadow:0 4px 18px rgba(255,215,0,0.18), 0 4px 16px rgba(27,42,74,0.18);
+}
+.fw-card.fw-rank-major{
+  border-color:var(--gold,#c9922a);
+}
+.fw-card.fw-rank-minor{
+  border-color:rgba(201,146,42,0.45);
+  background:linear-gradient(180deg,rgba(201,146,42,0.06) 0%,rgba(44,22,84,0.08) 100%);
+}
+.fw-eyebrow{
+  font-family:'Cinzel',serif;font-weight:600;
+  font-size:0.7rem;letter-spacing:0.18em;text-transform:uppercase;
+  color:var(--gold-light,#f0c96e);
+  margin-bottom:0.45rem;
+}
+.fw-name{
+  font-family:'Cinzel Decorative',serif;font-weight:700;
+  font-size:1.25rem;line-height:1.25;
+  color:rgba(244,232,193,0.95);
+  margin-bottom:0.2rem;
+}
+.fw-rank-great .fw-name{color:#ffd700;text-shadow:0 0 12px rgba(255,215,0,0.35);}
+.fw-date{
+  font-family:'Crimson Text',serif;font-style:italic;
+  font-size:0.92rem;color:rgba(240,201,110,0.7);
+  margin-bottom:0.55rem;
+}
+.fw-also-eyebrow{
+  font-family:'Cinzel',serif;font-weight:600;
+  font-size:0.62rem;letter-spacing:0.16em;text-transform:uppercase;
+  color:rgba(240,201,110,0.55);
+  margin-bottom:0.3rem;margin-top:0.4rem;
+}
+.fw-saint-list, .fw-detail-list{
+  list-style:none;padding:0;margin:0 0 0.25rem;
+}
+.fw-saint-list li, .fw-detail-list li{
+  font-family:'Crimson Text',serif;font-size:0.88rem;line-height:1.35;
+  color:rgba(244,232,193,0.78);
+  padding:0.15rem 0;
+  border-top:1px dashed rgba(201,146,42,0.18);
+}
+.fw-saint-list li:first-child, .fw-detail-list li:first-child{border-top:none;}
+.fw-saint-more{
+  font-style:italic;color:rgba(240,201,110,0.55) !important;
+}
+.fw-tap{
+  margin-top:0.55rem;
+  background:transparent;
+  border:1px solid rgba(201,146,42,0.4);
+  border-radius:8px;
+  padding:0.45rem 0.85rem;
+  font-family:'Cinzel',serif;font-weight:600;
+  font-size:0.7rem;letter-spacing:0.08em;
+  color:var(--gold-light,#f0c96e);
+  cursor:pointer;
+  transition:background 150ms ease, border-color 150ms ease, transform 120ms ease;
+}
+.fw-tap:active{transform:scale(0.97);background:rgba(201,146,42,0.1);}
+.fw-tap:hover{background:rgba(201,146,42,0.08);border-color:var(--gold,#c9922a);}
+.fw-detail{
+  margin-top:0.65rem;padding-top:0.65rem;
+  border-top:1px solid rgba(201,146,42,0.22);
+  animation:fwDetailIn 250ms ease-out;
+}
+@keyframes fwDetailIn{
+  from{opacity:0;transform:translateY(-4px);}
+  to  {opacity:1;transform:translateY(0);}
+}
+.fw-detail-sunday{
+  font-family:'Crimson Text',serif;font-style:italic;
+  font-size:0.88rem;color:rgba(240,201,110,0.72);
+  margin-bottom:0.4rem;
+}
+.fw-detail-title{
+  font-family:'Cinzel',serif;font-weight:600;
+  font-size:0.65rem;letter-spacing:0.14em;text-transform:uppercase;
+  color:rgba(240,201,110,0.58);
+  margin-bottom:0.3rem;
+}
+.fw-detail-empty{
+  font-family:'Crimson Text',serif;font-style:italic;
+  font-size:0.85rem;color:rgba(240,201,110,0.45);
+  padding:0.3rem 0;
+}
+.fw-detail-note{
+  margin-top:0.55rem;
+  font-family:'Crimson Text',serif;font-style:italic;
+  font-size:0.85rem;line-height:1.45;
+  color:rgba(244,232,193,0.65);
+}
 </style>
 </head>
 <body>
@@ -379,13 +485,20 @@ body::before{
     <div class="page-title fade-up">All Topics</div>
     <div class="page-subtitle fade-up">A scroll of every session ahead. Tap a session to enter the week.</div>
 
+    <!-- FEAST OF THE WEEK eyebrow card (Dispatch 4b)
+         Surfaces the principal liturgical feast for the current
+         Sunday-anchored week. Filled by FeastOfWeek.mount() from
+         the script section below. Hides entirely (display:none)
+         when no feast is found for the current week. -->
+    <div id="feast-of-week-mount"></div>
+
     <!-- TOPIC LIST -->
     <div id="topic-list"></div>
 
   </div>
 </div>
 
-<!-- BOTTOM NAV — Home · Missions · Topics · Holy Scriptures · Field Manual -->
+<!-- BOTTOM NAV — Home · Missions · Topics · Scriptures · Field Manual -->
 <nav class="bottom-nav" id="bottom-nav" style="display:none;">
   <a class="nav-item" href="home.html">
     <span class="nav-mark">✦</span>
@@ -401,13 +514,17 @@ body::before{
   </a>
   <a class="nav-item" href="bible-reader.html">
     <span class="nav-mark">☦︎</span>
-    <span class="nav-label">Holy Scriptures</span>
+    <span class="nav-label">Scriptures</span>
   </a>
   <a class="nav-item" href="journal.html">
     <span class="nav-mark">✎</span>
     <span class="nav-label">Field Manual</span>
   </a>
 </nav>
+
+<!-- Dispatch 4b — Feast of the Week dependencies -->
+<script src="js/week-utils.js"></script>
+<script src="js/feast-of-week.js"></script>
 
 <script>
 // ── SUPABASE ──────────────────────────────────────────────────
@@ -464,6 +581,18 @@ function esc(s){
     document.getElementById('app').style.display='block';
     document.getElementById('bottom-nav').style.display='flex';
     propagateAdminQuery();
+
+    // Dispatch 4b — Feast of the Week eyebrow card.
+    // Fire-and-forget; mount is defensive (renders nothing on
+    // empty weeks, hides the slot via display:none).
+    if (window.FeastOfWeek && typeof window.FeastOfWeek.mount === 'function') {
+      const fwHost = document.getElementById('feast-of-week-mount');
+      if (fwHost) {
+        window.FeastOfWeek.mount(fwHost, { sb }).catch(err => {
+          console.warn('FeastOfWeek.mount failed (graceful):', err);
+        });
+      }
+    }
   } catch(e) {
     console.error('Curriculum error:', e);
     window.location.href='index.html';

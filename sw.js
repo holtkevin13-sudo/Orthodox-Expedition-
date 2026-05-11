@@ -1,4 +1,16 @@
-// Orthodox Expedition — Service Worker v20
+// Orthodox Expedition — Service Worker v22
+// v22: Dispatch 3a — Lectionary on Daily Anchor Card. js/daily-anchor-card.js
+//      refactored so the verse sub-card surfaces today's gospel from
+//      liturgical_calendar.daily_readings.gospel when populated (eyebrow
+//      "Today's Gospel", reference + ~35-word teaser with liturgical
+//      lead-ins like "At that time, " and "The Lord said, …" stripped,
+//      deep-link to bible-reader at the gospel's book + chapter). When
+//      the gospel payload is absent or incomplete (dates outside ICS
+//      coverage), the verse sub-card falls back to the existing
+//      daily_verses rotation — pre-3a UX preserved. home.html's
+//      loadDailyAnchorCard adds daily_readings to its liturgical_calendar
+//      SELECT and defensively prefers WeekUtils.todayKey() for the date
+//      string. No new files, no new schema, no bible-reader changes.
 // v20: Dispatch 2 — Sunday-anchor migration + prayer streak alignment
 //      + pilgrimage integration. Week boundaries flipped from
 //      Monday-anchored to Sunday-anchored across the codebase: new
@@ -145,7 +157,7 @@
 // v4: added week.html, prayers.html, day-state, pause-card, prayers, and config JSON
 // Version bump forces cache clear and fresh install
 
-const CACHE_NAME = 'orthodox-expedition-v21';
+const CACHE_NAME = 'orthodox-expedition-v22';
 const STATIC_ASSETS = [
   '/Orthodox-Expedition-/',
   '/Orthodox-Expedition-/index.html',

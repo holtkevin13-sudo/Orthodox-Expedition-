@@ -35,12 +35,25 @@
  *   pre-launch teaser. Outside the gap window, null `row` → no
  *   eyebrow + universal-day fallback.
  *
+ * Dispatch 3a — Lectionary on Daily Anchor Card:
+ *   When `row.daily_readings.gospel` is populated, the verse sub-card
+ *   surfaces today's gospel reading (eyebrow "Today's Gospel",
+ *   reference like "John 11:47-54", a ~35-word teaser of the gospel
+ *   text with liturgical lead-ins stripped, and a deep-link to
+ *   bible-reader at the gospel's book + chapter). When the gospel
+ *   payload is absent or malformed, the verse sub-card falls back to
+ *   the existing daily_verses rotation — identical to pre-3a UX on
+ *   dates outside ICS coverage. The framing line, body line, and
+ *   prompt sub-card are untouched by 3a.
+ *
  * Public API:
  *   DailyAnchorCard.render({ row, verse, prompt, today, explorerName })
  *     → HTML string
  *
  * Inputs:
- *   row          — liturgical_calendar row or null
+ *   row          — liturgical_calendar row or null. Expected to include
+ *                  `daily_readings` JSONB when available; absence
+ *                  cleanly falls through to the verse pool.
  *   verse        — daily_verses row (reference, text, bible_book_code,
  *                  bible_chapter) or null
  *   prompt       — journal_prompts row ({ prompt_text }) or null
@@ -164,6 +177,181 @@ const DailyAnchorCard = (() => {
     };
   }
 
+  // ─────────────────────────────────────────────────────────────────
+  // LECTIONARY TEASER HELPERS (Dispatch 3a)
+  // ─────────────────────────────────────────────────────────────────
+
+  // ── GOSPEL LEAD-IN PATTERNS ──────────────────────────────────────
+  // Orthodox lectionary gospel texts conventionally open with a brief
+  // liturgical lead-in identifying the speaker or scene-setting context
+  // ("At that time, ...", "The Lord said to his disciples, ..."). For
+  // a compact home-card teaser, the lead-in burns word budget without
+  // adding context, so we strip the first matching pattern.
+  //
+  // Order matters: most-specific (longest) prefix first so that, e.g.,
+  // "The Lord said to his disciples, " wins before "The Lord said, "
+  // grabs a too-short prefix. Matched case-insensitively.
+  //
+  // The list combines the dispatch's specified patterns with the
+  // actually-occurring corpus variants discovered via SQL audit of
+  // liturgical_calendar.daily_readings (May 8 → Aug 31, 2026 coverage).
+  // Notably the corpus uses "the Jews" rather than "those Jews" — both
+  // included so the strip is robust across data and dispatch literals.
+  const GOSPEL_LEAD_INS = [
+    // Most-specific / longest first
+    'The Lord said to the Jews who had believed in him, ',
+    'The Lord said to the Jews who had come to him, ',
+    'The Lord said to the Jews who came to him, ',
+    'The Lord said to those Jews who came to him, ',
+    'The Lord said to his own disciples, ',
+    'The Lord said to his disciples: ',
+    'The Lord said to his disciples, ',
+    'The Lord said this parable: ',
+    'The Lord said this parable, ',
+    'The Lord said, ',
+    'At that time, ',
+    'Brethren, ',
+  ];
+
+  // ── stripLeadIn ──────────────────────────────────────────────────
+  // Case-insensitive prefix match. Strips the first matching pattern
+  // from the front of `text`. Also strips any subsequent leading
+  // whitespace and opening quote characters (straight " or curly “)
+  // so the teaser flows as a narrative excerpt rather than an
+  // orphaned-quote fragment.
+  //
+  // Returns the stripped text. If no pattern matches, returns the
+  // original text unchanged.
+  function stripLeadIn(text) {
+    if (!text) return '';
+    const s = String(text);
+    const lower = s.toLowerCase();
+    for (let i = 0; i < GOSPEL_LEAD_INS.length; i++) {
+      const pat = GOSPEL_LEAD_INS[i];
+      if (lower.startsWith(pat.toLowerCase())) {
+        let rest = s.slice(pat.length);
+        // Strip leading whitespace and opening quote chars.
+        rest = rest.replace(/^[\s"\u201C]+/, '');
+        return rest;
+      }
+    }
+    return s;
+  }
+
+  // ── capitalizeFirstAlpha ─────────────────────────────────────────
+  // After stripping a lead-in, the remaining first character is
+  // sometimes a lowercase letter from mid-sentence narrative
+  // (e.g., "the chief priests..." after stripping "At that time, ").
+  // This helper uppercases the first alphabetic character so the
+  // teaser reads as a properly-cased sentence.
+  function capitalizeFirstAlpha(s) {
+    if (!s) return '';
+    for (let i = 0; i < s.length; i++) {
+      const c = s[i];
+      // Alphabetic test: a letter has distinct upper/lower forms.
+      if (c.toLowerCase() !== c.toUpperCase()) {
+        return s.slice(0, i) + c.toUpperCase() + s.slice(i + 1);
+      }
+    }
+    return s;
+  }
+
+  // ── buildGospelTeaser ────────────────────────────────────────────
+  // Produces the home-card teaser from full gospel text:
+  //   1. Strip liturgical lead-in (and any opening quote).
+  //   2. Capitalize first alphabetic char of the remainder.
+  //   3. Take first `wordCount` whitespace-separated tokens.
+  //   4. Trim trailing punctuation that reads poorly before an
+  //      ellipsis (commas, semicolons, colons).
+  //   5. Append a Unicode ellipsis (…) iff the text was truncated.
+  //
+  // wordCount defaults to 35 per the dispatch's spec ("first ~30-40
+  // words" with the example showing ~35).
+  function buildGospelTeaser(text, wordCount) {
+    const n = (typeof wordCount === 'number' && wordCount > 0) ? wordCount : 35;
+    const stripped = stripLeadIn(text);
+    const capped = capitalizeFirstAlpha(stripped);
+    if (!capped) return '';
+    const tokens = capped.split(/\s+/).filter(Boolean);
+    if (tokens.length <= n) {
+      // No truncation needed; return as-is (the full passage fit).
+      return capped.trim();
+    }
+    let head = tokens.slice(0, n).join(' ');
+    // Strip trailing read-poorly-before-ellipsis punctuation.
+    head = head.replace(/[,;:]+$/, '');
+    return head + '\u2026'; // U+2026 HORIZONTAL ELLIPSIS
+  }
+
+  // ── renderLectionaryGospel ───────────────────────────────────────
+  // Renders the gospel sub-card. Returns the HTML string on success,
+  // or null when the gospel payload is incomplete (which lets render()
+  // fall back to the daily_verses verse sub-card).
+  //
+  // Required gospel fields: reference, text, book_code, chapter.
+  // verse_start / verse_end are intentionally NOT consumed in 3a;
+  // Dispatch 3c will add verse-range highlighting via a Today's
+  // Reading mode in bible-reader.
+  //
+  // Reuses existing `.dac-sub`, `.dac-sub-eyebrow`, `.dac-verse-text`,
+  // `.dac-verse-ref`, and `.dac-sub-cta` CSS classes — no new CSS
+  // required. The eyebrow ("Today's Gospel") is the only visual
+  // addition vs the daily_verses sub-card.
+  function renderLectionaryGospel(gospel) {
+    if (!gospel) return null;
+    const ref       = gospel.reference;
+    const text      = gospel.text;
+    const bookCode  = gospel.book_code;
+    const chapter   = gospel.chapter;
+    if (!ref || !text || !bookCode || chapter == null || chapter === '') {
+      return null;
+    }
+    const teaser = buildGospelTeaser(text, 35);
+    if (!teaser) return null;
+    const href = `bible-reader.html?book=${encodeURIComponent(bookCode)}`
+               + `&chapter=${encodeURIComponent(chapter)}`
+               + `&source=expedition`;
+    return `
+      <a class="dac-sub dac-verse-sub dac-gospel-sub" href="${esc(href)}">
+        <div class="dac-sub-eyebrow">Today's Gospel</div>
+        <div class="dac-verse-text">${esc(teaser)}</div>
+        <div class="dac-verse-ref">${esc(ref)}</div>
+        <div class="dac-sub-cta">
+          <span>Read this passage</span>
+          <span class="dac-sub-arrow" aria-hidden="true">›</span>
+        </div>
+      </a>
+    `;
+  }
+
+  // ── renderDailyVerseFallback ─────────────────────────────────────
+  // Renders the daily_verses sub-card (existing pre-3a behavior).
+  // Returns the HTML string when the verse row has all required
+  // fields, or empty string when it doesn't (in which case the verse
+  // sub-card is simply omitted from the card — same as before).
+  //
+  // Extracted from the original inline render block so the
+  // lectionary-vs-fallback decision in render() reads cleanly.
+  function renderDailyVerseFallback(verse) {
+    if (!verse) return '';
+    if (!verse.reference || !verse.text || !verse.bible_book_code || verse.bible_chapter == null) {
+      return '';
+    }
+    const href = `bible-reader.html?book=${encodeURIComponent(verse.bible_book_code)}`
+               + `&chapter=${encodeURIComponent(verse.bible_chapter)}`
+               + `&source=expedition`;
+    return `
+      <a class="dac-sub dac-verse-sub" href="${esc(href)}">
+        <div class="dac-verse-text">&ldquo;${esc(verse.text)}&rdquo;</div>
+        <div class="dac-verse-ref">— ${esc(verse.reference)}</div>
+        <div class="dac-sub-cta">
+          <span>Read this passage</span>
+          <span class="dac-sub-arrow" aria-hidden="true">›</span>
+        </div>
+      </a>
+    `;
+  }
+
   // ── MAIN RENDER ─────────────────────────────────────────────────
   function render({ row, verse, prompt, today, explorerName } = {}) {
     const head = resolveHeadCopy({ row, today, explorerName });
@@ -189,24 +377,25 @@ const DailyAnchorCard = (() => {
       <div class="dac-body${head.greatFeast ? ' dac-body-great' : ''}">${esc(head.body)}</div>
     ` : '';
 
-    // ── VERSE SUB-CARD ───────────────────────────────────────────
-    // Tappable; deep-links to bible-reader.html with source=expedition
-    // so the bible-reader's expedition banner activates.
+    // ── VERSE SUB-CARD (Dispatch 3a: lectionary-first) ───────────
+    // Lectionary gospel takes precedence when row.daily_readings.gospel
+    // is fully populated. Otherwise, fall back to the daily_verses
+    // rotation (existing pre-3a UX). Either failure path yields '' so
+    // the card simply omits the verse sub-card when there is nothing
+    // to render — matches pre-existing graceful behavior.
     let verseHtml = '';
-    if (verse && verse.reference && verse.text && verse.bible_book_code && verse.bible_chapter) {
-      const href = `bible-reader.html?book=${encodeURIComponent(verse.bible_book_code)}`
-                 + `&chapter=${encodeURIComponent(verse.bible_chapter)}`
-                 + `&source=expedition`;
-      verseHtml = `
-        <a class="dac-sub dac-verse-sub" href="${esc(href)}">
-          <div class="dac-verse-text">&ldquo;${esc(verse.text)}&rdquo;</div>
-          <div class="dac-verse-ref">— ${esc(verse.reference)}</div>
-          <div class="dac-sub-cta">
-            <span>Read this passage</span>
-            <span class="dac-sub-arrow" aria-hidden="true">›</span>
-          </div>
-        </a>
-      `;
+    if (row && row.daily_readings && row.daily_readings.gospel) {
+      const lectionaryHtml = renderLectionaryGospel(row.daily_readings.gospel);
+      if (lectionaryHtml) {
+        verseHtml = lectionaryHtml;
+      } else {
+        // Gospel payload present but incomplete — fall back rather
+        // than show nothing. Preserves the verse sub-card surface
+        // on misshapen data.
+        verseHtml = renderDailyVerseFallback(verse);
+      }
+    } else {
+      verseHtml = renderDailyVerseFallback(verse);
     }
 
     // ── PROMPT SUB-CARD ──────────────────────────────────────────
@@ -245,7 +434,20 @@ const DailyAnchorCard = (() => {
   // ── PUBLIC API ──────────────────────────────────────────────────
   return {
     render,
-    _internals: { esc, todayMMDD, todayISO, inPreLaunchGap, resolveHeadCopy },
+    _internals: {
+      esc,
+      todayMMDD,
+      todayISO,
+      inPreLaunchGap,
+      resolveHeadCopy,
+      // Lectionary helpers (Dispatch 3a) — exposed for tests
+      stripLeadIn,
+      capitalizeFirstAlpha,
+      buildGospelTeaser,
+      renderLectionaryGospel,
+      renderDailyVerseFallback,
+      GOSPEL_LEAD_INS,
+    },
   };
 })();
 

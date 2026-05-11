@@ -21,158 +21,17 @@
 <script src="js/pilgrimages.js"></script>
 <script src="js/prayers.js"></script>
 <script src="js/prayer-rollup.js"></script>
+<script src="js/reading.js"></script>
 <script src="js/daily-anchor-card.js"></script>
 <script src="js/reading-quest.js"></script>
 <script src="js/memorization.js"></script>
+<script src="js/missions.js"></script>
+<script src="js/home-dashboard.js"></script>
 <script src="js/welcome-flow.js"></script>
 <script>
 function showAdminBar(){
   const bar = document.getElementById('admin-bar');
   if(bar) bar.classList.add('show');
-}
-
-// ── TODAY CARD ────────────────────────────────────────────────
-// B1.a — session item is built FIRST (visual hero); daily missions follow underneath.
-// ADHD-first: ONE clear next action above the smaller recurring practices.
-// Note: this is the hoisting-loser duplicate of the live function further down.
-// Both copies kept in lockstep so future edits surface mismatches immediately.
-function renderTodayCard(mastery, completed, topics, allSessions, missions, missionComps, today, progressRows){
-  const container = document.getElementById('today-items');
-  if(!container) return;
-  container.innerHTML = '';
-  progressRows = progressRows || [];
-
-  const items = [];
-
-  // 1. Current session (HERO) — use parseInt to avoid type mismatch
-  const activeMastery = mastery.find(m=>m.status==='available'||m.status==='pending');
-  if(activeMastery && allSessions.length > 0){
-    const activeTopicId = parseInt(activeMastery.topic_id);
-    const topicSessions = allSessions
-      .filter(s=>parseInt(s.topic_id)===activeTopicId)
-      .sort((a,b)=>a.order_index-b.order_index);
-    const nextSession = topicSessions.find(s=>!completed.includes(s.id));
-    if(nextSession){
-      items.push({
-        text: `${nextSession.id} — ${nextSession.title}`,
-        coins: nextSession.coins,
-        done: false,
-        link: 'week.html',
-        isSession: true,
-        sessionId: nextSession.id,
-        dayProgress: progressRows.find(p=>p.session_id===nextSession.id) || null,
-      });
-    } else if(topicSessions.length > 0){
-      // All sessions in topic done — show mastery reminder
-      items.push({
-        text: 'Topic complete — present your mastery assignment!',
-        coins: 200,
-        done: activeMastery.status==='pending',
-        link: 'week.html',
-        isSession: false,
-      });
-    }
-  } else if(!activeMastery && allSessions.length > 0){
-    // Fallback: show first incomplete session from topic 0
-    const firstIncomplete = allSessions.find(s=>parseInt(s.topic_id)===0 && !completed.includes(s.id));
-    if(firstIncomplete){
-      items.push({
-        text: `${firstIncomplete.id} — ${firstIncomplete.title}`,
-        coins: firstIncomplete.coins,
-        done: false,
-        link: 'week.html',
-        isSession: true,
-        sessionId: firstIncomplete.id,
-        dayProgress: progressRows.find(p=>p.session_id===firstIncomplete.id) || null,
-      });
-    }
-  }
-
-  // 2. Daily practice missions (under the session, smaller recurring rhythm)
-  const dailyMissions = missions.filter(m=>m.type==='daily');
-  dailyMissions.forEach(m=>{
-    const done = missionComps.some(c=>c.mission_id===m.id && c.day_key===today);
-    items.push({text: m.name, coins: m.coins, done, link:'missions.html'});
-  });
-
-  if(!items.length){
-    container.innerHTML='<div style="font-size:0.8rem;color:rgba(240,201,110,0.65);font-style:italic;padding:0.25rem 0;">All done for today! ✦</div>';
-    return;
-  }
-
-  // Today's day-of-week → which dot is "active today" (M=1, W=2, F=3; otherwise 0/none)
-  const dow = new Date().getDay(); // 0=Sun..6=Sat
-  const todayDayN = dow === 1 ? 1 : dow === 3 ? 2 : dow === 5 ? 3 : 0;
-
-  // Repair J — schedule flexibility on the home day-rail mini.
-  // isSlotPast: is M/W/F slot N strictly before today's calendar day?
-  //   slot 1 (Mon) lives at dow=1, slot 2 (Wed) at dow=3, slot 3 (Fri) at dow=5.
-  //   Sunday (dow=0) is treated as past every weekday slot in the just-ended week.
-  function isSlotPast(n, currentDow){
-    const slotDow = n === 1 ? 1 : n === 2 ? 3 : 5;
-    if (currentDow === 0) return true;
-    return slotDow < currentDow;
-  }
-  // pickCatchUpDay: walk slots in order; the first incomplete *past* slot wins,
-  // gated on prior slots being complete (sequence rule — day_2 always requires
-  // day_1 complete, day_3 requires both). Returns 1 | 2 | 3 | null.
-  function pickCatchUpDay(progress, currentDow){
-    if (isSlotPast(1, currentDow) && !(progress && progress.day_1_completed_at)) return 1;
-    if (progress && progress.day_1_completed_at && isSlotPast(2, currentDow) && !progress.day_2_completed_at) return 2;
-    if (progress && progress.day_1_completed_at && progress.day_2_completed_at && isSlotPast(3, currentDow) && !progress.day_3_completed_at) return 3;
-    return null;
-  }
-
-  function dotClass(progress, n, catchUpDay){
-    if(progress && progress[`day_${n}_completed_at`]) return 'done';
-    if(catchUpDay !== null && catchUpDay !== undefined && n === catchUpDay) return 'catch-up';
-    // When a catch-up is active, suppress the literal-today highlight to
-    // keep one focal point — the catch-up dot becomes the active visual.
-    if(catchUpDay !== null && catchUpDay !== undefined) return 'future';
-    if(n === todayDayN) return 'today';
-    return 'future';
-  }
-  function dotMarkup(progress, n, label, catchUpDay){
-    const cls = dotClass(progress, n, catchUpDay);
-    const glyph = cls === 'done' ? '✓' : (cls === 'catch-up' ? '↺' : '');
-    return `<span class="day-pair">`+
-      `<span class="day-dot ${cls}" aria-label="Day ${n} (${label}) ${cls}">${glyph}</span>`+
-      `<span class="day-dot-label" aria-hidden="true">${label}</span>`+
-      `</span>`;
-  }
-
-  items.forEach(item=>{
-    const div = document.createElement('a');
-    div.href = item.link || '#';
-    div.style.textDecoration = 'none';
-    div.className = 'today-item' + (item.done?' done':'');
-
-    if(item.isSession){
-      div.classList.add('today-session-item');
-      const p = item.dayProgress;
-      const allThree = p && p.day_1_completed_at && p.day_2_completed_at && p.day_3_completed_at;
-      if(allThree) div.classList.add('complete');
-      const catchUpDay = pickCatchUpDay(p, dow);
-      div.innerHTML = `
-        <div class="today-check ${item.done?'done':'pending'}">${item.done?'✦':'☩'}</div>
-        <div class="today-session-body">
-          <span class="today-text">${item.text}</span>
-          <div class="day-rail-mini" role="group" aria-label="Mon Wed Fri progress for this session">
-            ${dotMarkup(p, 1, 'Mon', catchUpDay)}
-            ${dotMarkup(p, 2, 'Wed', catchUpDay)}
-            ${dotMarkup(p, 3, 'Fri', catchUpDay)}
-          </div>
-        </div>
-        <span class="today-coins">${item.done?'':'+'+ item.coins}</span>
-        <span class="today-session-chevron" aria-hidden="true">›</span>`;
-    } else {
-      div.innerHTML = `
-        <div class="today-check ${item.done?'done':'pending'}">${item.done?'✦':''}</div>
-        <span class="today-text">${item.text}</span>
-        <span class="today-coins">${item.done?'':'+'+ item.coins}</span>`;
-    }
-    container.appendChild(div);
-  });
 }
 
 // ── PRAYER STREAK ─────────────────────────────────────────────
@@ -1357,6 +1216,131 @@ body::before{
 .map-bottom{font-size:0.6rem;letter-spacing:0.55rem;color:rgba(80,40,0,0.85);}
 #expedition-map.fade-out{animation:mapFade 0.5s ease forwards;}
 @keyframes mapFade{to{opacity:0;pointer-events:none;}}
+
+/* ═══════════════════════════════════════════════════════════════
+   HOME DASHBOARD — Dispatch 4b (HomeDashboard.mount renders here)
+   ═══════════════════════════════════════════════════════════════ */
+#home-dashboard{margin-bottom:1rem;}
+
+/* (1) Today's Progress Card */
+.hd-progress-card{
+  background:linear-gradient(180deg,rgba(201,146,42,0.10) 0%,rgba(44,22,84,0.12) 100%);
+  border:1.5px solid var(--gold);
+  border-radius:14px;
+  padding:1.1rem 1.05rem;
+  margin-bottom:0.75rem;
+  box-shadow:0 4px 18px rgba(27,42,74,0.18);
+}
+.hd-pc-eyebrow{
+  font-family:'Cinzel',serif;font-weight:600;
+  font-size:0.7rem;letter-spacing:0.18em;text-transform:uppercase;
+  color:var(--gold-light);
+  margin-bottom:0.55rem;
+}
+.hd-pc-count{
+  font-family:'Cinzel',serif;
+  font-size:1.1rem;
+  color:rgba(244,232,193,0.92);
+  margin-bottom:0.55rem;
+  display:flex;align-items:baseline;gap:0.4rem;
+}
+.hd-pc-num{
+  font-family:'Cinzel Decorative',serif;font-weight:700;
+  font-size:2.1rem;
+  color:var(--gold-bright);
+  text-shadow:0 0 10px rgba(255,215,0,0.4);
+  line-height:1;
+  display:inline-block;min-width:1.4ch;text-align:right;
+}
+.hd-pc-sep{
+  font-size:0.95rem;color:rgba(240,201,110,0.6);font-weight:400;
+}
+.hd-pc-total{
+  font-size:1.3rem;color:rgba(244,232,193,0.85);font-weight:600;
+}
+.hd-pc-today{
+  font-family:'Crimson Text',serif;font-style:italic;
+  font-size:0.95rem;color:rgba(240,201,110,0.7);font-weight:400;
+  margin-left:0.25rem;
+}
+.hd-pc-check{
+  color:rgba(134,239,172,0.92);
+  font-weight:700;font-size:1.4rem;
+  margin-left:0.3rem;
+}
+.hd-pc-bar{
+  height:8px;border-radius:5px;
+  background:rgba(244,232,193,0.08);
+  border:1px solid rgba(201,146,42,0.18);
+  overflow:hidden;margin-bottom:0.5rem;
+}
+.hd-pc-fill{
+  height:100%;width:0%;
+  background:linear-gradient(90deg,var(--gold) 0%,var(--gold-bright) 100%);
+  box-shadow:0 0 6px rgba(255,215,0,0.4);
+  transition:width 500ms ease;
+}
+.hd-pc-day{
+  font-family:'Crimson Text',serif;font-style:italic;
+  font-size:0.85rem;color:rgba(240,201,110,0.6);
+}
+
+/* (2) Primary CTA */
+.hd-cta{
+  display:flex;align-items:center;justify-content:center;gap:0.55rem;
+  width:100%;
+  padding:1rem 1.25rem;
+  font-family:'Cinzel',serif;font-weight:700;
+  font-size:1.0rem;letter-spacing:0.06em;
+  text-decoration:none;
+  border-radius:14px;
+  margin-bottom:0.75rem;
+  transition:transform 150ms ease, box-shadow 150ms ease, opacity 200ms ease;
+}
+.hd-cta:active{transform:translateY(1px) scale(0.99);}
+.hd-cta-pending{
+  background:linear-gradient(180deg,#d9a849 0%,#a87420 100%);
+  color:var(--ink);
+  border:1.5px solid var(--gold-bright);
+  box-shadow:0 5px 16px rgba(201,146,42,0.32),
+             inset 0 1px 0 rgba(255,255,255,0.35);
+}
+.hd-cta-done{
+  background:linear-gradient(180deg,rgba(201,146,42,0.12) 0%,rgba(44,22,84,0.15) 100%);
+  color:var(--gold-light);
+  border:1.5px solid rgba(201,146,42,0.45);
+}
+.hd-cta-pilgrimage{
+  background:linear-gradient(180deg,var(--parchment) 0%,var(--parchment-dark) 100%);
+  color:var(--ink);
+  border:1.5px solid var(--gold);
+}
+.hd-cta-arrow{font-size:1.15rem;line-height:1;}
+.hd-cta-mark{font-size:1.1rem;color:var(--gold);line-height:1;}
+
+/* (3) Compact Streak Row */
+.hd-streak-row{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:0.55rem;
+  margin-bottom:0.5rem;
+}
+.hd-streak-tile{
+  display:flex;align-items:center;gap:0.55rem;
+  padding:0.65rem 0.7rem;
+  background:rgba(244,232,193,0.04);
+  border:1px solid rgba(201,146,42,0.22);
+  border-radius:10px;
+}
+.hd-st-icon{font-size:1.2rem;line-height:1;flex-shrink:0;}
+.hd-st-meta{display:flex;flex-direction:column;gap:0.05rem;min-width:0;}
+.hd-st-label{
+  font-family:'Cinzel',serif;font-weight:600;
+  font-size:0.6rem;letter-spacing:0.12em;text-transform:uppercase;
+  color:rgba(240,201,110,0.65);
+}
+.hd-st-val{
+  font-family:'Cinzel Decorative',serif;font-weight:700;
+  font-size:0.95rem;color:var(--gold-light);
+}
 </style>
 </head>
 <body>
@@ -1493,28 +1477,19 @@ body::before{
       </div>
     </div>
 
-    <!-- DAILY ANCHOR CARD — Lane A "Today We Celebrate"
-         Liturgical season + feast/saint + Bible verse + reflection prompt.
-         Renders into .daily-anchor-card by loadDailyAnchorCard() in the
-         script section below. Hidden until populated to avoid an empty
-         frame flash. -->
-    <div class="daily-anchor-card fade-up" id="daily-anchor-card" style="display:none;"></div>
+    <!-- Dispatch 4b — Daily Anchor Card and Reading Quest mounts
+         have MOVED from home to Missions (Daily tab). Verse tile
+         REMOVED entirely; its info now lives in the compact streak
+         row inside the home dashboard.
 
-    <!-- READING QUEST MOUNT — Dispatch 3b
-         Sibling to daily-anchor-card. ReadingQuest.mount() (in
-         js/reading-quest.js) renders today's question card here
-         AFTER Nolan has tapped through to bible-reader via the gospel
-         link AND returned (pagehide hook in bible-reader.html sets a
-         localStorage flag). Before that — and on dates without a
-         populated question — this slot renders empty. Conditional
-         render is fully internal to ReadingQuest; no `hidden` attr
-         is used here, so Op Learning #15 has no cascade trap to
-         apply on this element. -->
-    <div id="reading-quest-mount"></div>
+         The home page is now a calm status surface; the action hub
+         lives on missions.html. -->
 
     <!-- PILGRIMAGE BANNER (Dispatch 2 / Surface C) — surfaced when
-         Pilgrimages.isActiveToday returns truthy. Quiet parchment palette,
-         not alarming, sits above the today-card so Nolan sees it first. -->
+         Pilgrimages.isActiveToday returns truthy. Quiet parchment
+         palette, not alarming. Sits above the home dashboard so
+         Nolan sees the pilgrimage context first; the dashboard's
+         CTA also takes a pilgrimage-state copy variant. -->
     <div class="hp-pilgrimage-banner" id="hp-pilgrimage-banner" hidden>
       <div class="hp-pb-icon" id="hp-pb-icon">🚶</div>
       <div class="hp-pb-text">
@@ -1523,27 +1498,13 @@ body::before{
       </div>
     </div>
 
-    <!-- TODAY CARD — HERO (B1.a, ADHD-first: ONE clear next action;
-         Repair N: now position 3 in the rank → liturgical → today → next-rank stack.
-         The renderTodayCard() function (defined in two lockstep copies in the script
-         section below) targets #today-items by id, so this DOM target moves with the
-         section without requiring any JS change.) -->
-    <div class="today-card fade-up" id="today-card">
-      <div class="today-eyebrow">✦ Today's Expedition</div>
-      <div class="today-items" id="today-items"></div>
-    </div>
-
-    <!-- VERSE TILE (Dispatch 4a — Memorization Lane, v1)
-         Tappable link to memorization.html. Renders only when a verse
-         is set for the current week (initVerseTile populates the
-         contents; otherwise the tile stays hidden so the home page
-         isn't cluttered with an empty placeholder).
-         Dispatch 4b will fold this into the Quest Bar. -->
-    <a class="verse-tile fade-up" id="verse-tile" href="memorization.html" style="display:none;">
-      <div class="verse-tile-eyebrow">✦ This Week's Verse</div>
-      <div class="verse-tile-ref" id="verse-tile-ref"></div>
-      <span class="verse-tile-arrow">›</span>
-    </a>
+    <!-- HOME DASHBOARD MOUNT (Dispatch 4b)
+         Renders the new home status surfaces: Today's Progress
+         card, state-aware CTA, and compact streak row. Filled by
+         window.HomeDashboard.mount() from the script section
+         below. Delegates state to Missions.loadTodaysState so home
+         and missions can never drift. -->
+    <div id="home-dashboard"></div>
 
     <!-- NEXT RANK -->
     <div class="next-rank-card fade-up" id="next-rank-card">
@@ -1621,7 +1582,7 @@ body::before{
   </a>
   <a class="nav-item" href="bible-reader.html">
     <span class="nav-mark">☦︎</span>
-    <span class="nav-label">Holy Scriptures</span>
+    <span class="nav-label">Scriptures</span>
   </a>
   <a class="nav-item" href="journal.html">
     <span class="nav-mark">✎</span>
@@ -1738,7 +1699,8 @@ async function loadData(userId){
   const progressRows  = sessionsRes.data || [];
   // B1.c — "completed" means FULLY complete: all three M/W/F days done.
   // A bare session_progress row (legacy single-day model) does NOT count as complete.
-  // This semantic is consumed by renderTodayCard (next-session lookup).
+  // This semantic is consumed by Missions.loadTodaysState's next-session
+  // lookup (active-session resolution mirrors home.html's prior pattern).
   // checkNotifications ignores the param.
   const completed     = progressRows
     .filter(s => s.day_1_completed_at && s.day_2_completed_at && s.day_3_completed_at)
@@ -1750,16 +1712,69 @@ async function loadData(userId){
 
   renderAll(mastery, completed, topics);
   checkNotifications(mastery, completed);
-  renderTodayCard(mastery, completed, topics, allSessions, missions, missionComps, today, progressRows);
-  // Initialize Prayers module (Surface B): canonical streak source.
+  // Dispatch 4b — Today card REMOVED from home; its surface
+  // (session info + day-rail) moves to the Missions session row.
+  // Reading-quest + daily-anchor-card MOVED to missions Daily tab.
+  // Verse tile REMOVED entirely.
+  //
+  // Initialize streak modules so HomeDashboard's compact streak row
+  // can read getStreak() against initialized state. Pilgrimages
+  // doesn't need init (module-scope cache); Memorization takes
+  // args directly (no init).
   if (window.Prayers && typeof window.Prayers.init === 'function') {
     try { await window.Prayers.init(sb, profile.id); } catch(_e) { /* graceful */ }
   }
+  if (window.Reading && typeof window.Reading.init === 'function') {
+    try { await window.Reading.init(sb, profile.id); } catch(_e) { /* graceful */ }
+  }
   renderPrayerStreak(missions, missionComps);
   loadAnnouncement();
-  loadDailyAnchorCard();
   loadPilgrimageBanner();
+
+  // Mount the home dashboard (Today's Progress + state-aware CTA +
+  // compact streak row). Internally delegates to
+  // Missions.loadTodaysState so home and missions can never drift.
+  if (window.HomeDashboard && typeof window.HomeDashboard.mount === 'function') {
+    const host = document.getElementById('home-dashboard');
+    if (host && profile && profile.id && profile.family_id) {
+      try {
+        await window.HomeDashboard.mount(host, {
+          sb,
+          explorerId: profile.id,
+          familyId:   profile.family_id,
+          profile,
+        });
+      } catch (e) {
+        console.warn('HomeDashboard.mount failed (graceful):', e);
+      }
+    }
+  }
 }
+
+// ── HOME DASHBOARD REFRESH ON VISIBILITY ─────────────────────
+// 10/10 polish #4: when Nolan returns to home (e.g. after
+// completing a lane on missions.html → tapping Home), refresh
+// the dashboard so the count-up animation fires for the new
+// completed count, and the CTA copy may switch (pending → done).
+(function wireHomeDashboardRefresh(){
+  async function maybeRefresh(){
+    if (document.visibilityState !== 'visible') return;
+    if (!window.HomeDashboard || !window.HomeDashboard.mount) return;
+    if (!profile || !profile.id || !profile.family_id) return;
+    const host = document.getElementById('home-dashboard');
+    if (!host) return;
+    try {
+      await window.HomeDashboard.mount(host, {
+        sb,
+        explorerId: profile.id,
+        familyId:   profile.family_id,
+        profile,
+      });
+    } catch (_e) { /* graceful */ }
+  }
+  document.addEventListener('visibilitychange', maybeRefresh);
+  window.addEventListener('pageshow', maybeRefresh);
+})();
 
 // ── RENDER ────────────────────────────────────────────────────
 function renderAll(mastery, completed, topics){
@@ -1948,14 +1963,9 @@ function closeRankup(){
         console.warn('Prayer rollup (home) failed:', err);
       });
     }
-    // Lane 5 verse tile (Dispatch 4a — Memorization Lane). Fire-and-forget;
-    // failures leave the tile hidden, which is the right empty state.
-    // Dispatch 4b's Quest Bar will absorb this surface.
-    if(window.Memorization && profile && profile.family_id){
-      initVerseTile(profile.family_id).catch(err => {
-        console.warn('Verse tile (home) init failed:', err);
-      });
-    }
+    // Dispatch 4b — initVerseTile() removed; the slim verse tile is
+    // gone. Verse info now surfaces inside the compact streak row
+    // on the home dashboard.
     // Repair S v2 — Welcome flow. Fires once per account on/after May 18,
     // 2026 (America/New_York). Pre-launch: silent no-op, no Supabase calls.
     // State lives in profiles.onboarding_state.welcome_completed_at.
@@ -1984,28 +1994,6 @@ async function checkAdminRedirect(){
   }
 }
 
-// ── VERSE TILE INIT (Dispatch 4a — Memorization Lane) ─────────
-// Reads the current week's verse via Memorization.getCurrentVerse,
-// populates the slim tile between today-card and next-rank-card,
-// and unhides the element. If no verse is set for the current
-// week, the tile stays display:none and the home layout collapses
-// naturally. v1 surface — Dispatch 4b's Quest Bar will absorb.
-async function initVerseTile(familyId){
-  const tile = document.getElementById('verse-tile');
-  if(!tile || !familyId || !window.Memorization) return;
-  try {
-    const verse = await window.Memorization.getCurrentVerse(sb, familyId);
-    if(!verse || !verse.reference){
-      // No verse this week — leave tile hidden (display:none stays).
-      return;
-    }
-    const refEl = document.getElementById('verse-tile-ref');
-    if(refEl){ refEl.textContent = verse.reference; }
-    tile.style.display = 'flex';
-  } catch(e){
-    console.warn('initVerseTile failed (non-fatal):', e);
-  }
-}
 
 function showAdminBar(){
   const bar = document.getElementById('admin-bar');
@@ -2033,149 +2021,6 @@ function showAdminBar(){
   }
 })();
 
-// ── TODAY CARD ────────────────────────────────────────────────
-// B1.a — session item is built FIRST (visual hero); daily missions follow underneath.
-// ADHD-first: ONE clear next action above the smaller recurring practices.
-// JS hoisting: this is the live copy that wins. The earlier identical copy is kept
-// in lockstep so future edits surface mismatches immediately.
-function renderTodayCard(mastery, completed, topics, allSessions, missions, missionComps, today, progressRows){
-  const container = document.getElementById('today-items');
-  if(!container) return;
-  container.innerHTML = '';
-  progressRows = progressRows || [];
-
-  const items = [];
-
-  // 1. Current session (HERO) — use parseInt to avoid type mismatch
-  const activeMastery = mastery.find(m=>m.status==='available'||m.status==='pending');
-  if(activeMastery && allSessions.length > 0){
-    const activeTopicId = parseInt(activeMastery.topic_id);
-    const topicSessions = allSessions
-      .filter(s=>parseInt(s.topic_id)===activeTopicId)
-      .sort((a,b)=>a.order_index-b.order_index);
-    const nextSession = topicSessions.find(s=>!completed.includes(s.id));
-    if(nextSession){
-      items.push({
-        text: `${nextSession.id} — ${nextSession.title}`,
-        coins: nextSession.coins,
-        done: false,
-        link: 'week.html',
-        isSession: true,
-        sessionId: nextSession.id,
-        dayProgress: progressRows.find(p=>p.session_id===nextSession.id) || null,
-      });
-    } else if(topicSessions.length > 0){
-      // All sessions in topic done — show mastery reminder
-      items.push({
-        text: 'Topic complete — present your mastery assignment!',
-        coins: 200,
-        done: activeMastery.status==='pending',
-        link: 'week.html',
-        isSession: false,
-      });
-    }
-  } else if(!activeMastery && allSessions.length > 0){
-    // Fallback: show first incomplete session from topic 0
-    const firstIncomplete = allSessions.find(s=>parseInt(s.topic_id)===0 && !completed.includes(s.id));
-    if(firstIncomplete){
-      items.push({
-        text: `${firstIncomplete.id} — ${firstIncomplete.title}`,
-        coins: firstIncomplete.coins,
-        done: false,
-        link: 'week.html',
-        isSession: true,
-        sessionId: firstIncomplete.id,
-        dayProgress: progressRows.find(p=>p.session_id===firstIncomplete.id) || null,
-      });
-    }
-  }
-
-  // 2. Daily practice missions (under the session, smaller recurring rhythm)
-  const dailyMissions = missions.filter(m=>m.type==='daily');
-  dailyMissions.forEach(m=>{
-    const done = missionComps.some(c=>c.mission_id===m.id && c.day_key===today);
-    items.push({text: m.name, coins: m.coins, done, link:'missions.html'});
-  });
-
-  if(!items.length){
-    container.innerHTML='<div style="font-size:0.8rem;color:rgba(240,201,110,0.65);font-style:italic;padding:0.25rem 0;">All done for today! ✦</div>';
-    return;
-  }
-
-  // Today's day-of-week → which dot is "active today" (M=1, W=2, F=3; otherwise 0/none)
-  const dow = new Date().getDay(); // 0=Sun..6=Sat
-  const todayDayN = dow === 1 ? 1 : dow === 3 ? 2 : dow === 5 ? 3 : 0;
-
-  // Repair J — schedule flexibility on the home day-rail mini.
-  // isSlotPast: is M/W/F slot N strictly before today's calendar day?
-  //   slot 1 (Mon) lives at dow=1, slot 2 (Wed) at dow=3, slot 3 (Fri) at dow=5.
-  //   Sunday (dow=0) is treated as past every weekday slot in the just-ended week.
-  function isSlotPast(n, currentDow){
-    const slotDow = n === 1 ? 1 : n === 2 ? 3 : 5;
-    if (currentDow === 0) return true;
-    return slotDow < currentDow;
-  }
-  // pickCatchUpDay: walk slots in order; the first incomplete *past* slot wins,
-  // gated on prior slots being complete (sequence rule — day_2 always requires
-  // day_1 complete, day_3 requires both). Returns 1 | 2 | 3 | null.
-  function pickCatchUpDay(progress, currentDow){
-    if (isSlotPast(1, currentDow) && !(progress && progress.day_1_completed_at)) return 1;
-    if (progress && progress.day_1_completed_at && isSlotPast(2, currentDow) && !progress.day_2_completed_at) return 2;
-    if (progress && progress.day_1_completed_at && progress.day_2_completed_at && isSlotPast(3, currentDow) && !progress.day_3_completed_at) return 3;
-    return null;
-  }
-
-  function dotClass(progress, n, catchUpDay){
-    if(progress && progress[`day_${n}_completed_at`]) return 'done';
-    if(catchUpDay !== null && catchUpDay !== undefined && n === catchUpDay) return 'catch-up';
-    // When a catch-up is active, suppress the literal-today highlight to
-    // keep one focal point — the catch-up dot becomes the active visual.
-    if(catchUpDay !== null && catchUpDay !== undefined) return 'future';
-    if(n === todayDayN) return 'today';
-    return 'future';
-  }
-  function dotMarkup(progress, n, label, catchUpDay){
-    const cls = dotClass(progress, n, catchUpDay);
-    const glyph = cls === 'done' ? '✓' : (cls === 'catch-up' ? '↺' : '');
-    return `<span class="day-pair">`+
-      `<span class="day-dot ${cls}" aria-label="Day ${n} (${label}) ${cls}">${glyph}</span>`+
-      `<span class="day-dot-label" aria-hidden="true">${label}</span>`+
-      `</span>`;
-  }
-
-  items.forEach(item=>{
-    const div = document.createElement('a');
-    div.href = item.link || '#';
-    div.style.textDecoration = 'none';
-    div.className = 'today-item' + (item.done?' done':'');
-
-    if(item.isSession){
-      div.classList.add('today-session-item');
-      const p = item.dayProgress;
-      const allThree = p && p.day_1_completed_at && p.day_2_completed_at && p.day_3_completed_at;
-      if(allThree) div.classList.add('complete');
-      const catchUpDay = pickCatchUpDay(p, dow);
-      div.innerHTML = `
-        <div class="today-check ${item.done?'done':'pending'}">${item.done?'✦':'☩'}</div>
-        <div class="today-session-body">
-          <span class="today-text">${item.text}</span>
-          <div class="day-rail-mini" role="group" aria-label="Mon Wed Fri progress for this session">
-            ${dotMarkup(p, 1, 'Mon', catchUpDay)}
-            ${dotMarkup(p, 2, 'Wed', catchUpDay)}
-            ${dotMarkup(p, 3, 'Fri', catchUpDay)}
-          </div>
-        </div>
-        <span class="today-coins">${item.done?'':'+'+ item.coins}</span>
-        <span class="today-session-chevron" aria-hidden="true">›</span>`;
-    } else {
-      div.innerHTML = `
-        <div class="today-check ${item.done?'done':'pending'}">${item.done?'✦':''}</div>
-        <span class="today-text">${item.text}</span>
-        <span class="today-coins">${item.done?'':'+'+ item.coins}</span>`;
-    }
-    container.appendChild(div);
-  });
-}
 
 // ── PRAYER STREAK ─────────────────────────────────────────────
 // Dispatch 2: delegates to Prayers.getStreak() (single source of truth)
@@ -2327,99 +2172,6 @@ async function loadPilgrimageBanner(){
   }
 }
 
-// ── DAILY ANCHOR CARD (Lane A) ────────────────────────────────
-// Pulls today's liturgical_calendar row + a daily verse + a daily
-// reflection prompt, and asks DailyAnchorCard.render() (loaded from
-// js/daily-anchor-card.js) to produce the markup. Three queries in
-// parallel; failures degrade silently (the card just stays hidden).
-//
-// Date matching uses the local wall-clock day to avoid late-night
-// UTC drift bumping us forward a day in Florida time.
-async function loadDailyAnchorCard(){
-  try {
-    if (typeof DailyAnchorCard === 'undefined') return; // defensive
-
-    const now = new Date();
-    // Date string for liturgical_calendar lookup. Prefers
-    // WeekUtils.todayKey() (America/New_York via Intl) when available
-    // — matches the rest of the app's ET convention (Op Learning #7)
-    // and is iPad-timezone-defensive. Falls back to raw local-Date
-    // formatting if WeekUtils hasn't loaded for any reason (Florida is
-    // ET so the fallback produces the same value here in practice).
-    const localISO = (typeof WeekUtils !== 'undefined' && WeekUtils && typeof WeekUtils.todayKey === 'function')
-      ? WeekUtils.todayKey()
-      : `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
-    const doy = (() => {
-      // Day-of-year in local wall clock — matches Postgres EXTRACT(DOY)
-      const start = new Date(now.getFullYear(), 0, 0);
-      const diff  = now - start;
-      return Math.floor(diff / 86400000); // 1..365/366
-    })();
-
-    const [calRes, versesRes, promptsRes] = await Promise.all([
-      sb.from('liturgical_calendar')
-        .select('calendar_date,liturgical_season,feast_name,feast_rank,sunday_name,saint_commemorations,daily_readings')
-        .eq('calendar_date', localISO).maybeSingle(),
-      sb.from('daily_verses')
-        .select('reference,text,bible_book_code,bible_chapter')
-        .eq('is_active', true).order('display_order'),
-      sb.from('journal_prompts')
-        .select('prompt_text')
-        .eq('is_active', true).order('display_order'),
-    ]);
-
-    const verses  = versesRes.data  || [];
-    const prompts = promptsRes.data || [];
-    const verse   = verses.length  ? verses[(doy - 1 + verses.length)  % verses.length]  : null;
-    const prompt  = prompts.length ? prompts[(doy - 1 + prompts.length) % prompts.length] : null;
-
-    const explorerName = (profile && profile.name)
-      ? String(profile.name).trim().split(/\s+/)[0]
-      : null;
-
-    const html = DailyAnchorCard.render({
-      row: calRes && calRes.data ? calRes.data : null,
-      verse,
-      prompt,
-      today: now,
-      explorerName,
-    });
-
-    const host = document.getElementById('daily-anchor-card');
-    if (host && html) {
-      host.innerHTML = html;
-      host.style.display = 'block';
-    }
-
-    // ── Dispatch 3b · Mount the reading-quest card ──────────────
-    // Sibling-mount under the daily anchor card. Reuses the row +
-    // localISO already computed above to avoid a duplicate
-    // liturgical_calendar SELECT. The mount call is fully defensive
-    // (no-op when profile / row / module is missing) and idempotent
-    // (re-mount reads DB + localStorage state and renders the right
-    // markup without re-awarding coins or duplicating side-effects).
-    if (window.ReadingQuest && profile && profile.id && profile.family_id) {
-      const rqHost = document.getElementById('reading-quest-mount');
-      if (rqHost) {
-        try {
-          await window.ReadingQuest.mount(rqHost, {
-            sb,
-            explorerId: profile.id,
-            familyId:   profile.family_id,
-            today:      localISO,
-            row:        (calRes && calRes.data) ? calRes.data : null,
-          });
-        } catch (e) {
-          // Graceful: a failed mount leaves the slot empty.
-          console.warn('Reading-quest mount failed:', e);
-        }
-      }
-    }
-  } catch (e) {
-    // Silent fail — the card stays hidden, page is still usable.
-    console.warn('Daily anchor card load failed:', e);
-  }
-}
 </script>
 
 <script>

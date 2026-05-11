@@ -1,4 +1,32 @@
-// Orthodox Expedition — Service Worker v22
+// Orthodox Expedition — Service Worker v23
+// v23: Dispatch 3b — Question Card UI + Engagement Loop. New module
+//      js/reading-quest.js mounts a daily "Theo or Christopher asks…"
+//      card on home.html, immediately under the daily anchor card,
+//      once Nolan has tapped through to bible-reader via the gospel
+//      link AND returned (bible-reader carries a tiny pagehide hook
+//      that writes oe_bible_reader_visited_<YYYY-MM-DD> to local-
+//      Storage when ?source=expedition was on the visit). Three
+//      question formats supported per the orchestrator-populated
+//      liturgical_calendar.daily_readings.question JSONB shape:
+//      multiple_choice (5/4/3 try-mechanic floor), free_text (+5 on
+//      save, writes to field_journal as category='expedition_log'
+//      with "Reflection on <ref>" prefix per approved Deviation 2),
+//      and chips (+5 on select; last-chip escape-hatch detection
+//      for "type it" / "Something else" opens a textarea). Pastoral
+//      skip path always available: 0 coins, gentle Theo/Christopher
+//      line, day still counts toward the 5/7 reading streak (3c
+//      will wire the streak math). New schema: reading_completions
+//      table (UNIQUE per explorer per calendar_date), canonical
+//      family-scoped RLS via current_user_family_id() per Deviation
+//      1. Coin awarding matches the canonical direct profile-bump
+//      pattern (prayer-rollup.js, quiz-runner.js, etc.); row insert
+//      is idempotent (Postgres 23505 duplicate → silent re-mount,
+//      no double-award). New static assets: js/reading-quest.js,
+//      assets/characters/theo-portrait.png,
+//      assets/characters/christopher-portrait.png. Sibling-mount
+//      architecture: daily-anchor-card stays as 3a left it (always
+//      shows today's gospel teaser + "Read this passage" CTA);
+//      reading-quest-mount renders conditionally beneath it.
 // v22: Dispatch 3a — Lectionary on Daily Anchor Card. js/daily-anchor-card.js
 //      refactored so the verse sub-card surfaces today's gospel from
 //      liturgical_calendar.daily_readings.gospel when populated (eyebrow
@@ -157,7 +185,7 @@
 // v4: added week.html, prayers.html, day-state, pause-card, prayers, and config JSON
 // Version bump forces cache clear and fresh install
 
-const CACHE_NAME = 'orthodox-expedition-v22';
+const CACHE_NAME = 'orthodox-expedition-v23';
 const STATIC_ASSETS = [
   '/Orthodox-Expedition-/',
   '/Orthodox-Expedition-/index.html',
@@ -195,11 +223,14 @@ const STATIC_ASSETS = [
   '/Orthodox-Expedition-/js/session-rollup.js',
   '/Orthodox-Expedition-/js/streak-grace.js',
   '/Orthodox-Expedition-/js/daily-anchor-card.js',
+  '/Orthodox-Expedition-/js/reading-quest.js',
   '/Orthodox-Expedition-/js/topic-00-day.js',
   '/Orthodox-Expedition-/js/quiz-runner.js',
   '/Orthodox-Expedition-/js/welcome-flow.js',
   '/Orthodox-Expedition-/config/program-spine.json',
   '/Orthodox-Expedition-/config/daily-prayers.json',
+  '/Orthodox-Expedition-/assets/characters/theo-portrait.png',
+  '/Orthodox-Expedition-/assets/characters/christopher-portrait.png',
 ];
 
 // Install — cache static assets

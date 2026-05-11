@@ -144,6 +144,33 @@ body::before{
   border-color:rgba(240,201,110,0.65);
   box-shadow:0 0 0 1px rgba(201,146,42,0.12);
 }
+/* Dispatch 6 — schedule-locked card (future-week session) */
+.session-card.locked{
+  background:rgba(244,232,193,0.015);
+  border-color:rgba(201,146,42,0.10);
+  opacity:0.72;
+}
+.session-card.locked .session-row{
+  cursor:not-allowed;
+}
+.session-card.locked .session-row:active,
+.session-card.locked .session-row:hover{background:transparent;}
+.session-card.locked .session-id{color:rgba(240,201,110,0.40);}
+.session-card.locked .session-title{color:rgba(244,232,193,0.55);}
+.session-card.locked .day-rail-mini{opacity:0.45;}
+.session-card.locked .session-resources{display:none;}
+/* The lock glyph + caption sit to the right of the title row */
+.session-locked-meta{
+  display:flex;align-items:center;gap:0.4rem;flex-shrink:0;
+  font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.10em;
+  color:rgba(240,201,110,0.55);text-transform:uppercase;
+}
+.session-locked-meta .lock-glyph{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:16px;height:16px;border-radius:50%;
+  border:1.5px solid rgba(240,201,110,0.35);
+  font-size:0.7rem;line-height:1;color:rgba(240,201,110,0.55);
+}
 
 /* PRIMARY TAP TARGET — the session row */
 .session-row{
@@ -541,6 +568,18 @@ let progressById = {};      // session_progress rows keyed by session_id
 let handoutsById = {};      // session_handouts rows keyed by session_id
 let masteryById = {};       // topic_mastery rows keyed by topic_id
 
+// Dispatch 6 — schedule gating state.
+// unlockDateById maps session_id → 'YYYY-MM-DD' starts_monday from the spine.
+// isAdminBypass is set true for superuser/admin/parent roles so they can
+// see (and conceptually open) future-week cards without the locked treatment.
+// launchFloorDate mirrors Repair P's soft-open behavior in week.html: if
+// today is pre-launch, gating treats the effective "today" as the launch
+// date so 00.1 reads as available on Sun May 17 (welcome-flow evening),
+// matching the soft-open synthesis Nolan sees in week.html.
+let unlockDateById = {};
+let isAdminBypass = false;
+let launchFloorDate = null;
+
 // ── HELPERS ───────────────────────────────────────────────────
 function showAdminBar(){
   const bar = document.getElementById('admin-bar');
@@ -605,7 +644,7 @@ async function loadAll(userId){
   // (7 stale 0.1-0.7 sessions sit at order_index 4-10 alongside Topic 00 sessions
   // due to FK constraints preventing cleanup; they share topic_id=0 but pre-date
   // the v3 schema. Filtering by id pattern guarantees a clean 15-row Topic 00 set.)
-  const [profRes, topicsRes, sessionsRes, spRes, tmRes, handoutsRes] = await Promise.all([
+  const [profRes, topicsRes, sessionsRes, spRes, tmRes, handoutsRes, spineRes] = await Promise.all([
     sb.from('profiles').select('*').eq('id',userId).single(),
     sb.from('topics').select('id,title,description,order_index,is_conclusion').order('order_index'),
     sb.from('sessions')
@@ -617,6 +656,11 @@ async function loadAll(userId){
       .eq('explorer_id',userId),
     sb.from('topic_mastery').select('topic_id,status').eq('explorer_id',userId),
     sb.from('session_handouts').select('session_id, pdf_url').like('session_id','00.%'),
+    // Dispatch 6 — program spine for schedule gating (date math source of truth).
+    // Fetched in parallel; failure is non-fatal: an empty unlockDateById means
+    // no locking is applied (graceful degradation — the day-state machine still
+    // governs the rest of the app).
+    fetch('config/program-spine.json').then(r => r.ok ? r.json() : null).catch(() => null),
   ]);
 
   profile         = profRes.data;
@@ -630,6 +674,29 @@ async function loadAll(userId){
   (handoutsRes.data || []).forEach(h => { handoutsById[h.session_id] = h; });
   masteryById = {};
   (tmRes.data || []).forEach(m => { masteryById[m.topic_id] = m; });
+
+  // Dispatch 6 — build unlockDateById from the spine's topic_00 phase. Each
+  // week's session_id maps to its starts_monday (YYYY-MM-DD). Lex comparison
+  // against WeekUtils.todayKey() (also YYYY-MM-DD ET) tells us if a session
+  // is in the future for Nolan today.
+  unlockDateById = {};
+  if (spineRes && Array.isArray(spineRes.phases)) {
+    const topic00Phase = spineRes.phases.find(p => p.id === 'topic_00');
+    if (topic00Phase && Array.isArray(topic00Phase.weeks)) {
+      topic00Phase.weeks.forEach(w => {
+        if (w.session_id && w.starts_monday) {
+          unlockDateById[w.session_id] = w.starts_monday;
+        }
+      });
+    }
+  }
+  // Repair P soft-open floor: in pre-launch, treat today as launch_date.
+  // Keeps the syllabus in step with week.html's pre-launch state synthesis.
+  launchFloorDate = (spineRes && spineRes.launch_date) ? spineRes.launch_date : null;
+
+  // Admin/parent roles bypass the lock (catch-up scheduling, content review,
+  // sick days, etc.). Explorer role gets the natural calendar gate.
+  isAdminBypass = !!(profile && ['superuser','admin','parent'].includes(profile.role));
 
   // Year topics = topics 1, 2, 3 (Year 1/2/3 — legitimate future content).
   // Topics 4-10 are explicit "Reserved — Repurposed Topic" placeholders;
@@ -714,18 +781,81 @@ function dotMarkup(progress, n, label, isCurrentSession){
     `</span>`;
 }
 
+// ── SCHEDULE GATING HELPERS (Dispatch 6) ─────────────────────
+// A session is "locked" when today (ET) is strictly before its unlock date.
+// Admin/parent/superuser bypass via isAdminBypass — they see every card.
+// Completed sessions are never locked (defensive: edge case of catch-up
+// work being done before the spine's calendar Monday).
+function isSessionLocked(session){
+  if(isAdminBypass) return false;
+  if(sessionFullyComplete(session.id)) return false;
+  const unlock = unlockDateById[session.id];
+  if(!unlock) return false; // graceful: no spine row → no lock
+  let today = (window.WeekUtils && window.WeekUtils.todayKey)
+    ? window.WeekUtils.todayKey()
+    : new Date().toISOString().slice(0,10);
+  // Repair P soft-open floor: pre-launch, the syllabus shows 00.1 as
+  // available (mirroring week.html's pre-launch state synthesis).
+  if(launchFloorDate && today < launchFloorDate) today = launchFloorDate;
+  return today < unlock; // lex comparison; both 'YYYY-MM-DD'
+}
+
+// Format a 'YYYY-MM-DD' unlock date as 'Mon, May 25' for the locked caption.
+// Anchored at UTC-noon so the day-of-week and date readout match the ET
+// calendar string regardless of the host timezone (mirrors WeekUtils).
+function formatUnlockDate(dateStr){
+  if(!dateStr) return '';
+  const [y,m,d] = dateStr.split('-').map(Number);
+  if(!y || !m || !d) return '';
+  const dt = new Date(Date.UTC(y, m-1, d, 12, 0, 0, 0));
+  const dows = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const fmt = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/New_York',
+    weekday: 'short', month: 'short', day: 'numeric',
+  });
+  // Intl gives "Mon, May 25" with a comma; reuse it for consistency.
+  try { return fmt.format(dt); }
+  catch(e){ return `${dows[dt.getUTCDay()]}, ${months[m-1]} ${d}`; }
+}
+
 // ── SESSION CARD ──────────────────────────────────────────────
 function renderSessionCard(session, isCurrent){
   const progress = progressById[session.id] || null;
   const isComplete = sessionFullyComplete(session.id);
+  const isLocked = isSessionLocked(session);
   const handout = handoutsById[session.id] || null;
 
   const classes = ['session-card'];
   if(isComplete) classes.push('complete');
+  else if(isLocked) classes.push('locked');
   else if(isCurrent) classes.push('current');
 
   const card = document.createElement('div');
   card.className = classes.join(' ');
+
+  // Dispatch 6 — locked branch. Renders a non-tappable card with a lock
+  // glyph and the unlock-date caption ("Returns Mon, May 25"). No href,
+  // no resources block (handout/quiz-history are gated on the same date).
+  // The day-rail is preserved for visual rhythm but dimmed via CSS.
+  if(isLocked){
+    const unlockLabel = formatUnlockDate(unlockDateById[session.id]);
+    card.innerHTML = `
+      <div class="session-row" aria-label="Session ${esc(session.id)} ${esc(session.title)} — locked until ${esc(unlockLabel)}" aria-disabled="true">
+        <div class="session-row-main">
+          <div class="session-row-id-line">
+            <span class="session-id">Session ${esc(session.id)}</span>
+          </div>
+          <span class="session-title">${esc(session.title)}</span>
+        </div>
+        <div class="session-locked-meta" aria-hidden="true">
+          <span class="lock-glyph">⌧</span>
+          <span>Returns ${esc(unlockLabel)}</span>
+        </div>
+      </div>
+    `;
+    return card;
+  }
 
   // Determine whether to show the Quiz history resource link.
   // quiz-results.html is restricted to parent/admin/superuser roles by design,

@@ -46,8 +46,10 @@
    SIDE-EFFECTS (Supabase calls):
      persistPrayerGrace(sb, profileId, weekStartDate)
      persistSessionGrace(sb, profileId, weekStartDate)
+     persistReadingGrace(sb, profileId, weekStartDate)
      readPrayerGraceFlag(sb, profileId, weekStartDate)
      readSessionGraceFlag(sb, profileId, weekStartDate)
+     readReadingGraceFlag(sb, profileId, weekStartDate)
 
    PUBLIC API (browser): window.StreakGrace = { …all of the above… }
    PUBLIC API (node/test): module.exports = StreakGrace;
@@ -60,6 +62,14 @@
    session ladder because there is currently NO existing per-week
    session-rollup table to extend. Symmetric (explorer_id,
    week_start_date) keying and RLS posture across both surfaces.
+
+   DISPATCH 3c (May 11, 2026) — Pattern (B) extended for the reading
+   lane via `weekly_reading_streak` (id, explorer_id, week_start_date,
+   grace_used, created_at). Reading is structurally analogous to
+   sessions (per-day boolean events) not prayer (AM/PM duality), so
+   weekly_session_grace is the correct canonical mirror — see Op
+   Learning #16. persistReadingGrace / readReadingGraceFlag mirror
+   the session pair exactly.
 
    DISPATCH 2 NOTE
    This file remains live for progress.html's day-streak pip rendering.
@@ -403,6 +413,80 @@
     }
   }
 
+  // ── PERSISTENCE — READING (Dispatch 3c) ──────────────────────────
+  // Mirrors the session pair exactly. weekly_reading_streak is the
+  // Pattern (B) sibling of weekly_session_grace for the reading lane.
+  // Lazy row creation: row only exists once the first half-week is
+  // detected (typically by Reading.getStreak() on a Sunday-or-later
+  // page load). Idempotent. Best-effort.
+
+  /**
+   * UPSERT weekly_reading_streak.grace_used = true for a given week.
+   * Idempotent. Skips DB write if flag is already true. Best-effort
+   * (does not throw on failure — caller should rely on the read flag
+   * to render UI; if the write fails, the next page load retries).
+   *
+   * Returns { ok: bool, wrote: bool, error?: any }.
+   */
+  async function persistReadingGrace(sb, profileId, weekStartDate) {
+    if (!sb || !profileId || !weekStartDate) {
+      return { ok: false, wrote: false };
+    }
+    try {
+      const existing = await sb
+        .from('weekly_reading_streak')
+        .select('id, grace_used')
+        .eq('explorer_id', profileId)
+        .eq('week_start_date', weekStartDate)
+        .maybeSingle();
+      if (existing.error) throw existing.error;
+
+      if (existing.data && existing.data.grace_used === true) {
+        return { ok: true, wrote: false };
+      }
+
+      if (existing.data) {
+        const upd = await sb
+          .from('weekly_reading_streak')
+          .update({ grace_used: true })
+          .eq('id', existing.data.id);
+        if (upd.error) throw upd.error;
+        return { ok: true, wrote: true };
+      }
+
+      const ins = await sb
+        .from('weekly_reading_streak')
+        .insert([{
+          explorer_id:     profileId,
+          week_start_date: weekStartDate,
+          grace_used:      true,
+        }]);
+      if (ins.error) throw ins.error;
+      return { ok: true, wrote: true };
+    } catch (e) {
+      console.warn('StreakGrace.persistReadingGrace failed:', e);
+      return { ok: false, wrote: false, error: e };
+    }
+  }
+
+  /** Read the current reading-grace flag for a given week. */
+  async function readReadingGraceFlag(sb, profileId, weekStartDate) {
+    if (!sb || !profileId || !weekStartDate) return false;
+    try {
+      const res = await sb
+        .from('weekly_reading_streak')
+        .select('grace_used')
+        .eq('explorer_id', profileId)
+        .eq('week_start_date', weekStartDate)
+        .maybeSingle();
+      if (res.error) throw res.error;
+      return !!(res.data && res.data.grace_used);
+    } catch (e) {
+      console.warn('StreakGrace.readReadingGraceFlag failed:', e);
+      return false;
+    }
+  }
+
   // ── PUBLIC API ───────────────────────────────────────────────────
 
   const StreakGrace = {
@@ -415,8 +499,10 @@
     // Side-effects
     persistPrayerGrace:   persistPrayerGrace,
     persistSessionGrace:  persistSessionGrace,
+    persistReadingGrace:  persistReadingGrace,
     readPrayerGraceFlag:  readPrayerGraceFlag,
     readSessionGraceFlag: readSessionGraceFlag,
+    readReadingGraceFlag: readReadingGraceFlag,
   };
 
   if (typeof window !== 'undefined') {

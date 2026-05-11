@@ -332,13 +332,14 @@
 // v8: LAUNCH-BLOCKER FIX — config/program-spine.json updated; Topic 00 now uses_three_day_model:true
 //     This activates Lane 2's M/W/F UI for Topic 00. Without it, week.html would render empty
 //     content on May 18 launch day (Topic00Day.render() returned '' when day_kind='topic00_open').
+// v28: Dispatch 6 — curriculum.html schedule gating (locked future-week cards); spine title 00.12 → "St. Herman of Alaska — Your Patron Saint"
 // v7: added PWA icon set (Option 2 burgundy logo) — favicon.svg, icon-{180,192,512}.png, icon-maskable-{192,512}.png
 // v6: added quiz-runner.js, assess.html, quiz-results.html for Lane 3
 // v5: added topic-00-day.js for Lane 2 M/W/F rendering UI
 // v4: added week.html, prayers.html, day-state, pause-card, prayers, and config JSON
 // Version bump forces cache clear and fresh install
 
-const CACHE_NAME = 'orthodox-expedition-v27';
+const CACHE_NAME = 'orthodox-expedition-v28';
 const STATIC_ASSETS = [
   '/Orthodox-Expedition-/',
   '/Orthodox-Expedition-/index.html',

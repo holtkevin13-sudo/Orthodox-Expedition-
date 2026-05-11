@@ -289,9 +289,12 @@ const DailyAnchorCard = (() => {
   // fall back to the daily_verses verse sub-card).
   //
   // Required gospel fields: reference, text, book_code, chapter.
-  // verse_start / verse_end are intentionally NOT consumed in 3a;
-  // Dispatch 3c will add verse-range highlighting via a Today's
-  // Reading mode in bible-reader.
+  // Optional gospel fields: verse_start, verse_end — when both are
+  // present, they are appended to the bible-reader URL as &vs=N&ve=N
+  // so bible-reader.html's Today's Reading mode (Dispatch 3c) can
+  // scroll to and highlight the day's verse range. If either is
+  // null/undefined/empty, both are omitted and bible-reader falls
+  // back to chapter-level open (existing 3a behavior preserved).
   //
   // Reuses existing `.dac-sub`, `.dac-sub-eyebrow`, `.dac-verse-text`,
   // `.dac-verse-ref`, and `.dac-sub-cta` CSS classes — no new CSS
@@ -308,9 +311,22 @@ const DailyAnchorCard = (() => {
     }
     const teaser = buildGospelTeaser(text, 35);
     if (!teaser) return null;
-    const href = `bible-reader.html?book=${encodeURIComponent(bookCode)}`
-               + `&chapter=${encodeURIComponent(chapter)}`
-               + `&source=expedition`;
+
+    // Dispatch 3c: optional verse-range params. Include only when both
+    // ends are present and parseable as positive integers — a half-
+    // range or non-numeric value would produce an invalid Today's
+    // Reading mode in bible-reader, so omit and fall back to chapter
+    // level. Both ends are coerced to strings via encodeURIComponent.
+    const vs = gospel.verse_start;
+    const ve = gospel.verse_end;
+    const vsOk = (vs !== null && vs !== undefined && vs !== '' && Number(vs) > 0);
+    const veOk = (ve !== null && ve !== undefined && ve !== '' && Number(ve) > 0);
+    let href = `bible-reader.html?book=${encodeURIComponent(bookCode)}`
+             + `&chapter=${encodeURIComponent(chapter)}`
+             + `&source=expedition`;
+    if (vsOk && veOk) {
+      href += `&vs=${encodeURIComponent(vs)}&ve=${encodeURIComponent(ve)}`;
+    }
     return `
       <a class="dac-sub dac-verse-sub dac-gospel-sub" href="${esc(href)}">
         <div class="dac-sub-eyebrow">Today's Gospel</div>

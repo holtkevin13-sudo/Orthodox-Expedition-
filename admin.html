@@ -899,6 +899,40 @@ th{font-size:0.78rem !important;letter-spacing:0.06em !important;font-weight:600
       </div>
     </div>
 
+    <!-- Family Devotional Thread (Chat 5) -->
+    <div class="section">
+      <div class="section-title">Family Devotional Thread</div>
+      <p style="font-family:'Crimson Text',serif;font-size:0.95rem;color:rgba(244,232,193,0.7);font-style:italic;margin-bottom:0.95rem;line-height:1.5;">A short message that appears on your explorer's home page on a chosen day. One line, ≤ 280 characters. They see it the moment they open the app on the day you pick — a quiet way to walk with them.</p>
+
+      <!-- Compose -->
+      <div class="card" style="margin-bottom:0.95rem;">
+        <div style="font-family:'Cinzel',serif;font-size:0.78rem;letter-spacing:0.12em;color:rgba(240,201,110,0.95);text-transform:uppercase;margin-bottom:0.6rem;">Write a message</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">To</label>
+            <select class="form-input" id="fm-new-to"><option value="">Loading…</option></select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Visible on</label>
+            <input type="date" class="form-input" id="fm-new-date" value="">
+          </div>
+        </div>
+        <div class="form-group" style="margin-top:0.4rem;">
+          <label class="form-label">Message <span id="fm-new-count" style="color:rgba(244,232,193,0.55);font-size:0.78rem;text-transform:none;letter-spacing:0;font-weight:400;font-style:italic;margin-left:0.4rem;">0 / 280</span></label>
+          <textarea class="form-textarea" id="fm-new-text" rows="3" maxlength="280" placeholder="One short line. Personal. A father's voice."></textarea>
+        </div>
+        <div style="display:flex;gap:0.5rem;align-items:center;margin-top:0.4rem;">
+          <button class="btn btn-gold" onclick="sendFamilyMessage(this)">Send ✦</button>
+          <span class="fm-new-feedback" style="font-family:'Crimson Text',serif;font-size:0.82rem;font-style:italic;color:rgba(244,232,193,0.55);"></span>
+        </div>
+      </div>
+
+      <!-- Upcoming + recent list -->
+      <div id="family-messages-list">
+        <div class="empty" style="font-family:'Crimson Text',serif;font-size:0.92rem;color:rgba(244,232,193,0.5);font-style:italic;">Loading…</div>
+      </div>
+    </div>
+
     <!-- Explorer Stats -->
     <div class="section">
       <div class="section-title">Explorer Status</div>
@@ -1340,6 +1374,7 @@ async function loadAll(){
   await loadActivityLog();
   await loadPilgrimagesAdmin();
   await loadWeeklyVerses();
+  await loadFamilyMessages();
   renderDashboard();
   populateTopicSelect();
 }
@@ -1590,6 +1625,233 @@ async function deleteWeeklyVerse(id, btn){
   } catch(e){
     console.error('deleteWeeklyVerse failed:', e);
     if(fb){ fb.textContent='Delete failed.'; fb.style.color='rgba(220,38,38,0.85)'; }
+    toast('Delete failed: ' + (e.message || 'unknown error'), true);
+    btn.disabled = false;
+  }
+}
+
+// ── FAMILY DEVOTIONAL THREAD (Chat 5) ────────────────────────────
+// Compose UI + upcoming/recent list. Mirrors the Weekly Verses shape:
+// a top "compose" card and a list of existing rows below. Backed by
+// the family_messages table; family-scoped RLS enforced at the DB.
+
+// Tomorrow in America/New_York as YYYY-MM-DD (used as default visible_on).
+function _fmTomorrowETKey(){
+  try {
+    const fmt = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'America/New_York',
+      year: 'numeric', month: '2-digit', day: '2-digit',
+    });
+    const parts = fmt.formatToParts(new Date());
+    const y = parts.find(p=>p.type==='year').value;
+    const m = parts.find(p=>p.type==='month').value;
+    const d = parts.find(p=>p.type==='day').value;
+    const today = new Date(Date.UTC(parseInt(y,10), parseInt(m,10)-1, parseInt(d,10), 12, 0, 0));
+    today.setUTCDate(today.getUTCDate() + 1);
+    const y2 = today.getUTCFullYear();
+    const m2 = String(today.getUTCMonth()+1).padStart(2,'0');
+    const d2 = String(today.getUTCDate()).padStart(2,'0');
+    return `${y2}-${m2}-${d2}`;
+  } catch(_e){
+    const d = new Date(); d.setDate(d.getDate()+1);
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  }
+}
+
+// Today in America/New_York as YYYY-MM-DD (for delete-eligibility check).
+function _fmTodayETKey(){
+  try {
+    const fmt = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'America/New_York',
+      year: 'numeric', month: '2-digit', day: '2-digit',
+    });
+    const parts = fmt.formatToParts(new Date());
+    const y = parts.find(p=>p.type==='year').value;
+    const m = parts.find(p=>p.type==='month').value;
+    const d = parts.find(p=>p.type==='day').value;
+    return `${y}-${m}-${d}`;
+  } catch(_e){
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  }
+}
+
+// Pretty-print a YYYY-MM-DD as "Mon, May 18" (ET).
+function _fmFormatDateLabel(ymd){
+  try {
+    const [y, m, d] = ymd.split('-').map(n => parseInt(n, 10));
+    const dt = new Date(Date.UTC(y, m-1, d, 12, 0, 0));
+    return new Intl.DateTimeFormat('en-US', {
+      timeZone: 'America/New_York',
+      weekday: 'short', month: 'short', day: 'numeric',
+    }).format(dt);
+  } catch(_e){ return ymd; }
+}
+
+async function loadFamilyMessages(){
+  const list = document.getElementById('family-messages-list');
+  if(!list) return;
+  if(!adminProfile || !adminProfile.family_id){
+    list.innerHTML = '<div class="empty" style="font-family:\'Crimson Text\',serif;font-size:0.92rem;color:rgba(244,232,193,0.5);font-style:italic;">No family on record.</div>';
+    return;
+  }
+
+  // (1) Populate the To: dropdown with explorers in this family.
+  const toSelect = document.getElementById('fm-new-to');
+  if(toSelect){
+    try {
+      const { data: exps } = await sb.from('profiles')
+        .select('id, name')
+        .eq('family_id', adminProfile.family_id)
+        .eq('role', 'explorer')
+        .order('name');
+      const opts = (exps || []).map(e =>
+        `<option value="${_wvEscape(e.id)}">${_wvEscape(e.name)}</option>`
+      ).join('');
+      toSelect.innerHTML = opts + '<option value="__all__">Whole family</option>';
+    } catch(_e){
+      toSelect.innerHTML = '<option value="__all__">Whole family</option>';
+    }
+  }
+
+  // (2) Seed the date with tomorrow (ET) if not already set.
+  const dateEl = document.getElementById('fm-new-date');
+  if(dateEl && !dateEl.value){ dateEl.value = _fmTomorrowETKey(); }
+
+  // (3) Wire the live char count for the textarea (idempotent).
+  const txtEl = document.getElementById('fm-new-text');
+  const countEl = document.getElementById('fm-new-count');
+  if(txtEl && countEl && !txtEl._fmCountWired){
+    const update = () => { countEl.textContent = (txtEl.value || '').length + ' / 280'; };
+    txtEl.addEventListener('input', update);
+    txtEl._fmCountWired = true;
+    update();
+  }
+
+  // (4) Load upcoming + recent (last 30 days OR future), newest-first.
+  try {
+    const today = _fmTodayETKey();
+    const cutoff = new Date(today + 'T00:00:00Z');
+    cutoff.setUTCDate(cutoff.getUTCDate() - 30);
+    const cutoffStr = cutoff.toISOString().slice(0,10);
+    const { data, error } = await sb.from('family_messages')
+      .select('id, from_user_id, to_user_id, message_text, visible_on, read_at, created_at')
+      .eq('family_id', adminProfile.family_id)
+      .gte('visible_on', cutoffStr)
+      .order('visible_on', { ascending: false })
+      .order('created_at', { ascending: false })
+      .limit(60);
+    if(error) throw error;
+    const rows = data || [];
+    if(!rows.length){
+      list.innerHTML = '<div class="empty" style="font-family:\'Crimson Text\',serif;font-size:0.92rem;color:rgba(244,232,193,0.5);font-style:italic;">No messages yet. Write one above.</div>';
+      return;
+    }
+    // Build a name map for from_user_id / to_user_id labels.
+    const ids = [...new Set(rows.flatMap(r => [r.from_user_id, r.to_user_id].filter(Boolean)))];
+    let nameMap = {};
+    if(ids.length){
+      const { data: profs } = await sb.from('profiles').select('id, name').in('id', ids);
+      (profs || []).forEach(p => { nameMap[p.id] = p.name; });
+    }
+    list.innerHTML = rows.map(r => {
+      const fromName = nameMap[r.from_user_id] || 'Family';
+      const toName   = r.to_user_id ? (nameMap[r.to_user_id] || 'Explorer') : 'Whole family';
+      const visLabel = _fmFormatDateLabel(r.visible_on);
+      const isFuture = r.visible_on > today;
+      const isUnread = !r.read_at;
+      const canDelete = isUnread && (isFuture || r.visible_on === today && isUnread);
+      // Per Q8: delete only unread/future-dated. Today + unread also
+      // qualifies (Kevin may have typo'd and want to retract before
+      // Nolan opens the app).
+      const statusBits = [];
+      if(isFuture) statusBits.push('<span style="color:rgba(240,201,110,0.85);">Upcoming · ' + _wvEscape(visLabel) + '</span>');
+      else if(isUnread) statusBits.push('<span style="color:rgba(244,232,193,0.7);">Visible today · unread</span>');
+      else if(r.read_at) statusBits.push('<span style="color:rgba(134,239,172,0.75);">Read ✓</span>');
+      else statusBits.push('<span style="color:rgba(244,232,193,0.55);">Sent</span>');
+      const statusLine = statusBits.join(' · ');
+      return `
+        <div class="card" data-fm-id="${_wvEscape(r.id)}" style="margin-bottom:0.65rem;${isFuture ? 'border-left:3px solid rgba(201,168,76,0.55);' : ''}">
+          <div style="font-family:'Cinzel',serif;font-size:0.72rem;letter-spacing:0.12em;color:rgba(240,201,110,0.9);text-transform:uppercase;margin-bottom:0.35rem;">
+            From ${_wvEscape(fromName)} → ${_wvEscape(toName)} · ${_wvEscape(visLabel)}
+          </div>
+          <div style="font-family:'Crimson Text',serif;font-size:1rem;color:rgba(244,232,193,0.95);line-height:1.5;margin-bottom:0.45rem;white-space:pre-wrap;">${_wvEscape(r.message_text)}</div>
+          <div style="display:flex;gap:0.5rem;align-items:center;justify-content:space-between;">
+            <div style="font-family:'Crimson Text',serif;font-size:0.82rem;font-style:italic;">${statusLine}</div>
+            ${canDelete
+              ? `<button class="btn btn-red btn-sm" onclick="deleteFamilyMessage('${_wvEscape(r.id)}', this)">Delete</button>`
+              : ''}
+          </div>
+        </div>
+      `;
+    }).join('');
+  } catch(e){
+    console.warn('loadFamilyMessages failed:', e);
+    list.innerHTML = '<div class="empty" style="font-family:\'Crimson Text\',serif;font-size:0.92rem;color:rgba(220,38,38,0.7);font-style:italic;">Failed to load messages.</div>';
+  }
+}
+
+async function sendFamilyMessage(btn){
+  const card  = btn.closest('.card');
+  const fb    = card ? card.querySelector('.fm-new-feedback') : null;
+  const toEl  = document.getElementById('fm-new-to');
+  const dEl   = document.getElementById('fm-new-date');
+  const txtEl = document.getElementById('fm-new-text');
+  const toVal = (toEl && toEl.value) || '';
+  const date  = (dEl && dEl.value) || '';
+  const text  = (txtEl && txtEl.value || '').trim();
+
+  if(!toVal){ if(fb){ fb.textContent='Pick a recipient.'; fb.style.color='rgba(220,38,38,0.85)'; } return; }
+  if(!date){  if(fb){ fb.textContent='Pick a visible-on date.'; fb.style.color='rgba(220,38,38,0.85)'; } return; }
+  if(!text){  if(fb){ fb.textContent='Write a message.'; fb.style.color='rgba(220,38,38,0.85)'; } return; }
+  if(text.length > 280){
+    if(fb){ fb.textContent='Too long (max 280).'; fb.style.color='rgba(220,38,38,0.85)'; }
+    return;
+  }
+  if(!adminProfile || !adminProfile.family_id){
+    if(fb){ fb.textContent='No family on record.'; fb.style.color='rgba(220,38,38,0.85)'; }
+    return;
+  }
+  if(fb){ fb.textContent='Sending…'; fb.style.color='rgba(244,232,193,0.55)'; }
+  btn.disabled = true;
+  try {
+    const payload = {
+      family_id:    adminProfile.family_id,
+      from_user_id: adminProfile.id,
+      to_user_id:   (toVal === '__all__') ? null : toVal,
+      message_text: text,
+      visible_on:   date,
+      created_by:   adminProfile.id,
+    };
+    const { error } = await sb.from('family_messages').insert(payload);
+    if(error) throw error;
+    if(fb){ fb.textContent='Sent ✓'; fb.style.color='rgba(134,239,172,0.85)'; }
+    toast('Message sent.');
+    // Reset compose, re-seed date, reload list.
+    if(txtEl) txtEl.value = '';
+    const countEl = document.getElementById('fm-new-count');
+    if(countEl) countEl.textContent = '0 / 280';
+    if(dEl) dEl.value = _fmTomorrowETKey();
+    await loadFamilyMessages();
+  } catch(e){
+    console.error('sendFamilyMessage failed:', e);
+    if(fb){ fb.textContent='Send failed.'; fb.style.color='rgba(220,38,38,0.85)'; }
+    toast('Send failed: ' + (e.message || 'unknown error'), true);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function deleteFamilyMessage(id, btn){
+  if(!confirm('Delete this message? (Only allowed for unread or future-dated messages.)')) return;
+  btn.disabled = true;
+  try {
+    const { error } = await sb.from('family_messages').delete().eq('id', id);
+    if(error) throw error;
+    toast('Message deleted.');
+    await loadFamilyMessages();
+  } catch(e){
+    console.error('deleteFamilyMessage failed:', e);
     toast('Delete failed: ' + (e.message || 'unknown error'), true);
     btn.disabled = false;
   }

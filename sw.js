@@ -1,4 +1,56 @@
-// Orthodox Expedition — Service Worker v23
+// Orthodox Expedition — Service Worker v24
+// v24: Dispatch 3c — Reading Streak + Verse-Range + Sunday Settlement
+//      (D3 resolution). New schema: weekly_reading_streak table
+//      (Pattern B mirror of weekly_session_grace; 5 columns —
+//      id, explorer_id, week_start_date, grace_used, created_at —
+//      with explorer-scoped RLS matching the session sibling per Op
+//      Learning #16). Reading is structurally analogous to SESSIONS
+//      (per-day boolean events), not prayer (AM/PM duality), so the
+//      canonical mirror is weekly_session_grace, NOT prayer_streak_
+//      weekly. Intactness is computed on-the-fly by the new
+//      Reading.getStreak() walker; there is no rollup file because
+//      coins are awarded at completion time in reading-quest.js
+//      (Dispatch 3b) and nothing else needs settling on Sunday.
+//      New module js/reading.js exposes Reading.init(sb, profileId)
+//      + Reading.getStreak(opts?) → int. Walker mirrors
+//      Prayers.getStreak() line-for-line for window math, pilgrimage
+//      exclusion (Pilgrimages.isActiveOn), 5/7-of-active-days
+//      threshold (Math.max(1, Math.ceil(activeDays*5/7))), and
+//      rescue at intactThreshold-1. Lazy grace persist: when the
+//      walker encounters a 4/7 past week with grace_used=false, it
+//      consumes that week's grace via StreakGrace.persistReadingGrace
+//      (best-effort, fire-and-forget; each week's grace is
+//      independent per Dispatch 2's "1 per week per lane"
+//      architecture). js/streak-grace.js extended with
+//      persistReadingGrace + readReadingGraceFlag, mirroring the
+//      session pair exactly. js/daily-anchor-card.js URL upgrade:
+//      gospel deep-link now appends &vs=N&ve=N when both
+//      gospel.verse_start and gospel.verse_end are present and
+//      parseable positive integers (omits both otherwise, so 3a
+//      chapter-level open still works as fallback). bible-reader.html
+//      gains Today's Reading mode: when ?vs=N&ve=N are present, the
+//      verses in range get .brm-verse-today (gold-tint background +
+//      inset gold-edge box-shadow), verses outside get
+//      .brm-verse-faded (opacity:0.55), and the page auto-scrolls
+//      to the first verse in the range. Mode clears automatically
+//      on chapter navigation via book/chapter mismatch check in
+//      applyTodaysReadingMode. Existing source=expedition banner
+//      upgraded to show "Book Chapter:vs-ve" when range present.
+//      progress.html D3 resolution: renderPrayerStreak's displayed
+//      number now sources from Prayers.getStreak() (canonical
+//      weekly intact count) instead of StreakGrace.computePrayerStreak
+//      (legacy daily-EITHER walker). Legacy walker still called for
+//      pip detection (returns weeksWithGrace). "Days" label flipped
+//      to "Weeks" — matches home.html rank-hero banner. New Reading
+//      Streak card added below the dual-streak-row (single full-
+//      width row via .solo-streak-row modifier; just the count, no
+//      week-dots — visual parity with Weekly/Prayer is Dispatch 4
+//      territory per dispatch). Explainer copy updated. New static
+//      asset: js/reading.js. NO changes to reading-quest.js commit
+//      path (grace row created lazily by walker per orchestrator
+//      approval). NO new home.html mount integration (no rollup
+//      to fire). NO change to prayer_streak_weekly, weekly_session_
+//      grace, or reading_completions schemas.
 // v23: Dispatch 3b — Question Card UI + Engagement Loop. New module
 //      js/reading-quest.js mounts a daily "Theo or Christopher asks…"
 //      card on home.html, immediately under the daily anchor card,
@@ -185,7 +237,7 @@
 // v4: added week.html, prayers.html, day-state, pause-card, prayers, and config JSON
 // Version bump forces cache clear and fresh install
 
-const CACHE_NAME = 'orthodox-expedition-v23';
+const CACHE_NAME = 'orthodox-expedition-v24';
 const STATIC_ASSETS = [
   '/Orthodox-Expedition-/',
   '/Orthodox-Expedition-/index.html',
@@ -224,6 +276,7 @@ const STATIC_ASSETS = [
   '/Orthodox-Expedition-/js/streak-grace.js',
   '/Orthodox-Expedition-/js/daily-anchor-card.js',
   '/Orthodox-Expedition-/js/reading-quest.js',
+  '/Orthodox-Expedition-/js/reading.js',
   '/Orthodox-Expedition-/js/topic-00-day.js',
   '/Orthodox-Expedition-/js/quiz-runner.js',
   '/Orthodox-Expedition-/js/welcome-flow.js',

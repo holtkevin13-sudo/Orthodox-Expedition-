@@ -552,6 +552,41 @@ body::before{
   color:rgba(244,232,193,0.85);font-style:italic;
 }
 
+/* ── DEVOTIONAL MESSAGE CARD (Chat 5 — Family Devotional Thread) ────
+   A parchment card surfaced when Mom or Dad has left a one-line note
+   for today. Sits BELOW the pilgrimage banner and ABOVE the home
+   dashboard. Renders only when a message exists; otherwise the
+   wrapper is empty and contributes no layout. Single-play gold-glow
+   on first DOM mount; honors prefers-reduced-motion. */
+#hp-devotional-message:empty{display:none;}
+.hp-dm-card{
+  background:linear-gradient(135deg,rgba(244,232,193,0.14),rgba(232,213,160,0.08));
+  border:1.5px solid rgba(201,168,76,0.55);
+  border-radius:14px;padding:0.95rem 1.1rem;
+  margin-bottom:1rem;
+  box-shadow:0 4px 16px rgba(0,0,0,0.25),inset 0 1px 0 rgba(244,232,193,0.08);
+}
+.hp-dm-eyebrow{
+  font-family:'Cinzel',serif;font-size:0.72rem;letter-spacing:0.16em;
+  color:rgba(240,201,110,0.95);text-transform:uppercase;
+  margin-bottom:0.45rem;
+}
+.hp-dm-eyebrow-mark{margin-right:0.4rem;color:rgba(201,168,76,0.9);}
+.hp-dm-body{
+  font-family:'Crimson Text',serif;font-size:1.02rem;line-height:1.5;
+  color:rgba(244,232,193,0.95);
+  white-space:pre-wrap;word-break:break-word;
+}
+@keyframes hp-dm-glow {
+  0%   { box-shadow:0 4px 16px rgba(0,0,0,0.25), inset 0 1px 0 rgba(244,232,193,0.08), 0 0 0 0 rgba(201,168,76,0); }
+  30%  { box-shadow:0 4px 16px rgba(0,0,0,0.25), inset 0 1px 0 rgba(244,232,193,0.08), 0 0 24px 4px rgba(201,168,76,0.40); }
+  100% { box-shadow:0 4px 16px rgba(0,0,0,0.25), inset 0 1px 0 rgba(244,232,193,0.08), 0 0 0 0 rgba(201,168,76,0); }
+}
+.hp-dm-card.hp-dm-glow{animation:hp-dm-glow 2000ms ease-out 1;}
+@media (prefers-reduced-motion: reduce) {
+  .hp-dm-card.hp-dm-glow{animation:none;}
+}
+
 /* ── TODAY CARD ──────────────────────────────────────────────── */
 /* B1.a — hero treatment: this card is the ONE clear next action above the fold.
    Stronger border, fuller gradient, bigger eyebrow. Session item is the visual hero;
@@ -1500,6 +1535,13 @@ body::before{
       </div>
     </div>
 
+    <!-- DEVOTIONAL MESSAGE (Chat 5 — Family Devotional Thread)
+         Renders when Mom or Dad has left a one-line note for today.
+         Empty otherwise (CSS :empty rule suppresses layout). Sits
+         below pilgrimage banner (which is rare/special) and above
+         the home dashboard. loadDevotionalMessage() fills this. -->
+    <div id="hp-devotional-message"></div>
+
     <!-- HOME DASHBOARD MOUNT (Dispatch 4b)
          Renders the new home status surfaces: Today's Progress
          card, state-aware CTA, and compact streak row. Filled by
@@ -1732,6 +1774,7 @@ async function loadData(userId){
   renderPrayerStreak(missions, missionComps);
   loadAnnouncement();
   loadPilgrimageBanner();
+  loadDevotionalMessage();
 
   // Mount the home dashboard (Today's Progress + state-aware CTA +
   // compact streak row). Internally delegates to
@@ -2199,6 +2242,90 @@ async function loadPilgrimageBanner(){
     }
   } catch (e) {
     console.warn('loadPilgrimageBanner failed (graceful):', e);
+  }
+}
+
+// ── DEVOTIONAL MESSAGE (Chat 5 — Family Devotional Thread) ────
+// Renders the oldest unread message addressed to this explorer (or
+// to the whole family) with visible_on <= today (ET). RLS handles
+// scoping; this code trusts the policy and asks for the slice it
+// needs. On first render, plays a single ~2s gold-glow (honoring
+// prefers-reduced-motion). Writes read_at silently on mount.
+function _dmTodayETKey(){
+  try {
+    const fmt = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'America/New_York',
+      year: 'numeric', month: '2-digit', day: '2-digit',
+    });
+    const parts = fmt.formatToParts(new Date());
+    const y = parts.find(p=>p.type==='year').value;
+    const m = parts.find(p=>p.type==='month').value;
+    const d = parts.find(p=>p.type==='day').value;
+    return `${y}-${m}-${d}`;
+  } catch(_e){
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  }
+}
+function _dmEsc(s){
+  if (s == null) return '';
+  return String(s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+async function loadDevotionalMessage(){
+  const host = document.getElementById('hp-devotional-message');
+  if (!host) return;
+  // Default to empty; CSS :empty rule keeps it out of layout when
+  // there is nothing to show.
+  host.innerHTML = '';
+  if (!profile || !profile.id || !profile.family_id) return;
+
+  try {
+    const today = _dmTodayETKey();
+    // Pull the oldest UNREAD message visible today or earlier that's
+    // addressed to this explorer or to the whole family. RLS filters
+    // already restrict to caller's family + visible_on <= today, but
+    // we also pass the explicit predicate so admins viewing via
+    // ?admin=1 see the same single-card preview Nolan would see.
+    const { data, error } = await sb.from('family_messages')
+      .select('id, from_user_id, message_text, visible_on, read_at')
+      .or(`to_user_id.eq.${profile.id},to_user_id.is.null`)
+      .lte('visible_on', today)
+      .is('read_at', null)
+      .order('visible_on', { ascending: true })
+      .order('created_at', { ascending: true })
+      .limit(1);
+    if (error) throw error;
+    const msg = (data && data[0]) || null;
+    if (!msg) return;
+
+    // Resolve sender name (single tiny query — most family is < 6 rows).
+    let fromName = 'Your family';
+    try {
+      const { data: sender } = await sb.from('profiles')
+        .select('name, username').eq('id', msg.from_user_id).single();
+      if (sender) fromName = sender.name || sender.username || 'Your family';
+    } catch(_e) { /* graceful — keep default */ }
+
+    host.innerHTML = `
+      <div class="hp-dm-card hp-dm-glow fade-up" id="hp-dm-card">
+        <div class="hp-dm-eyebrow"><span class="hp-dm-eyebrow-mark">✦</span>From ${_dmEsc(fromName)}</div>
+        <div class="hp-dm-body">${_dmEsc(msg.message_text)}</div>
+      </div>
+    `;
+
+    // Mount-time read receipt — only if the card actually rendered
+    // and read_at is currently null. Idempotent: a duplicate update
+    // is harmless (read_at NULL→non-NULL once; subsequent attempts
+    // simply won't match the .is('read_at', null) filter).
+    sb.from('family_messages')
+      .update({ read_at: new Date().toISOString() })
+      .eq('id', msg.id)
+      .is('read_at', null)
+      .then(() => {}, (e) => { console.warn('family_messages mark-read failed:', e); });
+  } catch (e) {
+    console.warn('loadDevotionalMessage failed (graceful):', e);
   }
 }
 

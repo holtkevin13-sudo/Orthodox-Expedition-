@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="stylesheet" href="css/viewport.css">
+<link rel="stylesheet" href="css/contrast.css">
+<link rel="stylesheet" href="css/nav-polish.css">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Memorization — The Orthodox Expedition</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<meta name="theme-color" content="#0e0800">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400;1,600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+/* ─── PALETTE ──────────────────────────────────────────────── */
+:root{
+  --gold:#c9922a;
+  --gold-light:#f0c96e;
+  --gold-bright:#ffd700;
+  --parchment:#f4e8c1;
+  --parchment-dark:#e8d5a0;
+  --ink:#1a0f00;
+  --burgundy:#6b1a1a;
+  --byzantine:#2c1654;
+  --bg:#0e0800;
+  --nav-h:64px;
+}
+
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{min-height:100%;overflow-x:hidden;}
+body{
+  font-family:'Crimson Text',serif;
+  background:var(--bg);
+  background-image:
+    radial-gradient(ellipse at 50% 0%,rgba(107,26,26,0.5) 0%,transparent 55%),
+    radial-gradient(ellipse at 100% 100%,rgba(44,22,84,0.35) 0%,transparent 50%);
+  min-height:100vh;
+  color:rgba(244,232,193,0.92);
+  padding:0 0 calc(var(--nav-h) + env(safe-area-inset-bottom));
+  padding-top:env(safe-area-inset-top);
+}
+body::before{
+  content:'';
+  position:fixed;
+  inset:0;
+  background-image:
+    linear-gradient(rgba(201,146,42,0.02) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(201,146,42,0.02) 1px,transparent 1px);
+  background-size:44px 44px;
+  pointer-events:none;
+  z-index:0;
+}
+.glyph{font-variant-emoji:text;}
+
+/* ─── PAGE ─────────────────────────────────────────────────── */
+#app{
+  max-width:var(--container-max-width);
+  margin:0 auto;
+  position:relative;
+  z-index:1;
+  padding:1rem 1rem 2rem;
+}
+
+/* ─── HEADER ───────────────────────────────────────────────── */
+.m-header{
+  display:flex;
+  align-items:center;
+  gap:0.85rem;
+  padding:0.5rem 0 1.25rem;
+}
+.m-back{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:42px;
+  height:42px;
+  border-radius:50%;
+  background:rgba(244,232,193,0.05);
+  border:1px solid rgba(201,146,42,0.25);
+  color:rgba(244,232,193,0.85);
+  text-decoration:none;
+  font-size:1.4rem;
+  line-height:1;
+  transition:background 120ms ease;
+}
+.m-back:active{background:rgba(244,232,193,0.12);}
+.m-title{
+  font-family:'Cinzel',serif;
+  font-size:1.35rem;
+  font-weight:600;
+  letter-spacing:0.06em;
+  color:rgba(244,232,193,0.95);
+}
+
+/* ─── VERSE HERO CARD ──────────────────────────────────────── */
+.verse-hero{
+  position:relative;
+  margin:0.25rem 0 1.4rem;
+  padding:1.6rem 1.4rem 1.8rem;
+  border-radius:14px;
+  background:
+    linear-gradient(180deg,rgba(244,232,193,0.95) 0%,rgba(232,213,160,0.92) 100%);
+  border:2px solid rgba(201,146,42,0.85);
+  box-shadow:
+    0 6px 24px rgba(0,0,0,0.35),
+    inset 0 0 0 1px rgba(255,255,255,0.25),
+    inset 0 0 30px rgba(201,146,42,0.10);
+  color:var(--ink);
+}
+.verse-hero::before,
+.verse-hero::after{
+  content:'';
+  position:absolute;
+  left:1rem;right:1rem;
+  height:1px;
+  background:linear-gradient(90deg,transparent 0%,rgba(107,26,26,0.35) 20%,rgba(107,26,26,0.35) 80%,transparent 100%);
+}
+.verse-hero::before{top:0.5rem;}
+.verse-hero::after{bottom:0.5rem;}
+.verse-eyebrow{
+  font-family:'Cinzel',serif;
+  font-size:0.72rem;
+  font-weight:600;
+  letter-spacing:0.18em;
+  text-transform:uppercase;
+  color:rgba(107,26,26,0.85);
+  margin-bottom:0.85rem;
+  text-align:center;
+}
+.verse-ref{
+  font-family:'Cinzel',serif;
+  font-size:1.7rem;
+  font-weight:700;
+  letter-spacing:0.04em;
+  color:var(--ink);
+  text-align:center;
+  margin-bottom:0.9rem;
+  line-height:1.2;
+}
+.verse-text{
+  font-family:'Crimson Text',serif;
+  font-style:italic;
+  font-size:1.18rem;
+  line-height:1.55;
+  color:rgba(26,15,0,0.92);
+  text-align:center;
+  padding:0 0.4rem;
+}
+
+/* ─── PRACTICE BUTTON ──────────────────────────────────────── */
+.practice-row{
+  display:flex;
+  justify-content:center;
+  margin:1.5rem 0 1.1rem;
+}
+.practice-btn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:0.55rem;
+  min-width:18rem;
+  padding:1.05rem 1.6rem;
+  border-radius:999px;
+  font-family:'Cinzel',serif;
+  font-size:1.05rem;
+  font-weight:600;
+  letter-spacing:0.06em;
+  text-transform:uppercase;
+  cursor:pointer;
+  border:2px solid var(--gold);
+  background:
+    linear-gradient(180deg,rgba(240,201,110,0.18) 0%,rgba(201,146,42,0.22) 100%);
+  color:var(--gold-light);
+  box-shadow:
+    0 6px 18px rgba(201,146,42,0.18),
+    inset 0 0 0 1px rgba(201,146,42,0.25);
+  transition:transform 120ms ease,box-shadow 120ms ease,background 120ms ease;
+  -webkit-appearance:none;
+  appearance:none;
+}
+.practice-btn:active{transform:scale(0.97);}
+.practice-btn[disabled]{
+  cursor:default;
+  background:linear-gradient(180deg,rgba(201,146,42,0.55) 0%,rgba(155,108,28,0.55) 100%);
+  color:var(--ink);
+  border-color:rgba(201,146,42,0.95);
+  box-shadow:
+    0 4px 12px rgba(0,0,0,0.25),
+    inset 0 0 0 1px rgba(255,255,255,0.18);
+}
+.practice-btn-icon{font-size:1.15rem;line-height:1;}
+
+/* ─── STREAK LINE ──────────────────────────────────────────── */
+.streak-line{
+  text-align:center;
+  font-family:'Crimson Text',serif;
+  font-style:italic;
+  font-size:0.95rem;
+  color:rgba(244,232,193,0.6);
+  margin-top:0.4rem;
+  letter-spacing:0.02em;
+}
+.streak-line strong{
+  font-style:normal;
+  font-weight:600;
+  color:var(--gold-light);
+  font-family:'Cinzel',serif;
+  letter-spacing:0.04em;
+}
+
+/* ─── EMPTY / PILGRIMAGE STATES ────────────────────────────── */
+.state-card{
+  position:relative;
+  margin:0.25rem 0 1.4rem;
+  padding:1.4rem 1.3rem;
+  border-radius:14px;
+  background:
+    linear-gradient(180deg,rgba(244,232,193,0.10) 0%,rgba(244,232,193,0.04) 100%);
+  border:1px dashed rgba(201,146,42,0.45);
+  text-align:center;
+}
+.state-card-icon{
+  font-size:1.6rem;
+  color:rgba(240,201,110,0.7);
+  margin-bottom:0.7rem;
+  line-height:1;
+}
+.state-card-title{
+  font-family:'Cinzel',serif;
+  font-size:1.05rem;
+  font-weight:600;
+  letter-spacing:0.05em;
+  color:rgba(244,232,193,0.85);
+  margin-bottom:0.45rem;
+}
+.state-card-body{
+  font-family:'Crimson Text',serif;
+  font-style:italic;
+  font-size:0.98rem;
+  line-height:1.5;
+  color:rgba(244,232,193,0.62);
+  max-width:24rem;
+  margin:0 auto;
+}
+
+/* ─── LOADING ──────────────────────────────────────────────── */
+.m-loading{
+  text-align:center;
+  padding:3rem 1rem;
+  font-family:'Crimson Text',serif;
+  font-style:italic;
+  color:rgba(244,232,193,0.5);
+}
+
+/* ─── AUTH GATE ────────────────────────────────────────────── */
+.auth-gate{
+  margin:2rem 1rem;
+  padding:2rem 1.4rem;
+  border-radius:14px;
+  background:rgba(244,232,193,0.04);
+  border:1px solid rgba(201,146,42,0.35);
+  text-align:center;
+}
+.auth-gate-text{
+  font-family:'Crimson Text',serif;
+  font-style:italic;
+  color:rgba(244,232,193,0.7);
+  margin-bottom:1.2rem;
+}
+.auth-gate-btn{
+  display:inline-block;
+  padding:0.75rem 1.4rem;
+  border-radius:999px;
+  background:var(--gold);
+  color:var(--ink);
+  font-family:'Cinzel',serif;
+  font-weight:600;
+  letter-spacing:0.06em;
+  text-decoration:none;
+}
+
+/* ─── TOAST ────────────────────────────────────────────────── */
+.toast{
+  position:fixed;
+  left:50%;
+  bottom:calc(var(--nav-h) + env(safe-area-inset-bottom) + 1.1rem);
+  transform:translateX(-50%);
+  padding:0.85rem 1.3rem;
+  border-radius:999px;
+  background:rgba(26,15,0,0.96);
+  border:1px solid rgba(201,146,42,0.65);
+  color:var(--gold-light);
+  font-family:'Cinzel',serif;
+  font-size:0.92rem;
+  letter-spacing:0.04em;
+  box-shadow:0 8px 24px rgba(0,0,0,0.45);
+  opacity:0;
+  pointer-events:none;
+  transition:opacity 200ms ease,transform 200ms ease;
+  z-index:200;
+}
+.toast.show{opacity:1;transform:translate(-50%,-4px);}
+
+/* ─── BOTTOM NAV ───────────────────────────────────────────── */
+.bottom-nav{
+  position:fixed;
+  left:0;right:0;bottom:0;
+  height:calc(var(--nav-h) + env(safe-area-inset-bottom));
+  padding-bottom:env(safe-area-inset-bottom);
+  background:rgba(14,8,0,0.92);
+  backdrop-filter:blur(10px);
+  -webkit-backdrop-filter:blur(10px);
+  border-top:1px solid rgba(201,146,42,0.25);
+  display:flex;
+  justify-content:space-around;
+  align-items:stretch;
+  z-index:100;
+}
+.nav-item{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:0.18rem;
+  text-decoration:none;
+  color:rgba(244,232,193,0.55);
+  transition:color 150ms ease,background 150ms ease;
+}
+.nav-item:active{background:rgba(201,146,42,0.06);}
+.nav-mark{font-size:1.25rem;line-height:1;}
+.nav-label{
+  font-family:'Cinzel',serif;
+  font-size:0.62rem;
+  letter-spacing:0.08em;
+  text-transform:uppercase;
+}
+</style>
+</head>
+<body>
+
+<div id="app">
+  <div class="m-header">
+    <a class="m-back" href="home.html" aria-label="Back to home">‹</a>
+    <div class="m-title">Memorization</div>
+  </div>
+
+  <div id="m-content">
+    <div class="m-loading">Loading the week's verse…</div>
+  </div>
+</div>
+
+<div class="toast" id="m-toast"></div>
+
+<nav class="bottom-nav" id="bottom-nav" style="display:none;">
+  <a class="nav-item" href="home.html">
+    <span class="nav-mark glyph">&#x2726;&#xFE0E;</span>
+    <span class="nav-label">Home</span>
+  </a>
+  <a class="nav-item" href="missions.html">
+    <span class="nav-mark glyph">&#x2629;&#xFE0E;</span>
+    <span class="nav-label">Missions</span>
+  </a>
+  <a class="nav-item" href="curriculum.html">
+    <span class="nav-mark glyph">&#x2295;&#xFE0E;</span>
+    <span class="nav-label">Topics</span>
+  </a>
+  <a class="nav-item" href="bible-reader.html">
+    <span class="nav-mark glyph">&#x2626;&#xFE0E;</span>
+    <span class="nav-label">Holy Scriptures</span>
+  </a>
+  <a class="nav-item" href="journal.html">
+    <span class="nav-mark glyph">&#x270E;&#xFE0E;</span>
+    <span class="nav-label">Field Manual</span>
+  </a>
+</nav>
+
+<script src="js/week-utils.js"></script>
+<script src="js/pilgrimages.js"></script>
+<script src="js/streak-grace.js"></script>
+<script src="js/memorization.js"></script>
+<script>
+'use strict';
+
+// ──────────────────────────────────────────────────────────────────
+// CONFIG
+// ──────────────────────────────────────────────────────────────────
+const SUPABASE_URL = 'https://ksfnsryfmkafwirzgjoe.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtzZm5zcnlmbWthZndpcnpnam9lIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2ODM4MTcsImV4cCI6MjA5MTI1OTgxN30.mHQty44WBnjQY8BJ8KbPk_pp-yTcOaifGxCZPUO4xpY';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+  auth: { persistSession: true, storage: localStorage }
+});
+
+// ──────────────────────────────────────────────────────────────────
+// STATE
+// ──────────────────────────────────────────────────────────────────
+const state = {
+  profileId:   null,
+  familyId:    null,
+  verse:       null,
+  practiced:   false,
+  streak:      0,
+  onPilgrimage:false,
+};
+
+// ──────────────────────────────────────────────────────────────────
+// HELPERS
+// ──────────────────────────────────────────────────────────────────
+function escapeHtml(s){
+  return (s == null ? '' : String(s))
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+function showToast(msg, dur){
+  const el = document.getElementById('m-toast');
+  if(!el) return;
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(() => el.classList.remove('show'), dur || 2200);
+}
+function authGateHTML(msg){
+  return `
+    <div class="auth-gate">
+      <div class="auth-gate-text">${escapeHtml(msg)}</div>
+      <a class="auth-gate-btn" href="index.html">Sign In</a>
+    </div>`;
+}
+
+// ──────────────────────────────────────────────────────────────────
+// INIT
+// ──────────────────────────────────────────────────────────────────
+async function init(){
+  // 1. Auth
+  let session = null;
+  try {
+    const r = await sb.auth.getSession();
+    session = r && r.data && r.data.session ? r.data.session : null;
+  } catch(e){
+    console.warn('Memorization page: auth check failed', e);
+  }
+  if(!session){
+    document.getElementById('m-content').innerHTML =
+      authGateHTML('Sign in to practice this week\u2019s verse.');
+    document.getElementById('bottom-nav').style.display = 'flex';
+    return;
+  }
+  state.profileId = session.user.id;
+
+  // 2. Profile → family_id
+  try {
+    const profRes = await sb.from('profiles')
+      .select('id, family_id, role')
+      .eq('id', state.profileId)
+      .single();
+    if(profRes.error) throw profRes.error;
+    state.familyId = profRes.data && profRes.data.family_id || null;
+  } catch(e){
+    console.warn('Memorization page: profile lookup failed', e);
+  }
+  if(!state.familyId){
+    document.getElementById('m-content').innerHTML =
+      authGateHTML('Your family record could not be loaded. Try signing out and back in.');
+    document.getElementById('bottom-nav').style.display = 'flex';
+    return;
+  }
+
+  // 3. Are we on pilgrimage today?
+  try {
+    if(window.Pilgrimages){
+      const row = await window.Pilgrimages.isActiveToday(sb);
+      state.onPilgrimage = !!row;
+    }
+  } catch(e){
+    console.warn('Memorization page: pilgrimage check failed (non-fatal)', e);
+  }
+
+  // 4. Load verse + practice state + streak (parallel)
+  try {
+    const [verse, practiced, streak] = await Promise.all([
+      window.Memorization.getCurrentVerse(sb, state.familyId),
+      window.Memorization.didTodayCount(sb, state.profileId),
+      window.Memorization.getStreak(sb, state.profileId),
+    ]);
+    state.verse     = verse;
+    state.practiced = !!practiced;
+    state.streak    = streak || 0;
+  } catch(e){
+    console.warn('Memorization page: data load failed', e);
+  }
+
+  // 5. Render
+  render();
+  document.getElementById('bottom-nav').style.display = 'flex';
+}
+
+// ──────────────────────────────────────────────────────────────────
+// RENDER
+// ──────────────────────────────────────────────────────────────────
+function render(){
+  const root = document.getElementById('m-content');
+  if(!root) return;
+
+  // Pilgrimage state takes priority (the rest of the surface hides).
+  if(state.onPilgrimage){
+    root.innerHTML = renderVerseHero(state.verse) + renderPilgrimage();
+    return;
+  }
+
+  // No verse for this week.
+  if(!state.verse){
+    root.innerHTML = renderEmpty();
+    return;
+  }
+
+  // Standard state: verse + practice button + streak.
+  root.innerHTML =
+    renderVerseHero(state.verse) +
+    renderPracticeRow(state.practiced) +
+    renderStreakLine(state.streak);
+
+  // Wire button (if present).
+  const btn = document.getElementById('practice-btn');
+  if(btn && !state.practiced){
+    btn.addEventListener('click', onPractice);
+  }
+}
+
+function renderVerseHero(verse){
+  if(!verse) return '';
+  return `
+    <div class="verse-hero">
+      <div class="verse-eyebrow">This Week's Verse</div>
+      <div class="verse-ref">${escapeHtml(verse.reference)}</div>
+      <div class="verse-text">${escapeHtml(verse.verse_text)}</div>
+    </div>`;
+}
+
+function renderPracticeRow(practiced){
+  if(practiced){
+    return `
+      <div class="practice-row">
+        <button class="practice-btn" id="practice-btn" disabled aria-disabled="true">
+          <span class="practice-btn-icon">✓</span>
+          <span>Practiced Today</span>
+        </button>
+      </div>`;
+  }
+  return `
+    <div class="practice-row">
+      <button class="practice-btn" id="practice-btn" type="button">
+        <span class="practice-btn-icon">✦</span>
+        <span>I Tried It Today</span>
+      </button>
+    </div>`;
+}
+
+function renderStreakLine(streak){
+  if(!streak || streak <= 0){
+    return `<div class="streak-line">Each day you try, your streak grows.</div>`;
+  }
+  const word = streak === 1 ? 'week' : 'weeks';
+  return `<div class="streak-line">Your streak: <strong>${streak} ${word}</strong></div>`;
+}
+
+function renderEmpty(){
+  return `
+    <div class="state-card">
+      <div class="state-card-icon glyph">&#x2726;&#xFE0E;</div>
+      <div class="state-card-title">No verse this week</div>
+      <div class="state-card-body">Mom or Dad will set this week\u2019s verse soon. Check back later.</div>
+    </div>`;
+}
+
+function renderPilgrimage(){
+  return `
+    <div class="state-card">
+      <div class="state-card-icon">🚶</div>
+      <div class="state-card-title">On Pilgrimage</div>
+      <div class="state-card-body">Practice resumes when you return. Your streak is preserved.</div>
+    </div>`;
+}
+
+// ──────────────────────────────────────────────────────────────────
+// PRACTICE HANDLER
+// ──────────────────────────────────────────────────────────────────
+async function onPractice(ev){
+  const btn = ev && ev.currentTarget;
+  if(btn){ btn.disabled = true; }
+  try {
+    const res = await window.Memorization.practiceToday(
+      sb, state.profileId, state.familyId
+    );
+    if(res && res.ok){
+      state.practiced = true;
+      if(res.alreadyDone){
+        showToast('Already practiced today ✓');
+      } else {
+        showToast(`+${res.coinsAwarded || 5} ✦ Saint Coins`);
+      }
+      // Re-render to switch to the completed state.
+      render();
+    } else {
+      showToast('Could not save. Try again in a moment.');
+      if(btn){ btn.disabled = false; }
+    }
+  } catch(e){
+    console.warn('Memorization page: practiceToday threw', e);
+    showToast('Could not save. Try again in a moment.');
+    if(btn){ btn.disabled = false; }
+  }
+}
+
+// ──────────────────────────────────────────────────────────────────
+// SERVICE WORKER (PWA — match other pages)
+// ──────────────────────────────────────────────────────────────────
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  });
+}
+
+// ──────────────────────────────────────────────────────────────────
+// GO
+// ──────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>

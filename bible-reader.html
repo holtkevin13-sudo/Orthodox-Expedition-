@@ -513,6 +513,29 @@ body::before{
   100% {background:rgba(201,146,42,0.16)!important;}
 }
 
+/* ── Dispatch 3c · Today's Reading mode ─────────────────────────
+   When bible-reader is opened with ?vs=N&ve=N (via daily-anchor-
+   card.js's gospel deep-link), verses inside the range get
+   .brm-verse-today (gold-tinted background + left edge accent) and
+   verses outside the range get .brm-verse-faded (desaturated so the
+   surrounding chapter is still readable but visually deemphasized).
+   The gold left edge uses inset box-shadow rather than border-left
+   to avoid disrupting the existing verse padding (.verse has
+   padding-left:2.2rem for the verse number gutter).
+   Persists for the duration of the visit — not animated. User
+   highlights (.hl-gold/blue/green/red) win via !important, which
+   is the intended priority (user intent over system highlighting). */
+.verse.brm-verse-today{
+  background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.04));
+  box-shadow:inset 3px 0 0 #c9a84c;
+}
+.verse.brm-verse-faded{
+  opacity:0.55;
+}
+@media (prefers-reduced-motion: reduce){
+  /* No animated transitions to disable — both classes are static. */
+}
+
 /* Verse action toolbar (appears on selection) */
 .verse-actions{
   display:none;
@@ -1544,6 +1567,11 @@ let supabaseUser = null;
 let sb = null;
 let currentView = 'books';
 let lastReadingURL = null;  // for the "‹ Chapters" back-from-reading
+// Dispatch 3c — Today's Reading mode state. Set by applyRouteFromUrl
+// when ?vs=N&ve=N are present. Cleared when URL params are absent or
+// when the user navigates to a different book/chapter than the range.
+// Shape: { book: 'JHN', chapter: 11, start: 47, end: 54 } or null.
+let todaysReadingRange = null;
 
 // ═══════════════════════════════════════════════════════════════
 // VIEW STATE MACHINE
@@ -1805,6 +1833,14 @@ async function loadAndRenderChapter(idx, scrollVerse){
       );
       renderApiChapter(data);
     }
+    // Dispatch 3c — Today's Reading mode. Apply gold-tint + faded
+    // styling when the URL carries a verse-range that matches this
+    // chapter. Idempotent: a no-op when todaysReadingRange is null
+    // or refers to a different book/chapter. Runs synchronously
+    // after the verses are in the DOM. Scrolls to the start of the
+    // range only when scrollVerse is not provided (an explicit
+    // ?verse=N takes priority over the range scroll).
+    applyTodaysReadingMode({ skipScroll: !!scrollVerse });
     if (scrollVerse) {
       // Wait one frame for the DOM to settle, then scroll to verse
       requestAnimationFrame(() => { setTimeout(() => scrollToVerse(scrollVerse), 80); });
@@ -2471,6 +2507,72 @@ function scrollToVerse(verseNum){
   }
 }
 
+// ── Dispatch 3c · Today's Reading mode ───────────────────────────
+// Apply .brm-verse-today to verses inside todaysReadingRange and
+// .brm-verse-faded to verses outside. Idempotent — safe to call
+// repeatedly. A no-op when:
+//   • todaysReadingRange is null
+//   • todaysReadingRange.book doesn't match currentBook.id
+//   • todaysReadingRange.chapter doesn't match the current chapter
+// In those cases, ALL existing brm-* classes are cleared (defensive
+// against navigating away from the range chapter via prev/next).
+//
+// Verse identifier convention: .verse elements carry data-vnum (the
+// verse number as string) and data-vid (full unique id like
+// "JHN.11.47"). We filter by parsed data-vnum since it's the
+// chapter-local index, which is what verse_start/verse_end refer to.
+//
+// Scrolling: by default, scrolls to the FIRST verse in the range
+// (block:'start' with a small top offset for the sticky header).
+// Pass { skipScroll: true } when an explicit ?verse=N is also in
+// the URL — the chapter-arrow nav and other callers may also opt
+// out of the scroll.
+function applyTodaysReadingMode(opts){
+  opts = opts || {};
+  const verseEls = document.querySelectorAll('.verse[data-vnum]');
+  // Always clear first so chapter-changes / nav don't leave stale
+  // classes on verses (lockstep with the chapter-mismatch no-op
+  // below). Cheap pass; verseEls is at most ~150 elements.
+  verseEls.forEach(el => {
+    el.classList.remove('brm-verse-today', 'brm-verse-faded');
+  });
+
+  if (!todaysReadingRange) return;
+  if (!currentBook || currentBook.id !== todaysReadingRange.book) return;
+  const curCh = currentChapters[currentChapterIdx];
+  if (!curCh || String(curCh.number) !== String(todaysReadingRange.chapter)) return;
+
+  const start = todaysReadingRange.start;
+  const end   = todaysReadingRange.end;
+  let firstInRange = null;
+
+  verseEls.forEach(el => {
+    const vn = parseInt(el.getAttribute('data-vnum'), 10);
+    if (!Number.isFinite(vn)) return;
+    if (vn >= start && vn <= end) {
+      el.classList.add('brm-verse-today');
+      if (firstInRange === null || vn < firstInRange.vn) {
+        firstInRange = { vn: vn, el: el };
+      }
+    } else {
+      el.classList.add('brm-verse-faded');
+    }
+  });
+
+  if (opts.skipScroll) return;
+  if (firstInRange) {
+    // One-frame wait so the DOM settles (the existing scrollVerse
+    // pattern uses the same trick — see loadAndRenderChapter).
+    const target = firstInRange.el;
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        try { target.scrollIntoView({ behavior:'smooth', block:'start' }); }
+        catch (_e) { target.scrollIntoView(); }
+      }, 80);
+    });
+  }
+}
+
 // ═══════════════════════════════════════════════════════════════
 // CHAPTER NAV ARROWS (prev / next)
 // ═══════════════════════════════════════════════════════════════
@@ -2579,12 +2681,46 @@ async function applyRouteFromUrl(replace){
   const verseNum= params.get('verse');
   const source  = params.get('source');
 
+  // Dispatch 3c — Today's Reading range. Set only when source=
+  // expedition AND both vs+ve are present and parseable as positive
+  // integers AND vs <= ve. Otherwise null (bible-reader falls back
+  // to existing chapter-level open with no verse-range styling).
+  const vsRaw = params.get('vs');
+  const veRaw = params.get('ve');
+  const vsInt = vsRaw ? parseInt(vsRaw, 10) : NaN;
+  const veInt = veRaw ? parseInt(veRaw, 10) : NaN;
+  if (source === 'expedition'
+      && bookId && chNum
+      && Number.isFinite(vsInt) && vsInt > 0
+      && Number.isFinite(veInt) && veInt > 0
+      && vsInt <= veInt) {
+    todaysReadingRange = {
+      book:    bookId,
+      chapter: String(chNum),
+      start:   vsInt,
+      end:     veInt,
+    };
+  } else {
+    todaysReadingRange = null;
+  }
+
   // Expedition banner activation
   if (source === 'expedition' && bookId && chNum) {
     const banner = document.getElementById('expeditionBanner');
     const refEl  = document.getElementById('expeditionBannerRef');
     if (banner) banner.style.display = '';
-    if (refEl)  refEl.textContent = `${getBookName(bookId)} ${chNum}${verseNum?':'+verseNum:''}`;
+    if (refEl) {
+      // Show verse range when set (Dispatch 3c) — falls back to
+      // chapter-level ref when vs/ve absent. Preserves 3a behavior
+      // for non-gospel expedition links.
+      let refLabel = `${getBookName(bookId)} ${chNum}`;
+      if (todaysReadingRange) {
+        refLabel += `:${todaysReadingRange.start}-${todaysReadingRange.end}`;
+      } else if (verseNum) {
+        refLabel += `:${verseNum}`;
+      }
+      refEl.textContent = refLabel;
+    }
   }
 
   if (bookId && chNum) {

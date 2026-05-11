@@ -617,6 +617,14 @@ body::before{
 /* Quiet, reassuring. Not alarming. Parchment-tinted gold border.
    Sits above today-card to be the first thing Nolan sees when he's
    on pilgrimage — "your streak walks with you." */
+/* Repair Patch 1 (May 11, 2026) — Root cause of "ghost banner" bugs.
+   Author rule `.hp-pilgrimage-banner{display:flex}` was overriding the
+   UA stylesheet's `[hidden]{display:none}` (author origin beats UA
+   origin in the CSS cascade), so `banner.hidden = true` from JS was
+   a no-op visually. This explicit `[hidden]` rule at author level
+   restores the expected semantics. Belt — the JS reset block in
+   loadPilgrimageBanner() is the braces. */
+.hp-pilgrimage-banner[hidden]{display:none !important;}
 .hp-pilgrimage-banner{
   display:flex;align-items:center;gap:0.875rem;
   background:linear-gradient(135deg,rgba(244,232,193,0.10),rgba(232,213,160,0.06));
@@ -1914,6 +1922,21 @@ async function loadPilgrimageBanner(){
     const titleEl  = document.getElementById('hp-pb-title');
     const detailEl = document.getElementById('hp-pb-detail');
     if (!banner || !titleEl || !detailEl) return;
+
+    // Repair Patch 1 (May 11, 2026) — clean slate every render.
+    // Bug 2 root cause: when neither path below matched (e.g. all
+    // dates NULL, or welcome-home flag already set), nothing reset
+    // banner.hidden, and the CSS rule on `.hp-pilgrimage-banner`
+    // overrode the initial `hidden` attribute, leaking the static
+    // 🚶 markup with empty text. We now (a) re-assert hidden, (b)
+    // blank the icon/title/detail so any stale text from a prior
+    // render cannot show through, and (c) rely on the new
+    // `.hp-pilgrimage-banner[hidden]{display:none !important}` rule
+    // in the CSS to actually take the element out of layout.
+    banner.hidden = true;
+    if (iconEl) iconEl.textContent = '';
+    titleEl.textContent  = '';
+    detailEl.textContent = '';
 
     // (1) Active pilgrimage today?
     const active = await window.Pilgrimages.isActiveToday(sb);

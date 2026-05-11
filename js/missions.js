@@ -145,6 +145,31 @@
     return !!(row && row.daily_readings && row.daily_readings.question);
   }
 
+  // Build a bible-reader deep-link URL from a liturgical_calendar
+  // row's gospel payload. Mirrors the URL pattern produced by
+  // js/daily-anchor-card.js renderLectionaryGospel (book + chapter
+  // + source=expedition, optional vs/ve when both are present).
+  // Falls back to a plain bible-reader.html link when the gospel
+  // payload is incomplete — still tappable, still useful.
+  function _buildGospelHref(row) {
+    const gospel = (row && row.daily_readings && row.daily_readings.gospel) || null;
+    if (!gospel) return 'bible-reader.html';
+    const bookCode = gospel.book_code;
+    const chapter  = gospel.chapter;
+    if (!bookCode || chapter == null || chapter === '') return 'bible-reader.html';
+    let href = `bible-reader.html?book=${encodeURIComponent(bookCode)}`
+             + `&chapter=${encodeURIComponent(chapter)}`
+             + `&source=expedition`;
+    const vs = gospel.verse_start;
+    const ve = gospel.verse_end;
+    const vsOk = (vs !== null && vs !== undefined && vs !== '' && Number(vs) > 0);
+    const veOk = (ve !== null && ve !== undefined && ve !== '' && Number(ve) > 0);
+    if (vsOk && veOk) {
+      href += `&vs=${encodeURIComponent(vs)}&ve=${encodeURIComponent(ve)}`;
+    }
+    return href;
+  }
+
   // Strip liturgical lead-ins from gospel text for the teaser line.
   // Same pattern daily-anchor-card uses, kept minimal here.
   function _gospelTeaser(text) {
@@ -374,7 +399,15 @@
     if (isPilgrimage) {
       readingState = 'pilgrimage';
     } else if (readCompleteToday) {
-      readingState = 'complete';
+      // DB has a completion row. Distinguish by whether today's
+      // liturgical_calendar row carries a question payload:
+      //   • with question → 'complete' (ReadingQuest renders the
+      //     reveal view from the stored answer).
+      //   • without question → 'complete-no-question' (the always-
+      //     clickable ✓ tile; the idempotent log+coin write in mount
+      //     becomes a no-op on subsequent visits via the unique
+      //     constraint on reading_completions).
+      readingState = _hasQuestion(anchorData.row) ? 'complete' : 'complete-no-question';
     } else if (_readingFlagSet(today)) {
       // Per Pause #2 (a): visited counts as complete EVEN on dates
       // with no question payload (post-Jun-14 unless content
@@ -517,15 +550,18 @@
     `;
   }
 
-  // For complete-no-question (Pause #2 = a): a small "✓ Today's
-  // Gospel — read" mini-card. No streak credit on these dates; the
-  // dispatch acknowledges this is acceptable for launch.
-  function _readingCompleteNoQuestionHTML() {
+  // For complete-no-question: a small, ALWAYS-CLICKABLE "✓ Today's
+  // Gospel — read · +5" mini-card. Tap re-opens bible-reader at
+  // today's Gospel for re-reading (DB row already logged on the
+  // first mount entering this state; unique constraint prevents
+  // double-log). Coin reward is flat +5 (Chat 1 Decision 1).
+  function _readingCompleteNoQuestionHTML(row) {
+    const href = _buildGospelHref(row);
     return `
-      <div class="mh-reading-done-mini">
+      <a class="mh-reading-done-mini" href="${esc(href)}">
         <div class="mh-rdm-check">✓</div>
-        <div class="mh-rdm-text">Today's Gospel — read.</div>
-      </div>
+        <div class="mh-rdm-text">Today's Gospel — read &middot; <span class="mh-rdm-coins">+5</span></div>
+      </a>
     `;
   }
 
@@ -781,7 +817,23 @@
       if (state.reading === 'pilgrimage') {
         innerSlot.innerHTML = _readingPilgrimageHTML();
       } else if (state.reading === 'complete-no-question') {
-        innerSlot.innerHTML = _readingCompleteNoQuestionHTML();
+        // No-question day: the user has read the Gospel (localStorage
+        // flag set by bible-reader's pagehide hook) but there's no
+        // question payload to answer. Log a completion row + award
+        // flat +5 coins via the ReadingQuest wrapper (idempotent —
+        // unique constraint blocks dupes on re-mount). Render the
+        // tile as an always-clickable anchor so re-reads are free.
+        if (window.ReadingQuest
+            && typeof window.ReadingQuest.commitNoQuestionCompletion === 'function') {
+          try {
+            await window.ReadingQuest.commitNoQuestionCompletion(sb, {
+              explorerId, familyId, today, coins: 5,
+            });
+          } catch (e) {
+            console.warn('ReadingQuest.commitNoQuestionCompletion failed (graceful):', e);
+          }
+        }
+        innerSlot.innerHTML = _readingCompleteNoQuestionHTML(state.readingAnchorRow);
       } else if (state.reading === 'pending') {
         // Pending → full DailyAnchorCard. Anchor card brings the
         // gospel teaser AND the deep-link to bible-reader. Tap on

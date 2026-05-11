@@ -88,8 +88,8 @@ const SessionLoader = (() => {
     const progressQuery = profileId
       ? sb
           .from('session_progress')
-          .select('session_id, profile_id, day_1_completed_at, day_2_completed_at, day_3_completed_at, sunday_liturgy_observed_at, completed_at')
-          .eq('profile_id', profileId)
+          .select('session_id, explorer_id, day_1_completed_at, day_2_completed_at, day_3_completed_at, sunday_liturgy_observed_at, completed_at')
+          .eq('explorer_id', profileId)
           .eq('session_id', sessionId)
           .maybeSingle()
       : Promise.resolve({ data: null, error: null });

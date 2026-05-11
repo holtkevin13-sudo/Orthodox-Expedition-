@@ -1,4 +1,24 @@
-// Orthodox Expedition — Service Worker v24
+// Orthodox Expedition — Service Worker v25
+// v25: Dispatch 4a — Memorization Lane Foundation (Lane 5). New
+//      schema: weekly_verses (family-scoped content catalog),
+//      verse_practice_completions (per-day boolean, mirrors
+//      reading_completions), weekly_memorization_streak (Pattern B
+//      grace, mirrors weekly_reading_streak). Memorization is
+//      structurally analogous to reading (per-day boolean events,
+//      one practice tap per day, +5 coins), not prayer (AM/PM
+//      duality) — Op Learning #16. New module js/memorization.js
+//      exposes getVerseForWeek, getCurrentVerse, didTodayCount,
+//      practiceToday (idempotent via 23505), getStreak (line-for-
+//      line mirror of Reading.getStreak). js/streak-grace.js
+//      extended with persistMemorizationGrace + readMemorization-
+//      GraceFlag. New page memorization.html (verse hero + practice
+//      button + streak count). admin.html Weekly Verses panel for
+//      Kevin to author verses week-by-week. home.html adds a small
+//      verse tile between today-card and next-rank-card (will be
+//      absorbed by Dispatch 4b's Quest Bar). New static assets:
+//      js/memorization.js, memorization.html. NO changes to
+//      reading-quest commit pattern, reading streak math, prayer
+//      rollup, or any session-lane surface.
 // v24: Dispatch 3c — Reading Streak + Verse-Range + Sunday Settlement
 //      (D3 resolution). New schema: weekly_reading_streak table
 //      (Pattern B mirror of weekly_session_grace; 5 columns —
@@ -237,7 +257,7 @@
 // v4: added week.html, prayers.html, day-state, pause-card, prayers, and config JSON
 // Version bump forces cache clear and fresh install
 
-const CACHE_NAME = 'orthodox-expedition-v24';
+const CACHE_NAME = 'orthodox-expedition-v25';
 const STATIC_ASSETS = [
   '/Orthodox-Expedition-/',
   '/Orthodox-Expedition-/index.html',
@@ -254,6 +274,7 @@ const STATIC_ASSETS = [
   '/Orthodox-Expedition-/parent.html',
   '/Orthodox-Expedition-/assess.html',
   '/Orthodox-Expedition-/quiz-results.html',
+  '/Orthodox-Expedition-/memorization.html',
   '/Orthodox-Expedition-/email-utils.js',
   '/Orthodox-Expedition-/favicon.svg',
   '/Orthodox-Expedition-/icon-180.png',
@@ -277,6 +298,7 @@ const STATIC_ASSETS = [
   '/Orthodox-Expedition-/js/daily-anchor-card.js',
   '/Orthodox-Expedition-/js/reading-quest.js',
   '/Orthodox-Expedition-/js/reading.js',
+  '/Orthodox-Expedition-/js/memorization.js',
   '/Orthodox-Expedition-/js/topic-00-day.js',
   '/Orthodox-Expedition-/js/quiz-runner.js',
   '/Orthodox-Expedition-/js/welcome-flow.js',

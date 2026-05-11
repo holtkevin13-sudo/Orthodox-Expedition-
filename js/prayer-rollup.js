@@ -2,6 +2,8 @@
    Orthodox Expedition — Prayer System Lane 3
    js/prayer-rollup.js — Sunday-night weekly rollup
    May 8, 2026 (Sunday-anchor migration: Dispatch 2, May 10, 2026)
+   May 11, 2026 — Dispatch 5: standalone celebration overlay DISABLED.
+                  Settlement logic preserved; see step 4 of run().
 
    PURPOSE
    The per-routine reward is 0 coins (Lane 2 zeroed daily prayer
@@ -15,16 +17,24 @@
    Sunday and whose settled_at IS NULL is settled in-place:
      - profiles.coins + lifetime_coins bumped by coins_awarded
      - row.settled_at + coins_awarded set
-   Then a quiet parchment celebration appears on screen for the
-   most-recent settled non-zero week (one celebration max per open).
+
+   Previously, this module then displayed a parchment slide-down
+   celebration overlay for the most-recent settled non-zero week.
+   As of Dispatch 5 (May 11, 2026) that overlay is DISABLED — the
+   Sunday Celebration overlay (js/sunday-celebration.js) is now the
+   canonical weekly reverent moment, displaying a unified status
+   readout across prayer + reading + memorization + feast instead
+   of three competing per-lane fanfares. The showCelebration()
+   function and its CSS are preserved here for rollback safety and
+   v1.1 reference; only the invocation is short-circuited.
 
    IDEMPOTENCY
    The settle UPDATE is gated on `settled_at IS NULL`, so two tabs
    firing simultaneously produce exactly one effective settle
    (last-writer's RETURNING is empty). Zero-completion weeks still
-   settle (set settled_at + coins_awarded=0) but never trigger a
-   celebration — "you prayed 0 times last week, glory to God" would
-   be tone-deaf per orchestrator guidance.
+   settle (set settled_at + coins_awarded=0). The Sunday Celebration
+   overlay handles its own "zero weeks never celebrate" semantics by
+   filtering on non-zero counts in shouldShow().
 
    Public API: window.PrayerRollup.run(supabaseClient, profileId).
    Helpers: getCurrentWeekStart(date), ymd(date) — also useful for the
@@ -150,10 +160,36 @@
       }));
     }
 
-    // 4. Show celebration for the most-recent NON-ZERO settled row that
-    //    has not yet been celebrated. Per dispatch: "show only the most
-    //    recent — don't queue multiple celebrations" + "zero weeks never
-    //    celebrate — tone-deaf." Both rules respected.
+    // 4. Celebration display — DISABLED as of Dispatch 5 (May 11, 2026).
+    //
+    // The Sunday Celebration overlay (js/sunday-celebration.js) is now
+    // the canonical weekly reverent moment. It displays a unified
+    // status readout across all three weekly lanes (prayer/reading/
+    // memorization) plus the week's feast — instead of three separate
+    // per-lane overlays competing for Nolan's attention on Sunday.
+    //
+    // Prayer settlement logic (steps 1-3 above) remains intact:
+    //   • Unsettled past-week rows still get coined.
+    //   • profiles.coins + lifetime_coins are still bumped.
+    //   • settled_at + coins_awarded are still written.
+    //
+    // Only the visual overlay invocation is short-circuited. The
+    // showCelebration function below is preserved (not deleted) for:
+    //   (a) easy rollback if the Sunday Celebration is ever rolled
+    //       back via dispatch reversal,
+    //   (b) reference / documentation of the prior per-lane pattern,
+    //   (c) potential v1.1 reuse if a "Full Crown" 7/7 AM+PM variant
+    //       gets re-enabled as a special-case fanfare.
+    //
+    // Sunday Celebration writes its own celebration_shown_at via
+    // SundayCelebration.dismiss(), so prayer_streak_weekly rows still
+    // get their celebration_shown_at marker — just by a different
+    // surface.
+    //
+    // DO NOT re-enable this call without coordinating with the Sunday
+    // Celebration dispatch design (would re-introduce the double-
+    // overlay UX conflict that Dispatch 5 resolved).
+    /*
     const candidates = settled.filter(r =>
       (r.coins_awarded || 0) > 0 && !r.celebration_shown_at
     );
@@ -165,6 +201,7 @@
         console.warn('PrayerRollup: celebration display failed:', e);
       }
     }
+    */
 
     return { ok: true, settled: settled.length };
   }

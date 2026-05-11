@@ -865,6 +865,40 @@ th{font-size:0.78rem !important;letter-spacing:0.06em !important;font-weight:600
       </div>
     </div>
 
+    <!-- Weekly Verses (Dispatch 4a — Memorization Lane) -->
+    <div class="section">
+      <div class="section-title">Weekly Verses</div>
+      <p style="font-family:'Crimson Text',serif;font-size:0.95rem;color:rgba(244,232,193,0.7);font-style:italic;margin-bottom:0.95rem;line-height:1.5;">One short verse per week. Sunday-anchored. Nolan practices daily, earns +5 coins per try.</p>
+
+      <!-- Add new verse -->
+      <div class="card" style="margin-bottom:0.95rem;">
+        <div style="font-family:'Cinzel',serif;font-size:0.78rem;letter-spacing:0.12em;color:rgba(240,201,110,0.95);text-transform:uppercase;margin-bottom:0.6rem;">Add a verse</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Week (Sunday)</label>
+            <input type="date" class="form-input" id="wv-new-week" value="">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Reference</label>
+            <input type="text" class="form-input" id="wv-new-ref" placeholder="e.g. John 14:6">
+          </div>
+        </div>
+        <div class="form-group" style="margin-top:0.4rem;">
+          <label class="form-label">Verse text</label>
+          <textarea class="form-textarea" id="wv-new-text" rows="2" placeholder="I am the way, and the truth, and the life."></textarea>
+        </div>
+        <div style="display:flex;gap:0.5rem;align-items:center;margin-top:0.4rem;">
+          <button class="btn btn-gold" onclick="addWeeklyVerse(this)">Add verse</button>
+          <span class="wv-new-feedback" style="font-family:'Crimson Text',serif;font-size:0.82rem;font-style:italic;color:rgba(244,232,193,0.55);"></span>
+        </div>
+      </div>
+
+      <!-- Existing verses list -->
+      <div id="weekly-verses-list">
+        <div class="empty" style="font-family:'Crimson Text',serif;font-size:0.92rem;color:rgba(244,232,193,0.5);font-style:italic;">Loading…</div>
+      </div>
+    </div>
+
     <!-- Explorer Stats -->
     <div class="section">
       <div class="section-title">Explorer Status</div>
@@ -1305,6 +1339,7 @@ async function loadAll(){
   await loadPending();
   await loadActivityLog();
   await loadPilgrimagesAdmin();
+  await loadWeeklyVerses();
   renderDashboard();
   populateTopicSelect();
 }
@@ -1384,6 +1419,178 @@ async function savePilgrimage(id, btn){
     if(fb){ fb.textContent = 'Save failed.'; fb.style.color = 'rgba(220,38,38,0.85)'; }
     toast('Save failed: ' + (e.message || 'unknown error'), true);
   } finally {
+    btn.disabled = false;
+  }
+}
+
+// ── WEEKLY VERSES (Dispatch 4a — Memorization Lane) ──────────────
+function _wvEscape(s){
+  return (s == null ? '' : String(s))
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+// Compute the next Sunday (today included if today IS Sunday).
+function _nextSundayKey(){
+  const d = new Date();
+  const dow = d.getDay(); // 0 = Sunday
+  const daysToAdd = (dow === 0) ? 0 : (7 - dow);
+  d.setDate(d.getDate() + daysToAdd);
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,'0');
+  const day = String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
+
+async function loadWeeklyVerses(){
+  // Seed the "Add verse" date field with the next Sunday.
+  const newDateEl = document.getElementById('wv-new-week');
+  if(newDateEl && !newDateEl.value){
+    newDateEl.value = _nextSundayKey();
+  }
+
+  const list = document.getElementById('weekly-verses-list');
+  if(!list) return;
+  if(!adminProfile || !adminProfile.family_id){
+    list.innerHTML = '<div class="empty" style="font-family:\'Crimson Text\',serif;font-size:0.92rem;color:rgba(244,232,193,0.5);font-style:italic;">No family on record.</div>';
+    return;
+  }
+  try {
+    const { data, error } = await sb.from('weekly_verses')
+      .select('id, week_start_date, reference, verse_text, created_at')
+      .eq('family_id', adminProfile.family_id)
+      .order('week_start_date', { ascending: false })
+      .limit(12);
+    if(error) throw error;
+    const rows = data || [];
+    if(!rows.length){
+      list.innerHTML = '<div class="empty" style="font-family:\'Crimson Text\',serif;font-size:0.92rem;color:rgba(244,232,193,0.5);font-style:italic;">No verses yet. Add one above.</div>';
+      return;
+    }
+    list.innerHTML = rows.map(r => `
+      <div class="card" data-verse-id="${_wvEscape(r.id)}" style="margin-bottom:0.65rem;">
+        <div style="font-family:'Cinzel',serif;font-size:0.78rem;letter-spacing:0.12em;color:rgba(240,201,110,0.95);text-transform:uppercase;margin-bottom:0.25rem;">Week of ${_wvEscape(r.week_start_date)}</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Week (Sunday)</label>
+            <input type="date" class="form-input wv-week" value="${_wvEscape(r.week_start_date)}">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Reference</label>
+            <input type="text" class="form-input wv-ref" value="${_wvEscape(r.reference)}">
+          </div>
+        </div>
+        <div class="form-group" style="margin-top:0.4rem;">
+          <label class="form-label">Verse text</label>
+          <textarea class="form-textarea wv-text" rows="2">${_wvEscape(r.verse_text)}</textarea>
+        </div>
+        <div style="display:flex;gap:0.5rem;align-items:center;margin-top:0.4rem;">
+          <button class="btn btn-gold" onclick="saveWeeklyVerse('${_wvEscape(r.id)}', this)">Save</button>
+          <button class="btn btn-red"  onclick="deleteWeeklyVerse('${_wvEscape(r.id)}', this)">Delete</button>
+          <span class="wv-feedback" style="font-family:'Crimson Text',serif;font-size:0.82rem;font-style:italic;color:rgba(244,232,193,0.55);"></span>
+        </div>
+      </div>
+    `).join('');
+  } catch(e){
+    console.warn('loadWeeklyVerses failed:', e);
+    list.innerHTML = '<div class="empty" style="font-family:\'Crimson Text\',serif;font-size:0.92rem;color:rgba(220,38,38,0.7);font-style:italic;">Failed to load weekly verses.</div>';
+  }
+}
+
+async function addWeeklyVerse(btn){
+  const card = btn.closest('.card');
+  const fb   = card ? card.querySelector('.wv-new-feedback') : null;
+  const wkEl = document.getElementById('wv-new-week');
+  const refEl= document.getElementById('wv-new-ref');
+  const txtEl= document.getElementById('wv-new-text');
+  const week = (wkEl && wkEl.value) || '';
+  const refr = (refEl && refEl.value || '').trim();
+  const text = (txtEl && txtEl.value || '').trim();
+
+  if(!week){ if(fb){ fb.textContent='Pick a Sunday.'; fb.style.color='rgba(220,38,38,0.85)'; } return; }
+  if(!refr){ if(fb){ fb.textContent='Reference required.'; fb.style.color='rgba(220,38,38,0.85)'; } return; }
+  if(!text){ if(fb){ fb.textContent='Verse text required.'; fb.style.color='rgba(220,38,38,0.85)'; } return; }
+  if(!adminProfile || !adminProfile.family_id){
+    if(fb){ fb.textContent='No family on record.'; fb.style.color='rgba(220,38,38,0.85)'; }
+    return;
+  }
+  if(fb){ fb.textContent='Saving…'; fb.style.color='rgba(244,232,193,0.55)'; }
+  btn.disabled = true;
+  try {
+    const payload = {
+      family_id:       adminProfile.family_id,
+      week_start_date: week,
+      reference:       refr,
+      verse_text:      text,
+      created_by:      adminProfile.id || null,
+    };
+    const { error } = await sb.from('weekly_verses')
+      .upsert(payload, { onConflict: 'family_id,week_start_date' });
+    if(error) throw error;
+    if(fb){ fb.textContent='Saved ✓'; fb.style.color='rgba(134,239,172,0.85)'; }
+    toast('Weekly verse saved.');
+    // Reset the form, re-seed date with next Sunday, and reload list.
+    if(refEl) refEl.value='';
+    if(txtEl) txtEl.value='';
+    if(wkEl)  wkEl.value = _nextSundayKey();
+    await loadWeeklyVerses();
+  } catch(e){
+    console.error('addWeeklyVerse failed:', e);
+    if(fb){ fb.textContent='Save failed.'; fb.style.color='rgba(220,38,38,0.85)'; }
+    toast('Save failed: ' + (e.message || 'unknown error'), true);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function saveWeeklyVerse(id, btn){
+  const card = btn.closest('[data-verse-id]');
+  if(!card) return;
+  const wkEl = card.querySelector('.wv-week');
+  const refEl= card.querySelector('.wv-ref');
+  const txtEl= card.querySelector('.wv-text');
+  const fb   = card.querySelector('.wv-feedback');
+  const week = (wkEl && wkEl.value) || '';
+  const refr = (refEl && refEl.value || '').trim();
+  const text = (txtEl && txtEl.value || '').trim();
+
+  if(!week || !refr || !text){
+    if(fb){ fb.textContent='All fields required.'; fb.style.color='rgba(220,38,38,0.85)'; }
+    return;
+  }
+  if(fb){ fb.textContent='Saving…'; fb.style.color='rgba(244,232,193,0.55)'; }
+  btn.disabled = true;
+  try {
+    const { error } = await sb.from('weekly_verses')
+      .update({ week_start_date: week, reference: refr, verse_text: text })
+      .eq('id', id);
+    if(error) throw error;
+    if(fb){ fb.textContent='Saved ✓'; fb.style.color='rgba(134,239,172,0.85)'; }
+    toast('Weekly verse updated.');
+  } catch(e){
+    console.error('saveWeeklyVerse failed:', e);
+    if(fb){ fb.textContent='Save failed.'; fb.style.color='rgba(220,38,38,0.85)'; }
+    toast('Save failed: ' + (e.message || 'unknown error'), true);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function deleteWeeklyVerse(id, btn){
+  if(!confirm('Delete this weekly verse?')) return;
+  const card = btn.closest('[data-verse-id]');
+  const fb   = card ? card.querySelector('.wv-feedback') : null;
+  if(fb){ fb.textContent='Deleting…'; fb.style.color='rgba(244,232,193,0.55)'; }
+  btn.disabled = true;
+  try {
+    const { error } = await sb.from('weekly_verses').delete().eq('id', id);
+    if(error) throw error;
+    toast('Weekly verse deleted.');
+    await loadWeeklyVerses();
+  } catch(e){
+    console.error('deleteWeeklyVerse failed:', e);
+    if(fb){ fb.textContent='Delete failed.'; fb.style.color='rgba(220,38,38,0.85)'; }
+    toast('Delete failed: ' + (e.message || 'unknown error'), true);
     btn.disabled = false;
   }
 }

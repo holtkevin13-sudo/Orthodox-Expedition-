@@ -1,4 +1,48 @@
-// Orthodox Expedition — Service Worker v26
+// Orthodox Expedition — Service Worker v27
+// v27: Dispatch 5 — Sunday Celebration Overlay. The canonical weekly
+//      reverent moment. When Nolan opens the app on Sunday (or any
+//      later day before this week's celebration is dismissed), a
+//      full-viewport parchment overlay surfaces last closed week's
+//      lane activity (prayer mornings/evenings, reading days,
+//      memorization days), the streak counts that held intact, and
+//      this week's feast — closing with "Glory to God for all things.
+//      — St. John Chrysostom" and a Continue button. New module:
+//      js/sunday-celebration.js (shouldShow / loadData / show /
+//      dismiss). New schema: celebration_shown_at timestamptz added
+//      to weekly_reading_streak + weekly_memorization_streak (mirrors
+//      the existing prayer_streak_weekly.celebration_shown_at). One-
+//      per-week semantics enforced by the new columns. Mounted as
+//      position:fixed inset:0 z-index:9999 overlay on document.body
+//      (matches welcome-flow pattern); locks body scroll while open;
+//      gentle fade-in + scale animation honoring
+//      prefers-reduced-motion. CSS authored in-module via injectCSS
+//      (prayer-rollup precedent). Reverent, not gamified — no coin
+//      totals, no fanfare; the streak number is the recognition.
+//      Multi-week catch-up: most-recent unseen week's celebration
+//      surfaces; older unseen weeks silently marked
+//      celebration_shown_at=now() on dismiss. Pilgrimage exclusion
+//      transitive via existing streak walkers (no new logic). Edge
+//      cases: mid-week before any Sunday → no overlay; full-
+//      pilgrimage week with 0 days → no overlay; partial-pilgrimage
+//      week with activity → celebrate honored lanes.
+//      Modified surfaces:
+//        • home.html — adds feast-of-week.js + sunday-celebration.js
+//          script tags; inserts SundayCelebration.shouldShow → show
+//          block between showApp() and PrayerRollup.run.
+//        • js/prayer-rollup.js — disables showCelebration() call in
+//          step 4 of run() (preserved as commented block + function
+//          definition retained for rollback / v1.1 reference).
+//          Settlement logic (steps 1-3) intact: coins still bumped,
+//          settled_at / coins_awarded still written, celebration_-
+//          shown_at still markable via SundayCelebration.dismiss().
+//      Untouched: missions.html, Topics page, bottom nav, pilgrimage
+//      banner, session-rollup ladder toast (per-milestone, not per-
+//      week — coexists fine), session_progress data, admin.html.
+//      Op Learning #4 (schema-first), #7 (ET timezone via WeekUtils),
+//      #13 (staged present_files), #15 (CSS class names over UA
+//      [hidden]), #16 (data shape match — prayer rich row, reading/
+//      memo thin row with per-day completions on companion tables)
+//      honored throughout.
 // v26: Dispatch 4b — Unified IA: Home dashboard + Missions hub +
 //      Feast of the Week. Collapses 3 competing daily-action surfaces
 //      into ONE clear job each: HOME → status & welcome dashboard;
@@ -294,7 +338,7 @@
 // v4: added week.html, prayers.html, day-state, pause-card, prayers, and config JSON
 // Version bump forces cache clear and fresh install
 
-const CACHE_NAME = 'orthodox-expedition-v26';
+const CACHE_NAME = 'orthodox-expedition-v27';
 const STATIC_ASSETS = [
   '/Orthodox-Expedition-/',
   '/Orthodox-Expedition-/index.html',
@@ -333,6 +377,7 @@ const STATIC_ASSETS = [
   '/Orthodox-Expedition-/js/prayer-rollup.js',
   '/Orthodox-Expedition-/js/session-rollup.js',
   '/Orthodox-Expedition-/js/streak-grace.js',
+  '/Orthodox-Expedition-/js/sunday-celebration.js',
   '/Orthodox-Expedition-/js/daily-anchor-card.js',
   '/Orthodox-Expedition-/js/reading-quest.js',
   '/Orthodox-Expedition-/js/reading.js',

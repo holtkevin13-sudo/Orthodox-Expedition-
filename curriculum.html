@@ -472,6 +472,261 @@ body::before{
   font-size:0.85rem;line-height:1.45;
   color:rgba(244,232,193,0.65);
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   CHAT 7 — TOPICS PAGE VISUAL LIFT
+   ───────────────────────────────────────────────────────────────
+   Illuminated manuscript treatment. Mines existing Byzantine
+   vocabulary from home.html (.map-parchment, .map-rule,
+   .rank-hero-deco-*) — no new dialect introduced.
+   Frame: "A scroll laid on a navy celebrant's cloth."
+   All additions; no overrides of structural layout.
+   ═══════════════════════════════════════════════════════════════ */
+
+/* (1) PAGE HEADER — gold gradient rules framing the title block.
+   Whisper-illumination: clean hairlines, no glyph-in-middle
+   (the existing .app-divider ✦ ☩ ✦ above and the ✦ glyph at the
+   start of eyebrow text already carry the cross). */
+.page-eyebrow::before,
+.page-subtitle::after{
+  content:'';
+  display:block;
+  height:1px;
+  width:60%;
+  max-width:280px;
+  margin:0 auto;
+  background:linear-gradient(90deg,
+    transparent 0%,
+    rgba(201,146,42,0.45) 50%,
+    transparent 100%);
+}
+.page-eyebrow::before{margin-bottom:0.7rem;}
+.page-subtitle::after{margin-top:0.95rem;}
+
+/* (2) TOPIC 00 BLOCK — parchment-tinted panel laid on the navy
+   desk, with ✦ TL/BR corner ornaments via pseudo-elements only
+   (no markup change). Corner glyphs kept small + 0.55 opacity
+   per orchestrator guidance: a frame, not a focal point. */
+.topic-block{
+  position:relative;
+  padding:1.25rem 1rem 1.1rem;
+  border-radius:14px;
+  background:linear-gradient(180deg,
+    rgba(244,232,193,0.045) 0%,
+    rgba(201,146,42,0.035) 100%);
+  border:1px solid rgba(201,146,42,0.20);
+  box-shadow:
+    inset 0 1px 0 rgba(240,201,110,0.10),
+    0 2px 10px rgba(0,0,0,0.25);
+}
+.topic-block::before,
+.topic-block::after{
+  content:'✦';
+  position:absolute;
+  font-family:'Cinzel',serif;
+  font-size:0.78rem;
+  line-height:1;
+  color:rgba(240,201,110,0.55);
+  pointer-events:none;
+}
+.topic-block::before{top:0.55rem;left:0.7rem;}
+.topic-block::after{bottom:0.55rem;right:0.7rem;}
+
+/* (3) TOPIC 00 HEADER — illuminated "00" drop-cap floats left.
+   Pure CSS via ::before pseudo; topic-header markup unchanged.
+   The existing eyebrow text "Topic 00 · Active" persists as
+   supporting metadata to the right of the illuminated number.
+   ADHD-friendly: the big gold "00" is the visual landmark. */
+.topic-block .topic-header{
+  position:relative;
+  padding:0 0 0 3.4rem;
+  min-height:2.6rem;
+  margin-bottom:1.1rem;
+}
+.topic-block .topic-header::before{
+  content:'00';
+  position:absolute;
+  left:0;
+  top:-0.1rem;
+  font-family:'Cinzel Decorative',serif;
+  font-size:clamp(2.2rem,8vw,2.55rem);
+  line-height:1;
+  font-weight:700;
+  color:var(--gold-light);
+  text-shadow:0 0 14px rgba(201,146,42,0.35);
+  letter-spacing:-0.02em;
+  pointer-events:none;
+}
+
+/* (4) SESSION CARDS — parchment vocabulary unified across states.
+   Default → subtle parchment gradient.
+   Current → richer parchment + small gold ✦ corner accent (pulses).
+   Complete → small gold ✓ corner accent (static).
+   Locked → wax-seal styling on existing lock glyph; italic
+            Crimson Text caption in muted gold-brown.
+   Cascade-only: builds on existing rules at lines 131-167 above. */
+.session-card{
+  position:relative;
+  background:linear-gradient(135deg,
+    rgba(244,232,193,0.045) 0%,
+    rgba(201,146,42,0.04) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(240,201,110,0.10),
+    0 1px 2px rgba(0,0,0,0.20);
+}
+/* Session "Session 00.X" chip — tier-two illumination. Slight
+   weight + gold whisper-glow; readability preserved (kept Cinzel,
+   not Decorative — Decorative at 0.6rem uppercase reads poorly). */
+.session-card .session-id{
+  font-weight:700;
+  text-shadow:0 0 5px rgba(201,146,42,0.25);
+}
+
+/* CURRENT card — richer parchment + corner ✦ accent with pulse */
+.session-card.current{
+  background:linear-gradient(135deg,
+    rgba(244,232,193,0.07) 0%,
+    rgba(201,146,42,0.09) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255,215,0,0.20),
+    0 2px 12px rgba(201,146,42,0.20);
+}
+.session-card.current::after{
+  content:'✦';
+  position:absolute;
+  top:0.5rem;
+  right:0.7rem;
+  font-family:'Cinzel',serif;
+  font-size:0.78rem;
+  line-height:1;
+  color:rgba(255,215,0,0.78);
+  text-shadow:0 0 8px rgba(255,215,0,0.45);
+  pointer-events:none;
+  animation:topicsCurrentPulse 3s ease-in-out infinite;
+}
+@keyframes topicsCurrentPulse{
+  0%,100%{opacity:0.55;}
+  50%{opacity:0.95;}
+}
+
+/* COMPLETE card — small gold ✓ corner accent (static, no pulse) */
+.session-card.complete::after{
+  content:'✓';
+  position:absolute;
+  top:0.5rem;
+  right:0.7rem;
+  font-family:'Cinzel',serif;
+  font-size:0.82rem;
+  font-weight:700;
+  line-height:1;
+  color:rgba(180,240,200,0.72);
+  text-shadow:0 0 6px rgba(134,239,172,0.32);
+  pointer-events:none;
+}
+
+/* LOCKED card — wax-seal treatment on existing lock-glyph circle.
+   Visually distinct from "current" at-a-glance: gold-filled with
+   inset shadow reads as a sealed wax stamp, not an active beacon.
+   Caption switches to italic Crimson Text muted gold-brown to read
+   as a margin annotation rather than a UI label. */
+.session-card.locked{
+  background:linear-gradient(135deg,
+    rgba(244,232,193,0.025) 0%,
+    rgba(201,146,42,0.025) 100%);
+}
+.session-card.locked .session-locked-meta .lock-glyph{
+  background:radial-gradient(circle at 35% 28%,
+    rgba(240,201,110,0.34) 0%,
+    rgba(201,146,42,0.22) 55%,
+    rgba(107,90,30,0.18) 100%);
+  border:1.5px solid rgba(201,146,42,0.50);
+  color:rgba(240,201,110,0.85);
+  box-shadow:
+    inset 0 -1px 1.5px rgba(0,0,0,0.22),
+    inset 0 1px 1px rgba(255,215,0,0.20);
+}
+/* The "Returns Mon, May 25" caption — italic, parchment-margin feel.
+   Selector targets the last child span inside .session-locked-meta
+   (the caption text; the prior child is the lock-glyph). */
+.session-card.locked .session-locked-meta > span:last-child{
+  font-family:'Crimson Text',serif;
+  font-style:italic;
+  font-size:0.74rem;
+  letter-spacing:0.02em;
+  text-transform:none;
+  color:rgba(190,160,100,0.88);
+}
+
+/* (5) RESOURCES SUB-BLOCK — gold gradient rule replaces dashed
+   border. Same gradient + thickness + width-fade as the page
+   header rules (intervention 1) for design-system consistency. */
+.session-resources{
+  border-top:none;
+  position:relative;
+}
+.session-resources::before{
+  content:'';
+  position:absolute;
+  top:0;
+  left:8%;
+  right:8%;
+  height:1px;
+  background:linear-gradient(90deg,
+    transparent 0%,
+    rgba(201,146,42,0.40) 50%,
+    transparent 100%);
+}
+.resource-icon{
+  text-shadow:0 0 6px rgba(201,146,42,0.35);
+}
+
+/* LOCKED FUTURE TOPICS (Topic 1, 2, 3) — unified parchment + wax-
+   seal vocabulary so they belong to the same visual family as
+   the Topic 00 block above them. Cascade builds on lines 265-297. */
+.topic-locked-card{
+  background:linear-gradient(135deg,
+    rgba(244,232,193,0.028) 0%,
+    rgba(201,146,42,0.022) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(240,201,110,0.07),
+    0 1px 2px rgba(0,0,0,0.18);
+}
+.topic-locked-icon{
+  background:radial-gradient(circle at 35% 28%,
+    rgba(240,201,110,0.30) 0%,
+    rgba(201,146,42,0.16) 55%,
+    rgba(107,90,30,0.14) 100%);
+  border:1px solid rgba(201,146,42,0.32);
+  color:rgba(240,201,110,0.82);
+  font-family:'Cinzel Decorative',serif;
+  box-shadow:
+    inset 0 -1px 1px rgba(0,0,0,0.18),
+    inset 0 1px 1px rgba(255,215,0,0.16);
+}
+.topic-locked-status{
+  font-family:'Crimson Text',serif;
+  font-style:italic;
+  font-size:0.76rem;
+  letter-spacing:0.02em;
+  text-transform:none;
+  color:rgba(190,160,100,0.82);
+}
+
+/* REDUCED MOTION — disable the current-session pulse only.
+   The accent still renders (opacity 0.85 — visible but static)
+   so the "current" semantic is preserved without movement.
+   curriculum.html previously had no reduced-motion handling;
+   this adds the first one, matching the established standard
+   from week.html line 405. */
+@media (prefers-reduced-motion: reduce){
+  .session-card.current::after{
+    animation:none;
+    opacity:0.85;
+  }
+}
+/* ═══════════════════════════════════════════════════════════════
+   END CHAT 7 — TOPICS PAGE VISUAL LIFT
+   ═══════════════════════════════════════════════════════════════ */
 </style>
 </head>
 <body>

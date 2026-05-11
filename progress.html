@@ -15,7 +15,16 @@
 <title>Progress — The Orthodox Expedition</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- Dispatch 3c · D3 resolution + Reading Streak display.
+     Order matters: WeekUtils + Pilgrimages must load before Prayers
+     (Prayers.getStreak depends on both) and before Reading (mirrors
+     the same dependency chain). streak-grace.js stays live for
+     pip detection (legacy daily walker exposing weeksWithGrace). -->
+<script src="js/week-utils.js"></script>
+<script src="js/pilgrimages.js"></script>
 <script src="js/streak-grace.js"></script>
+<script src="js/prayers.js"></script>
+<script src="js/reading.js"></script>
 <script src="js/session-rollup.js"></script>
 <style>
 :root {
@@ -81,6 +90,13 @@ body::before{
 .dual-streak-row{
   display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;
   margin-bottom:1.5rem;
+}
+/* Dispatch 3c — single-column variant for the Reading Streak card
+   (the dispatch directs "just the count" for reading; no week-dots
+   visualization until Dispatch 4). Full-width preserves the visual
+   weight of the dual row above without forcing a 3-column squeeze. */
+.dual-streak-row.solo-streak-row{
+  grid-template-columns:1fr;
 }
 .streak-card-half{
   background:rgba(244,232,193,0.04);
@@ -279,7 +295,24 @@ body::before{
         </div>
         <div class="streak-right">
           <div class="streak-num" id="prayer-num">0</div>
-          <div class="streak-sub">Days</div>
+          <div class="streak-sub">Weeks</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- READING STREAK (Dispatch 3c — single full-width card; "just the
+         count" per dispatch. Visual parity with week-dots is Dispatch 4
+         territory. Inherits .streak-card-half styling; outer grid is
+         single-column via .solo-streak-row modifier. -->
+    <div class="dual-streak-row solo-streak-row fade-up">
+      <div class="streak-card-half">
+        <div class="streak-icon">📖</div>
+        <div class="streak-center">
+          <div class="streak-title"><span>Reading Streak</span></div>
+        </div>
+        <div class="streak-right">
+          <div class="streak-num" id="reading-num">0</div>
+          <div class="streak-sub">Weeks</div>
         </div>
       </div>
     </div>
@@ -312,8 +345,9 @@ body::before{
       <div class="explainer-title">About These Streaks</div>
       <div class="explainer-body">
         <p><strong>Weekly Streak</strong> counts the number of weeks in a row you completed your expedition session.</p>
-        <p><strong>Prayer Streak</strong> counts how many days in a row you prayed both Morning and Evening prayer.</p>
-        <p>Each week, missing one prayer slot or one session day is gently absorbed — your streak holds. A small gold dot beside the title means grace was used this week. Glory to God for your faithfulness.</p>
+        <p><strong>Prayer Streak</strong> counts the number of weeks in a row you prayed faithfully — 5 or more days each week, morning or evening. Pilgrimage days are gently set aside.</p>
+        <p><strong>Reading Streak</strong> counts the number of weeks in a row you opened today's Gospel and answered the question — 5 or more days each week.</p>
+        <p>Each week, one missed day in any lane is gently absorbed — your streak holds. A small gold dot beside the title means grace was used this week. Glory to God for your faithfulness.</p>
       </div>
     </div>
 
@@ -370,10 +404,17 @@ function renderWeeklyStreak(streak){
 }
 
 function renderPrayerStreak(prayerMissions, missionComps){
-  // Repair B — strict "both prayers required" semantic with once-per-
-  // week grace token. Today never breaks (Nolan may still pray).
-  // Returns the set of week-Mondays where grace was consumed; caller
-  // persists prayer_streak_weekly.grace_used for the current week.
+  // Dispatch 3c — D3 resolution. Display is now sourced from the
+  // canonical Prayers.getStreak() (consecutive intact SETTLED weeks
+  // per the Dispatch 2 architecture). The legacy daily-EITHER
+  // walker stays callable elsewhere for pip detection, but the
+  // displayed number must match home.html's rank-hero banner.
+  //
+  // This function is now SYNCHRONOUS for backward compatibility —
+  // it kicks off Prayers.getStreak() asynchronously and renders the
+  // result when it resolves. Returns the legacy weeksWithGrace
+  // result (still useful for pip detection) so callers don't need
+  // to re-walk the data.
   const missionMap = {};
   prayerMissions.forEach(m => {
     const lc = (m.name || '').toLowerCase();
@@ -387,23 +428,66 @@ function renderPrayerStreak(prayerMissions, missionComps){
     if (!byDay[c.day_key]) byDay[c.day_key] = { morning:false, evening:false };
     byDay[c.day_key][slot] = true;
   });
+  // Pip-detection walker (legacy) — kept for weeksWithGrace return.
   const result = (window.StreakGrace
     ? window.StreakGrace.computePrayerStreak(byDay, new Date(), 60)
     : { streak: 0, weeksWithGrace: [] });
-  const streak = result.streak;
-  const numEl = document.getElementById('prayer-num');
+
+  // Canonical streak number for DISPLAY. Async; falls back to 0 if
+  // Prayers module / WeekUtils / Pilgrimages not yet loaded.
+  const numEl  = document.getElementById('prayer-num');
   const dotsEl = document.getElementById('prayer-dots');
-  if(numEl) numEl.textContent = streak;
-  if(dotsEl){
-    dotsEl.innerHTML = '';
-    for(let i=0;i<5;i++){
-      const d = document.createElement('div');
-      d.className = 'streak-dot'+(i<Math.min(streak,5)?' lit':'');
-      d.textContent = i<Math.min(streak,5)?'☩':'';
-      dotsEl.appendChild(d);
+  function paint(streak){
+    if (numEl) numEl.textContent = streak;
+    if (dotsEl) {
+      dotsEl.innerHTML = '';
+      for (let i = 0; i < 5; i++) {
+        const d = document.createElement('div');
+        d.className = 'streak-dot' + (i < Math.min(streak,5) ? ' lit' : '');
+        d.textContent = i < Math.min(streak,5) ? '☩' : '';
+        dotsEl.appendChild(d);
+      }
     }
   }
+  paint(0);  // start at zero; canonical fills in when promise resolves
+  if (window.Prayers && typeof window.Prayers.getStreak === 'function') {
+    window.Prayers.getStreak()
+      .then(s => paint(s || 0))
+      .catch(e => {
+        console.warn('renderPrayerStreak: Prayers.getStreak failed; falling back to legacy daily-EITHER', e);
+        paint(result.streak || 0);
+      });
+  } else {
+    // Module not loaded — fall back to the legacy daily-EITHER count
+    // so the surface is never blank. Logs a console.warn so the
+    // condition is observable in dev.
+    console.warn('renderPrayerStreak: window.Prayers unavailable; using legacy daily-EITHER count');
+    paint(result.streak || 0);
+  }
   return result;
+}
+
+// Dispatch 3c · Reading Streak — single full-width card, just the
+// count (per dispatch; visual parity with week-dots is Dispatch 4
+// territory). Async; falls back to 0 if Reading module / WeekUtils
+// not yet loaded.
+function renderReadingStreak(){
+  const numEl = document.getElementById('reading-num');
+  function paint(streak){
+    if (numEl) numEl.textContent = streak;
+  }
+  paint(0);
+  if (window.Reading && typeof window.Reading.getStreak === 'function') {
+    window.Reading.getStreak()
+      .then(s => paint(s || 0))
+      .catch(e => {
+        console.warn('renderReadingStreak: Reading.getStreak failed', e);
+        paint(0);
+      });
+  } else {
+    console.warn('renderReadingStreak: window.Reading unavailable; showing 0');
+    paint(0);
+  }
 }
 
 async function loadData(userId){
@@ -426,6 +510,17 @@ async function loadData(userId){
     return;
   }
 
+  // Dispatch 3c — init canonical streak modules BEFORE rendering
+  // streak cards. Both modules stash (sb, profileId) internally and
+  // their getStreak() returns 0 if init wasn't called. Best-effort:
+  // failures are non-fatal (the renderers fall back to 0 / legacy).
+  if (window.Prayers && typeof window.Prayers.init === 'function') {
+    try { await window.Prayers.init(sb, userId); } catch(_e) { /* graceful */ }
+  }
+  if (window.Reading && typeof window.Reading.init === 'function') {
+    try { await window.Reading.init(sb, userId); } catch(_e) { /* graceful */ }
+  }
+
   // Title
   const name = profile.name || profile.username || 'Explorer';
   document.getElementById('page-title').textContent = name;
@@ -443,6 +538,10 @@ async function loadData(userId){
     m.name.toLowerCase().includes('prayer') || m.name.toLowerCase().includes('pray')
   );
   const prayerResult = renderPrayerStreak(prayerMissions, missionComps);
+  // Dispatch 3c — Reading Streak card (independent of prayer / session
+  // walkers; reads its own weekly_reading_streak grace flags via the
+  // canonical Reading.getStreak walker).
+  renderReadingStreak();
 
   // ── Repair B — Grace evaluation + pip rendering ───────────────
   if (window.StreakGrace) {

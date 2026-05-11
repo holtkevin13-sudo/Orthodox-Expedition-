@@ -27,6 +27,8 @@
 <script src="js/memorization.js"></script>
 <script src="js/missions.js"></script>
 <script src="js/home-dashboard.js"></script>
+<script src="js/feast-of-week.js"></script>
+<script src="js/sunday-celebration.js"></script>
 <script src="js/welcome-flow.js"></script>
 <script>
 function showAdminBar(){
@@ -1955,9 +1957,37 @@ function closeRankup(){
     if(prof && ['superuser','admin','parent'].includes(prof.role) && isAdminView){ showAdminBar(); }
     await loadData(session.user.id);
     showApp();
+    // Dispatch 5 — Sunday Celebration Overlay. Canonical weekly
+    // reverent moment. shouldShow() returns true when last closed
+    // week has unseen settled activity in at least one lane. Fires
+    // BEFORE PrayerRollup.run so the overlay paints first; settlement
+    // continues silently in the background. Failures are non-fatal.
+    //
+    // Welcome flow vs Sunday Celebration: no practical collision
+    // (welcome is one-time-per-account gated to launch day; first
+    // Sunday with settled data is May 24, by which point welcome has
+    // long since completed).
+    if (window.SundayCelebration && typeof window.SundayCelebration.shouldShow === 'function') {
+      (async () => {
+        try {
+          const should = await window.SundayCelebration.shouldShow(sb, session.user.id);
+          if (should) {
+            await window.SundayCelebration.show({
+              sb:         sb,
+              explorerId: session.user.id,
+              familyId:   profile && profile.family_id,
+            });
+          }
+        } catch (err) {
+          console.warn('Sunday Celebration (home) failed:', err);
+        }
+      })();
+    }
     // Lane 3 prayer rollup — fire-and-forget. Sundays-night unsettled rows
-    // get coined; quiet parchment celebration slides in if a non-zero week
-    // just rolled. Failures are non-fatal (console.warn only).
+    // get coined; the standalone slide-down overlay is DISABLED as of
+    // Dispatch 5 (the Sunday Celebration above is now the canonical
+    // weekly reverent moment). Settlement logic remains intact.
+    // Failures are non-fatal (console.warn only).
     if(window.PrayerRollup){
       window.PrayerRollup.run(sb, session.user.id).catch(err => {
         console.warn('Prayer rollup (home) failed:', err);

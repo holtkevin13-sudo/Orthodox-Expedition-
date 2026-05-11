@@ -1,4 +1,41 @@
-// Orthodox Expedition — Service Worker v25
+// Orthodox Expedition — Service Worker v26
+// v26: Dispatch 4b — Unified IA: Home dashboard + Missions hub +
+//      Feast of the Week. Collapses 3 competing daily-action surfaces
+//      into ONE clear job each: HOME → status & welcome dashboard;
+//      MISSIONS → daily action hub (THE place for daily checklist);
+//      TOPICS → study material + Feast of the Week; SCRIPTURES →
+//      free reading (Bible reader); FIELD MANUAL → past reflections.
+//      Two cards MOVE from home to Missions (Daily tab): daily-anchor-
+//      card + reading-quest. Verse tile REMOVED from home. New
+//      modules: js/missions.js (daily-hub renderer with state machine
+//      for reading mission: pilgrimage / pending / read-not-answered /
+//      complete / complete-no-question; session row preserves M/W/F
+//      day-rail + catch-up logic from home's renderTodayCard);
+//      js/home-dashboard.js (Today's Progress card + state-aware CTA
+//      + compact streak row — delegates to Missions.loadTodaysState
+//      so home and missions can never drift); js/feast-of-week.js
+//      (4-tier priority algorithm: great → major → Sunday → minor;
+//      tap-to-expand inline detail; hides on empty weeks). New page
+//      journal-mission.html (T/Th reflection — single prompt rotated
+//      by (weekOfYear + dayOfWeek) % 6, idempotent save,
+//      field_journal category='expedition_log' entry_text='Reflection:
+//      ...' + UPSERT coins +5). Surgical missions.html edits replace
+//      Daily tab content only (Pause #6 = B); Weekly + Special tabs
+//      with parent-verification flow are UNTOUCHED. Bottom-nav
+//      rename "Holy Scriptures" → "Scriptures" across 9 surfaces
+//      (8 HTML + week.html's JS template literal). 10/10 polish:
+//      count-up animation on completedCount delta, 700ms gold-flash
+//      micro-celebration on newly-complete rows, all-done celebration
+//      line ("Glory to God for all things, Nolan. ☦ See you tomorrow."),
+//      state-aware CTA copy on home (pending / done / pilgrimage),
+//      portrait fade-in via reading-quest. NO schema changes, NO
+//      modifications to lane modules (Prayers, Reading, Memorization,
+//      Pilgrimages, ReadingQuest, DailyAnchorCard); all consumed
+//      via existing public APIs. Pilgrimage banner DOM duplicated
+//      across home + missions (Pause #5 = a). Op Learning #4
+//      (schema-first), #7 (ET timezone via WeekUtils), #15 (CSS
+//      class names over UA [hidden]), #16 (structural mirror by
+//      data shape, not surface concept) honored throughout.
 // v25: Dispatch 4a — Memorization Lane Foundation (Lane 5). New
 //      schema: weekly_verses (family-scoped content catalog),
 //      verse_practice_completions (per-day boolean, mirrors
@@ -257,7 +294,7 @@
 // v4: added week.html, prayers.html, day-state, pause-card, prayers, and config JSON
 // Version bump forces cache clear and fresh install
 
-const CACHE_NAME = 'orthodox-expedition-v25';
+const CACHE_NAME = 'orthodox-expedition-v26';
 const STATIC_ASSETS = [
   '/Orthodox-Expedition-/',
   '/Orthodox-Expedition-/index.html',
@@ -270,6 +307,7 @@ const STATIC_ASSETS = [
   '/Orthodox-Expedition-/bazaar.html',
   '/Orthodox-Expedition-/games.html',
   '/Orthodox-Expedition-/journal.html',
+  '/Orthodox-Expedition-/journal-mission.html',
   '/Orthodox-Expedition-/bible-reader.html',
   '/Orthodox-Expedition-/parent.html',
   '/Orthodox-Expedition-/assess.html',
@@ -299,6 +337,9 @@ const STATIC_ASSETS = [
   '/Orthodox-Expedition-/js/reading-quest.js',
   '/Orthodox-Expedition-/js/reading.js',
   '/Orthodox-Expedition-/js/memorization.js',
+  '/Orthodox-Expedition-/js/missions.js',
+  '/Orthodox-Expedition-/js/home-dashboard.js',
+  '/Orthodox-Expedition-/js/feast-of-week.js',
   '/Orthodox-Expedition-/js/topic-00-day.js',
   '/Orthodox-Expedition-/js/quiz-runner.js',
   '/Orthodox-Expedition-/js/welcome-flow.js',

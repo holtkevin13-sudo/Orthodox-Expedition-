@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="stylesheet" href="css/viewport.css">
+<link rel="stylesheet" href="css/contrast.css">
+<link rel="stylesheet" href="css/nav-polish.css">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Today's Reflection — The Orthodox Expedition</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<meta name="theme-color" content="#0e0800">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400;1,600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+/* ─── PALETTE ──────────────────────────────────────────────── */
+:root{
+  --gold:#c9922a;
+  --gold-light:#f0c96e;
+  --gold-bright:#ffd700;
+  --parchment:#f4e8c1;
+  --parchment-dark:#e8d5a0;
+  --ink:#1a0f00;
+  --burgundy:#6b1a1a;
+  --byzantine:#2c1654;
+  --bg:#0e0800;
+  --nav-h:64px;
+}
+
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{min-height:100%;overflow-x:hidden;}
+body{
+  font-family:'Crimson Text',serif;
+  background:var(--bg);
+  background-image:
+    radial-gradient(ellipse at 50% 0%,rgba(107,26,26,0.5) 0%,transparent 55%),
+    radial-gradient(ellipse at 100% 100%,rgba(44,22,84,0.35) 0%,transparent 50%);
+  min-height:100vh;
+  color:rgba(244,232,193,0.92);
+  padding:0 0 calc(var(--nav-h) + env(safe-area-inset-bottom));
+  padding-top:env(safe-area-inset-top);
+}
+body::before{
+  content:'';
+  position:fixed;
+  inset:0;
+  background-image:
+    linear-gradient(rgba(201,146,42,0.02) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(201,146,42,0.02) 1px,transparent 1px);
+  background-size:40px 40px;
+  pointer-events:none;
+  z-index:0;
+}
+
+#app{position:relative;z-index:1;max-width:560px;margin:0 auto;padding:1.5rem 1rem 2rem;}
+
+/* ─── HEADER ────────────────────────────────────────────────── */
+.jm-header{
+  display:flex;align-items:center;gap:0.75rem;margin-bottom:1.25rem;
+}
+.jm-back{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:2.25rem;height:2.25rem;border-radius:50%;
+  background:rgba(201,146,42,0.08);
+  border:1px solid rgba(201,146,42,0.25);
+  color:var(--gold-light);
+  font-size:1.4rem;line-height:1;
+  text-decoration:none;
+  transition:background 150ms ease, transform 150ms ease;
+}
+.jm-back:active{transform:scale(0.94);background:rgba(201,146,42,0.18);}
+.jm-title{
+  font-family:'Cinzel',serif;font-weight:700;
+  font-size:1.05rem;letter-spacing:0.04em;
+  color:var(--gold-light);
+}
+
+/* ─── DAY EYEBROW ───────────────────────────────────────────── */
+.jm-day-eyebrow{
+  font-family:'Crimson Text',serif;font-style:italic;
+  font-size:0.95rem;color:rgba(240,201,110,0.75);
+  margin-bottom:1rem;
+}
+
+/* ─── PROMPT CARD ───────────────────────────────────────────── */
+.jm-prompt-card{
+  background:linear-gradient(180deg,var(--parchment) 0%,var(--parchment-dark) 100%);
+  border:2px solid var(--gold);
+  border-radius:14px;
+  padding:1.25rem 1.1rem;
+  margin-bottom:1.25rem;
+  box-shadow:0 4px 18px rgba(27,42,74,0.18), inset 0 1px 0 rgba(255,255,255,0.4);
+  position:relative;
+}
+.jm-prompt-card::before{
+  content:'✦';
+  position:absolute;top:0.5rem;right:0.7rem;
+  color:var(--gold);
+  font-size:0.95rem;opacity:0.55;
+}
+.jm-prompt-eyebrow{
+  font-family:'Cinzel',serif;font-weight:600;
+  font-size:0.72rem;letter-spacing:0.18em;
+  text-transform:uppercase;
+  color:#7a4f10;
+  margin-bottom:0.55rem;
+}
+.jm-prompt-text{
+  font-family:'Crimson Text',serif;
+  font-size:1.15rem;line-height:1.45;
+  color:var(--ink);
+  font-style:italic;
+}
+
+/* ─── TEXTAREA ──────────────────────────────────────────────── */
+.jm-input-wrap{margin-bottom:1rem;}
+.jm-textarea{
+  width:100%;
+  min-height:9rem;
+  resize:vertical;
+  padding:1rem 1.05rem;
+  font-family:'Crimson Text',serif;
+  font-size:1.05rem;line-height:1.5;
+  color:var(--ink);
+  background:linear-gradient(180deg,#fbf3d8 0%,#f0e1b0 100%);
+  border:2px solid rgba(201,146,42,0.55);
+  border-radius:12px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.45), 0 2px 8px rgba(27,42,74,0.12);
+  outline:none;
+}
+.jm-textarea:focus{
+  border-color:var(--gold-light);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.5),
+             0 0 0 3px rgba(201,146,42,0.25),
+             0 4px 14px rgba(27,42,74,0.18);
+}
+.jm-textarea::placeholder{
+  color:rgba(26,15,0,0.4);
+  font-style:italic;
+}
+.jm-meta-row{
+  display:flex;justify-content:space-between;align-items:center;
+  margin-top:0.4rem;
+  font-size:0.8rem;color:rgba(240,201,110,0.55);
+}
+.jm-char-count.jm-near-limit{color:#e0a050;}
+.jm-char-count.jm-at-limit{color:var(--burgundy);}
+
+/* ─── SAVE BUTTON ───────────────────────────────────────────── */
+.jm-save-btn{
+  display:flex;align-items:center;justify-content:center;gap:0.5rem;
+  width:100%;
+  padding:0.95rem 1.25rem;
+  font-family:'Cinzel',serif;font-weight:600;
+  font-size:1rem;letter-spacing:0.06em;
+  background:linear-gradient(180deg,#d9a849 0%,#a87420 100%);
+  color:#1a0f00;
+  border:1.5px solid var(--gold);
+  border-radius:12px;
+  cursor:pointer;
+  box-shadow:0 4px 12px rgba(201,146,42,0.3), inset 0 1px 0 rgba(255,255,255,0.4);
+  transition:transform 150ms ease, box-shadow 150ms ease, opacity 150ms ease;
+}
+.jm-save-btn:active:not(:disabled){
+  transform:translateY(1px);
+  box-shadow:0 2px 6px rgba(201,146,42,0.25), inset 0 1px 0 rgba(255,255,255,0.3);
+}
+.jm-save-btn:disabled{
+  opacity:0.45;cursor:not-allowed;
+  background:linear-gradient(180deg,#7a6a45 0%,#5a4830 100%);
+  color:rgba(244,232,193,0.55);
+}
+.jm-save-mark{font-size:1.1rem;line-height:1;}
+
+/* ─── SAVED STATE ───────────────────────────────────────────── */
+.jm-saved{
+  background:rgba(201,146,42,0.08);
+  border:1px solid rgba(201,146,42,0.35);
+  border-radius:12px;
+  padding:1.1rem;
+  margin-top:1rem;
+}
+.jm-saved-eyebrow{
+  font-family:'Cinzel',serif;font-weight:600;
+  font-size:0.72rem;letter-spacing:0.16em;
+  text-transform:uppercase;
+  color:var(--gold-light);
+  margin-bottom:0.4rem;
+}
+.jm-saved-eyebrow::before{content:'✓ '; }
+.jm-saved-text{
+  font-family:'Crimson Text',serif;font-style:italic;
+  font-size:1rem;line-height:1.5;
+  color:rgba(244,232,193,0.85);
+  white-space:pre-wrap;
+}
+
+/* ─── TOAST ─────────────────────────────────────────────────── */
+.jm-toast{
+  position:fixed;left:50%;bottom:calc(var(--nav-h) + 1.5rem);
+  transform:translateX(-50%) translateY(20px);
+  background:linear-gradient(180deg,#d9a849 0%,#a87420 100%);
+  color:#1a0f00;
+  font-family:'Cinzel',serif;font-weight:600;font-size:0.95rem;
+  padding:0.7rem 1.25rem;border-radius:24px;
+  border:1.5px solid var(--gold);
+  box-shadow:0 6px 20px rgba(0,0,0,0.4);
+  opacity:0;
+  pointer-events:none;
+  z-index:50;
+  transition:opacity 200ms ease, transform 200ms ease;
+}
+.jm-toast.jm-show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+/* ─── PILGRIMAGE BANNER (light reuse) ───────────────────────── */
+.jm-pilgrimage{
+  background:linear-gradient(180deg,var(--parchment) 0%,var(--parchment-dark) 100%);
+  border:1.5px solid var(--gold);
+  border-radius:12px;
+  padding:1rem 1.05rem;
+  margin-bottom:1rem;
+  color:var(--ink);
+}
+.jm-pilgrimage-title{
+  font-family:'Cinzel',serif;font-weight:600;
+  font-size:0.95rem;letter-spacing:0.04em;
+  margin-bottom:0.25rem;
+}
+.jm-pilgrimage-text{
+  font-family:'Crimson Text',serif;font-style:italic;
+  font-size:0.95rem;line-height:1.45;
+  color:#5a3e0e;
+}
+
+/* ─── LOADING / ERROR ───────────────────────────────────────── */
+.jm-loading{
+  font-family:'Crimson Text',serif;font-style:italic;
+  color:rgba(240,201,110,0.6);
+  text-align:center;padding:2rem 1rem;
+}
+
+/* ─── BOTTOM NAV ────────────────────────────────────────────── */
+.bottom-nav{
+  position:fixed;left:0;right:0;bottom:0;
+  height:var(--nav-h);
+  background:rgba(14,8,0,0.94);
+  backdrop-filter:saturate(120%) blur(8px);
+  border-top:1px solid rgba(201,146,42,0.22);
+  display:flex;justify-content:space-around;align-items:center;
+  padding-bottom:env(safe-area-inset-bottom);
+  z-index:40;
+}
+.nav-item{
+  flex:1;height:100%;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:0.18rem;
+  text-decoration:none;color:rgba(244,232,193,0.65);
+  transition:color 150ms ease,background 150ms ease;
+}
+.nav-item:active{background:rgba(201,146,42,0.06);}
+.nav-mark{font-size:1.25rem;line-height:1;}
+.nav-label{
+  font-family:'Cinzel',serif;
+  font-size:0.62rem;
+  letter-spacing:0.08em;
+  text-transform:uppercase;
+}
+</style>
+</head>
+<body>
+
+<div id="app">
+  <div class="jm-header">
+    <a class="jm-back" href="missions.html" aria-label="Back to missions">‹</a>
+    <div class="jm-title">Today's Reflection</div>
+  </div>
+
+  <div class="jm-day-eyebrow" id="jm-day-label"></div>
+
+  <div id="jm-pilgrimage-slot"></div>
+
+  <div id="jm-content">
+    <div class="jm-loading">Preparing today's reflection…</div>
+  </div>
+</div>
+
+<div class="jm-toast" id="jm-toast"></div>
+
+<nav class="bottom-nav" id="bottom-nav" style="display:none;">
+  <a class="nav-item" href="home.html">
+    <span class="nav-mark glyph">&#x2726;&#xFE0E;</span>
+    <span class="nav-label">Home</span>
+  </a>
+  <a class="nav-item" href="missions.html">
+    <span class="nav-mark glyph">&#x2629;&#xFE0E;</span>
+    <span class="nav-label">Missions</span>
+  </a>
+  <a class="nav-item" href="curriculum.html">
+    <span class="nav-mark glyph">&#x2295;&#xFE0E;</span>
+    <span class="nav-label">Topics</span>
+  </a>
+  <a class="nav-item" href="bible-reader.html">
+    <span class="nav-mark glyph">&#x2626;&#xFE0E;</span>
+    <span class="nav-label">Scriptures</span>
+  </a>
+  <a class="nav-item" href="journal.html">
+    <span class="nav-mark glyph">&#x270E;&#xFE0E;</span>
+    <span class="nav-label">Field Manual</span>
+  </a>
+</nav>
+
+<script src="js/week-utils.js"></script>
+<script src="js/pilgrimages.js"></script>
+<script>
+'use strict';
+
+// ──────────────────────────────────────────────────────────────────
+// CONFIG
+// ──────────────────────────────────────────────────────────────────
+const SUPABASE_URL = 'https://ksfnsryfmkafwirzgjoe.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtzZm5zcnlmbWthZndpcnpnam9lIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2ODM4MTcsImV4cCI6MjA5MTI1OTgxN30.mHQty44WBnjQY8BJ8KbPk_pp-yTcOaifGxCZPUO4xpY';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+  auth: { persistSession: true, storage: localStorage }
+});
+
+const COINS_FOR_REFLECTION = 5;
+const MAX_REFLECTION_CHARS = 800;
+const MIN_REFLECTION_CHARS = 10;
+
+// ──────────────────────────────────────────────────────────────────
+// PROMPT ROTATION (Dispatch 4b §H)
+// Deterministic: index = (weekOfYear + dayOfWeek) % 6
+// Tue and Thu in the same week get DIFFERENT prompts.
+// ──────────────────────────────────────────────────────────────────
+const PROMPTS = [
+  "What's something you learned this week that's staying with you?",
+  "Pick a moment from this week that made you wonder.",
+  "What's a question you'd ask Christ if He sat next to you?",
+  "What's something you want to remember about God today?",
+  "What's something hard you're walking through?",
+  "What's one prayer you'd like to say today?",
+];
+
+// ──────────────────────────────────────────────────────────────────
+// STATE
+// ──────────────────────────────────────────────────────────────────
+const state = {
+  profileId:   null,
+  familyId:    null,
+  alreadySaved:false,
+  savedText:   null,
+  onPilgrimage:false,
+  promptText:  null,
+};
+
+// ──────────────────────────────────────────────────────────────────
+// HELPERS
+// ──────────────────────────────────────────────────────────────────
+function esc(s){
+  if (s == null) return '';
+  return String(s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+function todayKeyET(){
+  if (window.WeekUtils && typeof window.WeekUtils.todayKey === 'function') {
+    return window.WeekUtils.todayKey();
+  }
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function formatDayLabel(ymd){
+  try {
+    const [y,m,d] = ymd.split('-').map(n=>parseInt(n,10));
+    const dt = new Date(Date.UTC(y, m-1, d, 12, 0, 0));
+    const fmt = new Intl.DateTimeFormat('en-US', {
+      timeZone:'America/New_York',
+      weekday:'long', month:'long', day:'numeric',
+    });
+    return fmt.format(dt);
+  } catch(_e){ return ymd; }
+}
+
+// Week-of-year in ET (ISO-ish: 1..53). Uses Jan 1 of the local year
+// as anchor, then floor(days/7) + 1. Good enough for prompt rotation;
+// not a calendar-grade ISO weekNumber.
+function weekOfYearET(){
+  const W = window.WeekUtils;
+  if (!W) return 0;
+  const today = todayKeyET();
+  const [y] = today.split('-').map(n=>parseInt(n,10));
+  // Anchor: ymd of Jan 1 in ET
+  const jan1 = new Date(Date.UTC(y, 0, 1, 12, 0, 0));
+  const jan1Key = W.ymd(jan1);
+  // Day count between jan1Key and today, computed via Date math at
+  // UTC-noon (stable across DST per WeekUtils note).
+  const [ty,tm,td] = today.split('-').map(n=>parseInt(n,10));
+  const todayDt = new Date(Date.UTC(ty, tm-1, td, 12, 0, 0));
+  const days = Math.round((todayDt - jan1) / 86400000);
+  return Math.floor(days / 7) + 1;
+}
+
+function dowET(){
+  const W = window.WeekUtils;
+  if (W && typeof W.dayOfWeekET === 'function') return W.dayOfWeekET(new Date());
+  return new Date().getDay();
+}
+
+function pickPrompt(){
+  const woy = weekOfYearET();
+  const d = dowET();
+  return PROMPTS[(woy + d) % PROMPTS.length];
+}
+
+function showToast(text){
+  const t = document.getElementById('jm-toast');
+  if (!t) return;
+  t.textContent = text;
+  t.classList.add('jm-show');
+  setTimeout(() => { t.classList.remove('jm-show'); }, 2200);
+}
+
+// ──────────────────────────────────────────────────────────────────
+// AUTH GATE
+// ──────────────────────────────────────────────────────────────────
+async function loadProfile(){
+  const { data: { user } } = await sb.auth.getUser();
+  if (!user) { location.href = 'index.html'; return null; }
+  const { data, error } = await sb.from('profiles').select('*').eq('id', user.id).maybeSingle();
+  if (error || !data) { location.href = 'index.html'; return null; }
+  return data;
+}
+
+// ──────────────────────────────────────────────────────────────────
+// CHECK SAVED-TODAY
+// Reads field_journal for today's "Reflection: ..." entry.
+// Returns { saved: bool, entry_text: string|null }
+// ──────────────────────────────────────────────────────────────────
+async function loadTodaysReflection(){
+  const today = todayKeyET();
+  const [y,m,d] = today.split('-').map(n=>parseInt(n,10));
+  const dayStartET = `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}T00:00:00-04:00`;
+  const dayEndET   = `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}T23:59:59-04:00`;
+  try {
+    const res = await sb.from('field_journal')
+      .select('entry_text,created_at')
+      .eq('explorer_id', state.profileId)
+      .eq('category', 'expedition_log')
+      .gte('created_at', dayStartET)
+      .lte('created_at', dayEndET)
+      .ilike('entry_text', 'Reflection:%')
+      .order('created_at', { ascending:false })
+      .limit(1);
+    if (res.error) throw res.error;
+    if (!res.data || res.data.length === 0) return { saved:false, entry_text:null };
+    return { saved:true, entry_text: res.data[0].entry_text };
+  } catch (e) {
+    console.warn('loadTodaysReflection failed (graceful):', e);
+    return { saved:false, entry_text:null };
+  }
+}
+
+// ──────────────────────────────────────────────────────────────────
+// SAVE REFLECTION
+// 1. INSERT field_journal row (Reflection: <prompt>\n\n<text>)
+// 2. UPSERT profiles.coins + lifetime_coins (+5)
+// Idempotent guard: re-check saved-today before insert.
+// ──────────────────────────────────────────────────────────────────
+async function saveReflection(rawText){
+  const text = String(rawText || '').trim();
+  if (text.length < MIN_REFLECTION_CHARS) return { ok:false, reason:'too-short' };
+  if (text.length > MAX_REFLECTION_CHARS) return { ok:false, reason:'too-long' };
+
+  // Guard against double-save (e.g. fast double-tap).
+  const check = await loadTodaysReflection();
+  if (check.saved) {
+    return { ok:true, alreadyCompleted:true, entry_text: check.entry_text };
+  }
+
+  const entryText = `Reflection: ${state.promptText}\n\n${text}`;
+
+  try {
+    const insertRes = await sb.from('field_journal').insert({
+      explorer_id: state.profileId,
+      category:    'expedition_log',
+      entry_text:  entryText,
+      tool_type:   'pen',
+      tool_color:  '#1a0f00',
+    });
+    if (insertRes.error) throw insertRes.error;
+  } catch (e) {
+    console.warn('field_journal insert failed:', e);
+    return { ok:false, reason:'db-insert-failed' };
+  }
+
+  // Award coins via canonical pattern: read current profile values,
+  // add the delta, write back. Best-effort: a failure here leaves
+  // the reflection saved but coins un-awarded; we surface a softer
+  // toast.
+  try {
+    const profRes = await sb.from('profiles')
+      .select('coins,lifetime_coins')
+      .eq('id', state.profileId)
+      .maybeSingle();
+    if (!profRes.error && profRes.data) {
+      const newCoins   = (profRes.data.coins         || 0) + COINS_FOR_REFLECTION;
+      const newLife    = (profRes.data.lifetime_coins|| 0) + COINS_FOR_REFLECTION;
+      await sb.from('profiles')
+        .update({ coins: newCoins, lifetime_coins: newLife })
+        .eq('id', state.profileId);
+    }
+  } catch (e) {
+    console.warn('coin update failed (saved still succeeded):', e);
+    return { ok:true, alreadyCompleted:false, coinsAwarded:false, entry_text: entryText };
+  }
+
+  return { ok:true, alreadyCompleted:false, coinsAwarded:true, entry_text: entryText };
+}
+
+// ──────────────────────────────────────────────────────────────────
+// RENDER
+// ──────────────────────────────────────────────────────────────────
+function renderPilgrimageBanner(){
+  const slot = document.getElementById('jm-pilgrimage-slot');
+  if (!slot) return;
+  if (!state.onPilgrimage) { slot.innerHTML = ''; return; }
+  slot.innerHTML = `
+    <div class="jm-pilgrimage">
+      <div class="jm-pilgrimage-title">On Pilgrimage</div>
+      <div class="jm-pilgrimage-text">
+        Reflections rest this week. Write if you'd like — but quests
+        pause. Your streak walks with you.
+      </div>
+    </div>
+  `;
+}
+
+function renderSavedState(entryText){
+  // Strip the "Reflection: <prompt>\n\n" prefix for display.
+  let display = entryText || '';
+  const split = display.indexOf('\n\n');
+  if (display.startsWith('Reflection:') && split > -1) {
+    display = display.slice(split + 2);
+  }
+  return `
+    <div class="jm-prompt-card">
+      <div class="jm-prompt-eyebrow">Today's Question</div>
+      <div class="jm-prompt-text">${esc(state.promptText)}</div>
+    </div>
+    <div class="jm-saved">
+      <div class="jm-saved-eyebrow">Saved today</div>
+      <div class="jm-saved-text">${esc(display)}</div>
+    </div>
+  `;
+}
+
+function renderEntryForm(){
+  return `
+    <div class="jm-prompt-card">
+      <div class="jm-prompt-eyebrow">Today's Question</div>
+      <div class="jm-prompt-text">${esc(state.promptText)}</div>
+    </div>
+
+    <div class="jm-input-wrap">
+      <textarea class="jm-textarea" id="jm-textarea"
+                placeholder="Write a few sentences. There's no wrong answer."
+                maxlength="${MAX_REFLECTION_CHARS}"
+                aria-label="Today's reflection"></textarea>
+      <div class="jm-meta-row">
+        <span class="jm-coins-promise">+5 ✦ on save</span>
+        <span class="jm-char-count" id="jm-char-count">0 / ${MAX_REFLECTION_CHARS}</span>
+      </div>
+    </div>
+
+    <button class="jm-save-btn" id="jm-save" type="button" disabled>
+      <span class="jm-save-mark">✦</span>
+      <span>Save Reflection</span>
+    </button>
+  `;
+}
+
+function wireEntryForm(){
+  const ta = document.getElementById('jm-textarea');
+  const btn = document.getElementById('jm-save');
+  const cc  = document.getElementById('jm-char-count');
+  if (!ta || !btn || !cc) return;
+
+  function update(){
+    const len = ta.value.length;
+    cc.textContent = `${len} / ${MAX_REFLECTION_CHARS}`;
+    cc.classList.toggle('jm-near-limit', len >= MAX_REFLECTION_CHARS - 50);
+    cc.classList.toggle('jm-at-limit',   len >= MAX_REFLECTION_CHARS);
+    btn.disabled = ta.value.trim().length < MIN_REFLECTION_CHARS;
+  }
+  ta.addEventListener('input', update);
+  update();
+
+  btn.addEventListener('click', async (ev) => {
+    ev.preventDefault();
+    if (btn.disabled) return;
+    btn.disabled = true;                          // prevent double-tap
+    const original = btn.innerHTML;
+    btn.innerHTML = '<span>Saving…</span>';
+    const result = await saveReflection(ta.value);
+    if (!result.ok) {
+      btn.disabled = false;
+      btn.innerHTML = original;
+      showToast(result.reason === 'too-short'
+        ? 'Write a few more words ✦'
+        : 'Something went wrong — try again');
+      return;
+    }
+    // Success path
+    if (result.coinsAwarded === false && !result.alreadyCompleted) {
+      showToast('Saved ✦ (coins will update next visit)');
+    } else if (result.alreadyCompleted) {
+      showToast('Already saved today ✦');
+    } else {
+      showToast(`+${COINS_FOR_REFLECTION} ✦ Saint Coins`);
+    }
+    // Re-render into saved state
+    state.alreadySaved = true;
+    state.savedText    = result.entry_text;
+    document.getElementById('jm-content').innerHTML = renderSavedState(result.entry_text);
+  });
+}
+
+// ──────────────────────────────────────────────────────────────────
+// BOOT
+// ──────────────────────────────────────────────────────────────────
+async function boot(){
+  const profile = await loadProfile();
+  if (!profile) return;
+
+  state.profileId = profile.id;
+  state.familyId  = profile.family_id;
+  state.promptText = pickPrompt();
+
+  // Day label
+  const today = todayKeyET();
+  const dayEl = document.getElementById('jm-day-label');
+  if (dayEl) dayEl.textContent = formatDayLabel(today);
+
+  // Pilgrimage check (informational; doesn't block writing).
+  try {
+    if (window.Pilgrimages && typeof window.Pilgrimages.isActiveToday === 'function') {
+      state.onPilgrimage = !!(await window.Pilgrimages.isActiveToday(sb));
+    }
+  } catch (_e) { /* graceful */ }
+  renderPilgrimageBanner();
+
+  // Already saved today?
+  const todays = await loadTodaysReflection();
+  const content = document.getElementById('jm-content');
+  if (!content) return;
+
+  if (todays.saved) {
+    state.alreadySaved = true;
+    state.savedText    = todays.entry_text;
+    content.innerHTML = renderSavedState(todays.entry_text);
+  } else {
+    content.innerHTML = renderEntryForm();
+    wireEntryForm();
+  }
+
+  // Reveal nav
+  document.getElementById('bottom-nav').style.display = 'flex';
+}
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(()=>{});
+  });
+}
+
+boot();
+</script>
+</body>
+</html>

@@ -254,6 +254,46 @@
     }
   }
 
+  // ── Public no-question completion wrapper ──────────────────────
+  // Used when liturgical_calendar.daily_readings.question is null
+  // for `today`. The user has read the Gospel (the localStorage flag
+  // was set by bible-reader's pagehide hook), so we log a completion
+  // with a flat coin reward and let the unique constraint handle
+  // idempotency. Mirrors the prayer / memorization lane ethos:
+  // engagement is worth a coin, the question is bonus rigor.
+  //
+  // Args:
+  //   sb           — supabase client
+  //   opts.explorerId, opts.familyId, opts.today (YYYY-MM-DD ET)
+  //   opts.coins   — coin reward (defaults to 5; orchestrator-set)
+  //
+  // Returns the same shape as commitCompletion:
+  //   { ok: bool, duplicate: bool, row: object|null }
+  // Caller should treat ok=false+duplicate=true as success (the row
+  // already exists from an earlier mount; coins were awarded then).
+  async function commitNoQuestionCompletion(sb, opts) {
+    opts = opts || {};
+    const explorerId = opts.explorerId;
+    const familyId   = opts.familyId;
+    const today      = opts.today;
+    const coins      = (typeof opts.coins === 'number') ? opts.coins : 5;
+    if (!sb || !explorerId || !familyId || !today) {
+      return { ok: false, duplicate: false, row: null };
+    }
+    const payload = {
+      explorer_id:        explorerId,
+      family_id:          familyId,
+      calendar_date:      today,
+      question_format:    null,
+      tries_used:         null,
+      was_correct:        null,
+      coins_earned:       coins,
+      reflection_text:    null,
+      skipped_pastorally: false,
+    };
+    return commitCompletion(sb, payload, explorerId, coins);
+  }
+
   // ── Write reflection to field_journal ──────────────────────────
   // Per approved Deviation 2: category='expedition_log', entry_text
   // prefixed with "Reflection on <gospel.reference>\n\n", defaults
@@ -729,6 +769,7 @@
 
   const ReadingQuest = {
     mount,
+    commitNoQuestionCompletion,
     _internals: {
       esc,
       capSpeaker,

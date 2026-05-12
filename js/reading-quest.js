@@ -323,6 +323,177 @@
   }
 
   // ═══════════════════════════════════════════════════════════════
+  // CHAT 2A · TWO-STAGE READING LANE (read + reflect)
+  // ═══════════════════════════════════════════════════════════════
+  // The orphan-question model from Dispatch 3b is retired by Chat 2A.
+  // Reading is now two stages, BOTH inline on the Missions surface:
+  //   Stage 1 — read    → +3 coins, sets reading_completions.read_at
+  //   Stage 2 — reflect → +2 coins, sets reflected_at + reflection_text
+  //                       AND writes a field_journal entry with the
+  //                       new prescriptive category 'reading_reflection'.
+  // Cumulative coins_earned on reading_completions = 5.
+  // Idempotency: stage 1 uses UNIQUE(explorer_id, calendar_date) on
+  // INSERT (23505 = already-staged); stage 2 uses a WHERE
+  // reflected_at IS NULL guard on UPDATE (0-row return = already-
+  // reflected, no coin bump). Both paths are safe across re-mounts.
+  // ═══════════════════════════════════════════════════════════════
+
+  // Private helper: field_journal write for the reading lane.
+  // category='reading_reflection' (Chat 2A new prescriptive label;
+  // journal.html CATEGORIES list has the matching chip).
+  // Non-fatal — failure logs but does not roll back the
+  // reading_completions stage 2 commit.
+  async function writeReadingReflectionEntry(sb, explorerId, gospelRef, reflectionText) {
+    const safeText = String(reflectionText || '').trim();
+    if (!safeText) return;
+    const prefix = gospelRef ? `Gospel Reflection on ${gospelRef}\n\n` : '';
+    try {
+      const { error } = await sb.from('field_journal').insert({
+        explorer_id: explorerId,
+        category:    'reading_reflection',
+        entry_text:  prefix + safeText,
+        tool_type:   'pen',
+        tool_color:  '#1a0f00',
+        highlight:   null,
+        stamps:      null,
+      });
+      if (error) {
+        console.warn('[ReadingQuest] reading_reflection journal write error (non-fatal):', error);
+      }
+    } catch (e) {
+      console.warn('[ReadingQuest] reading_reflection journal write threw (non-fatal):', e);
+    }
+  }
+
+  // ── Public: Stage 1 — commit the read step ─────────────────────
+  // Used by missions.js the first time Nolan returns to Missions
+  // after a gospel-reader visit (localStorage flag set by
+  // bible-reader's pagehide hook). Inserts the canonical
+  // reading_completions row with read_at + coins_earned=3.
+  //
+  // Args:
+  //   sb            — supabase client
+  //   opts.explorerId, opts.familyId, opts.today (YYYY-MM-DD ET)
+  //   opts.coins    — coin reward (default 3; orchestrator-locked)
+  //
+  // Returns:
+  //   { ok: bool, duplicate: bool, row: object|null }
+  // duplicate=true means a reading_completions row for this date
+  // already exists — either from an earlier stage-1 mount today or
+  // from a fully-reflected prior write. Caller treats as success.
+  //
+  // Side effect: clears the localStorage _readingFlagSet flag so DB
+  // is unambiguously the source of truth post-Stage-1 (Q-confirmed
+  // by orchestrator).
+  async function commitReadCompletion(sb, opts) {
+    opts = opts || {};
+    const explorerId = opts.explorerId;
+    const familyId   = opts.familyId;
+    const today      = opts.today;
+    const coins      = (typeof opts.coins === 'number') ? opts.coins : 3;
+    if (!sb || !explorerId || !familyId || !today) {
+      return { ok: false, duplicate: false, row: null };
+    }
+    const nowIso = new Date().toISOString();
+    const payload = {
+      explorer_id:        explorerId,
+      family_id:          familyId,
+      calendar_date:      today,
+      question_format:    null,
+      tries_used:         null,
+      was_correct:        null,
+      coins_earned:       coins,
+      reflection_text:    null,
+      skipped_pastorally: false,
+      read_at:            nowIso,
+      reflected_at:       null,
+    };
+    const result = await commitCompletion(sb, payload, explorerId, coins);
+    // Clear the localStorage flag — DB read_at is now source of truth.
+    try { clearFlag(today); } catch (_e) { /* defensive */ }
+    return result;
+  }
+
+  // ── Public: Stage 2 — commit the reflection step ───────────────
+  // Used by missions.js when Nolan submits a reflection textarea.
+  // UPDATEs the existing reading_completions row (must already have
+  // read_at set from Stage 1):
+  //   reflected_at    = now()
+  //   reflection_text = trimmed text
+  //   coins_earned    = 5  (cumulative; was 3 from Stage 1)
+  // Guarded by `WHERE reflected_at IS NULL` for idempotency. A
+  // 0-row UPDATE return = already-reflected; no coin bump, no
+  // duplicate field_journal entry.
+  //
+  // Args:
+  //   sb               — supabase client
+  //   opts.explorerId, opts.today
+  //   opts.reflectionText — string (≥1 char; caller validates)
+  //   opts.gospelRef   — string for field_journal prefix (optional)
+  //   opts.coinsDelta  — coin bump on successful update (default 2)
+  //   opts.cumulativeCoins — total coins_earned to write (default 5)
+  //
+  // Returns:
+  //   { ok: bool, alreadyReflected: bool, row: object|null }
+  async function commitReflectCompletion(sb, opts) {
+    opts = opts || {};
+    const explorerId = opts.explorerId;
+    const today      = opts.today;
+    const text       = String(opts.reflectionText || '').trim();
+    const gospelRef  = opts.gospelRef || null;
+    const coinsDelta = (typeof opts.coinsDelta === 'number') ? opts.coinsDelta : 2;
+    const cumulative = (typeof opts.cumulativeCoins === 'number') ? opts.cumulativeCoins : 5;
+    if (!sb || !explorerId || !today || !text) {
+      return { ok: false, alreadyReflected: false, row: null };
+    }
+    const nowIso = new Date().toISOString();
+    try {
+      // Idempotent update: only fires on rows without reflected_at.
+      const { data, error } = await sb
+        .from('reading_completions')
+        .update({
+          reflected_at:    nowIso,
+          reflection_text: text,
+          coins_earned:    cumulative,
+        })
+        .eq('explorer_id', explorerId)
+        .eq('calendar_date', today)
+        .is('reflected_at', null)
+        .select();
+      if (error) {
+        console.warn('[ReadingQuest] commitReflectCompletion update error:', error);
+        return { ok: false, alreadyReflected: false, row: null };
+      }
+      // Zero rows: stage 2 already done, OR no stage-1 row exists.
+      if (!data || data.length === 0) {
+        return { ok: false, alreadyReflected: true, row: null };
+      }
+      // Award +2 coins via the canonical profiles read-then-write.
+      if (coinsDelta > 0) {
+        try {
+          const profRes = await sb.from('profiles')
+            .select('coins, lifetime_coins')
+            .eq('id', explorerId)
+            .single();
+          const prof = profRes.data || { coins: 0, lifetime_coins: 0 };
+          await sb.from('profiles').update({
+            coins:          (prof.coins          || 0) + coinsDelta,
+            lifetime_coins: (prof.lifetime_coins || 0) + coinsDelta,
+          }).eq('id', explorerId);
+        } catch (coinErr) {
+          console.warn('[ReadingQuest] commitReflectCompletion coin award failed (non-fatal):', coinErr);
+        }
+      }
+      // Non-blocking field_journal write.
+      await writeReadingReflectionEntry(sb, explorerId, gospelRef, text);
+      return { ok: true, alreadyReflected: false, row: data[0] };
+    } catch (e) {
+      console.warn('[ReadingQuest] commitReflectCompletion threw:', e);
+      return { ok: false, alreadyReflected: false, row: null };
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════
   // RENDER — SHARED FRAGMENTS
   // ═══════════════════════════════════════════════════════════════
 
@@ -770,6 +941,8 @@
   const ReadingQuest = {
     mount,
     commitNoQuestionCompletion,
+    commitReadCompletion,      // Chat 2A · stage 1 (+3 coins)
+    commitReflectCompletion,   // Chat 2A · stage 2 (+2 coins, writes field_journal)
     _internals: {
       esc,
       capSpeaker,

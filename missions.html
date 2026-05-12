@@ -349,6 +349,32 @@ body::before{
   font-size:0.9rem;color:rgba(244,232,193,0.85);
 }
 
+/* ── Character portrait block (Chat 4 — used by reading Stage 2
+   reflect render in js/missions.js AND T/Th reflection lane in
+   js/reflection-lane.js). Theo's face above the prompt text turns
+   the question into a friend's voice rather than a system pip. ── */
+.mh-portrait-block{
+  display:flex;flex-direction:column;align-items:center;
+  gap:0.4rem;margin:0.5rem 0 0.7rem;
+}
+.mh-portrait{
+  width:96px;height:96px;border-radius:50%;
+  object-fit:cover;
+  border:2px solid var(--gold);
+  background:linear-gradient(135deg,#F4E8C1,#E8D5A0);
+  box-shadow:0 2px 8px rgba(27,42,74,0.18);
+  display:block;
+}
+.mh-portrait-speaker{
+  font-family:'Cinzel',serif;font-weight:600;
+  font-size:0.78rem;letter-spacing:0.14em;
+  color:var(--gold-light);text-transform:uppercase;
+  text-align:center;
+}
+@media (max-width:420px){
+  .mh-portrait{width:80px;height:80px;}
+}
+
 /* ── Mission row (generic + session variant) ─────────────────── */
 .mh-row{
   display:flex;align-items:center;gap:0.7rem;

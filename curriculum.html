@@ -727,6 +727,34 @@ body::before{
 /* ═══════════════════════════════════════════════════════════════
    END CHAT 7 — TOPICS PAGE VISUAL LIFT
    ═══════════════════════════════════════════════════════════════ */
+
+/* ── EXPEDITION MAP entry link (Chat 15 — Sacred Geography v0.1) ─
+   Quiet text-only entry to the Sacred Geography map page.
+   Italic Cinzel, gold-dimmed, single hairline underline.
+   Sits between the Feast-of-the-Week mount and the Topic 00 panel. */
+.map-link-block{
+  text-align:center;
+  margin:0.5rem 0 1.25rem;
+}
+.map-link{
+  display:inline-flex;align-items:center;gap:0.5rem;
+  padding:0.5rem 1rem;
+  font-family:'Cinzel',serif;font-style:italic;
+  font-size:0.95rem;
+  color:rgba(201,168,76,0.85);
+  text-decoration:none;
+  border-bottom:1px solid rgba(201,168,76,0.35);
+  transition:color 0.2s ease,border-color 0.2s ease;
+}
+.map-link:hover,
+.map-link:focus-visible{
+  color:var(--gold-light,#f0c96e);
+  border-bottom-color:rgba(240,201,110,0.8);
+}
+.map-link-glyph{
+  font-family:'Cinzel',serif;
+  color:rgba(201,168,76,0.75);
+}
 </style>
 </head>
 <body>
@@ -773,6 +801,17 @@ body::before{
          the script section below. Hides entirely (display:none)
          when no feast is found for the current week. -->
     <div id="feast-of-week-mount"></div>
+
+    <!-- EXPEDITION MAP entry (Chat 15) — quiet link to
+         map.html. Placed between the Feast mount and the
+         dynamic Topic 00 panel; renderActiveTopic00()
+         untouched, byte-identical. -->
+    <div class="map-link-block fade-up">
+      <a href="map.html" class="map-link">
+        <span class="map-link-glyph">✦</span>
+        <span class="map-link-label">View the Expedition Map</span>
+      </a>
+    </div>
 
     <!-- TOPIC LIST -->
     <div id="topic-list"></div>

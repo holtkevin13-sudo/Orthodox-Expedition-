@@ -1,4 +1,32 @@
-// Orthodox Expedition — Service Worker v38
+// Orthodox Expedition — Service Worker v39
+// v39: Chat 13 — Training Grounds (games.html) visual cleanup.
+//      🟢 games.html visual lift: replaced lavender-on-purple
+//          register with Chat-7 parchment+gold dialect. New
+//          page-title block (eyebrow / "Practice the Faith" /
+//          subtitle); 17 games reorganized into 7 category
+//          panels (.category-block) mirroring Topic 00 panel
+//          pattern with ✦ TL/BR corner ornaments. Cards refreshed
+//          with parchment tint + gold border + new meta row
+//          (⏱ duration · 🎯 difficulty · 🪙 Coins | ⚔ Practice).
+//          Responsive grid 1col / 2col / 3col at 600px / 980px
+//          breakpoints. Bottom-nav + auth + SW-register script
+//          blocks preserved byte-identical.
+//      🟢 Bare ☦ glyph fix on apostle-journeys card icon —
+//          added U+FE0E text variation selector (☦&#xFE0E;) to
+//          prevent iOS color-emoji substitution. Matches pattern
+//          from Chat N / Chat O bottom-nav fixes.
+//      🟢 STATIC_ASSETS — Chat 12 Sweep 7 finding addressed:
+//          adds 18 entries previously loaded by games.html but
+//          uncached. games/game-utils.js plus all 17 game .html
+//          files (sacrament-match, fasting-rules, creed-builder,
+//          saint-seeker, heresy-hunter, feast-calendar, council-
+//          timeline, creed-catcher, virtue-passion, feast-or-
+//          fast, liturgy-sequence, apostle-journeys, byzantine-
+//          blitz, icon-gallery, sacred-words, bible-trivia,
+//          church-history). saints-index.json + saints-index-
+//          generator.html intentionally EXCLUDED (dev/build
+//          artifacts; icon-gallery fetches live data from the
+//          orthodox-companion repo).
 // v38: Chat 12 — Pre-launch repo audit + 3x launch-critical fixes.
 //      🔴 ITEM A — js/prayers.js Prayers.getTodayStatus signature
 //          now accepts (sb, profileId) args; closure fallback
@@ -388,7 +416,7 @@
 // v4: added week.html, prayers.html, day-state, pause-card, prayers, and config JSON
 // Version bump forces cache clear and fresh install
 
-const CACHE_NAME = 'orthodox-expedition-v38';
+const CACHE_NAME = 'orthodox-expedition-v39';
 const STATIC_ASSETS = [
   '/Orthodox-Expedition-/',
   '/Orthodox-Expedition-/index.html',
@@ -452,6 +480,25 @@ const STATIC_ASSETS = [
   '/Orthodox-Expedition-/js/calendar-card.js',
   '/Orthodox-Expedition-/js/name-day-banner.js',
   '/Orthodox-Expedition-/parent-companion.html',
+  // v39 — Chat 13 additions (Chat 12 Sweep 7 — games dir):
+  '/Orthodox-Expedition-/games/game-utils.js',
+  '/Orthodox-Expedition-/games/sacrament-match.html',
+  '/Orthodox-Expedition-/games/fasting-rules.html',
+  '/Orthodox-Expedition-/games/creed-builder.html',
+  '/Orthodox-Expedition-/games/saint-seeker.html',
+  '/Orthodox-Expedition-/games/heresy-hunter.html',
+  '/Orthodox-Expedition-/games/feast-calendar.html',
+  '/Orthodox-Expedition-/games/council-timeline.html',
+  '/Orthodox-Expedition-/games/creed-catcher.html',
+  '/Orthodox-Expedition-/games/virtue-passion.html',
+  '/Orthodox-Expedition-/games/feast-or-fast.html',
+  '/Orthodox-Expedition-/games/liturgy-sequence.html',
+  '/Orthodox-Expedition-/games/apostle-journeys.html',
+  '/Orthodox-Expedition-/games/byzantine-blitz.html',
+  '/Orthodox-Expedition-/games/icon-gallery.html',
+  '/Orthodox-Expedition-/games/sacred-words.html',
+  '/Orthodox-Expedition-/games/bible-trivia.html',
+  '/Orthodox-Expedition-/games/church-history.html',
 ];
 
 // Install — cache static assets

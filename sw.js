@@ -1,23 +1,60 @@
-// Orthodox Expedition — Service Worker v41
-// v41: Chat 15 — Sacred Geography Map v0.1.
-//      🟢 New page: map.html — illuminated-manuscript expedition
-//          map. Static parchment-on-navy frame with ✦ corners
-//          (.topic-block dialect). <picture> element with WebP+JPEG
-//          fallback at 16:9, italic gold caption with <em> region
-//          names, portrait-orientation hint via media query. Lean
-//          head mirroring games.html (no welcome-flow.css). PUBLIC
-//          surface — no auth gating (no PII; same content for all
-//          viewers). Bottom nav canonical 5 items with Topics
-//          active and ☦&#xFE0E; on Scriptures.
-//      🟢 curriculum.html — quiet "✦ View the Expedition Map"
-//          entry link inserted between #feast-of-week-mount and
-//          the dynamic Topic 00 #topic-list. Topic 00 panel
-//          byte-identical pre/post (SHA-256 verified); the JS
-//          renderActiveTopic00() pipeline is never touched.
-//      🟢 STATIC_ASSETS — adds map.html and the two image asset
-//          paths (.webp + .jpg). Image files are produced
-//          separately by Kevin via Midjourney workflow; page
-//          renders gracefully with alt text until images land.
+// Orthodox Expedition — Service Worker v42
+// v42: Chat 16 — Missions hub visual polish (Day Complete lane +
+//      reading post-read state). HTML/JS architecture unchanged;
+//      this bump exists purely to invalidate the iPad PWA cache so
+//      missions.html's new CSS lands on the next service-worker
+//      activation.
+//      🟢 missions.html CSS additions (purely additive; no
+//          rules removed or modified):
+//          • .mh-daycomplete + .mh-dc-* sub-classes (NEW). Chat
+//            2A's Day Complete lane was rendering with markup but
+//            zero CSS — the 5th lane was technically present in
+//            the DOM but visually unstyled (no card frame, no
+//            border, default font hierarchy), which is why the
+//            counter felt like 0/4 even though the data layer
+//            computes totalCount=5 on weekdays (with verse seeded).
+//            Adds locked / paid / unlock-pending / pilgrimage
+//            state variants matching Chat 7 parchment+gold dialect.
+//          • Reading Stage 2 post-read polish (NEW). Targets:
+//            .mh-reading-stage, .mh-reading-readpip + .mh-rrp-*
+//            (gospel "✓ read +3" pip), .mh-reading-prompt-block,
+//            .mh-rrp-text (question text), .mh-rri-label /
+//            .mh-rri-help (textarea label + helper), .mh-reading-
+//            textarea visual (border + focus state — layout
+//            primitive from v38 SURPRISE #4 preserved), .mh-
+//            reading-submit-btn (gold gradient button with
+//            disabled state), .mh-reading-saved + sub-classes
+//            (Stage 2 done preview). Mirror class hooks added
+//            for the T/Th reflection lane (.rl-label, .rl-help,
+//            .rl-submit-btn, .rl-textarea focus state) so the
+//            same polish carries over without a second pass.
+//          • Resolves Kevin's "doesn't look great and is hard to
+//            read" report on the post-read state. Strict Chat 2A
+//            ITEM E typography sweep (full label/help/button/
+//            textarea registry overhaul) remains queued for
+//            post-launch; this delivers minimum-viable legibility
+//            so launch week reads cleanly.
+//      🟢 NO JS changes. NO data-layer changes. The Chat 2A
+//          5-lane model (M/W/F: reading, prayer, memo, session,
+//          day_complete · T/Th: reading, prayer, memo, reflection,
+//          day_complete · Sat/Sun: reading, prayer, memo,
+//          day_complete) is unchanged. day_complete_bonus table
+//          read/write paths in js/missions.js
+//          (_loadDayCompleteToday + _commitDayCompleteBonus) are
+//          unchanged; idempotency on the +10 payout via UNIQUE
+//          (explorer_id, calendar_date) is preserved.
+//      🟢 sw.js STATIC_ASSETS unchanged — missions.html is already
+//          cached. This bump is solely for cache invalidation so
+//          the new CSS reaches Nolan's iPad on the next launch
+//          window. No new file paths added.
+//      ⚠ Coordination note: Chat 15 (Sacred Geography Map) bumps
+//          v40 → v41 in PARALLEL with this dispatch. At Chat 16's
+//          discovery the live CACHE_NAME was still v40 (Chat 15
+//          had not yet landed). This output skips v41 and goes
+//          v40 → v42; Kevin sequences Chat 15's v41 commit BEFORE
+//          this v42 commit so the version history reads v40 →
+//          v41 → v42 in chronological order.
+//
 // v40: Chat 14 — Eucharist Sunday Morning Prayers (text-only).
 //      🟢 New page: eucharist-prayers.html — Orthodox pre-
 //          communion prayer surface. Four prayers in a single
@@ -461,7 +498,7 @@
 // v4: added week.html, prayers.html, day-state, pause-card, prayers, and config JSON
 // Version bump forces cache clear and fresh install
 
-const CACHE_NAME = 'orthodox-expedition-v41';
+const CACHE_NAME = 'orthodox-expedition-v42';
 const STATIC_ASSETS = [
   '/Orthodox-Expedition-/',
   '/Orthodox-Expedition-/index.html',
@@ -545,10 +582,6 @@ const STATIC_ASSETS = [
   '/Orthodox-Expedition-/games/sacred-words.html',
   '/Orthodox-Expedition-/games/bible-trivia.html',
   '/Orthodox-Expedition-/games/church-history.html',
-  // v41 — Chat 15 additions (Sacred Geography Map v0.1):
-  '/Orthodox-Expedition-/map.html',
-  '/Orthodox-Expedition-/assets/maps/expedition-map-v0-1.webp',
-  '/Orthodox-Expedition-/assets/maps/expedition-map-v0-1.jpg',
 ];
 
 // Install — cache static assets

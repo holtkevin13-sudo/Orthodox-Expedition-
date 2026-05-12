@@ -496,7 +496,7 @@ async function loadData(userId){
     sb.from('missions').select('*').eq('is_active',true).eq('type','daily'),
     sb.from('mission_completions').select('mission_id,day_key,week_key').eq('explorer_id',userId),
     sb.from('session_progress').select('session_id, day_1_completed_at, day_2_completed_at, day_3_completed_at').eq('explorer_id',userId),
-    sb.from('sessions').select('id, topic_id, order_index').order('topic_id').order('order_index'),
+    sb.from('sessions').select('id, topic_id, order_index').like('id','00.%').order('topic_id').order('order_index'),
   ]);
 
   const profile = profileRes.data;

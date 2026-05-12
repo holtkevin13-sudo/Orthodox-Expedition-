@@ -1047,7 +1047,7 @@
 
     parts.push(_renderMissionRow({
       id: 'prayer',
-      href: 'prayers.html',
+      href: 'prayers.html?pray=' + (window.WeekUtils && window.WeekUtils.hourET(new Date()) < 12 ? 'morning' : 'evening'),
       icon: '🕊️',
       name: 'Pray today',
       sub: state.prayer === 'complete' ? 'Today\'s prayer is offered' : 'Morning or evening',

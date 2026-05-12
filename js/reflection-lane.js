@@ -305,7 +305,10 @@
   function _renderPending(promptText) {
     return _renderShell(`
       <div class="rl-prompt-block">
-        <div class="rl-prompt-eyebrow">Today's Question</div>
+        <div class="mh-portrait-block">
+          <img class="mh-portrait" src="/Orthodox-Expedition-/assets/characters/theo-portrait.png" alt="Theo">
+          <div class="mh-portrait-speaker">Theo asks…</div>
+        </div>
         <div class="rl-prompt-text">${esc(promptText)}</div>
       </div>
       <div class="rl-input-block">

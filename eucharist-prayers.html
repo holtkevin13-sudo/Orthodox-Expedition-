@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#c9922a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Expedition">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="stylesheet" href="css/viewport.css">
+<link rel="stylesheet" href="css/contrast.css">
+<link rel="stylesheet" href="css/nav-polish.css">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pre-Communion Prayers — The Orthodox Expedition</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{
+  --gold:#c9922a;--gold-light:#f0c96e;--gold-bright:#ffd700;
+  --parchment:#f4e8c1;--ink:#1a0f00;
+  --byzantine:#2c1654;--byzantine-light:#4a2a7a;
+  --bg:#0e0800;--nav-h:72px;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{min-height:100%;overflow-x:hidden;}
+body{
+  font-family:'Crimson Text',serif;
+  background-color:var(--bg);
+  background-image:
+    radial-gradient(ellipse at 50% 0%,rgba(107,26,26,0.45) 0%,transparent 55%),
+    radial-gradient(ellipse at 100% 100%,rgba(44,22,84,0.3) 0%,transparent 50%);
+  min-height:100vh;
+}
+body::before{
+  content:'';position:fixed;inset:0;
+  background-image:
+    linear-gradient(rgba(201,146,42,0.022) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(201,146,42,0.022) 1px,transparent 1px);
+  background-size:44px 44px;pointer-events:none;z-index:0;
+}
+#loading{position:fixed;inset:0;z-index:400;display:flex;align-items:center;justify-content:center;background:var(--bg);}
+.loading-mark{font-family:'Cinzel',serif;font-size:2rem;color:rgba(240,201,110,0.7);animation:pulse 1.5s ease-in-out infinite;}
+@keyframes pulse{0%,100%{opacity:0.3;}50%{opacity:0.8;}}
+#app{display:none;position:relative;z-index:1;}
+.page{max-width:var(--container-max-width);margin:0 auto;padding:1.25rem 1rem calc(var(--nav-h) + 1.5rem);}
+.app-header{text-align:center;padding:1.25rem 1rem 1rem;border-bottom:1px solid rgba(201,146,42,0.18);margin-bottom:1.25rem;}
+.app-name{font-family:'Cinzel Decorative',serif;font-size:clamp(0.9rem,3.2vw,1.1rem);color:var(--gold-light);letter-spacing:0.06em;text-shadow:0 0 20px rgba(201,146,42,0.35);}
+.app-divider{color:rgba(240,201,110,0.65);letter-spacing:0.6rem;font-size:0.65rem;margin-top:0.3rem;}
+
+/* ── PAGE TITLE BLOCK (Chat 7 dialect) ──────────────────────── */
+.page-eyebrow{
+  font-family:'Cinzel',serif;font-size:0.7rem;letter-spacing:0.22em;
+  color:rgba(240,201,110,0.7);text-transform:uppercase;
+  text-align:center;margin-bottom:0.4rem;
+}
+.page-title{
+  font-family:'Cinzel Decorative',serif;
+  font-size:clamp(1.3rem,4.5vw,1.6rem);
+  color:var(--gold-light);text-align:center;
+  text-shadow:0 0 20px rgba(201,146,42,0.3);
+  margin-bottom:0.4rem;
+}
+.page-subtitle{
+  font-family:'Crimson Text',serif;font-size:0.85rem;
+  color:rgba(244,232,193,0.55);text-align:center;
+  font-style:italic;line-height:1.4;
+  margin-bottom:1.75rem;padding:0 0.5rem;
+}
+.page-eyebrow::before,
+.page-subtitle::after{
+  content:'';display:block;height:1px;width:60%;max-width:280px;
+  margin:0 auto;
+  background:linear-gradient(90deg,transparent 0%,rgba(201,146,42,0.45) 50%,transparent 100%);
+}
+.page-eyebrow::before{margin-bottom:0.7rem;}
+.page-subtitle::after{margin-top:0.95rem;}
+
+/* ── PRAYER BLOCK (parchment-tinted panel, Chat 7 mirror) ───── */
+.prayer-block{
+  position:relative;
+  padding:1.5rem 1.1rem 1.4rem;
+  margin-bottom:1.5rem;
+  border-radius:14px;
+  background:linear-gradient(180deg,
+    rgba(244,232,193,0.045) 0%,
+    rgba(201,146,42,0.035) 100%);
+  border:1px solid rgba(201,146,42,0.20);
+  box-shadow:
+    inset 0 1px 0 rgba(240,201,110,0.10),
+    0 2px 10px rgba(0,0,0,0.25);
+}
+.prayer-block::before,
+.prayer-block::after{
+  content:'✦';position:absolute;
+  font-family:'Cinzel',serif;font-size:0.78rem;line-height:1;
+  color:rgba(240,201,110,0.55);pointer-events:none;
+}
+.prayer-block::before{top:0.6rem;left:0.75rem;}
+.prayer-block::after{bottom:0.6rem;right:0.75rem;}
+
+/* ── PRAYER SECTION (one prayer = one section) ──────────────── */
+.prayer-section{
+  padding:0.25rem 0.1rem;
+}
+.prayer-section + .prayer-section{
+  margin-top:1.3rem;
+  padding-top:1.5rem;
+  border-top:1px solid rgba(201,146,42,0.18);
+}
+.prayer-section + .prayer-section::before{
+  content:'✦';display:block;text-align:center;
+  font-family:'Cinzel',serif;font-size:0.7rem;
+  color:rgba(240,201,110,0.45);
+  margin-top:-2rem;margin-bottom:1.3rem;line-height:1;
+  background:transparent;
+}
+.prayer-section-eyebrow{
+  font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.18em;
+  color:rgba(240,201,110,0.65);text-transform:uppercase;
+  text-align:center;margin-bottom:0.4rem;
+}
+.prayer-section-title{
+  font-family:'Cinzel',serif;font-size:0.95rem;font-weight:700;
+  color:var(--gold-light);letter-spacing:0.06em;text-transform:uppercase;
+  text-align:center;line-height:1.3;
+  margin-bottom:0.3rem;
+}
+.prayer-section-attribution{
+  font-family:'Crimson Text',serif;font-style:italic;
+  font-size:0.76rem;color:rgba(244,232,193,0.55);
+  text-align:center;margin-bottom:1rem;
+  letter-spacing:0.01em;
+}
+.prayer-text{
+  font-family:'Crimson Text',serif;font-size:1.05rem;
+  color:rgba(244,232,193,0.92);line-height:1.7;
+  padding:0 0.15rem;
+}
+.prayer-text p{margin-bottom:0.65rem;}
+.prayer-text p:last-child{margin-bottom:0;}
+.prayer-amen{
+  display:block;text-align:center;
+  font-family:'Crimson Text',serif;font-style:italic;
+  font-size:0.95rem;color:rgba(244,232,193,0.7);
+  margin-top:0.9rem;
+  letter-spacing:0.04em;
+}
+
+/* ── CLOSING DOXOLOGY LINE ──────────────────────────────────── */
+.page-closing{
+  font-family:'Crimson Text',serif;font-style:italic;
+  font-size:0.9rem;color:rgba(240,201,110,0.55);
+  text-align:center;margin:1.75rem 0 0.5rem;
+  letter-spacing:0.02em;
+}
+.page-closing::before,
+.page-closing::after{
+  content:'';display:block;height:1px;width:40%;max-width:200px;
+  margin:0 auto;
+  background:linear-gradient(90deg,transparent 0%,rgba(201,146,42,0.35) 50%,transparent 100%);
+}
+.page-closing::before{margin-bottom:0.9rem;}
+.page-closing::after{margin-top:0.9rem;}
+
+/* ── BOTTOM NAV (canonical) ─────────────────────────────────── */
+.bottom-nav{
+  position:fixed;bottom:0;left:0;right:0;height:var(--nav-h);
+  background:rgba(8,4,0,0.97);border-top:1px solid rgba(201,146,42,0.18);
+  display:flex;align-items:stretch;backdrop-filter:blur(16px);z-index:200;
+  padding-bottom:env(safe-area-inset-bottom);
+}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0.2rem;cursor:pointer;border:none;background:none;padding:0.5rem 0.25rem;position:relative;transition:all 0.2s;text-decoration:none;}
+.nav-item:active{background:rgba(201,146,42,0.06);}
+.nav-mark{font-size:1rem;line-height:1;color:rgba(240,201,110,0.65);transition:all 0.25s;}
+.nav-label{font-family:'Cinzel',serif;font-size:0.52rem;letter-spacing:0.08em;text-transform:uppercase;color:rgba(240,201,110,0.65);transition:all 0.25s;}
+.nav-item.active .nav-mark{color:var(--gold-bright);text-shadow:0 0 12px rgba(255,215,0,0.6);}
+.nav-item.active .nav-label{color:var(--gold-light);}
+.nav-item.active::before{content:'';position:absolute;top:0;left:20%;right:20%;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent);border-radius:0 0 2px 2px;}
+.nav-dot{position:absolute;top:0.4rem;right:calc(50% - 18px);width:7px;height:7px;border-radius:50%;background:#ef4444;border:1.5px solid rgba(8,4,0,0.9);display:none;}
+.nav-dot.show{display:block;}
+
+/* ── FADE-UP (project pattern, identical to games.html) ─────── */
+.fade-up{opacity:0;transform:translateY(12px);animation:fadeUp 0.35s ease forwards;}
+@keyframes fadeUp{to{opacity:1;transform:translateY(0);}}
+.fade-up:nth-child(1){animation-delay:0.03s;}
+.fade-up:nth-child(2){animation-delay:0.06s;}
+.fade-up:nth-child(3){animation-delay:0.09s;}
+.fade-up:nth-child(4){animation-delay:0.12s;}
+.fade-up:nth-child(5){animation-delay:0.15s;}
+.fade-up:nth-child(6){animation-delay:0.18s;}
+</style>
+</head>
+<body>
+
+<div id="loading"><div class="loading-mark">☩</div></div>
+
+<div id="app">
+<div class="page">
+
+  <header class="app-header">
+    <div class="app-name">The Orthodox Expedition</div>
+    <div class="app-divider">✦ ☩ ✦</div>
+  </header>
+
+  <div class="page-eyebrow fade-up">✦ Before Liturgy</div>
+  <div class="page-title fade-up">Pre-Communion Prayers</div>
+  <div class="page-subtitle fade-up">Words to carry with you on Sunday morning.</div>
+
+  <article class="prayer-block fade-up">
+
+    <!-- 1. HEAVENLY KING — invocation of the Holy Spirit -->
+    <section class="prayer-section">
+      <div class="prayer-section-eyebrow">Invocation of the Spirit</div>
+      <div class="prayer-section-title">O Heavenly King</div>
+      <div class="prayer-section-attribution">Βασιλεῦ Οὐράνιε · Universal Orthodox prayer</div>
+      <div class="prayer-text">
+        <p>O Heavenly King, the Comforter, the Spirit of Truth,<br>
+        who art everywhere present and fillest all things,<br>
+        Treasury of good things and Giver of life:<br>
+        Come and abide in us,<br>
+        and cleanse us from every impurity,<br>
+        and save our souls,<br>
+        O Good One.</p>
+      </div>
+      <span class="prayer-amen">Amen.</span>
+    </section>
+
+    <!-- 2. CONFESSION OF FAITH — St. John Chrysostom -->
+    <section class="prayer-section">
+      <div class="prayer-section-eyebrow">Confession of Faith</div>
+      <div class="prayer-section-title">I Believe, O Lord, and I Confess</div>
+      <div class="prayer-section-attribution">St. John Chrysostom · The central pre-Communion prayer</div>
+      <div class="prayer-text">
+        <p>I believe, O Lord, and I confess that Thou art truly the Christ, the Son of the living God, who camest into the world to save sinners, of whom I am first.</p>
+        <p>I believe also that this is truly Thine own pure Body, and that this is truly Thine own precious Blood.</p>
+        <p>Therefore, I pray Thee: have mercy on me and forgive me my transgressions, both voluntary and involuntary, of word and of deed, of knowledge and of ignorance; and make me worthy to partake without condemnation of Thy most pure Mysteries, for the remission of my sins and unto life everlasting.</p>
+      </div>
+      <span class="prayer-amen">Amen.</span>
+    </section>
+
+    <!-- 3. OF THY MYSTICAL SUPPER — Communion hymn -->
+    <section class="prayer-section">
+      <div class="prayer-section-eyebrow">Communion Hymn</div>
+      <div class="prayer-section-title">Of Thy Mystical Supper</div>
+      <div class="prayer-section-attribution">Sung at the Divine Liturgy of St. John Chrysostom</div>
+      <div class="prayer-text">
+        <p>Of Thy Mystical Supper, O Son of God, accept me today as a communicant; for I will not speak of the Mystery to Thine enemies, neither like Judas will I give Thee a kiss; but like the thief will I confess Thee: Remember me, O Lord, in Thy Kingdom.</p>
+      </div>
+      <span class="prayer-amen">Amen.</span>
+    </section>
+
+    <!-- 4. APPROACH PRAYER — St. John of Damascus (short form) -->
+    <section class="prayer-section">
+      <div class="prayer-section-eyebrow">Approach Prayer</div>
+      <div class="prayer-section-title">O Master, Lord Jesus Christ</div>
+      <div class="prayer-section-attribution">St. John of Damascus · Short form</div>
+      <div class="prayer-text">
+        <p>O Master, Lord Jesus Christ, our God, who alone hast authority to forgive the sins of men: in Thy goodness and love, overlook all my offenses, whether committed with knowledge or in ignorance, and make me worthy to partake without condemnation of Thy divine, glorious, pure, and life-giving Mysteries; not for punishment, nor for greater condemnation, but for the purification and sanctification of soul and body, and as a pledge of the life and Kingdom to come.</p>
+      </div>
+      <span class="prayer-amen">Amen.</span>
+    </section>
+
+  </article>
+
+  <div class="page-closing fade-up">Glory to God for all things.</div>
+
+</div>
+</div>
+
+<!-- BOTTOM NAV -->
+<nav class="bottom-nav" id="bottom-nav" style="display:none;">
+  <a class="nav-item" href="home.html">
+    <span class="nav-mark">✦</span>
+    <span class="nav-label">Home</span>
+  </a>
+  <a class="nav-item" href="missions.html">
+    <span class="nav-mark">☩</span>
+    <span class="nav-label">Missions</span>
+    <span class="nav-dot" id="missions-dot"></span>
+  </a>
+  <a class="nav-item" href="curriculum.html">
+    <span class="nav-mark">⊕</span>
+    <span class="nav-label">Topics</span>
+  </a>
+  <a class="nav-item" href="bible-reader.html">
+    <span class="nav-mark">☦&#xFE0E;</span>
+    <span class="nav-label">Scriptures</span>
+  </a>
+  <a class="nav-item" href="journal.html">
+    <span class="nav-mark">✎</span>
+    <span class="nav-label">Field Manual</span>
+  </a>
+</nav>
+
+<script>
+const SUPABASE_URL = 'https://ksfnsryfmkafwirzgjoe.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtzZm5zcnlmbWthZndpcnpnam9lIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2ODM4MTcsImV4cCI6MjA5MTI1OTgxN30.mHQty44WBnjQY8BJ8KbPk_pp-yTcOaifGxCZPUO4xpY';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+(async()=>{
+  try {
+    const timer = new Promise(r => setTimeout(() => r(null), 4000));
+    const res   = await Promise.race([sb.auth.getSession(), timer]);
+    const session = res?.data?.session ?? null;
+    if(!session){ window.location.href='index.html'; return; }
+    const {data:prof} = await sb.from('profiles').select('role').eq('id',session.user.id).single();
+    const isAdminView = new URLSearchParams(window.location.search).get('admin')==='1';
+    if(prof&&['superuser','admin','parent'].includes(prof.role)&&!isAdminView){
+      window.location.href = prof.role==='parent'?'parent.html':'admin.html'; return;
+    }
+    document.getElementById('loading').style.display='none';
+    document.getElementById('app').style.display='block';
+    document.getElementById('bottom-nav').style.display='flex';
+  } catch(e){
+    console.error('Eucharist prayers error:', e);
+    window.location.href='index.html';
+  }
+})();
+
+(function(){
+  if(new URLSearchParams(window.location.search).get('admin')==='1'){
+    document.querySelectorAll('a[href]').forEach(a=>{
+      const href=a.getAttribute('href');
+      if(href&&!href.startsWith('#')&&!href.startsWith('http')&&
+         !href.includes('?admin=1')&&!href.includes('index.html')){
+        a.setAttribute('href',href+'?admin=1');
+      }
+    });
+  }
+})();
+</script>
+<script>
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{ navigator.serviceWorker.register('sw.js').catch(()=>{}); });
+}
+</script>
+</body>
+</html>

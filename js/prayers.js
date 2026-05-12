@@ -13,7 +13,8 @@
  *   Prayers.renderPrayer(timeOfDay, ...)       — return HTML string for full prayer page
  *   Prayers.renderPanel(state, status)         — small "today's prayers" card for week.html
  *   await Prayers.markComplete(timeOfDay)      — log a completion to mission_completions
- *   await Prayers.getTodayStatus()             — { morning: bool, evening: bool }
+ *   await Prayers.getTodayStatus(sb?, profileId?) — { morning: bool, evening: bool }
+ *     args optional; falls back to closure (sb/profileId set by init())
  *   await Prayers.getStreak(opts?)             — integer (consecutive intact weeks)
  *   await Prayers.getFullCrownEligibility(ws?) — bool (current week 14/14 eligible)
  *
@@ -221,11 +222,19 @@ const Prayers = (() => {
   }
 
   // ── GET TODAY'S COMPLETION STATUS ────────────────────────────────
-  async function getTodayStatus() {
-    if (!sb || !profileId) return { morning: false, evening: false };
+  async function getTodayStatus(sbArg, profileIdArg) {
+    // Args take precedence; closure-set sb/profileId (from init()) are
+    // the back-compat fallback. Callers that supply args directly
+    // (e.g. missions.js Missions.loadTodaysState) do not require a
+    // prior Prayers.init() call. Callers that omit args (e.g.
+    // prayers.html after Prayers.init(sb, profile.id)) continue to
+    // work via closure.
+    const _sb = sbArg || sb;
+    const _profileId = profileIdArg || profileId;
+    if (!_sb || !_profileId) return { morning: false, evening: false };
     const dayKey = todayKey();
 
-    const { data: missions } = await sb
+    const { data: missions } = await _sb
       .from('missions')
       .select('id, key')
       .in('key', [MORNING_MISSION_KEY, EVENING_MISSION_KEY]);
@@ -236,10 +245,10 @@ const Prayers = (() => {
     const missionMap = {};
     missions.forEach(m => { missionMap[m.id] = m.key; });
 
-    const { data: completions } = await sb
+    const { data: completions } = await _sb
       .from('mission_completions')
       .select('mission_id')
-      .eq('explorer_id', profileId)
+      .eq('explorer_id', _profileId)
       .eq('day_key', dayKey)
       .in('mission_id', Object.keys(missionMap));
 

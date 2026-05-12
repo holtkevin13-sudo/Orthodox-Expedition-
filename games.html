@@ -47,30 +47,135 @@ body::before{
 .app-header{text-align:center;padding:1.25rem 1rem 1rem;border-bottom:1px solid rgba(201,146,42,0.18);margin-bottom:1.25rem;}
 .app-name{font-family:'Cinzel Decorative',serif;font-size:clamp(0.9rem,3.2vw,1.1rem);color:var(--gold-light);letter-spacing:0.06em;text-shadow:0 0 20px rgba(201,146,42,0.35);}
 .app-divider{color:rgba(240,201,110,0.65);letter-spacing:0.6rem;font-size:0.65rem;margin-top:0.3rem;}
-.section-eyebrow{font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.2em;text-transform:uppercase;color:rgba(240,201,110,0.7);margin-bottom:0.75rem;margin-top:0.25rem;}
-.games-grid{display:flex;flex-direction:column;gap:0.625rem;margin-bottom:1.5rem;}
-.game-card{
-  display:flex;align-items:center;gap:0.875rem;
-  background:rgba(44,22,84,0.2);
-  border:1px solid rgba(124,58,237,0.18);
-  border-radius:12px;padding:0.875rem 1rem;
-  text-decoration:none;transition:all 0.2s;cursor:pointer;
+/* ── PAGE TITLE BLOCK (Chat 7 dialect) ──────────────────────── */
+.page-eyebrow{
+  font-family:'Cinzel',serif;font-size:0.7rem;letter-spacing:0.22em;
+  color:rgba(240,201,110,0.7);text-transform:uppercase;
+  text-align:center;margin-bottom:0.4rem;
 }
-.game-card:active{background:rgba(44,22,84,0.35);border-color:rgba(196,181,253,0.85);transform:scale(0.98);}
+.page-title{
+  font-family:'Cinzel Decorative',serif;
+  font-size:clamp(1.3rem,4.5vw,1.6rem);
+  color:var(--gold-light);text-align:center;
+  text-shadow:0 0 20px rgba(201,146,42,0.3);
+  margin-bottom:0.4rem;
+}
+.page-subtitle{
+  font-family:'Crimson Text',serif;font-size:0.85rem;
+  color:rgba(244,232,193,0.55);text-align:center;
+  font-style:italic;line-height:1.4;
+  margin-bottom:1.75rem;padding:0 0.5rem;
+}
+.page-eyebrow::before,
+.page-subtitle::after{
+  content:'';display:block;height:1px;width:60%;max-width:280px;
+  margin:0 auto;
+  background:linear-gradient(90deg,transparent 0%,rgba(201,146,42,0.45) 50%,transparent 100%);
+}
+.page-eyebrow::before{margin-bottom:0.7rem;}
+.page-subtitle::after{margin-top:0.95rem;}
+
+/* ── CATEGORY BLOCK (parchment-tinted panel, Chat 7 mirror) ── */
+.category-block{
+  position:relative;
+  padding:1.25rem 1rem 1.1rem;
+  margin-bottom:1.75rem;
+  border-radius:14px;
+  background:linear-gradient(180deg,
+    rgba(244,232,193,0.045) 0%,
+    rgba(201,146,42,0.035) 100%);
+  border:1px solid rgba(201,146,42,0.20);
+  box-shadow:
+    inset 0 1px 0 rgba(240,201,110,0.10),
+    0 2px 10px rgba(0,0,0,0.25);
+}
+.category-block::before,
+.category-block::after{
+  content:'✦';position:absolute;
+  font-family:'Cinzel',serif;font-size:0.78rem;line-height:1;
+  color:rgba(240,201,110,0.55);pointer-events:none;
+}
+.category-block::before{top:0.55rem;left:0.7rem;}
+.category-block::after{bottom:0.55rem;right:0.7rem;}
+.category-header{margin-bottom:1rem;padding:0 0.25rem;}
+.category-eyebrow{
+  font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.16em;
+  color:rgba(240,201,110,0.65);text-transform:uppercase;
+  margin-bottom:0.3rem;
+}
+.category-title{
+  font-family:'Cinzel',serif;font-size:0.95rem;font-weight:700;
+  color:var(--gold-light);line-height:1.3;
+  letter-spacing:0.06em;text-transform:uppercase;
+}
+
+/* ── GAMES GRID — responsive ───────────────────────────────── */
+.games-grid{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:0.625rem;
+}
+@media (min-width:600px){
+  .games-grid{grid-template-columns:repeat(2,1fr);}
+}
+@media (min-width:980px){
+  .games-grid{grid-template-columns:repeat(3,1fr);}
+}
+
+/* ── GAME CARD — parchment+gold dialect ────────────────────── */
+.game-card{
+  display:flex;align-items:flex-start;gap:0.875rem;
+  background:rgba(244,232,193,0.03);
+  border:1.5px solid rgba(201,146,42,0.22);
+  border-radius:12px;padding:0.875rem 1rem;
+  text-decoration:none;color:inherit;
+  transition:background 0.2s,border-color 0.2s,transform 0.15s;
+  cursor:pointer;
+  min-height:96px;
+}
+.game-card:hover{
+  background:rgba(244,232,193,0.05);
+  border-color:rgba(240,201,110,0.42);
+}
+.game-card:active{
+  background:rgba(244,232,193,0.06);
+  border-color:rgba(240,201,110,0.65);
+  transform:scale(0.985);
+}
 .game-icon{
   font-size:1.4rem;flex-shrink:0;
-  width:44px;height:44px;display:flex;align-items:center;justify-content:center;
-  background:rgba(44,22,84,0.3);border-radius:10px;border:1px solid rgba(124,58,237,0.15);
+  width:44px;height:44px;
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(201,146,42,0.08);
+  border:1px solid rgba(201,146,42,0.22);
+  border-radius:10px;
+  color:var(--gold-light);
+  margin-top:0.1rem;
 }
-.game-info{flex:1;min-width:0;}
-.game-title{font-family:'Cinzel',serif;font-size:0.8rem;color:rgba(200,180,255,0.9);font-weight:600;line-height:1.3;margin-bottom:0.2rem;}
-.game-desc{font-size:0.75rem;color:rgba(196,181,253,0.95);font-style:italic;line-height:1.4;}
-.game-arrow{color:rgba(196,181,253,0.95);font-size:0.9rem;flex-shrink:0;}
-.game-topic{
-  font-family:'Cinzel',serif;font-size:0.52rem;letter-spacing:0.08em;text-transform:uppercase;
-  color:rgba(240,201,110,0.7);background:rgba(201,146,42,0.07);
-  border:1px solid rgba(201,146,42,0.15);border-radius:10px;
-  padding:0.15rem 0.5rem;display:inline-block;margin-top:0.25rem;
+.game-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:0.32rem;}
+.game-title{
+  font-family:'Cinzel',serif;font-size:0.82rem;font-weight:600;
+  color:var(--gold-light);line-height:1.3;
+  letter-spacing:0.04em;text-transform:uppercase;
+}
+.game-desc{
+  font-family:'Crimson Text',serif;font-size:0.78rem;
+  color:rgba(244,232,193,0.78);font-style:italic;
+  line-height:1.4;
+}
+.game-meta{
+  display:flex;flex-wrap:wrap;gap:0.35rem 0.85rem;
+  margin-top:0.1rem;
+}
+.game-meta-item{
+  font-family:'Crimson Text',serif;font-size:0.72rem;
+  color:rgba(244,232,193,0.62);
+  display:inline-flex;align-items:center;gap:0.25rem;
+  white-space:nowrap;
+}
+.game-arrow{
+  color:rgba(240,201,110,0.55);font-size:1rem;flex-shrink:0;
+  align-self:center;
 }
 .bottom-nav{
   position:fixed;bottom:0;left:0;right:0;height:var(--nav-h);
@@ -117,181 +222,317 @@ body::before{
     <div class="app-divider">✦ ☩ ✦</div>
   </header>
 
-  <div class="section-eyebrow">⚔ Training Grounds — 14 Games</div>
+  <div class="page-eyebrow fade-up">✦ Training Grounds</div>
+  <div class="page-title fade-up">Practice the Faith</div>
+  <div class="page-subtitle fade-up">Seventeen games. Match, trace, time yourself, and remember.</div>
 
-  <div class="games-grid">
+  <section class="category-block fade-up">
+    <header class="category-header">
+      <div class="category-eyebrow">1 game</div>
+      <div class="category-title">⚜ Sacraments</div>
+    </header>
+    <div class="games-grid">
 
-    <a class="game-card fade-up" href="games/creed-builder.html">
-      <div class="game-icon">☩</div>
-      <div class="game-info">
-        <div class="game-title">Creed Builder</div>
-        <div class="game-desc">Reconstruct the Nicene Creed line by line from memory</div>
-        <span class="game-topic">Foundations</span>
-      </div>
-      <span class="game-arrow">›</span>
-    </a>
+      <a class="game-card" href="games/sacrament-match.html">
+        <div class="game-icon">◈</div>
+        <div class="game-info">
+          <div class="game-title">Sacrament Match</div>
+          <div class="game-desc">Match each sacrament to its visible sign and grace</div>
+          <div class="game-meta">
+            <span class="game-meta-item">⏱ ~3 min</span>
+            <span class="game-meta-item">🎯 Beginner</span>
+            <span class="game-meta-item">🪙 Coins</span>
+          </div>
+        </div>
+        <span class="game-arrow">›</span>
+      </a>
 
-    <a class="game-card fade-up" href="games/creed-catcher.html">
-      <div class="game-icon">✦</div>
-      <div class="game-info">
-        <div class="game-title">Creed Catcher</div>
-        <div class="game-desc">Catch the correct words of the Creed as they fall</div>
-        <span class="game-topic">Foundations</span>
-      </div>
-      <span class="game-arrow">›</span>
-    </a>
+    </div>
+  </section>
 
-    <a class="game-card fade-up" href="games/council-timeline.html">
-      <div class="game-icon">⊕</div>
-      <div class="game-info">
-        <div class="game-title">Council Timeline</div>
-        <div class="game-desc">Place the 7 Ecumenical Councils in the correct order</div>
-        <span class="game-topic">Church History</span>
-      </div>
-      <span class="game-arrow">›</span>
-    </a>
+  <section class="category-block fade-up">
+    <header class="category-header">
+      <div class="category-eyebrow">4 games</div>
+      <div class="category-title">⚜ Creed &amp; Doctrine</div>
+    </header>
+    <div class="games-grid">
 
-    <a class="game-card fade-up" href="games/heresy-hunter.html">
-      <div class="game-icon">⚔</div>
-      <div class="game-info">
-        <div class="game-title">Heresy Hunter</div>
-        <div class="game-desc">Identify the heresies condemned by the Councils</div>
-        <span class="game-topic">Church History</span>
-      </div>
-      <span class="game-arrow">›</span>
-    </a>
+      <a class="game-card" href="games/creed-builder.html">
+        <div class="game-icon">☩</div>
+        <div class="game-info">
+          <div class="game-title">Creed Builder</div>
+          <div class="game-desc">Reconstruct the Nicene Creed line by line from memory</div>
+          <div class="game-meta">
+            <span class="game-meta-item">⏱ ~4 min</span>
+            <span class="game-meta-item">🎯 Intermediate</span>
+            <span class="game-meta-item">🪙 Coins</span>
+          </div>
+        </div>
+        <span class="game-arrow">›</span>
+      </a>
 
-    <a class="game-card fade-up" href="games/apostle-journeys.html">
-      <div class="game-icon">☦</div>
-      <div class="game-info">
-        <div class="game-title">Apostle Journeys</div>
-        <div class="game-desc">Trace the missionary routes of the Holy Apostles</div>
-        <span class="game-topic">Church History</span>
-      </div>
-      <span class="game-arrow">›</span>
-    </a>
+      <a class="game-card" href="games/creed-catcher.html">
+        <div class="game-icon">✦</div>
+        <div class="game-info">
+          <div class="game-title">Creed Catcher</div>
+          <div class="game-desc">Catch the correct words of the Creed as they fall</div>
+          <div class="game-meta">
+            <span class="game-meta-item">⏱ ~5 min</span>
+            <span class="game-meta-item">🎯 Intermediate</span>
+            <span class="game-meta-item">⚔ Practice</span>
+          </div>
+        </div>
+        <span class="game-arrow">›</span>
+      </a>
 
-    <a class="game-card fade-up" href="games/sacrament-match.html">
-      <div class="game-icon">◈</div>
-      <div class="game-info">
-        <div class="game-title">Sacrament Match</div>
-        <div class="game-desc">Match each sacrament to its visible sign and grace</div>
-        <span class="game-topic">The Sacraments</span>
-      </div>
-      <span class="game-arrow">›</span>
-    </a>
+      <a class="game-card" href="games/heresy-hunter.html">
+        <div class="game-icon">⚔</div>
+        <div class="game-info">
+          <div class="game-title">Heresy Hunter</div>
+          <div class="game-desc">Identify the heresies condemned by the Councils</div>
+          <div class="game-meta">
+            <span class="game-meta-item">⏱ ~5 min</span>
+            <span class="game-meta-item">🎯 Advanced</span>
+            <span class="game-meta-item">⚔ Practice</span>
+          </div>
+        </div>
+        <span class="game-arrow">›</span>
+      </a>
 
-    <a class="game-card fade-up" href="games/icon-gallery.html">
-      <div class="game-icon">🖼</div>
-      <div class="game-info">
-        <div class="game-title">Icon Gallery</div>
-        <div class="game-desc">Identify icons and the saints or feasts they depict</div>
-        <span class="game-topic">Saints &amp; Icons</span>
-      </div>
-      <span class="game-arrow">›</span>
-    </a>
+      <a class="game-card" href="games/virtue-passion.html">
+        <div class="game-icon">⚖</div>
+        <div class="game-info">
+          <div class="game-title">Virtue &amp; Passion</div>
+          <div class="game-desc">Match each passion to its opposing virtue</div>
+          <div class="game-meta">
+            <span class="game-meta-item">⏱ ~3 min</span>
+            <span class="game-meta-item">🎯 Beginner</span>
+            <span class="game-meta-item">🪙 Coins</span>
+          </div>
+        </div>
+        <span class="game-arrow">›</span>
+      </a>
 
-    <a class="game-card fade-up" href="games/liturgy-sequence.html">
-      <div class="game-icon">☩</div>
-      <div class="game-info">
-        <div class="game-title">Liturgy Sequence</div>
-        <div class="game-desc">Put the parts of the Divine Liturgy in the correct order</div>
-        <span class="game-topic">Worship &amp; Prayer</span>
-      </div>
-      <span class="game-arrow">›</span>
-    </a>
+    </div>
+  </section>
 
-    <a class="game-card fade-up" href="games/byzantine-blitz.html">
-      <div class="game-icon">⚡</div>
-      <div class="game-info">
-        <div class="game-title">Byzantine Blitz</div>
-        <div class="game-desc">Fast-fire Orthodox trivia — how many can you answer?</div>
-        <span class="game-topic">All Topics</span>
-      </div>
-      <span class="game-arrow">›</span>
-    </a>
+  <section class="category-block fade-up">
+    <header class="category-header">
+      <div class="category-eyebrow">5 games</div>
+      <div class="category-title">⚜ Saints &amp; Church History</div>
+    </header>
+    <div class="games-grid">
 
-    <a class="game-card fade-up" href="games/feast-calendar.html">
-      <div class="game-icon">📅</div>
-      <div class="game-info">
-        <div class="game-title">Feast Calendar</div>
-        <div class="game-desc">Match the 12 Great Feasts to their correct dates</div>
-        <span class="game-topic">Church Year</span>
-      </div>
-      <span class="game-arrow">›</span>
-    </a>
+      <a class="game-card" href="games/icon-gallery.html">
+        <div class="game-icon">🖼</div>
+        <div class="game-info">
+          <div class="game-title">Icon Gallery</div>
+          <div class="game-desc">Identify icons and the saints or feasts they depict</div>
+          <div class="game-meta">
+            <span class="game-meta-item">⏱ ~5 min</span>
+            <span class="game-meta-item">🎯 Intermediate</span>
+            <span class="game-meta-item">🪙 Coins</span>
+          </div>
+        </div>
+        <span class="game-arrow">›</span>
+      </a>
 
-    <a class="game-card fade-up" href="games/feast-or-fast.html">
-      <div class="game-icon">🕯</div>
-      <div class="game-info">
-        <div class="game-title">Feast or Fast</div>
-        <div class="game-desc">Identify whether each day is a feast, a fast, or both</div>
-        <span class="game-topic">Church Year</span>
-      </div>
-      <span class="game-arrow">›</span>
-    </a>
+      <a class="game-card" href="games/apostle-journeys.html">
+        <div class="game-icon">☦&#xFE0E;</div>
+        <div class="game-info">
+          <div class="game-title">Apostle Journeys</div>
+          <div class="game-desc">Trace the missionary routes of the Holy Apostles</div>
+          <div class="game-meta">
+            <span class="game-meta-item">⏱ ~3 min</span>
+            <span class="game-meta-item">🎯 Beginner</span>
+            <span class="game-meta-item">🪙 Coins</span>
+          </div>
+        </div>
+        <span class="game-arrow">›</span>
+      </a>
 
-    <a class="game-card fade-up" href="games/fasting-rules.html">
-      <div class="game-icon">🌿</div>
-      <div class="game-info">
-        <div class="game-title">Fasting Rules</div>
-        <div class="game-desc">Learn the Orthodox fasting calendar and its seasons</div>
-        <span class="game-topic">Church Year</span>
-      </div>
-      <span class="game-arrow">›</span>
-    </a>
+      <a class="game-card" href="games/saint-seeker.html">
+        <div class="game-icon">✦</div>
+        <div class="game-info">
+          <div class="game-title">Saint Seeker</div>
+          <div class="game-desc">Find saints from clues about their life and feast day</div>
+          <div class="game-meta">
+            <span class="game-meta-item">⏱ ~5 min</span>
+            <span class="game-meta-item">🎯 Intermediate</span>
+            <span class="game-meta-item">⚔ Practice</span>
+          </div>
+        </div>
+        <span class="game-arrow">›</span>
+      </a>
 
-    <a class="game-card fade-up" href="games/virtue-passion.html">
-      <div class="game-icon">⚖</div>
-      <div class="game-info">
-        <div class="game-title">Virtue &amp; Passion</div>
-        <div class="game-desc">Match each passion to its opposing virtue</div>
-        <span class="game-topic">The Inner Life</span>
-      </div>
-      <span class="game-arrow">›</span>
-    </a>
+      <a class="game-card" href="games/council-timeline.html">
+        <div class="game-icon">⊕</div>
+        <div class="game-info">
+          <div class="game-title">Council Timeline</div>
+          <div class="game-desc">Place the 7 Ecumenical Councils in the correct order</div>
+          <div class="game-meta">
+            <span class="game-meta-item">⏱ ~4 min</span>
+            <span class="game-meta-item">🎯 Advanced</span>
+            <span class="game-meta-item">🪙 Coins</span>
+          </div>
+        </div>
+        <span class="game-arrow">›</span>
+      </a>
 
-    <a class="game-card fade-up" href="games/saint-seeker.html">
-      <div class="game-icon">✦</div>
-      <div class="game-info">
-        <div class="game-title">Saint Seeker</div>
-        <div class="game-desc">Find saints from clues about their life and feast day</div>
-        <span class="game-topic">All Topics</span>
-      </div>
-      <span class="game-arrow">›</span>
-    </a>
+      <a class="game-card" href="games/church-history.html">
+        <div class="game-icon">📜</div>
+        <div class="game-info">
+          <div class="game-title">Church History</div>
+          <div class="game-desc">Two thousand years — Pentecost to today, across three rounds</div>
+          <div class="game-meta">
+            <span class="game-meta-item">⏱ ~10 min</span>
+            <span class="game-meta-item">🎯 Advanced</span>
+            <span class="game-meta-item">🪙 Coins</span>
+          </div>
+        </div>
+        <span class="game-arrow">›</span>
+      </a>
 
-    <a class="game-card fade-up" href="games/sacred-words.html">
-      <div class="game-icon">Α</div>
-      <div class="game-info">
-        <div class="game-title">Sacred Words</div>
-        <div class="game-desc">Match Greek terms from icons, Liturgy, and the saints</div>
-        <span class="game-topic">All Topics</span>
-      </div>
-      <span class="game-arrow">›</span>
-    </a>
+    </div>
+  </section>
 
-    <a class="game-card fade-up" href="games/bible-trivia.html">
-      <div class="game-icon">📖</div>
-      <div class="game-info">
-        <div class="game-title">Bible Trivia</div>
-        <div class="game-desc">Three rounds across the whole Bible — books, voices, and verses</div>
-        <span class="game-topic">All Topics</span>
-      </div>
-      <span class="game-arrow">›</span>
-    </a>
+  <section class="category-block fade-up">
+    <header class="category-header">
+      <div class="category-eyebrow">2 games</div>
+      <div class="category-title">⚜ Liturgy &amp; Worship</div>
+    </header>
+    <div class="games-grid">
 
-    <a class="game-card fade-up" href="games/church-history.html">
-      <div class="game-icon">📜</div>
-      <div class="game-info">
-        <div class="game-title">Church History</div>
-        <div class="game-desc">Two thousand years — Pentecost to today, across three rounds</div>
-        <span class="game-topic">All Topics</span>
-      </div>
-      <span class="game-arrow">›</span>
-    </a>
+      <a class="game-card" href="games/liturgy-sequence.html">
+        <div class="game-icon">☩</div>
+        <div class="game-info">
+          <div class="game-title">Liturgy Sequence</div>
+          <div class="game-desc">Put the parts of the Divine Liturgy in the correct order</div>
+          <div class="game-meta">
+            <span class="game-meta-item">⏱ ~5 min</span>
+            <span class="game-meta-item">🎯 Intermediate</span>
+            <span class="game-meta-item">🪙 Coins</span>
+          </div>
+        </div>
+        <span class="game-arrow">›</span>
+      </a>
 
-  </div>
+      <a class="game-card" href="games/sacred-words.html">
+        <div class="game-icon">Α</div>
+        <div class="game-info">
+          <div class="game-title">Sacred Words</div>
+          <div class="game-desc">Match Greek terms from icons, Liturgy, and the saints</div>
+          <div class="game-meta">
+            <span class="game-meta-item">⏱ ~10 min</span>
+            <span class="game-meta-item">🎯 Intermediate</span>
+            <span class="game-meta-item">🪙 Coins</span>
+          </div>
+        </div>
+        <span class="game-arrow">›</span>
+      </a>
+
+    </div>
+  </section>
+
+  <section class="category-block fade-up">
+    <header class="category-header">
+      <div class="category-eyebrow">3 games</div>
+      <div class="category-title">⚜ Feasts &amp; Fasting</div>
+    </header>
+    <div class="games-grid">
+
+      <a class="game-card" href="games/feast-calendar.html">
+        <div class="game-icon">📅</div>
+        <div class="game-info">
+          <div class="game-title">Feast Calendar</div>
+          <div class="game-desc">Match the 12 Great Feasts to their correct dates</div>
+          <div class="game-meta">
+            <span class="game-meta-item">⏱ ~5 min</span>
+            <span class="game-meta-item">🎯 Intermediate</span>
+            <span class="game-meta-item">🪙 Coins</span>
+          </div>
+        </div>
+        <span class="game-arrow">›</span>
+      </a>
+
+      <a class="game-card" href="games/feast-or-fast.html">
+        <div class="game-icon">🕯</div>
+        <div class="game-info">
+          <div class="game-title">Feast or Fast</div>
+          <div class="game-desc">Identify whether each day is a feast, a fast, or both</div>
+          <div class="game-meta">
+            <span class="game-meta-item">⏱ ~5 min</span>
+            <span class="game-meta-item">🎯 Beginner</span>
+            <span class="game-meta-item">⚔ Practice</span>
+          </div>
+        </div>
+        <span class="game-arrow">›</span>
+      </a>
+
+      <a class="game-card" href="games/fasting-rules.html">
+        <div class="game-icon">🌿</div>
+        <div class="game-info">
+          <div class="game-title">Fasting Rules</div>
+          <div class="game-desc">Learn the Orthodox fasting calendar and its seasons</div>
+          <div class="game-meta">
+            <span class="game-meta-item">⏱ ~5 min</span>
+            <span class="game-meta-item">🎯 Intermediate</span>
+            <span class="game-meta-item">🪙 Coins</span>
+          </div>
+        </div>
+        <span class="game-arrow">›</span>
+      </a>
+
+    </div>
+  </section>
+
+  <section class="category-block fade-up">
+    <header class="category-header">
+      <div class="category-eyebrow">1 game</div>
+      <div class="category-title">⚜ Scripture</div>
+    </header>
+    <div class="games-grid">
+
+      <a class="game-card" href="games/bible-trivia.html">
+        <div class="game-icon">📖</div>
+        <div class="game-info">
+          <div class="game-title">Bible Trivia</div>
+          <div class="game-desc">Three rounds across the whole Bible — books, voices, and verses</div>
+          <div class="game-meta">
+            <span class="game-meta-item">⏱ ~10 min</span>
+            <span class="game-meta-item">🎯 Advanced</span>
+            <span class="game-meta-item">🪙 Coins</span>
+          </div>
+        </div>
+        <span class="game-arrow">›</span>
+      </a>
+
+    </div>
+  </section>
+
+  <section class="category-block fade-up">
+    <header class="category-header">
+      <div class="category-eyebrow">1 game</div>
+      <div class="category-title">⚜ Trivia &amp; Reflex</div>
+    </header>
+    <div class="games-grid">
+
+      <a class="game-card" href="games/byzantine-blitz.html">
+        <div class="game-icon">⚡</div>
+        <div class="game-info">
+          <div class="game-title">Byzantine Blitz</div>
+          <div class="game-desc">Fast-fire Orthodox trivia — how many can you answer?</div>
+          <div class="game-meta">
+            <span class="game-meta-item">⏱ ~1 min</span>
+            <span class="game-meta-item">🎯 Intermediate</span>
+            <span class="game-meta-item">⚔ Practice</span>
+          </div>
+        </div>
+        <span class="game-arrow">›</span>
+      </a>
+
+    </div>
+  </section>
 
 </div>
 </div>

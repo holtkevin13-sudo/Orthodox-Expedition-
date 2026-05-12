@@ -384,3 +384,45 @@
   }
   .oe-cta { transition: none; }
 }
+
+/* ─────────────────────────────────────────────────────────────────
+   Hero frame (Chat 4 — new first scene in the welcome flow)
+   The first thing Nolan sees when the welcome flow opens: Theo
+   and Christopher walking toward a monastery at sunset, his name
+   in the greeting, a single "Begin →" CTA. Sets the tone before
+   the video amplifies and the instruction cards explain.
+   ───────────────────────────────────────────────────────────── */
+.oe-hero-panel {
+  gap: 1.5rem;
+}
+.oe-hero-portrait-wrap {
+  width: 100%;
+  max-width: 640px;
+  aspect-ratio: 16 / 9;
+  border: 2px solid #C9A84C;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #0B0E16;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.4);
+}
+.oe-hero-portrait {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.oe-hero-greeting {
+  font-family: 'Cinzel', serif;
+  font-size: 1.6rem;
+  letter-spacing: 0.02em;
+  text-align: center;
+  color: #F5ECD7;
+  line-height: 1.3;
+  margin: 0;
+  text-shadow: 0 2px 8px rgba(27, 42, 74, 0.4);
+}
+@media (max-width: 480px) {
+  .oe-hero-greeting {
+    font-size: 1.3rem;
+  }
+}

@@ -340,7 +340,7 @@
 // v4: added week.html, prayers.html, day-state, pause-card, prayers, and config JSON
 // Version bump forces cache clear and fresh install
 
-const CACHE_NAME = 'orthodox-expedition-v35';
+const CACHE_NAME = 'orthodox-expedition-v36';
 const STATIC_ASSETS = [
   '/Orthodox-Expedition-/',
   '/Orthodox-Expedition-/index.html',
@@ -388,6 +388,7 @@ const STATIC_ASSETS = [
   '/Orthodox-Expedition-/js/missions.js',
   '/Orthodox-Expedition-/js/home-dashboard.js',
   '/Orthodox-Expedition-/js/feast-of-week.js',
+  '/Orthodox-Expedition-/js/liturgical-calendar-home.js',
   '/Orthodox-Expedition-/js/topic-00-day.js',
   '/Orthodox-Expedition-/js/quiz-runner.js',
   '/Orthodox-Expedition-/js/welcome-flow.js',

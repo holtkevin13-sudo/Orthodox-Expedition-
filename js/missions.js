@@ -904,7 +904,10 @@
         </a>
         ${promptText ? `
           <div class="mh-reading-prompt-block">
-            <div class="mh-rrp-eyebrow">Today's Reflection</div>
+            <div class="mh-portrait-block">
+              <img class="mh-portrait" src="/Orthodox-Expedition-/assets/characters/theo-portrait.png" alt="Theo">
+              <div class="mh-portrait-speaker">Theo asks…</div>
+            </div>
             <div class="mh-rrp-text">${esc(promptText)}</div>
           </div>
         ` : ''}

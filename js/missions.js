@@ -234,6 +234,7 @@
           .eq('explorer_id', explorerId),
         sb.from('sessions')
           .select('id,title,topic_id,coins,order_index')
+          .like('id','00.%')
           .order('topic_id').order('order_index'),
       ]);
 

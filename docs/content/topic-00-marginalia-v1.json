@@ -1,0 +1,426 @@
+{
+  "version": "1.0",
+  "topic_id": "00",
+  "topic_title": "Coming Home",
+  "marginalia_count": 42,
+  "authored": "2026-05-12",
+  "voice_anchor": "COMIC_DESIGN_BRIEF.md §2.3 — Marginal posture (Theo wonders; Christopher names)",
+  "sessions": [
+    {
+      "session_id": "00.1",
+      "session_title": "The Church That Stayed",
+      "gospel_reference": "John 20:24-29 — Thomas Sees the Risen Christ",
+      "shape": "question-and-anchor + held-silence",
+      "bubbles": [
+        {
+          "id": "00.1.theo.1",
+          "speaker": "theo",
+          "placement_hint": "after_reading_start",
+          "lines": ["Why did Thomas need to touch?"]
+        },
+        {
+          "id": "00.1.christopher.1",
+          "speaker": "christopher",
+          "placement_hint": "middle_passage",
+          "lines": [
+            "The same reason we kiss the icons.",
+            "The body wants to know too."
+          ]
+        },
+        {
+          "id": "00.1.theo.2",
+          "speaker": "theo",
+          "placement_hint": "after_reading_end",
+          "lines": ["I think I would have wanted to touch Him too."]
+        }
+      ]
+    },
+    {
+      "session_id": "00.2",
+      "session_title": "Why We Cross Ourselves & What It Means",
+      "gospel_reference": "Mark 16:1-8 — The Myrrhbearing Women at the Tomb",
+      "shape": "two-noticings + theo-extension",
+      "bubbles": [
+        {
+          "id": "00.2.theo.1",
+          "speaker": "theo",
+          "placement_hint": "after_reading_start",
+          "lines": ["They brought spices to a tomb."]
+        },
+        {
+          "id": "00.2.christopher.1",
+          "speaker": "christopher",
+          "placement_hint": "middle_passage",
+          "lines": ["Their hands needed something to do."]
+        },
+        {
+          "id": "00.2.theo.2",
+          "speaker": "theo",
+          "placement_hint": "after_reading_end",
+          "lines": [
+            "Mine do sometimes.",
+            "When I don't have words."
+          ]
+        }
+      ]
+    },
+    {
+      "session_id": "00.3",
+      "session_title": "What Is an Icon?",
+      "gospel_reference": "John 5:1-15 — The Healing of the Paralytic",
+      "shape": "two-bubble — question-and-anchor",
+      "bubbles": [
+        {
+          "id": "00.3.theo.1",
+          "speaker": "theo",
+          "placement_hint": "after_reading_start",
+          "lines": ["He waited thirty-eight years for someone to see him."]
+        },
+        {
+          "id": "00.3.christopher.1",
+          "speaker": "christopher",
+          "placement_hint": "after_reading_end",
+          "lines": [
+            "Christ did.",
+            "The way we look at icons."
+          ]
+        }
+      ]
+    },
+    {
+      "session_id": "00.4",
+      "session_title": "Who Is the Theotokos?",
+      "gospel_reference": "Luke 1:26-38 — The Annunciation",
+      "shape": "noticing + anchor + wonder (Mom-reference per §2.3)",
+      "bubbles": [
+        {
+          "id": "00.4.theo.1",
+          "speaker": "theo",
+          "placement_hint": "after_reading_start",
+          "lines": ["She was just a girl."]
+        },
+        {
+          "id": "00.4.christopher.1",
+          "speaker": "christopher",
+          "placement_hint": "middle_passage",
+          "lines": ["And she said yes."]
+        },
+        {
+          "id": "00.4.theo.2",
+          "speaker": "theo",
+          "placement_hint": "after_reading_end",
+          "lines": ["I wonder if Mom was as scared as she was."]
+        }
+      ]
+    },
+    {
+      "session_id": "00.5",
+      "session_title": "What Will Happen at My Chrismation",
+      "gospel_reference": "Matthew 3:13-17 — The Baptism of Christ in the Jordan",
+      "shape": "noticing + anchor + interior anticipation",
+      "spot_check": true,
+      "bubbles": [
+        {
+          "id": "00.5.theo.1",
+          "speaker": "theo",
+          "placement_hint": "after_reading_start",
+          "lines": ["He didn't need to be baptized. He went anyway."]
+        },
+        {
+          "id": "00.5.christopher.1",
+          "speaker": "christopher",
+          "placement_hint": "middle_passage",
+          "lines": [
+            "He went first.",
+            "So we could follow."
+          ]
+        },
+        {
+          "id": "00.5.theo.2",
+          "speaker": "theo",
+          "placement_hint": "after_reading_end",
+          "lines": ["I keep thinking about my own day."]
+        }
+      ]
+    },
+    {
+      "session_id": "00.6",
+      "session_title": "The Day I Was Sealed",
+      "gospel_reference": "2 Corinthians 1:21-22 — Sealed by the Spirit",
+      "shape": "two-bubble — interior + pastoral (paired with 00.5)",
+      "spot_check": true,
+      "bubbles": [
+        {
+          "id": "00.6.theo.1",
+          "speaker": "theo",
+          "placement_hint": "after_reading_start",
+          "lines": [
+            "It happened.",
+            "I don't know what to say."
+          ]
+        },
+        {
+          "id": "00.6.christopher.1",
+          "speaker": "christopher",
+          "placement_hint": "after_reading_end",
+          "lines": [
+            "You don't have to.",
+            "Not yet."
+          ]
+        }
+      ]
+    },
+    {
+      "session_id": "00.7",
+      "session_title": "The Holy Eucharist — Christ Truly Present",
+      "gospel_reference": "John 6:48-69 — The Bread of Life",
+      "shape": "noticing + single-word confirmation + naming",
+      "bubbles": [
+        {
+          "id": "00.7.theo.1",
+          "speaker": "theo",
+          "placement_hint": "after_reading_start",
+          "lines": ["It was a hard thing to hear."]
+        },
+        {
+          "id": "00.7.christopher.1",
+          "speaker": "christopher",
+          "placement_hint": "middle_passage",
+          "lines": ["Yes."]
+        },
+        {
+          "id": "00.7.theo.2",
+          "speaker": "theo",
+          "placement_hint": "after_reading_end",
+          "lines": ["Peter didn't leave."]
+        }
+      ]
+    },
+    {
+      "session_id": "00.8",
+      "session_title": "The Divine Liturgy — A Walk-Through",
+      "gospel_reference": "Luke 24:13-35 — The Road to Emmaus",
+      "shape": "noticing + anchor + recognition",
+      "bubbles": [
+        {
+          "id": "00.8.theo.1",
+          "speaker": "theo",
+          "placement_hint": "after_reading_start",
+          "lines": ["They didn't recognize Him."]
+        },
+        {
+          "id": "00.8.christopher.1",
+          "speaker": "christopher",
+          "placement_hint": "middle_passage",
+          "lines": ["Not until He broke the bread."]
+        },
+        {
+          "id": "00.8.theo.2",
+          "speaker": "theo",
+          "placement_hint": "after_reading_end",
+          "lines": ["We do that too."]
+        }
+      ]
+    },
+    {
+      "session_id": "00.9",
+      "session_title": "The Apostles' Fast & Why We Fast",
+      "gospel_reference": "Matthew 6:16-18 — When You Fast",
+      "shape": "noticing + observation + first-person witness",
+      "bubbles": [
+        {
+          "id": "00.9.theo.1",
+          "speaker": "theo",
+          "placement_hint": "after_reading_start",
+          "lines": [
+            "He didn't say if.",
+            "He said when."
+          ]
+        },
+        {
+          "id": "00.9.christopher.1",
+          "speaker": "christopher",
+          "placement_hint": "middle_passage",
+          "lines": ["He took it for granted we would."]
+        },
+        {
+          "id": "00.9.theo.2",
+          "speaker": "theo",
+          "placement_hint": "after_reading_end",
+          "lines": ["I feel different on Wednesdays."]
+        }
+      ]
+    },
+    {
+      "session_id": "00.10",
+      "session_title": "Sts. Peter and Paul — The Apostles Who Built the Church",
+      "gospel_reference": "Matthew 16:13-19 — Peter's Confession at Caesarea Philippi",
+      "shape": "T-C-T with Christopher mid (Peter's wider pattern)",
+      "bubbles": [
+        {
+          "id": "00.10.theo.1",
+          "speaker": "theo",
+          "placement_hint": "after_reading_start",
+          "lines": ["Peter answered first."]
+        },
+        {
+          "id": "00.10.christopher.1",
+          "speaker": "christopher",
+          "placement_hint": "middle_passage",
+          "lines": [
+            "He always did.",
+            "Right or wrong."
+          ]
+        },
+        {
+          "id": "00.10.theo.2",
+          "speaker": "theo",
+          "placement_hint": "after_reading_end",
+          "lines": ["And the Lord chose him anyway."]
+        }
+      ]
+    },
+    {
+      "session_id": "00.11",
+      "session_title": "Praying at Home — A Beginner's Prayer Rule",
+      "gospel_reference": "Matthew 6:5-13 — How to Pray; The Lord's Prayer",
+      "shape": "two-bubble — light marvel",
+      "bubbles": [
+        {
+          "id": "00.11.theo.1",
+          "speaker": "theo",
+          "placement_hint": "after_reading_start",
+          "lines": ["He told us what words to use."]
+        },
+        {
+          "id": "00.11.christopher.1",
+          "speaker": "christopher",
+          "placement_hint": "after_reading_end",
+          "lines": [
+            "Every morning. Every night.",
+            "The same words for centuries."
+          ]
+        }
+      ]
+    },
+    {
+      "session_id": "00.12",
+      "session_title": "St. Herman of Alaska — Your Patron Saint",
+      "gospel_reference": "Matthew 18:1-6 — Christ Receives the Children",
+      "shape": "noticing + anchor + held-silence first-person",
+      "spot_check": true,
+      "bubbles": [
+        {
+          "id": "00.12.theo.1",
+          "speaker": "theo",
+          "placement_hint": "after_reading_start",
+          "lines": ["He put a child right in the middle."]
+        },
+        {
+          "id": "00.12.christopher.1",
+          "speaker": "christopher",
+          "placement_hint": "middle_passage",
+          "lines": ["He still does."]
+        },
+        {
+          "id": "00.12.theo.2",
+          "speaker": "theo",
+          "placement_hint": "after_reading_end",
+          "lines": ["My patron knows my name."]
+        }
+      ]
+    },
+    {
+      "session_id": "00.13",
+      "session_title": "The Prophet Elias",
+      "gospel_reference": "1 Kings 19:1-18 — The Still Small Voice at Horeb",
+      "shape": "C-T-C — Christopher opens; light register",
+      "bubbles": [
+        {
+          "id": "00.13.christopher.1",
+          "speaker": "christopher",
+          "placement_hint": "after_reading_start",
+          "lines": ["He listened past the loud things."]
+        },
+        {
+          "id": "00.13.theo.1",
+          "speaker": "theo",
+          "placement_hint": "middle_passage",
+          "lines": ["How will I learn that?"]
+        },
+        {
+          "id": "00.13.christopher.2",
+          "speaker": "christopher",
+          "placement_hint": "after_reading_end",
+          "lines": [
+            "Slowly.",
+            "Like he did."
+          ]
+        }
+      ]
+    },
+    {
+      "session_id": "00.14",
+      "session_title": "The Dormition Fast — Two Weeks With the Theotokos",
+      "gospel_reference": "Luke 1:39-56 — The Visitation and the Magnificat",
+      "shape": "noticing + extension + felt-affection",
+      "bubbles": [
+        {
+          "id": "00.14.theo.1",
+          "speaker": "theo",
+          "placement_hint": "after_reading_start",
+          "lines": ["They were both carrying something holy."]
+        },
+        {
+          "id": "00.14.christopher.1",
+          "speaker": "christopher",
+          "placement_hint": "middle_passage",
+          "lines": [
+            "And they knew it.",
+            "Even the baby knew it."
+          ]
+        },
+        {
+          "id": "00.14.theo.2",
+          "speaker": "theo",
+          "placement_hint": "after_reading_end",
+          "lines": ["Two weeks doesn't feel long enough."]
+        }
+      ]
+    },
+    {
+      "session_id": "00.15",
+      "session_title": "The Dormition of the Theotokos — She Did Not Die Like Others Die",
+      "gospel_reference": "John 2:1-11 — The Wedding at Cana",
+      "shape": "I-don't-get-this-one + exact theology + pattern-recognition",
+      "spot_check": true,
+      "bubbles": [
+        {
+          "id": "00.15.theo.1",
+          "speaker": "theo",
+          "placement_hint": "after_reading_start",
+          "lines": [
+            "Wait.",
+            "She didn't die?"
+          ]
+        },
+        {
+          "id": "00.15.christopher.1",
+          "speaker": "christopher",
+          "placement_hint": "middle_passage",
+          "lines": [
+            "Not the way we mean it.",
+            "She fell asleep.",
+            "And He came for her."
+          ]
+        },
+        {
+          "id": "00.15.theo.2",
+          "speaker": "theo",
+          "placement_hint": "after_reading_end",
+          "lines": ["The way she came for Him at the wedding."]
+        }
+      ]
+    }
+  ]
+}

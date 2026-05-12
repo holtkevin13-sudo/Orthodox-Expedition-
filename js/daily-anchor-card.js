@@ -467,4 +467,5 @@ const DailyAnchorCard = (() => {
   };
 })();
 
+if (typeof window !== 'undefined') window.DailyAnchorCard = DailyAnchorCard;
 if (typeof module !== 'undefined' && module.exports) module.exports = DailyAnchorCard;

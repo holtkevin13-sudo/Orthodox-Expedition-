@@ -1387,6 +1387,74 @@ body::before{
   font-family:'Cinzel Decorative',serif;font-weight:700;
   font-size:0.95rem;color:var(--gold-light);
 }
+
+/* ── BEFORE LITURGY PANEL (Sunday-only — Chat 14)
+   Pre-communion prayer entry. Markup is statically hidden via the
+   [hidden] attribute; an inline IIFE further down checks
+   WeekUtils.dayOfWeekET() === 0 (Sun in America/New_York) and
+   flips the attr off on Sundays. Structurally mirrors games.html
+   .game-card (anchor + icon + info + gold "›"). Parchment-tinted
+   gradient with 1.5px gold border at 0.22-alpha. */
+.hp-before-liturgy{
+  display:flex;align-items:flex-start;gap:0.875rem;
+  background:linear-gradient(135deg,
+    rgba(244,232,193,0.04) 0%,
+    rgba(201,146,42,0.045) 100%);
+  border:1.5px solid rgba(201,146,42,0.22);
+  border-radius:12px;
+  padding:0.95rem 1rem;
+  margin:1rem 0;
+  text-decoration:none;color:inherit;
+  transition:background 0.2s,border-color 0.2s,transform 0.15s;
+  cursor:pointer;
+  min-height:96px;
+  box-shadow:
+    inset 0 1px 0 rgba(240,201,110,0.10),
+    0 1px 2px rgba(0,0,0,0.20);
+}
+.hp-before-liturgy[hidden]{display:none !important;}
+.hp-before-liturgy:hover{
+  background:linear-gradient(135deg,
+    rgba(244,232,193,0.06) 0%,
+    rgba(201,146,42,0.065) 100%);
+  border-color:rgba(240,201,110,0.42);
+}
+.hp-before-liturgy:active{
+  background:linear-gradient(135deg,
+    rgba(244,232,193,0.075) 0%,
+    rgba(201,146,42,0.08) 100%);
+  border-color:rgba(240,201,110,0.65);
+  transform:scale(0.985);
+}
+.hp-bl-icon{
+  font-size:1.4rem;flex-shrink:0;
+  width:44px;height:44px;
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(201,146,42,0.08);
+  border:1px solid rgba(201,146,42,0.22);
+  border-radius:10px;
+  color:var(--gold-light);
+  margin-top:0.05rem;
+}
+.hp-bl-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:0.32rem;}
+.hp-bl-eyebrow{
+  font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.18em;
+  color:rgba(240,201,110,0.65);text-transform:uppercase;
+}
+.hp-bl-title{
+  font-family:'Cinzel',serif;font-size:0.82rem;font-weight:600;
+  color:var(--gold-light);line-height:1.3;
+  letter-spacing:0.04em;text-transform:uppercase;
+}
+.hp-bl-sub{
+  font-family:'Crimson Text',serif;font-size:0.82rem;
+  color:rgba(244,232,193,0.78);font-style:italic;
+  line-height:1.4;
+}
+.hp-bl-arrow{
+  color:rgba(240,201,110,0.55);font-size:1.1rem;flex-shrink:0;
+  align-self:center;
+}
 </style>
 </head>
 <body>
@@ -1560,6 +1628,22 @@ body::before{
          .mount() fills this. Read-only from liturgical_calendar;
          no new schema. -->
     <div id="hp-liturgical-calendar"></div>
+
+    <!-- BEFORE LITURGY (Sunday-only — Chat 14)
+         Pre-communion prayer entry. Renders only when ET weekday
+         is Sunday. Inline IIFE in the script section flips the
+         [hidden] attr off on Sun=0 from WeekUtils.dayOfWeekET().
+         Defensive fallback: if WeekUtils is missing the panel
+         stays hidden (silent absence). -->
+    <a class="hp-before-liturgy" id="hp-before-liturgy" href="eucharist-prayers.html" hidden>
+      <span class="hp-bl-icon">☩</span>
+      <div class="hp-bl-info">
+        <div class="hp-bl-eyebrow">✦ Before Liturgy</div>
+        <div class="hp-bl-title">Pre-Communion Prayers</div>
+        <div class="hp-bl-sub">Read together before the Divine Liturgy.</div>
+      </div>
+      <span class="hp-bl-arrow">›</span>
+    </a>
 
     <!-- HOME DASHBOARD MOUNT (Dispatch 4b)
          Renders the new home status surfaces: Today's Progress
@@ -1853,6 +1937,20 @@ async function loadData(userId){
   }
   document.addEventListener('visibilitychange', maybeRefresh);
   window.addEventListener('pageshow', maybeRefresh);
+})();
+
+// ── BEFORE LITURGY (Sunday-only — Chat 14) ────────────────────
+// Flip the [hidden] attr off on Sundays so the pre-communion
+// prayers entry panel surfaces between the liturgical calendar
+// and the home dashboard. WeekUtils.dayOfWeekET() returns 0=Sun
+// in the family's America/New_York calendar. Defensive fallback:
+// if WeekUtils is missing the panel stays hidden (silent — no
+// console warning needed, the absence is graceful).
+(function maybeShowBeforeLiturgy(){
+  if (!window.WeekUtils || typeof window.WeekUtils.dayOfWeekET !== 'function') return;
+  if (window.WeekUtils.dayOfWeekET(new Date()) !== 0) return;
+  const el = document.getElementById('hp-before-liturgy');
+  if (el) el.hidden = false;
 })();
 
 // ── RENDER ────────────────────────────────────────────────────

@@ -79,7 +79,7 @@ body::before{
 /* ─── HEADER (shared) ──────────────────────────────────────── */
 .p-header{
   text-align:center;
-  padding:1.5rem 0 1.75rem;
+  padding:2rem 0 1.5rem;
   position:relative;
 }
 .p-eyebrow{
@@ -130,12 +130,15 @@ body::before{
 }
 .p-back .arrow{margin-right:0.4rem;font-size:0.95rem;line-height:1;}
 
-/* ─── LANDING (Screen 1) ──────────────────────────────────── */
+/* ─── LANDING ──────────────────────────────────────────────── */
 .landing-cards{
-  display:flex;
-  flex-direction:column;
+  display:grid;
+  grid-template-columns:1fr;
   gap:1rem;
   margin-top:0.5rem;
+}
+@media (min-width:640px){
+  .landing-cards{grid-template-columns:1fr 1fr;}
 }
 .rule-card{
   display:block;
@@ -180,6 +183,17 @@ body::before{
   color:var(--text-secondary);
   margin-bottom:1rem;
   line-height:1.4;
+  min-height:1.4em;
+}
+.rule-card .rc-meta .rc-pip{
+  display:inline-block;
+  margin-left:0.4rem;
+  color:var(--gold-light);
+  font-style:normal;
+  font-family:'Cinzel',serif;
+  font-size:0.7rem;
+  letter-spacing:0.14em;
+  text-transform:uppercase;
 }
 .rule-card .rc-cta{
   display:inline-flex;
@@ -198,16 +212,38 @@ body::before{
   box-shadow:0 4px 16px rgba(255,215,0,0.18);
 }
 
-.rule-card.browse{
-  background:linear-gradient(160deg,rgba(244,232,193,0.07),rgba(232,213,160,0.03));
-  border-color:rgba(201,146,42,0.25);
+/* Tertiary affordances row — Edit my routine / Prayer Book */
+.tertiary-actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:0.5rem 1.5rem;
+  justify-content:center;
+  align-items:center;
+  margin-top:1.5rem;
+  padding:0.5rem 0;
 }
-.rule-card.browse .rc-cta{
+.tertiary-link{
   background:transparent;
-  color:var(--gold-light);
-  border:1.5px solid rgba(201,146,42,0.5);
-  box-shadow:none;
+  border:none;
+  font-family:'Cinzel',serif;
+  font-size:0.7rem;
+  letter-spacing:0.2em;
+  color:var(--text-eyebrow);
+  text-transform:uppercase;
+  cursor:pointer;
+  padding:0.6rem 0.4rem;
+  min-height:40px;
+  position:relative;
+  transition:color 0.2s;
 }
+.tertiary-link:hover,.tertiary-link:focus-visible{color:var(--gold-light);}
+.tertiary-link::before{
+  content:'\2726\FE0E';
+  margin-right:0.5rem;
+  color:rgba(201,146,42,0.55);
+  font-variant-emoji:text;
+}
+.tertiary-link:hover::before,.tertiary-link:focus-visible::before{color:var(--gold-light);}
 
 /* This-week summary */
 .week-summary{
@@ -237,164 +273,222 @@ body::before{
   margin:0 0.35rem;
 }
 
-/* ─── ROUTINE FLOW (Screen 2) ───────────────────────────── */
-.routine-meta{
-  text-align:center;
-  font-family:'Cinzel',serif;
-  font-size:0.65rem;
-  letter-spacing:0.32em;
-  color:var(--text-eyebrow-2);
-  text-transform:uppercase;
-  margin:0.5rem 0 0.4rem;
-}
-.routine-progress{
-  text-align:center;
-  font-family:'Cinzel',serif;
-  font-size:0.7rem;
-  letter-spacing:0.18em;
-  color:var(--text-tertiary);
-  text-transform:uppercase;
-  margin-bottom:1.5rem;
-}
-
-.prayer-pane{
-  background:linear-gradient(180deg,rgba(244,232,193,0.05),rgba(244,232,193,0.02));
-  border:1px solid rgba(201,146,42,0.22);
-  border-radius:12px;
-  padding:2rem 1.4rem 1.5rem;
-  margin:0 auto 2rem;
-  max-width:620px;
-}
-.prayer-pane .pp-name{
-  font-family:'Cinzel Decorative',serif;
-  font-size:clamp(1.5rem,4.6vw,1.85rem);
-  color:var(--gold-light);
-  text-align:center;
-  font-weight:400;
-  margin-bottom:1.5rem;
-  line-height:1.2;
-  text-shadow:0 0 18px rgba(201,146,42,0.25);
-}
-.prayer-pane .pp-rule{
-  width:60%;
-  height:1px;
-  border:0;
-  background:linear-gradient(90deg,transparent,rgba(201,146,42,0.55),transparent);
-  margin:0 auto 1.25rem;
-}
-.prayer-pane .pp-text{
-  font-family:'Crimson Text',serif;
-  font-size:1.1rem;
-  line-height:1.75;
-  color:var(--text-primary);
-  text-align:left;
-}
-.prayer-pane .pp-text p{margin-bottom:1.05rem;}
-.prayer-pane .pp-text p:last-child{margin-bottom:0;}
-
-.routine-actions{
-  text-align:center;
-  margin-top:1.25rem;
-}
-.routine-next-btn{
-  padding:1rem 2.5rem;
-  min-height:56px;
-  background:linear-gradient(135deg,var(--gold),var(--gold-bright));
-  border:none;
-  border-radius:14px;
-  font-family:'Cinzel',serif;
-  font-size:0.85rem;
-  letter-spacing:0.18em;
-  color:var(--bg);
-  font-weight:700;
-  cursor:pointer;
-  text-transform:uppercase;
-  box-shadow:0 4px 20px rgba(255,215,0,0.25);
-  max-width:340px;
-  width:100%;
-  font-variant-emoji:text;
-}
-.routine-next-btn:active{transform:scale(0.97);}
-.routine-next-btn .glyph{margin-right:0.5rem;}
-
-/* Routine completion toast (parchment notice mirroring Repair J banner) */
-.routine-toast{
-  position:fixed;
-  top:50%;left:50%;
-  transform:translate(-50%,-50%);
-  z-index:900;
-  max-width:380px;width:88%;
-  padding:1.25rem 1.5rem;
-  background:linear-gradient(160deg,rgba(244,232,193,0.20),rgba(232,213,160,0.10));
-  border:1.5px solid rgba(201,146,42,0.55);
-  border-radius:14px;
-  text-align:center;
-  backdrop-filter:blur(18px);
-  -webkit-backdrop-filter:blur(18px);
-  box-shadow:0 14px 40px rgba(0,0,0,0.5),inset 0 0 0 1px rgba(244,232,193,0.06);
-  opacity:0;
-  pointer-events:none;
-  animation:toast-pop 1.5s ease-out forwards;
-}
-.routine-toast .rt-marks{
-  font-family:'Cinzel',serif;
-  color:var(--gold-light);
-  letter-spacing:0.4em;font-size:0.85rem;
-  margin-bottom:0.4rem;
-  font-variant-emoji:text;
-}
-.routine-toast .rt-text{
-  font-family:'Cinzel Decorative',serif;
-  color:var(--gold-light);
-  font-size:1.15rem;
-  line-height:1.25;
-  font-weight:400;
-}
-@keyframes toast-pop{
-  0%  {opacity:0;transform:translate(-50%,-50%) scale(0.92);}
-  18% {opacity:1;transform:translate(-50%,-50%) scale(1);}
-  82% {opacity:1;transform:translate(-50%,-50%) scale(1);}
-  100%{opacity:0;transform:translate(-50%,-50%) scale(1);}
-}
-@media (prefers-reduced-motion: reduce){
-  .routine-toast{animation:toast-static 1.5s linear forwards;}
-  @keyframes toast-static{0%,100%{opacity:0;}10%,90%{opacity:1;}}
-}
-
-/* ─── BROWSE LIBRARY (Screen 3) ─────────────────────────── */
-.filter-row{
+/* ─── EDIT MODE ────────────────────────────────────────────── */
+.edit-slot-toggle{
   display:flex;
-  flex-wrap:wrap;
-  gap:0.5rem;
   justify-content:center;
+  gap:0.5rem;
   margin-bottom:1.75rem;
 }
-.filter-chip{
-  padding:0.45rem 0.95rem;
-  min-height:36px;
+.edit-slot-tab{
+  padding:0.55rem 1.4rem;
+  min-height:42px;
   background:transparent;
   border:1px solid rgba(201,146,42,0.30);
-  border-radius:20px;
+  border-radius:22px;
   font-family:'Cinzel',serif;
-  font-size:0.66rem;
-  letter-spacing:0.16em;
+  font-size:0.72rem;
+  letter-spacing:0.2em;
   color:var(--text-eyebrow-2);
   text-transform:uppercase;
   cursor:pointer;
   transition:all 0.2s;
 }
-.filter-chip:hover,.filter-chip:focus-visible{
+.edit-slot-tab:hover,.edit-slot-tab:focus-visible{
   border-color:rgba(240,201,110,0.7);
   color:var(--gold-light);
 }
-.filter-chip.active{
+.edit-slot-tab.active{
   background:rgba(201,146,42,0.18);
   border-color:rgba(240,201,110,0.85);
   color:var(--gold-light);
   font-weight:600;
 }
 
+.edit-list{
+  list-style:none;
+  margin:0 0 1.5rem;
+  padding:0;
+}
+.edit-row{
+  display:flex;
+  align-items:center;
+  gap:0.75rem;
+  padding:0.85rem 1rem;
+  background:linear-gradient(160deg,rgba(244,232,193,0.07),rgba(232,213,160,0.03));
+  border:1px solid rgba(201,146,42,0.22);
+  border-radius:10px;
+  margin-bottom:0.55rem;
+}
+.edit-row-pos{
+  font-family:'Cinzel',serif;
+  font-size:0.78rem;
+  letter-spacing:0.06em;
+  color:var(--text-eyebrow);
+  min-width:1.4rem;
+  text-align:center;
+  font-variant-numeric:tabular-nums;
+}
+.edit-row-icon{
+  font-size:1rem;
+  color:var(--gold-light);
+  font-variant-emoji:text;
+}
+.edit-row-name{
+  flex:1;
+  min-width:0;
+  font-family:'Cinzel',serif;
+  font-size:0.82rem;
+  letter-spacing:0.08em;
+  color:var(--text-primary);
+  text-transform:uppercase;
+  font-weight:600;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.edit-row-actions{
+  display:flex;
+  gap:0.3rem;
+}
+.edit-row-btn{
+  width:38px;
+  height:38px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  background:transparent;
+  border:1px solid rgba(201,146,42,0.35);
+  border-radius:8px;
+  color:var(--text-eyebrow);
+  font-family:'Cinzel',serif;
+  font-size:0.85rem;
+  cursor:pointer;
+  transition:all 0.2s;
+  font-variant-emoji:text;
+}
+.edit-row-btn:hover:not(:disabled),
+.edit-row-btn:focus-visible:not(:disabled){
+  border-color:rgba(240,201,110,0.7);
+  color:var(--gold-light);
+}
+.edit-row-btn:disabled{opacity:0.32;cursor:not-allowed;}
+.edit-row-btn.danger{color:rgba(252,165,165,0.85);border-color:rgba(252,165,165,0.28);}
+.edit-row-btn.danger:hover{border-color:rgba(252,165,165,0.65);color:rgba(252,165,165,1);}
+
+.edit-add-row{
+  display:block;
+  width:100%;
+  padding:1rem 1.2rem;
+  min-height:54px;
+  background:transparent;
+  border:1.5px dashed rgba(201,146,42,0.40);
+  border-radius:12px;
+  font-family:'Cinzel',serif;
+  font-size:0.78rem;
+  letter-spacing:0.18em;
+  color:var(--gold-light);
+  text-transform:uppercase;
+  font-weight:600;
+  cursor:pointer;
+  transition:all 0.2s;
+}
+.edit-add-row:hover,.edit-add-row:focus-visible{
+  border-color:rgba(240,201,110,0.85);
+  background:rgba(201,146,42,0.08);
+}
+
+.edit-empty{
+  text-align:center;
+  padding:2rem 1rem;
+  font-family:'Crimson Text',serif;
+  font-style:italic;
+  color:var(--text-secondary);
+  font-size:0.95rem;
+}
+
+/* ─── PRAYER PICKER MODAL ──────────────────────────────────── */
+.pk-overlay{
+  position:fixed;inset:0;z-index:9998;
+  background:rgba(11,14,22,0.96);
+  backdrop-filter:blur(2px);
+  -webkit-backdrop-filter:blur(2px);
+  display:flex;align-items:flex-start;justify-content:center;
+  padding:env(safe-area-inset-top,0) 0 env(safe-area-inset-bottom,0);
+  opacity:0;
+  transition:opacity 280ms ease-out;
+  -webkit-tap-highlight-color:transparent;
+  color:var(--text-primary);
+  overflow:hidden;
+}
+.pk-overlay.pk-in{opacity:1;}
+.pk-overlay.pk-out{opacity:0;}
+.pk-card{
+  width:100%;
+  max-width:560px;
+  max-height:100vh;
+  height:100%;
+  display:flex;
+  flex-direction:column;
+  background:
+    linear-gradient(160deg,rgba(244,232,193,0.10),rgba(232,213,160,0.04)),
+    var(--bg);
+  border-left:1px solid rgba(201,146,42,0.18);
+  border-right:1px solid rgba(201,146,42,0.18);
+  box-shadow:0 14px 40px rgba(0,0,0,0.5);
+}
+@media (min-width:600px){
+  .pk-card{
+    height:auto;
+    max-height:88vh;
+    margin-top:5vh;
+    border-radius:14px;
+    border:1.5px solid rgba(201,146,42,0.45);
+  }
+}
+.pk-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:1.1rem 1.2rem;
+  border-bottom:1px solid rgba(201,146,42,0.18);
+  flex-shrink:0;
+}
+.pk-title{
+  font-family:'Cinzel',serif;
+  font-size:0.78rem;
+  letter-spacing:0.28em;
+  color:var(--gold-light);
+  text-transform:uppercase;
+  font-weight:600;
+}
+.pk-close{
+  width:42px;
+  height:42px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  background:transparent;
+  border:1px solid rgba(201,146,42,0.30);
+  border-radius:50%;
+  color:var(--text-eyebrow);
+  font-size:1.1rem;
+  cursor:pointer;
+  transition:all 0.2s;
+}
+.pk-close:hover,.pk-close:focus-visible{
+  color:var(--gold-light);
+  border-color:rgba(240,201,110,0.65);
+}
+.pk-scroll{
+  flex:1;
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+  padding:1rem 1.2rem 2rem;
+}
+
 .cat-section{margin-bottom:1.75rem;}
+.cat-section:last-child{margin-bottom:0;}
 .cat-header{
   font-family:'Cinzel',serif;
   font-size:0.7rem;
@@ -402,10 +496,11 @@ body::before{
   color:var(--text-eyebrow);
   text-transform:uppercase;
   text-align:center;
-  margin:1.25rem 0 1rem;
+  margin:1rem 0 0.85rem;
   padding-bottom:0.4rem;
   border-bottom:1px solid rgba(201,146,42,0.18);
 }
+.cat-section:first-child .cat-header{margin-top:0;}
 
 .prayer-row{
   display:block;
@@ -427,12 +522,10 @@ body::before{
 }
 .prayer-row.muted{opacity:0.55;}
 .prayer-row.muted:hover{opacity:0.85;}
-.prayer-row.in-routine-morning,
-.prayer-row.in-routine-evening{
+.prayer-row.in-routine{
   border-color:rgba(240,201,110,0.55);
   background:linear-gradient(160deg,rgba(244,232,193,0.12),rgba(232,213,160,0.05));
 }
-
 .prayer-row .pr-row-top{
   display:flex;
   align-items:center;
@@ -458,16 +551,12 @@ body::before{
   font-family:'Cinzel',serif;
   font-size:0.55rem;
   letter-spacing:0.2em;
-  color:var(--text-eyebrow-2);
+  color:var(--gold-light);
   text-transform:uppercase;
   padding:0.18rem 0.55rem;
-  border:1px solid rgba(201,146,42,0.30);
+  border:1px solid rgba(240,201,110,0.5);
   border-radius:10px;
   white-space:nowrap;
-}
-.prayer-row .pr-row-tag.morning,
-.prayer-row .pr-row-tag.evening{
-  color:var(--gold-light);border-color:rgba(240,201,110,0.5);
 }
 .prayer-row .pr-row-preview{
   margin-top:0.4rem;
@@ -481,8 +570,6 @@ body::before{
   -webkit-box-orient:vertical;
   overflow:hidden;
 }
-
-/* Expanded state */
 .prayer-row.expanded{
   background:linear-gradient(180deg,rgba(244,232,193,0.10),rgba(232,213,160,0.04));
   border-color:rgba(240,201,110,0.65);
@@ -511,13 +598,13 @@ body::before{
   margin-top:1rem;
 }
 .pr-action-btn{
-  padding:0.45rem 0.9rem;
-  min-height:38px;
+  padding:0.5rem 0.95rem;
+  min-height:42px;
   background:transparent;
   border:1px solid rgba(201,146,42,0.40);
   border-radius:8px;
   font-family:'Cinzel',serif;
-  font-size:0.6rem;
+  font-size:0.62rem;
   letter-spacing:0.18em;
   color:var(--text-eyebrow);
   text-transform:uppercase;
@@ -529,8 +616,6 @@ body::before{
   border-color:rgba(240,201,110,0.85);
   color:var(--gold-light);
 }
-.pr-action-btn.danger{color:rgba(252,165,165,0.95);border-color:rgba(252,165,165,0.30);}
-.pr-action-btn.danger:hover{border-color:rgba(252,165,165,0.65);}
 .pr-action-btn.primary{
   background:linear-gradient(135deg,rgba(201,146,42,0.85),rgba(255,215,0,0.85));
   color:var(--bg);
@@ -538,6 +623,12 @@ body::before{
   font-weight:700;
 }
 .pr-action-btn.primary:hover{filter:brightness(1.05);}
+.pr-action-btn.added{
+  color:var(--gold-light);
+  border-color:rgba(240,201,110,0.55);
+  background:rgba(201,146,42,0.10);
+  cursor:default;
+}
 
 .muted-explainer{
   font-family:'Cinzel',serif;
@@ -547,6 +638,177 @@ body::before{
   text-transform:uppercase;
   margin-bottom:0.55rem;
   font-style:italic;
+}
+
+/* ─── PRAY MODE OVERLAY (Dispatch 11) ──────────────────────── */
+/*
+   Mirrors the Sunday Celebration overlay pattern (js/sunday-celebration.js
+   _injectCSS) — full-viewport reverent surface, body scroll lock, fade in/
+   out timing, prefers-reduced-motion respected. Author-clone (not shared
+   module) per Q1 ruling: zero risk to launch-week Sunday Celebration code.
+*/
+.pm-overlay{
+  position:fixed;inset:0;z-index:9999;
+  background:rgba(11,14,22,0.978);
+  background-image:
+    radial-gradient(ellipse at 50% 0%,rgba(107,26,26,0.35) 0%,transparent 55%),
+    radial-gradient(ellipse at 100% 100%,rgba(44,22,84,0.22) 0%,transparent 50%);
+  backdrop-filter:blur(2px);
+  -webkit-backdrop-filter:blur(2px);
+  display:flex;flex-direction:column;
+  padding:env(safe-area-inset-top,0) 0 env(safe-area-inset-bottom,0);
+  opacity:0;
+  transition:opacity 600ms ease-out;
+  -webkit-tap-highlight-color:transparent;
+  font-family:'Crimson Text','Times New Roman',serif;
+  color:#F5ECD7;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+}
+.pm-overlay.pm-in{opacity:1;}
+.pm-overlay.pm-out{opacity:0;transition-duration:280ms;}
+
+.pm-topbar{
+  display:flex;
+  justify-content:flex-end;
+  padding:0.85rem 1.1rem;
+  flex-shrink:0;
+}
+.pm-close{
+  width:42px;
+  height:42px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  background:transparent;
+  border:1px solid rgba(201,146,42,0.32);
+  border-radius:50%;
+  color:rgba(244,232,193,0.75);
+  font-size:1.1rem;
+  cursor:pointer;
+  transition:all 0.2s;
+}
+.pm-close:hover,.pm-close:focus-visible{
+  color:var(--gold-light);
+  border-color:rgba(240,201,110,0.75);
+}
+
+.pm-scroll{
+  flex:1;
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+  padding:1rem 1.25rem 1.5rem;
+}
+.pm-content{
+  max-width:560px;
+  margin:0 auto;
+  text-align:center;
+}
+.pm-eyebrow{
+  font-family:'Cinzel',serif;
+  font-size:0.7rem;
+  letter-spacing:0.4em;
+  color:rgba(240,201,110,0.78);
+  text-transform:uppercase;
+  margin-bottom:1.75rem;
+  font-variant-emoji:text;
+}
+
+/* The titled section header between prayers — locked per Q2 ruling. */
+.pm-prayer-title{
+  font-family:'Cinzel',serif;
+  font-size:0.85rem;
+  font-weight:600;
+  letter-spacing:0.18em;
+  text-transform:uppercase;
+  color:rgba(201,146,42,0.55);          /* muted gold per Q2 */
+  text-align:center;
+  margin:2.2rem 0 0.9rem;
+  padding-bottom:0.45rem;
+  border-bottom:1px solid rgba(201,146,42,0.18);
+}
+.pm-content > .pm-prayer-title:first-of-type{margin-top:0;}
+
+/* Prayer body — generous reading rhythm. */
+.pm-prayer-body{
+  font-family:'Crimson Text',serif;
+  font-size:1.05rem;
+  line-height:1.7;
+  color:rgba(244,232,193,0.92);
+  text-align:center;
+}
+.pm-prayer-body p{margin-bottom:1rem;}
+.pm-prayer-body p:last-child{margin-bottom:0;}
+
+/* Bottom action bar. */
+.pm-actions{
+  flex-shrink:0;
+  padding:1rem 1.25rem calc(1.1rem + env(safe-area-inset-bottom,0));
+  text-align:center;
+  background:linear-gradient(to top,rgba(11,14,22,0.92),rgba(11,14,22,0));
+}
+.pm-amen-btn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding:1.05rem 2.6rem;
+  min-height:56px;
+  max-width:380px;
+  width:100%;
+  background:linear-gradient(135deg,var(--gold),var(--gold-bright));
+  border:none;
+  border-radius:14px;
+  font-family:'Cinzel',serif;
+  font-size:0.88rem;
+  letter-spacing:0.22em;
+  color:var(--bg);
+  font-weight:700;
+  cursor:pointer;
+  text-transform:uppercase;
+  box-shadow:0 4px 20px rgba(255,215,0,0.25);
+  transition:transform 0.15s,filter 0.15s;
+  font-variant-emoji:text;
+}
+.pm-amen-btn:active{transform:scale(0.97);}
+.pm-amen-btn:disabled{opacity:0.7;cursor:default;}
+
+/* Reverent "Glory to God." confirmation — replaces the post-Amen state.
+   Per Q5 ruling: styled as a reverent moment, not a system toast. */
+.pm-glory{
+  position:absolute;
+  left:0;right:0;
+  bottom:0;top:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex-direction:column;
+  gap:0.6rem;
+  padding:1rem;
+  text-align:center;
+  pointer-events:none;
+  opacity:0;
+  transition:opacity 700ms ease-out;
+}
+.pm-glory.pm-glory-in{opacity:1;}
+.pm-glory-mark{
+  font-family:'Cinzel',serif;
+  font-size:0.78rem;
+  letter-spacing:0.5em;
+  color:rgba(240,201,110,0.75);
+  font-variant-emoji:text;
+}
+.pm-glory-text{
+  font-family:'Cinzel Decorative',serif;
+  font-size:1.4rem;
+  line-height:1.25;
+  color:var(--gold-light);
+  text-shadow:0 0 22px rgba(201,146,42,0.35);
+  font-weight:400;
+}
+
+@media (prefers-reduced-motion: reduce){
+  .pm-overlay{transition:none;}
+  .pm-glory{transition:none;}
 }
 
 /* ─── BOTTOM NAV ────────────────────────────────────────── */
@@ -641,6 +903,30 @@ body::before{
 <script>
 'use strict';
 
+/*
+ * ═══════════════════════════════════════════════════════════════
+ *   prayers.html — DISPATCH 11 REBUILD (May 11, 2026)
+ *
+ *   Two MODES on one route:
+ *     PRAY MODE  — full-screen overlay, continuous prayer scroll,
+ *                  "Amen — I prayed" self-attestation.
+ *     EDIT MODE  — reorder + add/remove on the same surface; picker
+ *                  modal exposes the 20-prayer pool (read-only in
+ *                  landing context, with [+ Add] in edit context).
+ *
+ *   Landing carries two large CTAs (Pray Morning / Pray Evening)
+ *   plus tertiary text affordances "Edit my routine" and
+ *   "Prayer Book". No more Browse Prayers tile.
+ *
+ *   Canonical write paths preserved verbatim:
+ *     recordRoutineCompletion(kind, missionKey) — mission_completions +
+ *                                                  prayer_streak_weekly
+ *     persistRoutine(kind, newIds)              — prayer_routines
+ *
+ *   See CHAT_11_COMPLETION_SUMMARY.md for the full change record.
+ * ═══════════════════════════════════════════════════════════════
+ */
+
 // ──────────────────────────────────────────────────────────────────
 // CONFIG
 // ──────────────────────────────────────────────────────────────────
@@ -655,9 +941,9 @@ const MISSION_KEY_MORNING = 'daily_morning_prayer';
 const MISSION_KEY_EVENING = 'daily_evening_prayer';
 
 // Liturgical season heuristics — for launch we statically mute three prayers
-// based on calendar windows. Per dispatch: "do not auto-detect dynamically."
-// A future content lane should source these from the liturgical_calendar
-// table; this is a launch-acceptable simplification.
+// based on calendar windows. Per Dispatch 11 inheritance: "do not auto-detect
+// dynamically." A future content lane should source these from the
+// liturgical_calendar table; this is a launch-acceptable simplification.
 const PASCHA_WINDOW_START = '2026-04-12';   // Pascha 2026
 const PASCHA_WINDOW_END   = '2026-05-31';   // through Pentecost
 const TODAY_ISO = (function(){
@@ -678,17 +964,6 @@ const CATEGORY_LABELS = {
   lent:     'Great Lent',
 };
 const CATEGORY_ORDER = ['anytime','morning','evening','patron','special','lent'];
-
-// Filter chips — "All" plus the six categories.
-const FILTER_CHIPS = [
-  { key:'all',     label:'All' },
-  { key:'anytime', label:'Anytime' },
-  { key:'morning', label:'Morning' },
-  { key:'evening', label:'Evening' },
-  { key:'patron',  label:'Patron' },
-  { key:'special', label:'Special' },
-  { key:'lent',    label:'Lent' },
-];
 
 // Per-prayer ornament glyph (each paired with U+FE0E for iOS text variant).
 function iconFor(prayer){
@@ -721,11 +996,8 @@ function iconFor(prayer){
 // STATE
 // ──────────────────────────────────────────────────────────────────
 const state = {
-  view: 'landing',           // 'landing' | 'routine' | 'browse'
-  routineKind: null,         // 'morning' | 'evening' | null
-  routineIndex: 0,
-  browseFilter: 'all',
-  expandedSlug: null,
+  view: 'landing',           // 'landing' | 'edit'
+  editSlot: 'morning',       // 'morning' | 'evening' (which routine is open in edit)
   // data
   profileId: null,
   prayers: [],               // ordered by display_order
@@ -826,22 +1098,31 @@ const state = {
     await refreshTodayCompletions();
   }
 
-  // 7. Apply URL params for backward compat with home.html / missions.html
-  //    links: `?time=morning` / `?time=evening` jumps straight into routine.
+  // 7. URL params — Dispatch 11 routing.
+  //    ?pray=morning|evening  → auto-open Pray Mode for that slot (NEW canonical)
+  //    ?time=morning|evening  → same as ?pray (back-compat for legacy callers
+  //                              like home.html ?time= deep-links; tracked in
+  //                              repo-audit chat for eventual cleanup)
+  //    ?edit=morning|evening  → open Edit Mode pre-tabbed to that slot
+  //    ?view=browse           → open Prayer Book picker (read-only) — back-compat
   const params = new URLSearchParams(window.location.search);
-  const timeParam = params.get('time');
+  const prayParam = params.get('pray') || params.get('time');
+  const editParam = params.get('edit');
   const viewParam = params.get('view');
-  if(timeParam === 'morning' || timeParam === 'evening'){
-    if(state.routines[timeParam]){
-      state.view = 'routine';
-      state.routineKind  = timeParam;
-      state.routineIndex = 0;
-    }
-  } else if(viewParam === 'browse'){
-    state.view = 'browse';
-  }
 
   render();
+
+  if(prayParam === 'morning' || prayParam === 'evening'){
+    if(state.routines[prayParam]){
+      openPrayMode(prayParam);
+    }
+  } else if(editParam === 'morning' || editParam === 'evening'){
+    state.view = 'edit';
+    state.editSlot = editParam;
+    render();
+  } else if(viewParam === 'browse'){
+    openPickerModal({ readOnly:true });
+  }
 })();
 
 // ──────────────────────────────────────────────────────────────────
@@ -852,18 +1133,13 @@ function render(){
   root.innerHTML = '';
   const view = document.createElement('div');
   view.className = 'view view-' + state.view;
-  if(state.view === 'landing'){
-    view.appendChild(renderLanding());
-    showBottomNav(true);
-  } else if(state.view === 'routine'){
-    view.appendChild(renderRoutine());
-    showBottomNav(false);
+  if(state.view === 'edit'){
+    view.appendChild(renderEdit());
   } else {
-    view.appendChild(renderBrowse());
-    showBottomNav(false);
+    view.appendChild(renderLanding());
   }
   root.appendChild(view);
-  // Reset scroll on view change for predictable read position.
+  showBottomNav(true);
   window.scrollTo(0, 0);
 }
 
@@ -888,7 +1164,7 @@ function renderLanding(){
     '<h1 class="p-title"><span class="glyph">&#x2726;&#xFE0E;</span>Prayer<span class="glyph">&#x2726;&#xFE0E;</span></h1>';
   wrap.appendChild(header);
 
-  // Three rule cards
+  // Two primary CTA cards — Morning Rule, Evening Rule
   const cards = document.createElement('div');
   cards.className = 'landing-cards';
 
@@ -898,64 +1174,48 @@ function renderLanding(){
     ? state.routines.evening.prayer_ids.length : 0;
 
   cards.appendChild(makeRuleCard({
+    slot:'morning',
     icon:'\uD83C\uDF05',                    // 🌅
     name:'Morning Rule',
-    meta: morningCount === 0
-      ? 'Tap to set up your morning prayers'
-      : (morningCount + ' prayer' + (morningCount===1?'':'s') +
-         (state.todayCompleted.morning ? ' \u00B7 prayed today' : '')),
-    cta: state.todayCompleted.morning ? 'Pray Again' : 'Begin',
-    onClick: function(){
-      if(!state.routines.morning){
-        state.view = 'browse';
-        state.expandedSlug = null;
-        render();
-        return;
-      }
-      state.view = 'routine';
-      state.routineKind = 'morning';
-      state.routineIndex = 0;
-      render();
-    },
+    count: morningCount,
+    completedToday: state.todayCompleted.morning,
   }));
 
   cards.appendChild(makeRuleCard({
+    slot:'evening',
     icon:'\uD83C\uDF19',                    // 🌙
     name:'Evening Rule',
-    meta: eveningCount === 0
-      ? 'Tap to set up your evening prayers'
-      : (eveningCount + ' prayer' + (eveningCount===1?'':'s') +
-         (state.todayCompleted.evening ? ' \u00B7 prayed today' : '')),
-    cta: state.todayCompleted.evening ? 'Pray Again' : 'Begin',
-    onClick: function(){
-      if(!state.routines.evening){
-        state.view = 'browse';
-        state.expandedSlug = null;
-        render();
-        return;
-      }
-      state.view = 'routine';
-      state.routineKind = 'evening';
-      state.routineIndex = 0;
-      render();
-    },
-  }));
-
-  cards.appendChild(makeRuleCard({
-    icon:'\uD83D\uDCD6',                    // 📖
-    name:'Browse Prayers',
-    meta:'The full prayer book \u2014 and customize your Rules',
-    cta:'Open',
-    extraClass:'browse',
-    onClick: function(){
-      state.view = 'browse';
-      state.expandedSlug = null;
-      state.browseFilter = 'all';
-      render();
-    },
+    count: eveningCount,
+    completedToday: state.todayCompleted.evening,
   }));
 
   wrap.appendChild(cards);
+
+  // Tertiary affordances — Edit my routine / Prayer Book
+  const tertiary = document.createElement('div');
+  tertiary.className = 'tertiary-actions';
+
+  const editBtn = document.createElement('button');
+  editBtn.type = 'button';
+  editBtn.className = 'tertiary-link';
+  editBtn.textContent = 'Edit my routine';
+  editBtn.addEventListener('click', function(){
+    state.view = 'edit';
+    state.editSlot = state.todayCompleted.morning && !state.todayCompleted.evening ? 'evening' : 'morning';
+    render();
+  });
+  tertiary.appendChild(editBtn);
+
+  const bookBtn = document.createElement('button');
+  bookBtn.type = 'button';
+  bookBtn.className = 'tertiary-link';
+  bookBtn.textContent = 'Prayer Book';
+  bookBtn.addEventListener('click', function(){
+    openPickerModal({ readOnly:true });
+  });
+  tertiary.appendChild(bookBtn);
+
+  wrap.appendChild(tertiary);
 
   // This-week summary
   if(state.profileId){
@@ -983,92 +1243,104 @@ function renderLanding(){
 }
 
 function makeRuleCard(opts){
+  const empty = opts.count === 0;
+  const ctaLabel = empty
+    ? 'Set Up'
+    : (opts.completedToday ? 'Pray again' : ('Pray ' + opts.slot.charAt(0).toUpperCase() + opts.slot.slice(1)));
+  const meta = empty
+    ? 'Tap to set up your ' + opts.slot + ' prayers'
+    : opts.count + ' prayer' + (opts.count===1?'':'s') +
+      (opts.completedToday ? '<span class="rc-pip">&#x2713; prayed today</span>' : '');
+
   const btn = document.createElement('button');
   btn.type = 'button';
-  btn.className = 'rule-card' + (opts.extraClass ? ' ' + opts.extraClass : '');
+  btn.className = 'rule-card';
   btn.innerHTML =
     '<span class="rc-icon glyph">' + opts.icon + '</span>' +
-    '<div class="rc-name">' + opts.name + '</div>' +
-    '<div class="rc-meta">' + opts.meta + '</div>' +
-    '<span class="rc-cta">' + opts.cta + '</span>';
-  btn.addEventListener('click', opts.onClick);
+    '<div class="rc-name">' + escapeHtml(opts.name) + '</div>' +
+    '<div class="rc-meta">' + meta + '</div>' +
+    '<span class="rc-cta">' + escapeHtml(ctaLabel) + '</span>';
+  btn.addEventListener('click', function(){
+    if(empty){
+      // No routine yet — drop the user into edit mode for that slot.
+      state.view = 'edit';
+      state.editSlot = opts.slot;
+      render();
+      return;
+    }
+    openPrayMode(opts.slot);
+  });
   return btn;
 }
 
 // ──────────────────────────────────────────────────────────────────
-// VIEW: ROUTINE FLOW
+// VIEW: EDIT MODE
 // ──────────────────────────────────────────────────────────────────
-function renderRoutine(){
+function renderEdit(){
   const wrap = document.createElement('div');
-  const routine = state.routines[state.routineKind];
 
-  if(!routine || !routine.prayer_ids || routine.prayer_ids.length === 0){
-    // Defensive — Landing bounces to Browse if empty, but render an exit anyway.
-    wrap.innerHTML = '<div class="error-block">No prayers in this Rule yet. Browse the prayer library to add some.</div>';
-    return wrap;
-  }
-
-  const total = routine.prayer_ids.length;
-  const idx = Math.max(0, Math.min(state.routineIndex, total - 1));
-  const prayer = state.prayersById[routine.prayer_ids[idx]];
-
-  if(!prayer){
-    wrap.innerHTML = '<div class="error-block">This prayer could not be loaded.</div>';
-    return wrap;
-  }
-
-  // Header — back arrow exits without marking complete (no half-credit).
+  // Header with back to landing
   const header = document.createElement('div');
   header.className = 'p-header';
   header.innerHTML =
-    '<button class="p-back" id="routine-back" type="button">' +
-    '<span class="arrow">&larr;</span>Exit</button>' +
-    '<div class="routine-meta">' + (state.routineKind === 'morning' ? 'Morning Rule' : 'Evening Rule') + '</div>';
+    '<button class="p-back" id="edit-back" type="button">' +
+    '<span class="arrow">&larr;</span>Back</button>' +
+    '<div class="p-eyebrow">Customize</div>' +
+    '<h1 class="p-title"><span class="glyph">&#x2726;&#xFE0E;</span>Edit my routine<span class="glyph">&#x2726;&#xFE0E;</span></h1>';
   wrap.appendChild(header);
 
-  // Progress
-  const prog = document.createElement('div');
-  prog.className = 'routine-progress';
-  prog.textContent = 'Prayer ' + (idx+1) + ' of ' + total;
-  wrap.appendChild(prog);
-
-  // Prayer pane
-  const pane = document.createElement('div');
-  pane.className = 'prayer-pane';
-  pane.innerHTML =
-    '<div class="pp-name">' + escapeHtml(prayer.name) + '</div>' +
-    '<hr class="pp-rule">' +
-    '<div class="pp-text">' + formatPrayerText(prayer.text) + '</div>';
-  wrap.appendChild(pane);
-
-  // Action button
-  const actions = document.createElement('div');
-  actions.className = 'routine-actions';
-  const isLast = (idx === total - 1);
-  const btn = document.createElement('button');
-  btn.type = 'button';
-  btn.className = 'routine-next-btn';
-  btn.innerHTML = isLast
-    ? '<span class="glyph">&#x2726;&#xFE0E;</span>Done'
-    : 'Next';
-  btn.addEventListener('click', function(){
-    if(isLast){
-      finishRoutine();
-    } else {
-      state.routineIndex = idx + 1;
+  // Slot toggle (Morning / Evening)
+  const toggle = document.createElement('div');
+  toggle.className = 'edit-slot-toggle';
+  [{key:'morning',label:'Morning'},{key:'evening',label:'Evening'}].forEach(function(t){
+    const tab = document.createElement('button');
+    tab.type = 'button';
+    tab.className = 'edit-slot-tab' + (state.editSlot === t.key ? ' active' : '');
+    tab.textContent = t.label;
+    tab.addEventListener('click', function(){
+      if(state.editSlot === t.key) return;
+      state.editSlot = t.key;
       render();
-    }
+    });
+    toggle.appendChild(tab);
   });
-  actions.appendChild(btn);
-  wrap.appendChild(actions);
+  wrap.appendChild(toggle);
 
-  // Wire back button (after insertion into DOM)
+  // Current routine list
+  const routine = state.routines[state.editSlot];
+  const prayerIds = (routine && routine.prayer_ids) ? routine.prayer_ids : [];
+
+  if(prayerIds.length === 0){
+    const empty = document.createElement('div');
+    empty.className = 'edit-empty';
+    empty.textContent = 'No prayers in this routine yet. Tap below to add one.';
+    wrap.appendChild(empty);
+  } else {
+    const list = document.createElement('ul');
+    list.className = 'edit-list';
+    prayerIds.forEach(function(pid, idx){
+      const prayer = state.prayersById[pid];
+      if(!prayer) return;
+      list.appendChild(makeEditRow(prayer, idx, prayerIds.length));
+    });
+    wrap.appendChild(list);
+  }
+
+  // Add-prayer button
+  const addBtn = document.createElement('button');
+  addBtn.type = 'button';
+  addBtn.className = 'edit-add-row';
+  addBtn.innerHTML = '+&nbsp;&nbsp;Add a prayer';
+  addBtn.addEventListener('click', function(){
+    openPickerModal({ readOnly:false, slot:state.editSlot });
+  });
+  wrap.appendChild(addBtn);
+
+  // Wire back button after DOM mount
   setTimeout(function(){
-    const back = document.getElementById('routine-back');
+    const back = document.getElementById('edit-back');
     if(back) back.addEventListener('click', function(){
       state.view = 'landing';
-      state.routineKind = null;
-      state.routineIndex = 0;
       render();
     });
   }, 0);
@@ -1076,48 +1348,407 @@ function renderRoutine(){
   return wrap;
 }
 
-async function finishRoutine(){
-  const kind = state.routineKind;
-  const missionKey = (kind === 'morning') ? MISSION_KEY_MORNING : MISSION_KEY_EVENING;
+function makeEditRow(prayer, idx, total){
+  const row = document.createElement('li');
+  row.className = 'edit-row';
 
-  // Record routine completion (auto-mark the daily prayer mission + bump
-  // streak counter). All writes are best-effort.
-  if(state.profileId){
-    try{
-      await recordRoutineCompletion(kind, missionKey);
-    }catch(e){
-      console.warn('Prayer: routine record failed (non-fatal):', e);
+  const pos = document.createElement('span');
+  pos.className = 'edit-row-pos';
+  pos.textContent = String(idx + 1);
+  row.appendChild(pos);
+
+  const icon = document.createElement('span');
+  icon.className = 'edit-row-icon glyph';
+  icon.textContent = iconFor(prayer);
+  row.appendChild(icon);
+
+  const name = document.createElement('span');
+  name.className = 'edit-row-name';
+  name.textContent = prayer.name;
+  row.appendChild(name);
+
+  const actions = document.createElement('span');
+  actions.className = 'edit-row-actions';
+
+  const upBtn = document.createElement('button');
+  upBtn.type = 'button';
+  upBtn.className = 'edit-row-btn';
+  upBtn.setAttribute('aria-label','Move up');
+  upBtn.innerHTML = '&uarr;';
+  upBtn.disabled = (idx === 0);
+  upBtn.addEventListener('click', function(){ moveInRoutine(state.editSlot, idx, -1); });
+  actions.appendChild(upBtn);
+
+  const dnBtn = document.createElement('button');
+  dnBtn.type = 'button';
+  dnBtn.className = 'edit-row-btn';
+  dnBtn.setAttribute('aria-label','Move down');
+  dnBtn.innerHTML = '&darr;';
+  dnBtn.disabled = (idx === total - 1);
+  dnBtn.addEventListener('click', function(){ moveInRoutine(state.editSlot, idx, +1); });
+  actions.appendChild(dnBtn);
+
+  const rmBtn = document.createElement('button');
+  rmBtn.type = 'button';
+  rmBtn.className = 'edit-row-btn danger';
+  rmBtn.setAttribute('aria-label','Remove from routine');
+  rmBtn.innerHTML = '&times;';
+  rmBtn.addEventListener('click', function(){ removeFromRoutine(state.editSlot, prayer.id); });
+  actions.appendChild(rmBtn);
+
+  row.appendChild(actions);
+  return row;
+}
+
+// ──────────────────────────────────────────────────────────────────
+// PICKER MODAL — read-only Prayer Book OR add-prayer surface
+// ──────────────────────────────────────────────────────────────────
+// Single modal serves both contexts (Q8 ruling):
+//   { readOnly:true }                  → "Prayer Book" mode, no [+ Add]
+//   { readOnly:false, slot:'morning' } → "Add a prayer" mode
+//
+// Modal stays open for chained adds. Per Q4 ruling: tapping the same
+// prayer twice consecutively auto-closes the modal (prevents accidental
+// duplication if Nolan's finger slips).
+let _pickerLastAdded = null;   // tracks last-added prayer.id for double-tap close
+let _pickerExpandedSlug = null;
+
+function openPickerModal(opts){
+  opts = opts || {};
+  const readOnly = !!opts.readOnly;
+  const slot = opts.slot || null;
+
+  _pickerLastAdded = null;
+  _pickerExpandedSlug = null;
+
+  // Build overlay
+  const overlay = document.createElement('div');
+  overlay.className = 'pk-overlay';
+  overlay.setAttribute('role','dialog');
+  overlay.setAttribute('aria-modal','true');
+  overlay.setAttribute('aria-label', readOnly ? 'Prayer Book' : 'Add a prayer');
+
+  const titleText = readOnly ? 'Prayer Book' : ('Add to ' + (slot === 'evening' ? 'Evening' : 'Morning'));
+
+  overlay.innerHTML =
+    '<div class="pk-card">' +
+      '<div class="pk-header">' +
+        '<div class="pk-title">' + escapeHtml(titleText) + '</div>' +
+        '<button class="pk-close" id="pk-close" type="button" aria-label="Close">&times;</button>' +
+      '</div>' +
+      '<div class="pk-scroll" id="pk-scroll"></div>' +
+    '</div>';
+
+  document.body.appendChild(overlay);
+
+  // Body scroll lock
+  const priorOverflow = document.body.style.overflow;
+  document.body.style.overflow = 'hidden';
+
+  // Force reflow → fade in
+  // eslint-disable-next-line no-unused-expressions
+  overlay.offsetWidth;
+  overlay.classList.add('pk-in');
+
+  // Render content
+  const scrollEl = overlay.querySelector('#pk-scroll');
+  renderPickerContent(scrollEl, { readOnly: readOnly, slot: slot });
+
+  // Close handling
+  let closed = false;
+  function closeModal(){
+    if(closed) return;
+    closed = true;
+    window.removeEventListener('keydown', onKey);
+    overlay.classList.remove('pk-in');
+    overlay.classList.add('pk-out');
+    document.body.style.overflow = priorOverflow || '';
+    setTimeout(function(){
+      if(overlay.parentNode) overlay.remove();
+    }, 280);
+  }
+  function onKey(ev){
+    if(ev.key === 'Escape'){
+      ev.preventDefault();
+      closeModal();
     }
   }
+  window.addEventListener('keydown', onKey);
 
-  showRoutineToast();
-  setTimeout(function(){
-    state.view = 'landing';
-    state.routineKind = null;
-    state.routineIndex = 0;
-    render();
-  }, 1500);
+  const closeBtn = overlay.querySelector('#pk-close');
+  if(closeBtn) closeBtn.addEventListener('click', closeModal);
+
+  // Stash close fn on the overlay so re-renders can find it
+  overlay._closePicker = closeModal;
 }
 
-function showRoutineToast(){
-  const toast = document.createElement('div');
-  toast.className = 'routine-toast';
-  toast.innerHTML =
-    '<div class="rt-marks"><span class="glyph">&#x2726;&#xFE0E;</span></div>' +
-    '<div class="rt-text">Routine complete</div>';
-  document.body.appendChild(toast);
-  setTimeout(function(){ if(toast.parentNode) toast.remove(); }, 1700);
+function renderPickerContent(scrollEl, opts){
+  scrollEl.innerHTML = '';
+  const readOnly = !!opts.readOnly;
+  const slot = opts.slot || null;
+
+  // Group prayers by category
+  const groups = {};
+  CATEGORY_ORDER.forEach(function(c){ groups[c] = []; });
+  state.prayers.forEach(function(p){
+    if(!groups[p.category]) groups[p.category] = [];
+    groups[p.category].push(p);
+  });
+
+  CATEGORY_ORDER.forEach(function(cat){
+    const list = groups[cat] || [];
+    if(list.length === 0) return;
+    const section = document.createElement('div');
+    section.className = 'cat-section';
+    section.innerHTML = '<div class="cat-header">' + (CATEGORY_LABELS[cat] || cat) + '</div>';
+    list.forEach(function(prayer){
+      section.appendChild(makePickerRow(prayer, { readOnly: readOnly, slot: slot, scrollEl: scrollEl }));
+    });
+    scrollEl.appendChild(section);
+  });
+}
+
+function makePickerRow(prayer, opts){
+  const readOnly = !!opts.readOnly;
+  const slot = opts.slot || null;
+  const scrollEl = opts.scrollEl;
+
+  const muted = isOutOfSeason(prayer);
+  const inMorning = !!(state.routines.morning && state.routines.morning.prayer_ids
+    && state.routines.morning.prayer_ids.indexOf(prayer.id) !== -1);
+  const inEvening = !!(state.routines.evening && state.routines.evening.prayer_ids
+    && state.routines.evening.prayer_ids.indexOf(prayer.id) !== -1);
+  const inThisSlot = (slot === 'morning' && inMorning) || (slot === 'evening' && inEvening);
+  const expanded   = _pickerExpandedSlug === prayer.slug;
+
+  const row = document.createElement('button');
+  row.type = 'button';
+  row.className = 'prayer-row';
+  if(muted)                       row.classList.add('muted');
+  if(inMorning || inEvening)      row.classList.add('in-routine');
+  if(expanded)                    row.classList.add('expanded');
+
+  // Right-side end-slot in row-top: in add mode shows [+ Add] / Added pip;
+  // in read-only mode shows the routine tag if the prayer is in any routine.
+  let endSlot = '';
+  if(!readOnly && slot){
+    if(inThisSlot){
+      endSlot = '<button class="pr-action-btn added" type="button" disabled>&#x2713; Added</button>';
+    } else {
+      endSlot = '<button class="pr-action-btn primary" data-action="add" data-slug="' + escapeHtml(prayer.slug) + '" type="button">+ Add</button>';
+    }
+  } else if(readOnly){
+    if(inMorning && inEvening) endSlot = '<span class="pr-row-tag">Morning &middot; Evening</span>';
+    else if(inMorning)         endSlot = '<span class="pr-row-tag">Morning Rule</span>';
+    else if(inEvening)         endSlot = '<span class="pr-row-tag">Evening Rule</span>';
+  }
+
+  const preview = previewOf(prayer.text);
+  const mutedNote = muted ? '<div class="muted-explainer">Out of season &mdash; shown for reference</div>' : '';
+
+  row.innerHTML =
+    '<div class="pr-row-top">' +
+    '<span class="pr-row-icon">' + iconFor(prayer) + '</span>' +
+    '<span class="pr-row-name">' + escapeHtml(prayer.name) + '</span>' +
+    endSlot +
+    '</div>' +
+    '<div class="pr-row-preview">' + escapeHtml(preview) + '</div>' +
+    '<div class="pr-expand">' +
+      mutedNote +
+      '<div class="pr-expand-text">' + formatPrayerText(prayer.text) + '</div>' +
+    '</div>';
+
+  // Tap row body → expand/collapse (does NOT trigger add — action button has its own handler)
+  row.addEventListener('click', function(ev){
+    const inAction = ev.target.closest('.pr-action-btn');
+    if(inAction) return;
+    _pickerExpandedSlug = (_pickerExpandedSlug === prayer.slug) ? null : prayer.slug;
+    renderPickerContent(scrollEl, { readOnly: readOnly, slot: slot });
+  });
+
+  // Wire the [+ Add] handler if present (visible in row-top, not behind expand)
+  if(!readOnly && slot){
+    setTimeout(function(){
+      const addBtn = row.querySelector('[data-action="add"]');
+      if(addBtn){
+        addBtn.addEventListener('click', function(ev){
+          ev.stopPropagation();
+          handlePickerAdd(prayer, slot, scrollEl, readOnly);
+        });
+      }
+    }, 0);
+  }
+
+  return row;
+}
+
+async function handlePickerAdd(prayer, slot, scrollEl, readOnly){
+  // Per Q4: double-tap on the same prayer auto-closes the modal.
+  if(_pickerLastAdded === prayer.id){
+    // Already just added this one — close the modal.
+    const overlay = document.querySelector('.pk-overlay');
+    if(overlay && typeof overlay._closePicker === 'function'){
+      overlay._closePicker();
+    }
+    return;
+  }
+  _pickerLastAdded = prayer.id;
+  await addToRoutine(slot, prayer.id);   // persists + bumps state.routines
+  // Re-render picker so the row flips to "Added ✓" state
+  renderPickerContent(scrollEl, { readOnly: readOnly, slot: slot });
 }
 
 // ──────────────────────────────────────────────────────────────────
-// AUTO-MARK + STREAK BUMP (per-day dedupe)
+// PRAY MODE OVERLAY — full-screen continuous prayer
+// ──────────────────────────────────────────────────────────────────
+// Mirrors Sunday Celebration overlay pattern (Q1: clone, not shared module).
+// Self-attestation via "Amen — I prayed" → recordRoutineCompletion (Q5/Q6).
+// Closes without crediting if user dismisses without tapping Amen (Q6).
+
+function openPrayMode(slot){
+  const routine = state.routines[slot];
+  if(!routine || !routine.prayer_ids || routine.prayer_ids.length === 0){
+    // Defensive: shouldn't happen because landing routes empty routines
+    // into edit mode, but if a deep-link lands here with no routine,
+    // fall through to edit.
+    state.view = 'edit';
+    state.editSlot = slot;
+    render();
+    return;
+  }
+
+  // Build overlay
+  const overlay = document.createElement('div');
+  overlay.className = 'pm-overlay';
+  overlay.setAttribute('role','dialog');
+  overlay.setAttribute('aria-modal','true');
+  overlay.setAttribute('aria-label', slot === 'evening' ? 'Evening Rule' : 'Morning Rule');
+
+  // Build the continuous content — eyebrow + (title, body)* alternation
+  const eyebrowText = (slot === 'evening' ? '\u2726\uFE0E   Evening Rule   \u2726\uFE0E' : '\u2726\uFE0E   Morning Rule   \u2726\uFE0E');
+  let contentHtml = '<div class="pm-eyebrow glyph">' + eyebrowText + '</div>';
+  routine.prayer_ids.forEach(function(pid){
+    const prayer = state.prayersById[pid];
+    if(!prayer) return;
+    contentHtml +=
+      '<div class="pm-prayer-title">' + escapeHtml(prayer.name) + '</div>' +
+      '<div class="pm-prayer-body">' + formatPrayerText(prayer.text) + '</div>';
+  });
+
+  overlay.innerHTML =
+    '<div class="pm-topbar">' +
+      '<button class="pm-close" id="pm-close" type="button" aria-label="Close">&times;</button>' +
+    '</div>' +
+    '<div class="pm-scroll" id="pm-scroll">' +
+      '<div class="pm-content">' + contentHtml + '</div>' +
+    '</div>' +
+    '<div class="pm-actions" id="pm-actions">' +
+      '<button class="pm-amen-btn glyph" id="pm-amen" type="button">Amen \u2014 I prayed</button>' +
+    '</div>';
+
+  document.body.appendChild(overlay);
+
+  // Lock body scroll
+  const priorOverflow = document.body.style.overflow;
+  document.body.style.overflow = 'hidden';
+
+  // Force reflow → fade in
+  // eslint-disable-next-line no-unused-expressions
+  overlay.offsetWidth;
+  overlay.classList.add('pm-in');
+
+  // Reset the scroll inside the overlay to top
+  const scrollEl = overlay.querySelector('#pm-scroll');
+  if(scrollEl) scrollEl.scrollTop = 0;
+
+  let closed = false;
+  let amenInProgress = false;
+
+  function closeOverlay(immediate){
+    if(closed) return;
+    closed = true;
+    window.removeEventListener('keydown', onKey);
+    overlay.classList.remove('pm-in');
+    overlay.classList.add('pm-out');
+    document.body.style.overflow = priorOverflow || '';
+    setTimeout(function(){
+      if(overlay.parentNode) overlay.remove();
+    }, immediate ? 80 : 320);
+  }
+  function onKey(ev){
+    if(ev.key === 'Escape'){
+      ev.preventDefault();
+      closeOverlay(false);   // Q6: no credit on dismiss
+    }
+  }
+  window.addEventListener('keydown', onKey);
+
+  const closeBtn = overlay.querySelector('#pm-close');
+  if(closeBtn) closeBtn.addEventListener('click', function(){
+    closeOverlay(false);     // Q6: no credit on dismiss
+  });
+
+  // Amen handler — record completion, show reverent confirmation, fade.
+  const amenBtn = overlay.querySelector('#pm-amen');
+  if(amenBtn) amenBtn.addEventListener('click', async function(){
+    if(amenInProgress) return;
+    amenInProgress = true;
+    amenBtn.disabled = true;
+
+    // Fire the canonical write path (existing, not rebuilt — Q5 lock).
+    const missionKey = (slot === 'morning') ? MISSION_KEY_MORNING : MISSION_KEY_EVENING;
+    if(state.profileId){
+      try{
+        await recordRoutineCompletion(slot, missionKey);
+      }catch(e){
+        console.warn('Prayer: routine record failed (non-fatal):', e);
+      }
+    }
+
+    // Slide in the reverent "Glory to God." confirmation.
+    showGloryConfirmation(overlay, function(){
+      // After ~1.4s of reverent moment, fade overlay out and re-render
+      // landing so the "✓ prayed today" pip + "Pray again" CTA show.
+      closeOverlay(false);
+      render();
+    });
+  });
+}
+
+// Reverent confirmation styled per Q5 ruling — Cinzel, parchment-gold,
+// centered. NOT a system toast.
+function showGloryConfirmation(overlay, onComplete){
+  // Hide the action bar (where the Amen button lived) and the scroll
+  // content; the gentle overlay-internal "glory" layer replaces them.
+  const actions = overlay.querySelector('#pm-actions');
+  const scroll  = overlay.querySelector('#pm-scroll');
+  if(actions) actions.style.opacity = '0';
+  if(scroll)  scroll.style.opacity  = '0';
+
+  const glory = document.createElement('div');
+  glory.className = 'pm-glory';
+  glory.innerHTML =
+    '<div class="pm-glory-mark glyph">\u2726\uFE0E   \u2726\uFE0E   \u2726\uFE0E</div>' +
+    '<div class="pm-glory-text">&ldquo;Glory to God.&rdquo;</div>';
+  overlay.appendChild(glory);
+
+  // Force reflow → fade in
+  // eslint-disable-next-line no-unused-expressions
+  glory.offsetWidth;
+  glory.classList.add('pm-glory-in');
+
+  setTimeout(function(){
+    if(typeof onComplete === 'function') onComplete();
+  }, 1400);
+}
+
+// ──────────────────────────────────────────────────────────────────
+// COMPLETION + STREAK (preserved canonical write path — DO NOT REBUILD)
 // ──────────────────────────────────────────────────────────────────
 //
-// Dedupe rule (orchestrator-recommended): one Morning Rule per day counts
-// toward the streak. Second tap on the same day silently no-ops on the
-// streak counter AND skips re-recording the mission_completion (cleaner
-// than re-recording dup completions). The per-routine reward is 0 coins
-// regardless, so no economic implication either way.
+// Dedupe rule: one Morning Rule per day counts toward the streak.
+// Second tap on the same day silently no-ops on the streak counter AND
+// skips re-recording the mission_completion. coins_awarded = 0 (Lane 2).
 async function recordRoutineCompletion(kind, missionKey){
   const mRes = await sb
     .from('missions')
@@ -1166,8 +1797,6 @@ async function recordRoutineCompletion(kind, missionKey){
     });
   if(insRes.error){
     console.warn('Prayer: mission_completion insert failed:', insRes.error);
-    // Continue to streak bump — the streak counter is the primary source
-    // of truth for the rollup; mission_completion is a secondary log.
   }
 
   // UPSERT this week's streak counter (+1 to morning_count or evening_count).
@@ -1277,170 +1906,7 @@ async function refreshTodayCompletions(){
 }
 
 // ──────────────────────────────────────────────────────────────────
-// VIEW: BROWSE LIBRARY
-// ──────────────────────────────────────────────────────────────────
-function renderBrowse(){
-  const wrap = document.createElement('div');
-
-  // Header
-  const header = document.createElement('div');
-  header.className = 'p-header';
-  header.innerHTML =
-    '<button class="p-back" id="browse-back" type="button">' +
-    '<span class="arrow">&larr;</span>Back</button>' +
-    '<div class="p-eyebrow">Prayer Library</div>' +
-    '<h1 class="p-title"><span class="glyph">&#x2726;&#xFE0E;</span>Prayer Library<span class="glyph">&#x2726;&#xFE0E;</span></h1>';
-  wrap.appendChild(header);
-
-  // Filter chips
-  const filterRow = document.createElement('div');
-  filterRow.className = 'filter-row';
-  FILTER_CHIPS.forEach(function(chip){
-    const b = document.createElement('button');
-    b.type = 'button';
-    b.className = 'filter-chip' + (state.browseFilter === chip.key ? ' active' : '');
-    b.textContent = chip.label;
-    b.addEventListener('click', function(){
-      state.browseFilter = chip.key;
-      state.expandedSlug = null;
-      render();
-    });
-    filterRow.appendChild(b);
-  });
-  wrap.appendChild(filterRow);
-
-  // Group prayers by category in the filter context
-  const groups = {};
-  CATEGORY_ORDER.forEach(function(c){ groups[c] = []; });
-  state.prayers.forEach(function(p){
-    if(state.browseFilter !== 'all' && p.category !== state.browseFilter) return;
-    if(!groups[p.category]) groups[p.category] = [];
-    groups[p.category].push(p);
-  });
-
-  let renderedAny = false;
-  CATEGORY_ORDER.forEach(function(cat){
-    const list = groups[cat] || [];
-    if(list.length === 0) return;
-    renderedAny = true;
-    const section = document.createElement('div');
-    section.className = 'cat-section';
-    section.innerHTML = '<div class="cat-header">' + (CATEGORY_LABELS[cat] || cat) + '</div>';
-    list.forEach(function(prayer){
-      section.appendChild(makePrayerRow(prayer));
-    });
-    wrap.appendChild(section);
-  });
-
-  if(!renderedAny){
-    const empty = document.createElement('div');
-    empty.className = 'error-block';
-    empty.innerHTML = 'No prayers in this category.';
-    wrap.appendChild(empty);
-  }
-
-  setTimeout(function(){
-    const back = document.getElementById('browse-back');
-    if(back) back.addEventListener('click', function(){
-      state.view = 'landing';
-      state.expandedSlug = null;
-      render();
-    });
-  }, 0);
-
-  return wrap;
-}
-
-function makePrayerRow(prayer){
-  const muted = isOutOfSeason(prayer);
-  const inMorning = !!(state.routines.morning && state.routines.morning.prayer_ids && state.routines.morning.prayer_ids.indexOf(prayer.id) !== -1);
-  const inEvening = !!(state.routines.evening && state.routines.evening.prayer_ids && state.routines.evening.prayer_ids.indexOf(prayer.id) !== -1);
-  const expanded  = state.expandedSlug === prayer.slug;
-
-  const row = document.createElement('button');
-  row.type = 'button';
-  row.className = 'prayer-row';
-  if(muted)     row.classList.add('muted');
-  if(inMorning) row.classList.add('in-routine-morning');
-  if(inEvening) row.classList.add('in-routine-evening');
-  if(expanded)  row.classList.add('expanded');
-
-  let tag = '';
-  if(inMorning && inEvening) tag = '<span class="pr-row-tag morning">Morning &middot; Evening</span>';
-  else if(inMorning)         tag = '<span class="pr-row-tag morning">Morning Rule</span>';
-  else if(inEvening)         tag = '<span class="pr-row-tag evening">Evening Rule</span>';
-
-  const preview = previewOf(prayer.text);
-  const mutedNote = muted ? '<div class="muted-explainer">Out of season &mdash; shown for reference</div>' : '';
-
-  row.innerHTML =
-    '<div class="pr-row-top">' +
-    '<span class="pr-row-icon">' + iconFor(prayer) + '</span>' +
-    '<span class="pr-row-name">' + escapeHtml(prayer.name) + '</span>' +
-    tag +
-    '</div>' +
-    '<div class="pr-row-preview">' + escapeHtml(preview) + '</div>' +
-    '<div class="pr-expand">' +
-      mutedNote +
-      '<div class="pr-expand-text">' + formatPrayerText(prayer.text) + '</div>' +
-      '<div class="pr-actions" id="actions-' + prayer.slug + '"></div>' +
-    '</div>';
-
-  row.addEventListener('click', function(ev){
-    if(ev.target.closest('.pr-action-btn')) return;
-    state.expandedSlug = (state.expandedSlug === prayer.slug) ? null : prayer.slug;
-    render();
-  });
-
-  setTimeout(function(){ buildPrayerActions(prayer, inMorning, inEvening); }, 0);
-  return row;
-}
-
-function buildPrayerActions(prayer, inMorning, inEvening){
-  const host = document.getElementById('actions-' + prayer.slug);
-  if(!host) return;
-  if(!state.profileId){
-    host.innerHTML = '<div class="muted-explainer">Sign in to customize your Rule.</div>';
-    return;
-  }
-  host.innerHTML = '';
-
-  function addAction(label, onClick, opts){
-    opts = opts || {};
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = 'pr-action-btn' + (opts.danger ? ' danger' : '') + (opts.primary ? ' primary' : '');
-    btn.innerHTML = label;
-    btn.addEventListener('click', function(e){
-      e.stopPropagation();
-      onClick();
-    });
-    host.appendChild(btn);
-  }
-
-  if(inMorning){
-    const idx = state.routines.morning.prayer_ids.indexOf(prayer.id);
-    const len = state.routines.morning.prayer_ids.length;
-    if(idx > 0)        addAction('&uarr; Up',   function(){ moveInRoutine('morning', idx, -1); });
-    if(idx < len - 1)  addAction('&darr; Down', function(){ moveInRoutine('morning', idx, +1); });
-    addAction('Remove from Morning', function(){ removeFromRoutine('morning', prayer.id); }, { danger:true });
-  } else {
-    addAction('+ Add to Morning', function(){ addToRoutine('morning', prayer.id); }, { primary:true });
-  }
-
-  if(inEvening){
-    const idx = state.routines.evening.prayer_ids.indexOf(prayer.id);
-    const len = state.routines.evening.prayer_ids.length;
-    if(idx > 0)        addAction('&uarr; Up',   function(){ moveInRoutine('evening', idx, -1); });
-    if(idx < len - 1)  addAction('&darr; Down', function(){ moveInRoutine('evening', idx, +1); });
-    addAction('Remove from Evening', function(){ removeFromRoutine('evening', prayer.id); }, { danger:true });
-  } else {
-    addAction('+ Add to Evening', function(){ addToRoutine('evening', prayer.id); }, { primary:true });
-  }
-}
-
-// ──────────────────────────────────────────────────────────────────
-// ROUTINE EDITS
+// ROUTINE EDITS (preserved canonical write path — DO NOT REBUILD)
 // ──────────────────────────────────────────────────────────────────
 async function addToRoutine(kind, prayerId){
   const existing = state.routines[kind];
@@ -1494,14 +1960,21 @@ async function persistRoutine(kind, newIds){
   }catch(e){
     console.error('Prayer: routine persist failed', e);
   }
-  render();
+  // Re-render the current view (edit mode list update) AND, if the
+  // picker modal is open, re-render its content so [+ Add]/Added pips
+  // flip correctly. The picker re-renders itself in handlePickerAdd
+  // for chained-add latency; we only need to re-render the edit view
+  // here for remove/reorder.
+  if(state.view === 'edit'){
+    render();
+  }
 }
 
 // ──────────────────────────────────────────────────────────────────
 // HELPERS
 // ──────────────────────────────────────────────────────────────────
 function isOutOfSeason(prayer){
-  // Per dispatch: muting is heuristic, static, three known cases.
+  // Heuristic: muting is static, three known cases.
   if(prayer.slug === 'paschal_troparion') return !IN_PASCHA_SEASON;
   if(prayer.slug === 'o_heavenly_king')   return  IN_PASCHA_SEASON;
   if(prayer.slug === 'st_ephrem')         return !IN_LENT;

@@ -13,7 +13,1556 @@
 <link rel="stylesheet" href="css/contrast.css">
 <link rel="stylesheet" href="css/nav-polish.css">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Missions — The Orthodox Expedition</title><!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#c9922a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Expedition">
+
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="stylesheet" href="css/viewport.css">
+<link rel="stylesheet" href="css/contrast.css">
+<link rel="stylesheet" href="css/nav-polish.css">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Missions — The Orthodox Expedition</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
+function showAdminBar(){
+  const bar = document.getElementById('admin-bar');
+  if(bar) bar.classList.add('show');
+}
+</script>
+<style>
+/* ── VARIABLES ─────────────────────────────────────────────── */
+:root{
+  --gold:#c9922a;--gold-light:#f0c96e;--gold-bright:#ffd700;
+  --parchment:#f4e8c1;--parchment-dark:#e8d5a0;
+  --ink:#1a0f00;--ink-light:#3d2b1f;
+  --burgundy:#6b1a1a;
+  --byzantine:#2c1654;--byzantine-light:#4a2a7a;
+  --green:#16a34a;--green-dark:#15803d;
+  --shadow:rgba(26,15,0,0.5);
+  --bg:#0e0800;
+  --nav-h:72px;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overflow-x:hidden;}
+body{
+  font-family:'Crimson Text',serif;
+  background-color:var(--bg);
+  background-image:
+    radial-gradient(ellipse at 50% 0%,rgba(107,26,26,0.4) 0%,transparent 60%),
+    radial-gradient(ellipse at 100% 100%,rgba(44,22,84,0.3) 0%,transparent 50%);
+  min-height:100vh;
+}
+body::before{
+  content:'';position:fixed;inset:0;
+  background-image:
+    linear-gradient(rgba(201,146,42,0.025) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(201,146,42,0.025) 1px,transparent 1px);
+  background-size:44px 44px;pointer-events:none;z-index:0;
+}
+
+/* ── COIN RAIN ──────────────────────────────────────────────── */
+#coin-rain{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999;overflow:hidden;}
+.coin-p{position:absolute;top:-60px;font-size:1.6rem;animation:coinFall linear forwards;filter:drop-shadow(0 0 6px var(--gold-bright));}
+@keyframes coinFall{0%{transform:translateY(0) rotate(0deg);opacity:1;}80%{opacity:1;}100%{transform:translateY(110vh) rotate(540deg) scale(0.4);opacity:0;}}
+
+/* ── LOADING / AUTH ─────────────────────────────────────────── */
+#loading{position:fixed;inset:0;z-index:400;display:flex;align-items:center;justify-content:center;background:var(--bg);}
+.loading-cross{font-family:'Cinzel',serif;font-size:2rem;color:rgba(201,146,42,0.4);animation:pulse 1.5s ease-in-out infinite;}
+@keyframes pulse{0%,100%{opacity:0.3;}50%{opacity:0.8;}}
+
+/* ── MAIN ───────────────────────────────────────────────────── */
+#app{display:none;position:relative;z-index:1;}
+.page{max-width:var(--container-max-width);margin:0 auto;padding:1.25rem 1rem calc(var(--nav-h) + 1.5rem);}
+
+/* ── HEADER ─────────────────────────────────────────────────── */
+.app-header{text-align:center;padding:1.25rem 1rem 1rem;border-bottom:1px solid rgba(201,146,42,0.18);margin-bottom:1.25rem;}
+.app-name{font-family:'Cinzel Decorative',serif;font-size:clamp(0.9rem,3.2vw,1.1rem);color:var(--gold-light);letter-spacing:0.06em;text-shadow:0 0 20px rgba(201,146,42,0.35);}
+.app-divider{color:rgba(201,146,42,0.35);letter-spacing:0.6rem;font-size:0.65rem;margin-top:0.3rem;}
+
+/* ── COIN STRIP ─────────────────────────────────────────────── */
+.coin-strip{
+  display:flex;align-items:center;justify-content:space-between;
+  background:linear-gradient(135deg,rgba(44,22,84,0.9) 0%,rgba(107,26,26,0.9) 100%);
+  border:1px solid rgba(201,146,42,0.3);
+  border-radius:14px;padding:0.875rem 1.25rem;
+  margin-bottom:1.25rem;
+}
+.coin-strip-left{font-family:'Cinzel',serif;font-size:0.65rem;letter-spacing:0.15em;color:rgba(201,146,42,0.55);text-transform:uppercase;}
+.coin-strip-val{font-family:'Cinzel Decorative',serif;font-size:1.8rem;color:var(--gold-bright);text-shadow:0 0 16px rgba(255,215,0,0.5);line-height:1;transition:all 0.3s;}
+.coin-strip-right{text-align:right;}
+.coin-strip-lifetime{font-family:'Cinzel',serif;font-size:0.6rem;color:rgba(201,146,42,0.4);letter-spacing:0.08em;}
+.coin-strip-lifetime-val{font-family:'Cinzel',serif;font-size:0.8rem;color:rgba(201,146,42,0.6);}
+@keyframes coinTick{from{transform:translateY(6px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+.coin-strip-val.tick{animation:coinTick 0.3s ease-out;}
+
+/* ── MISSION TABS ───────────────────────────────────────────── */
+.mission-tabs{display:flex;gap:0.4rem;margin-bottom:1rem;}
+.m-tab{
+  flex:1;padding:0.6rem 0.25rem;min-height:48px;
+  background:rgba(201,146,42,0.06);
+  border:1px solid rgba(201,146,42,0.18);
+  border-radius:10px;font-family:'Cinzel',serif;font-size:0.68rem;
+  cursor:pointer;text-align:center;transition:all 0.2s;
+  color:rgba(201,146,42,0.4);letter-spacing:0.04em;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0.15rem;
+}
+.m-tab.active,.m-tab:active{background:var(--gold);color:var(--ink);border-color:var(--gold-bright);box-shadow:0 0 12px rgba(255,215,0,0.2);}
+.m-tab-mark{font-size:0.9rem;line-height:1;}
+.m-tab-badge{
+  background:#ef4444;color:white;border-radius:10px;
+  font-size:0.5rem;padding:0.05rem 0.3rem;
+  font-family:'Cinzel',serif;display:none;
+}
+.m-tab-badge.show{display:inline-block;}
+
+/* ── TAB CONTENT ────────────────────────────────────────────── */
+.tab-panel{display:none;}
+.tab-panel.show{display:block;}
+
+/* ── PROGRESS SUMMARY ───────────────────────────────────────── */
+.progress-summary{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:0.875rem;padding:0 0.25rem;
+}
+.ps-label{font-family:'Cinzel',serif;font-size:0.65rem;letter-spacing:0.15em;color:rgba(201,146,42,0.45);text-transform:uppercase;}
+.ps-val{font-family:'Cinzel',serif;font-size:0.72rem;color:var(--gold-light);}
+.ps-bar-wrap{flex:1;margin:0 0.75rem;}
+.ps-bar{height:4px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden;}
+.ps-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--gold),var(--gold-bright));transition:width 0.8s cubic-bezier(0.4,0,0.2,1);}
+
+/* ── SECTION LABEL ──────────────────────────────────────────── */
+.section-lbl{
+  font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.2em;
+  text-transform:uppercase;color:rgba(201,146,42,0.4);
+  padding:0.5rem 0 0.4rem;
+  border-bottom:1px solid rgba(201,146,42,0.1);
+  margin-bottom:0.5rem;
+}
+
+/* ── MISSION CARD ───────────────────────────────────────────── */
+.m-card{
+  display:flex;align-items:center;gap:0.75rem;
+  border:1.5px solid rgba(201,146,42,0.2);
+  border-radius:12px;padding:0.875rem 0.875rem;
+  margin-bottom:0.6rem;
+  transition:all 0.35s ease;
+  position:relative;overflow:hidden;
+  background:rgba(244,232,193,0.03);
+}
+
+/* Available */
+.m-card.available{border-color:rgba(201,146,42,0.2);}
+.m-card.available:hover{border-color:rgba(201,146,42,0.35);background:rgba(244,232,193,0.05);}
+
+/* Done — green settled state */
+.m-card.done{
+  background:rgba(22,163,74,0.06);
+  border-color:rgba(22,163,74,0.3);
+}
+
+/* Done flash — brief bright green on completion */
+@keyframes doneFlash{
+  0%{background:rgba(22,163,74,0.25);border-color:rgba(22,163,74,0.8);box-shadow:0 0 20px rgba(22,163,74,0.3);}
+  100%{background:rgba(22,163,74,0.06);border-color:rgba(22,163,74,0.3);box-shadow:none;}
+}
+.m-card.done-flash{animation:doneFlash 0.7s ease-out forwards;}
+
+/* Pending */
+@keyframes pendingPulse{
+  0%,100%{border-color:rgba(124,58,237,0.35);box-shadow:0 0 8px rgba(124,58,237,0.1);}
+  50%{border-color:rgba(124,58,237,0.6);box-shadow:0 0 16px rgba(124,58,237,0.25);}
+}
+.m-card.pending{
+  background:rgba(44,22,84,0.12);
+  border-color:rgba(124,58,237,0.35);
+  animation:pendingPulse 2.5s ease-in-out infinite;
+}
+
+/* Special done (one-time complete) */
+.m-card.special-done{
+  background:rgba(201,146,42,0.06);
+  border-color:rgba(201,146,42,0.3);
+  opacity:0.65;
+}
+
+.m-emoji{font-size:1.4rem;flex-shrink:0;line-height:1;}
+.m-info{flex:1;min-width:0;}
+.m-name{font-family:'Cinzel',serif;font-size:0.82rem;color:rgba(244,232,193,0.85);font-weight:600;line-height:1.3;}
+.m-card.done .m-name{color:rgba(134,239,172,0.7);}
+.m-card.special-done .m-name{color:rgba(201,146,42,0.6);}
+.m-detail{font-size:0.74rem;color:rgba(244,232,193,0.35);margin-top:0.1rem;font-style:italic;line-height:1.3;}
+.m-meta{display:flex;align-items:center;gap:0.4rem;margin-top:0.2rem;}
+.m-coins{font-family:'Cinzel',serif;font-size:0.75rem;color:rgba(201,146,42,0.6);font-weight:700;}
+.m-tag{font-size:0.58rem;background:rgba(44,22,84,0.4);color:rgba(167,139,250,0.8);border:1px solid rgba(124,58,237,0.25);border-radius:4px;padding:0.1rem 0.35rem;font-family:'Cinzel',serif;}
+
+/* ── ACTION BUTTONS ─────────────────────────────────────────── */
+.m-btn{
+  padding:0.45rem 0.8rem;min-height:40px;
+  border:none;border-radius:8px;
+  font-family:'Cinzel',serif;font-size:0.68rem;
+  cursor:pointer;transition:all 0.2s;
+  white-space:nowrap;flex-shrink:0;
+  letter-spacing:0.04em;
+}
+.m-btn.mark{background:linear-gradient(135deg,var(--gold) 0%,var(--gold-bright) 100%);color:var(--ink);}
+.m-btn.mark:active{transform:scale(0.96);}
+.m-btn.done-btn{background:rgba(22,163,74,0.2);color:rgba(134,239,172,0.8);cursor:default;border:1px solid rgba(22,163,74,0.3);}
+.m-btn.pending-btn{background:rgba(44,22,84,0.4);color:rgba(167,139,250,0.8);cursor:default;border:1px solid rgba(124,58,237,0.3);}
+.m-btn.submit{background:linear-gradient(135deg,var(--byzantine) 0%,var(--byzantine-light) 100%);color:rgba(244,232,193,0.9);}
+.m-btn.submit:active{transform:scale(0.96);}
+.m-btn.complete-badge{background:rgba(201,146,42,0.15);color:rgba(201,146,42,0.6);cursor:default;border:1px solid rgba(201,146,42,0.2);}
+
+/* Done check */
+.m-check{
+  position:absolute;top:0.4rem;right:0.45rem;
+  font-size:0.75rem;color:rgba(134,239,172,0.7);
+}
+.m-pending-badge{
+  position:absolute;top:0.35rem;right:0.45rem;
+  font-family:'Cinzel',serif;font-size:0.55rem;
+  color:rgba(167,139,250,0.8);
+  background:rgba(44,22,84,0.4);
+  border:1px solid rgba(124,58,237,0.3);
+  border-radius:4px;padding:0.1rem 0.35rem;
+}
+
+/* ── EMPTY STATE ────────────────────────────────────────────── */
+.empty-state{
+  text-align:center;padding:2rem 1rem;
+  font-family:'Crimson Text',serif;font-style:italic;
+  color:rgba(201,146,42,0.3);font-size:0.9rem;
+}
+
+/* ── BOTTOM NAV ─────────────────────────────────────────────── */
+.bottom-nav{
+  position:fixed;bottom:0;left:0;right:0;height:var(--nav-h);
+  background:rgba(8,4,0,0.97);border-top:1px solid rgba(201,146,42,0.18);
+  display:flex;align-items:stretch;backdrop-filter:blur(16px);z-index:200;
+  padding-bottom:env(safe-area-inset-bottom);
+}
+.nav-item{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:0.2rem;cursor:pointer;border:none;background:none;
+  padding:0.5rem 0.25rem;position:relative;transition:all 0.2s;text-decoration:none;
+}
+.nav-item:active{background:rgba(201,146,42,0.06);}
+.nav-mark{font-size:1rem;line-height:1;color:rgba(201,146,42,0.25);transition:all 0.25s;}
+.nav-label{font-family:'Cinzel',serif;font-size:0.52rem;letter-spacing:0.08em;text-transform:uppercase;color:rgba(201,146,42,0.3);transition:all 0.25s;}
+.nav-item.active .nav-mark{color:var(--gold-bright);text-shadow:0 0 12px rgba(255,215,0,0.6);filter:drop-shadow(0 0 4px rgba(255,215,0,0.4));}
+.nav-item.active .nav-label{color:var(--gold-light);}
+.nav-item.active::before{content:'';position:absolute;top:0;left:20%;right:20%;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent);border-radius:0 0 2px 2px;}
+.nav-dot{position:absolute;top:0.4rem;right:calc(50% - 18px);width:7px;height:7px;border-radius:50%;background:#ef4444;border:1.5px solid rgba(8,4,0,0.9);display:none;}
+.nav-dot.show{display:block;}
+
+/* ── ANIMATIONS ─────────────────────────────────────────────── */
+.fade-up{opacity:0;transform:translateY(12px);animation:fadeUp 0.4s ease forwards;}
+@keyframes fadeUp{to{opacity:1;transform:translateY(0);}}
+.fade-up:nth-child(1){animation-delay:0.04s;}
+.fade-up:nth-child(2){animation-delay:0.1s;}
+.fade-up:nth-child(3){animation-delay:0.16s;}
+
+/* ── ADMIN BAR ─────────────────────────────────────────────── */
+.admin-bar{
+  position:fixed;top:0;left:0;right:0;z-index:999;
+  background:linear-gradient(90deg,rgba(44,22,84,0.97),rgba(107,26,26,0.97));
+  border-bottom:1px solid rgba(201,146,42,0.3);
+  display:none;align-items:center;justify-content:space-between;
+  padding:0.4rem 1rem;gap:0.75rem;
+}
+.admin-bar.show{display:flex;}
+.admin-bar-label{font-family:'Cinzel',serif;font-size:0.62rem;letter-spacing:0.15em;color:rgba(201,146,42,0.6);text-transform:uppercase;}
+.admin-bar-btn{background:none;border:1px solid rgba(201,146,42,0.3);border-radius:6px;padding:0.25rem 0.75rem;font-family:'Cinzel',serif;font-size:0.6rem;color:rgba(201,146,42,0.6);cursor:pointer;min-height:32px;transition:all 0.2s;}
+.admin-bar.show ~ .page{padding-top:calc(2.5rem + 1.25rem);}
+
+/* ═══════════════════════════════════════════════════════════════
+   DAILY HUB — Dispatch 4b (Missions.mount renders into #daily-hub)
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Eyebrow ─────────────────────────────────────────────────── */
+.mh-eyebrow{
+  display:flex;align-items:baseline;justify-content:space-between;
+  gap:0.6rem;margin-bottom:0.85rem;
+}
+.mh-eyebrow-title{
+  font-family:'Cinzel',serif;font-weight:700;
+  font-size:1.05rem;letter-spacing:0.04em;
+  color:var(--gold-light);
+}
+.mh-eyebrow-day{
+  font-family:'Crimson Text',serif;font-style:italic;
+  font-size:0.85rem;color:rgba(240,201,110,0.6);
+}
+
+/* ── Pilgrimage banner ──────────────────────────────────────── */
+.mh-pilgrimage-banner{
+  display:flex;align-items:center;gap:0.75rem;
+  background:linear-gradient(180deg,var(--parchment) 0%,var(--parchment-dark) 100%);
+  border:1.5px solid var(--gold);border-radius:12px;
+  padding:0.85rem 1rem;margin-bottom:0.85rem;color:var(--ink);
+  box-shadow:0 3px 10px rgba(27,42,74,0.15);
+}
+.mh-pb-icon{font-size:1.5rem;line-height:1;flex-shrink:0;}
+.mh-pb-text{flex:1;min-width:0;}
+.mh-pb-title{
+  font-family:'Cinzel',serif;font-weight:600;
+  font-size:0.92rem;letter-spacing:0.03em;
+  margin-bottom:0.18rem;
+}
+.mh-pb-detail{
+  font-family:'Crimson Text',serif;font-style:italic;
+  font-size:0.85rem;line-height:1.4;color:#5a3e0e;
+}
+
+/* ── Reading mission card (top, prominent) ──────────────────── */
+.mh-reading-card{
+  background:rgba(201,146,42,0.05);
+  border:1.5px solid rgba(201,146,42,0.4);
+  border-radius:14px;padding:1.1rem 1rem;margin-bottom:0.85rem;
+  box-shadow:0 3px 14px rgba(27,42,74,0.18);
+  position:relative;
+}
+.mh-reading-card.mh-card-prominent{
+  border-color:var(--gold);
+  background:linear-gradient(180deg,rgba(201,146,42,0.08) 0%,rgba(44,22,84,0.08) 100%);
+}
+.mh-card-eyebrow{
+  font-family:'Cinzel',serif;font-weight:600;
+  font-size:0.7rem;letter-spacing:0.18em;text-transform:uppercase;
+  color:var(--gold-light);
+  margin-bottom:0.7rem;
+}
+.mh-reading-pilgrimage{
+  display:flex;align-items:center;gap:0.7rem;
+  padding:0.5rem 0;
+}
+.mh-rp-icon{font-size:1.3rem;color:var(--gold);}
+.mh-rp-text{
+  font-family:'Crimson Text',serif;font-style:italic;
+  color:rgba(244,232,193,0.8);
+}
+.mh-reading-done-mini{
+  display:flex;align-items:center;gap:0.65rem;
+  padding:0.3rem 0;
+}
+.mh-rdm-check{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:1.6rem;height:1.6rem;border-radius:50%;
+  background:rgba(22,163,74,0.18);
+  color:rgba(134,239,172,0.9);
+  font-weight:700;font-size:0.9rem;
+  border:1px solid rgba(22,163,74,0.35);
+}
+.mh-rdm-text{
+  font-family:'Cinzel',serif;font-weight:600;
+  font-size:0.9rem;color:rgba(244,232,193,0.85);
+}
+
+/* ── Character portrait block (Chat 4 — used by reading Stage 2
+   reflect render in js/missions.js AND T/Th reflection lane in
+   js/reflection-lane.js). Theo's face above the prompt text turns
+   the question into a friend's voice rather than a system pip. ── */
+.mh-portrait-block{
+  display:flex;flex-direction:column;align-items:center;
+  gap:0.4rem;margin:0.5rem 0 0.7rem;
+}
+.mh-portrait{
+  width:96px;height:96px;border-radius:50%;
+  object-fit:cover;
+  border:2px solid var(--gold);
+  background:linear-gradient(135deg,#F4E8C1,#E8D5A0);
+  box-shadow:0 2px 8px rgba(27,42,74,0.18);
+  display:block;
+}
+.mh-portrait-speaker{
+  font-family:'Cinzel',serif;font-weight:600;
+  font-size:0.78rem;letter-spacing:0.14em;
+  color:var(--gold-light);text-transform:uppercase;
+  text-align:center;
+}
+@media (max-width:420px){
+  .mh-portrait{width:80px;height:80px;}
+}
+
+/* ── Reading Stage 2 + T/Th reflection input layout
+   (SURPRISE #4 — was rendering with browser-default
+   inline textarea + inline label, producing the cramped
+   layout Kevin screenshotted. Latent Chat 2A bug; not a
+   Chat 4 regression. Layout primitives only — visual
+   polish on label/help/button/textarea remains queued
+   for ITEM E post-launch.) ── */
+.mh-reading-input-block,
+.rl-input-block{
+  display:flex;flex-direction:column;align-items:flex-start;
+  gap:0.5rem;margin-top:0.7rem;
+}
+.mh-reading-textarea,
+.rl-textarea{
+  width:100%;box-sizing:border-box;
+}
+
+/* ── Reading Stage 2 post-read visuals (Chat 16 — minimum-viable
+   polish so the page READS cleanly. Full ITEM E typography sweep
+   stays queued for post-launch. Targets: read-pip, prompt text,
+   textarea visual, label/help/button, saved-state preview. ── */
+.mh-reading-stage{display:block;}
+
+/* "✓ Today's Gospel · read +3" pip — link back to re-read */
+.mh-reading-readpip{
+  display:inline-flex;align-items:center;gap:0.55rem;
+  padding:0.4rem 0.75rem;margin-bottom:0.75rem;
+  background:rgba(22,163,74,0.10);
+  border:1px solid rgba(22,163,74,0.32);
+  border-radius:999px;
+  text-decoration:none;color:inherit;
+  transition:background 180ms ease, border-color 180ms ease;
+}
+.mh-reading-readpip:hover{
+  background:rgba(22,163,74,0.16);
+  border-color:rgba(22,163,74,0.45);
+}
+.mh-rrp-check{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:1.3rem;height:1.3rem;border-radius:50%;
+  background:rgba(22,163,74,0.25);
+  color:rgba(134,239,172,0.95);
+  font-weight:700;font-size:0.78rem;line-height:1;
+  border:1px solid rgba(22,163,74,0.45);
+}
+.mh-rrp-label{
+  font-family:'Cinzel',serif;font-size:0.82rem;
+  letter-spacing:0.04em;color:rgba(244,232,193,0.85);
+}
+.mh-rrp-coins{
+  font-family:'Cinzel',serif;font-weight:600;font-size:0.78rem;
+  color:var(--gold-light);letter-spacing:0.02em;
+}
+
+/* Prompt block — Theo portrait above + question text below.
+   Portrait + speaker inherit existing .mh-portrait-block styling. */
+.mh-reading-prompt-block{margin:0.4rem 0 0.2rem;}
+.mh-rrp-text{
+  font-family:'Crimson Text',serif;
+  font-size:1.02rem;line-height:1.5;
+  color:rgba(244,232,193,0.92);
+  text-align:center;
+  padding:0 0.25rem;margin-top:0.15rem;
+}
+
+/* Textarea label, helper, submit — minimum-viable visual hierarchy. */
+.mh-rri-label,
+.rl-label{
+  font-family:'Cinzel',serif;font-weight:600;
+  font-size:0.7rem;letter-spacing:0.14em;text-transform:uppercase;
+  color:var(--gold-light);
+  align-self:flex-start;
+}
+.mh-reading-textarea,
+.rl-textarea{
+  padding:0.7rem 0.85rem;
+  background:rgba(244,232,193,0.045);
+  border:1px solid rgba(201,146,42,0.32);
+  border-radius:10px;
+  color:rgba(244,232,193,0.92);
+  font-family:'Crimson Text',serif;
+  font-size:1rem;line-height:1.4;
+  resize:vertical;min-height:4.5em;
+}
+.mh-reading-textarea:focus,
+.rl-textarea:focus{
+  outline:none;
+  border-color:var(--gold);
+  background:rgba(244,232,193,0.07);
+  box-shadow:0 0 8px rgba(201,146,42,0.18);
+}
+.mh-rri-help,
+.rl-help{
+  font-family:'Crimson Text',serif;font-style:italic;
+  font-size:0.85rem;line-height:1.35;
+  color:rgba(244,232,193,0.55);
+}
+.mh-reading-submit-btn,
+.rl-submit-btn{
+  align-self:stretch;
+  padding:0.7rem 1rem;margin-top:0.1rem;
+  background:linear-gradient(180deg,var(--gold) 0%,var(--gold-bright) 100%);
+  border:none;border-radius:10px;
+  font-family:'Cinzel',serif;font-weight:600;
+  font-size:0.88rem;letter-spacing:0.1em;text-transform:uppercase;
+  color:var(--ink);
+  cursor:pointer;
+  transition:transform 120ms ease, box-shadow 180ms ease, opacity 180ms ease;
+}
+.mh-reading-submit-btn:not(:disabled):hover,
+.rl-submit-btn:not(:disabled):hover{
+  box-shadow:0 0 12px rgba(255,215,0,0.42);
+}
+.mh-reading-submit-btn:not(:disabled):active,
+.rl-submit-btn:not(:disabled):active{transform:scale(0.99);}
+.mh-reading-submit-btn:disabled,
+.rl-submit-btn:disabled{
+  opacity:0.45;cursor:not-allowed;
+  background:rgba(244,232,193,0.12);
+  color:rgba(244,232,193,0.55);
+  box-shadow:none;
+}
+
+/* Saved-reflection preview (Stage 2 done) */
+.mh-reading-saved{
+  margin-top:0.7rem;padding:0.7rem 0.85rem;
+  background:rgba(22,163,74,0.07);
+  border:1px solid rgba(22,163,74,0.25);
+  border-radius:10px;
+}
+.mh-reading-saved-eyebrow{
+  font-family:'Cinzel',serif;font-weight:600;
+  font-size:0.7rem;letter-spacing:0.14em;text-transform:uppercase;
+  color:rgba(134,239,172,0.85);
+  margin-bottom:0.35rem;
+}
+.mh-reading-saved-text{
+  font-family:'Crimson Text',serif;font-style:italic;
+  font-size:0.95rem;line-height:1.45;
+  color:rgba(244,232,193,0.82);
+}
+
+/* ── Mission row (generic + session variant) ─────────────────── */
+.mh-row{
+  display:flex;align-items:center;gap:0.7rem;
+  padding:0.85rem 0.95rem;margin-bottom:0.55rem;
+  background:rgba(244,232,193,0.045);
+  border:1px solid rgba(201,146,42,0.22);
+  border-radius:12px;
+  text-decoration:none;color:inherit;
+  position:relative;
+  transition:background 180ms ease, border-color 180ms ease, transform 120ms ease;
+}
+.mh-row:active{transform:scale(0.99);}
+.mh-row:hover{background:rgba(201,146,42,0.07);}
+.mh-row-icon{
+  width:2.4rem;height:2.4rem;flex-shrink:0;
+  display:inline-flex;align-items:center;justify-content:center;
+  background:linear-gradient(180deg,var(--parchment) 0%,var(--parchment-dark) 100%);
+  border:1.5px solid var(--gold);border-radius:50%;
+  font-size:1.15rem;line-height:1;
+}
+.mh-row-body{flex:1;min-width:0;}
+.mh-row-name{
+  font-family:'Cinzel',serif;font-weight:600;
+  font-size:0.92rem;letter-spacing:0.02em;
+  color:rgba(244,232,193,0.92);
+}
+.mh-row-sub{
+  font-family:'Crimson Text',serif;font-style:italic;
+  font-size:0.82rem;color:rgba(240,201,110,0.62);
+  margin-top:0.12rem;line-height:1.35;
+}
+.mh-row-coins{
+  font-family:'Cinzel',serif;font-weight:700;
+  font-size:0.78rem;color:rgba(201,146,42,0.7);
+  flex-shrink:0;
+}
+.mh-row-indicator{
+  width:1.6rem;height:1.6rem;flex-shrink:0;
+  display:inline-flex;align-items:center;justify-content:center;
+  border-radius:50%;
+  font-weight:700;font-size:0.92rem;
+}
+.mh-ri-pending{
+  color:rgba(167,139,250,0.55);
+  border:1.5px solid rgba(167,139,250,0.35);
+}
+.mh-ri-done{
+  color:rgba(134,239,172,0.95);
+  background:rgba(22,163,74,0.18);
+  border:1.5px solid rgba(22,163,74,0.45);
+}
+.mh-ri-pilgrimage{
+  color:var(--gold-light);
+  background:rgba(201,146,42,0.12);
+  border:1.5px solid rgba(201,146,42,0.5);
+}
+.mh-ri-na{
+  color:rgba(240,201,110,0.35);
+  border:1.5px dashed rgba(240,201,110,0.3);
+}
+.mh-state-complete{
+  background:rgba(22,163,74,0.07);
+  border-color:rgba(22,163,74,0.25);
+}
+.mh-state-complete .mh-row-name{color:rgba(134,239,172,0.82);}
+.mh-state-pilgrimage{
+  background:rgba(201,146,42,0.06);
+  border-color:rgba(201,146,42,0.32);
+}
+.mh-state-not_applicable{
+  background:rgba(244,232,193,0.025);
+  border-color:rgba(201,146,42,0.12);
+  opacity:0.72;
+}
+
+/* Session row: day-rail mini below the session sub-line ─────── */
+.mh-row-session .mh-row-body{padding-right:0.25rem;}
+.mh-day-rail{
+  display:flex;gap:0.95rem;margin-top:0.5rem;align-items:center;
+}
+.mh-day-pair{
+  display:inline-flex;flex-direction:column;align-items:center;gap:0.18rem;
+}
+.mh-day-dot{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:1.15rem;height:1.15rem;border-radius:50%;
+  font-size:0.65rem;font-weight:700;line-height:1;
+}
+.mh-day-dot-label{
+  font-family:'Cinzel',serif;font-size:0.55rem;letter-spacing:0.08em;
+  color:rgba(240,201,110,0.45);text-transform:uppercase;
+}
+.mh-day-done{
+  background:rgba(22,163,74,0.25);
+  color:rgba(134,239,172,0.95);
+  border:1px solid rgba(22,163,74,0.5);
+}
+.mh-day-today{
+  background:linear-gradient(135deg,var(--gold) 0%,var(--gold-bright) 100%);
+  color:var(--ink);
+  border:1px solid var(--gold-bright);
+  box-shadow:0 0 6px rgba(255,215,0,0.4);
+}
+.mh-day-catch-up{
+  background:rgba(124,58,237,0.2);
+  color:rgba(167,139,250,0.95);
+  border:1px solid rgba(124,58,237,0.55);
+  animation:mhCatchUpPulse 2.2s ease-in-out infinite;
+}
+.mh-day-future{
+  background:transparent;
+  border:1.25px solid rgba(201,146,42,0.28);
+  color:rgba(201,146,42,0.45);
+}
+@keyframes mhCatchUpPulse{
+  0%,100%{box-shadow:0 0 0 rgba(124,58,237,0);}
+  50%{box-shadow:0 0 8px rgba(124,58,237,0.45);}
+}
+.mh-session-complete .mh-row-name{color:rgba(134,239,172,0.82);}
+
+/* ── Progress + celebration ─────────────────────────────────── */
+.mh-progress{
+  margin-top:0.85rem;padding:0.95rem 1rem;
+  background:rgba(244,232,193,0.04);
+  border:1px solid rgba(201,146,42,0.2);
+  border-radius:12px;
+}
+.mh-progress-row{
+  display:flex;align-items:baseline;justify-content:space-between;
+  margin-bottom:0.5rem;
+}
+.mh-progress-label{
+  font-family:'Cinzel',serif;font-weight:600;
+  font-size:0.78rem;letter-spacing:0.12em;text-transform:uppercase;
+  color:rgba(240,201,110,0.7);
+}
+.mh-progress-count{
+  font-family:'Cinzel',serif;font-size:0.95rem;
+  color:rgba(244,232,193,0.88);
+}
+.mh-pc-num{
+  font-family:'Cinzel Decorative',serif;font-weight:700;
+  font-size:1.15rem;color:var(--gold-light);
+  display:inline-block;min-width:1.1ch;text-align:right;
+}
+.mh-pc-total{font-weight:600;color:rgba(244,232,193,0.85);}
+.mh-progress-bar{
+  height:7px;border-radius:4px;
+  background:rgba(244,232,193,0.08);
+  overflow:hidden;border:1px solid rgba(201,146,42,0.18);
+}
+.mh-progress-fill{
+  height:100%;
+  background:linear-gradient(90deg,var(--gold) 0%,var(--gold-bright) 100%);
+  box-shadow:0 0 6px rgba(255,215,0,0.35);
+  transition:width 500ms ease;
+  width:0%;
+}
+.mh-celebration-line{
+  margin-top:0.75rem;
+  font-family:'Crimson Text',serif;font-style:italic;
+  font-size:0.95rem;text-align:center;line-height:1.4;
+  color:var(--gold-light);
+}
+.mh-celebration-rest{color:rgba(240,201,110,0.75);}
+
+/* ── Day Complete lane (Chat 2A · slot 5 on M-F, slot 4 on Sat/Sun)
+   Distinct visual register from the task rows: ✦-glyph in a circular
+   chip on the left, "Day Complete" title with prompt sub, and a
+   right-side +10 coin pip OR 🔒 lock indicator depending on state.
+   States: locked (default) / paid (+ unlock-pending alias) /
+   pilgrimage. ───────────────────────────────────────────────────── */
+.mh-daycomplete{
+  display:flex;align-items:center;gap:0.85rem;
+  padding:0.85rem 0.95rem;margin-bottom:0.55rem;
+  background:linear-gradient(180deg,rgba(201,146,42,0.08) 0%,rgba(44,22,84,0.06) 100%);
+  border:1px solid rgba(201,146,42,0.32);
+  border-radius:12px;
+  position:relative;
+  transition:background 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+}
+.mh-dc-glyph{
+  width:2.4rem;height:2.4rem;flex-shrink:0;
+  display:inline-flex;align-items:center;justify-content:center;
+  background:linear-gradient(180deg,var(--parchment) 0%,var(--parchment-dark) 100%);
+  border:1.5px solid var(--gold);border-radius:50%;
+  font-family:'Cinzel Decorative',serif;
+  font-size:1.05rem;line-height:1;
+  color:var(--ink);
+  /* iOS emoji defense: keep ✦ as text glyph, not multi-color emoji. */
+  font-variant-emoji:text;
+}
+.mh-dc-body{flex:1;min-width:0;}
+.mh-dc-title{
+  font-family:'Cinzel',serif;font-weight:600;
+  font-size:0.92rem;letter-spacing:0.06em;
+  color:rgba(244,232,193,0.92);
+}
+.mh-dc-sub{
+  font-family:'Crimson Text',serif;font-style:italic;
+  font-size:0.85rem;line-height:1.35;
+  color:rgba(244,232,193,0.66);
+  margin-top:0.15rem;
+}
+.mh-dc-coins{
+  flex-shrink:0;
+  font-family:'Cinzel',serif;font-weight:700;
+  font-size:0.95rem;color:var(--gold-light);
+  letter-spacing:0.04em;
+}
+.mh-dc-lock{
+  flex-shrink:0;font-size:0.95rem;
+  color:rgba(201,146,42,0.55);
+}
+
+/* Locked — dimmed; "Finish today's missions to unlock the +10 bonus." */
+.mh-dc-locked{
+  opacity:0.78;
+  background:rgba(244,232,193,0.035);
+  border-color:rgba(201,146,42,0.2);
+}
+.mh-dc-locked .mh-dc-glyph{
+  background:rgba(244,232,193,0.06);
+  border-color:rgba(201,146,42,0.32);
+  color:rgba(201,146,42,0.55);
+}
+.mh-dc-locked .mh-dc-title{color:rgba(244,232,193,0.75);}
+
+/* Paid / unlock-pending — celebration: gold gradient, glow, +10 visible */
+.mh-dc-paid{
+  background:linear-gradient(180deg,rgba(201,146,42,0.14) 0%,rgba(255,215,0,0.06) 100%);
+  border-color:var(--gold);
+  box-shadow:0 0 12px rgba(255,215,0,0.18);
+}
+.mh-dc-paid .mh-dc-glyph{
+  background:linear-gradient(135deg,var(--gold) 0%,var(--gold-bright) 100%);
+  border-color:var(--gold-bright);
+  color:var(--ink);
+  box-shadow:0 0 8px rgba(255,215,0,0.35);
+}
+.mh-dc-paid .mh-dc-title{color:var(--gold-light);}
+
+/* Pilgrimage — gentle; "Pilgrimage rest — your streak walks with you." */
+.mh-dc-pilgrimage{
+  background:rgba(201,146,42,0.06);
+  border-color:rgba(201,146,42,0.28);
+}
+
+/* ── 10/10 polish #1: micro-celebration on row complete ──────── */
+@keyframes mhRowCelebrate{
+  0%   { background:rgba(244,232,193,0.045); }
+  35%  { background:rgba(201,146,42,0.32); box-shadow:0 0 18px rgba(255,215,0,0.45); }
+  100% { background:rgba(22,163,74,0.07); box-shadow:0 0 0 rgba(0,0,0,0); }
+}
+.mh-row-celebrate, .mh-reading-card.mh-row-celebrate{
+  animation:mhRowCelebrate 700ms ease-out;
+}
+
+.mh-empty{
+  text-align:center;padding:1.5rem;
+  font-family:'Crimson Text',serif;font-style:italic;
+  color:rgba(244,232,193,0.5);
+}
+/* ════════════════════════════════════════════════════════
+ * .dac-* — DailyAnchorCard sub-card styles, originally
+ * resident on home.html, mounted on missions.html in
+ * Dispatch 4b. Block restored to missions.html in Chat 9
+ * after Chat 8's str_replace corruption was rolled back.
+ * Source: home.html lines 711-842 (HEAD as of Chat 9).
+ * ════════════════════════════════════════════════════════ */
+/* ── DAILY ANCHOR CARD ("Today We Celebrate") ───────────────────
+   Lane A — devotional anchor between today-card (the day's action)
+   and rank-hero (status reflection). Carries liturgical season,
+   feast/saint, Bible verse (deep-link to bible-reader), and a daily
+   journal prompt (deep-link to journal.html). Tokens borrowed from
+   contrast.css (text tiers) and home page gold/parchment palette.
+   ─────────────────────────────────────────────────────────────── */
+.daily-anchor-card{
+  background:linear-gradient(160deg,rgba(28,16,52,0.55) 0%,rgba(60,18,28,0.4) 100%);
+  border:1px solid rgba(201,146,42,0.32);
+  border-radius:16px;
+  padding:1.15rem 1.1rem 1rem;
+  margin-bottom:1.125rem;
+  box-shadow:0 6px 22px rgba(0,0,0,0.32),inset 0 1px 0 rgba(255,215,0,0.05);
+}
+.daily-anchor-card .dac-inner{
+  display:flex;flex-direction:column;gap:0.7rem;
+}
+/* Great-feast tier — slightly thicker gold border, subtle glow. */
+.daily-anchor-card:has(.dac-inner.dac-great){
+  border-width:1.5px;
+  border-color:rgba(240,201,110,0.55);
+  box-shadow:0 6px 22px rgba(0,0,0,0.32),0 0 18px rgba(255,215,0,0.08),inset 0 1px 0 rgba(255,215,0,0.08);
+}
+/* Name-day tier (Aug 9) — even more elevated, parchment-warm. */
+.daily-anchor-card:has(.dac-inner.dac-name-day){
+  background:linear-gradient(160deg,rgba(60,30,80,0.55) 0%,rgba(80,30,30,0.4) 100%);
+  border-color:rgba(255,215,0,0.5);
+  box-shadow:0 6px 22px rgba(0,0,0,0.32),0 0 24px rgba(255,215,0,0.12),inset 0 1px 0 rgba(255,215,0,0.1);
+}
+.dac-eyebrow{
+  font-family:'Cinzel',serif;
+  font-size:0.7rem;
+  letter-spacing:0.22em;
+  color:var(--text-eyebrow-2);
+  text-transform:uppercase;
+  text-align:center;
+  font-weight:600;
+}
+.dac-framing{
+  font-family:'Cinzel Decorative',serif;
+  font-size:1.1rem;
+  color:var(--text-eyebrow);
+  text-align:center;
+  line-height:1.25;
+  display:flex;align-items:center;justify-content:center;gap:0.55rem;flex-wrap:wrap;
+}
+.dac-orn{
+  /* iOS emoji defense (Repair N pattern): keep ✦ as text glyph,
+     not multi-color emoji presentation. U+2726 BLACK FOUR POINTED
+     STAR is followed by U+FE0E TEXT VARIATION SELECTOR in the
+     rendered HTML; this CSS is the belt-and-suspenders pair. */
+  font-variant-emoji:text;
+  font-family:'Cinzel Decorative',serif;
+  color:var(--text-eyebrow);
+  font-size:0.95rem;
+  line-height:1;
+  flex-shrink:0;
+}
+.dac-framing-text{display:inline-block;}
+/* Greater elevation for great-feast / name-day on the framing line. */
+.dac-inner.dac-great .dac-framing,
+.dac-inner.dac-name-day .dac-framing{
+  font-size:1.22rem;
+}
+.dac-body{
+  font-family:'Crimson Text',serif;
+  font-size:1rem;
+  line-height:1.45;
+  color:var(--text-primary);
+  text-align:center;
+  padding:0 0.25rem;
+}
+.dac-body-great{font-size:1.1rem;}
+
+/* ── DAC sub-cards (verse + prompt) ──────────────────────────── */
+.dac-sub{
+  display:block;
+  text-decoration:none;
+  background:rgba(244,232,193,0.05);
+  border:1px solid rgba(201,146,42,0.22);
+  border-radius:12px;
+  padding:0.85rem 0.95rem 0.7rem;
+  transition:background 0.18s ease,border-color 0.18s ease,transform 0.12s ease;
+  min-height:44px;  /* iOS tap target floor */
+  color:inherit;
+}
+.dac-sub:hover{background:rgba(244,232,193,0.07);border-color:rgba(240,201,110,0.4);}
+.dac-sub:active{transform:scale(0.99);background:rgba(244,232,193,0.08);}
+.dac-sub-eyebrow{
+  font-family:'Cinzel',serif;
+  font-size:0.62rem;
+  letter-spacing:0.2em;
+  color:var(--text-eyebrow-3);
+  text-transform:uppercase;
+  margin-bottom:0.4rem;
+  font-weight:600;
+}
+.dac-verse-text{
+  font-family:'Crimson Text',serif;
+  font-style:italic;
+  font-size:0.98rem;
+  line-height:1.5;
+  color:var(--text-primary);
+  margin-bottom:0.4rem;
+}
+.dac-verse-ref{
+  font-family:'Cinzel',serif;
+  font-size:0.72rem;
+  letter-spacing:0.08em;
+  color:var(--text-eyebrow-2);
+  text-align:right;
+  margin-bottom:0.6rem;
+}
+.dac-prompt-text{
+  font-family:'Crimson Text',serif;
+  font-style:italic;
+  font-size:0.98rem;
+  line-height:1.5;
+  color:var(--text-primary);
+  margin-bottom:0.6rem;
+}
+.dac-sub-cta{
+  display:flex;align-items:center;justify-content:flex-end;gap:0.3rem;
+  font-family:'Cinzel',serif;
+  font-size:0.68rem;
+  letter-spacing:0.14em;
+  color:var(--text-eyebrow-2);
+  text-transform:uppercase;
+  font-weight:600;
+}
+.dac-sub-arrow{font-size:1rem;line-height:1;}
+</style>
+</head>
+<body>
+
+<div id="coin-rain"></div>
+<!-- ADMIN BAR -->
+<div class="admin-bar" id="admin-bar">
+  <span class="admin-bar-label">⚙ Admin View</span>
+  <div style="display:flex;gap:0.4rem;">
+    <button class="admin-bar-btn" onclick="window.location.href='admin.html'">← Admin Panel</button>
+    <button class="admin-bar-btn" onclick="window.location.href='index.html?signout=1'">Sign Out</button>
+  </div>
+</div>
+
+<div id="loading"><div class="loading-cross">☩</div></div>
+
+<div id="app">
+  <div class="page">
+
+    <!-- HEADER -->
+    <header class="app-header">
+      <div class="app-name">The Orthodox Expedition</div>
+      <div class="app-divider">✦ ☩ ✦</div>
+    </header>
+
+    <!-- COIN STRIP -->
+    <div class="coin-strip fade-up">
+      <div class="coin-strip-left">
+        <div style="margin-bottom:0.15rem">Saint Coins</div>
+        <div class="coin-strip-val" id="coin-val">0</div>
+      </div>
+      <div class="coin-strip-right">
+        <div class="coin-strip-lifetime">Lifetime Earned</div>
+        <div class="coin-strip-lifetime-val" id="lifetime-val">0</div>
+      </div>
+    </div>
+
+    <!-- TABS -->
+    <div class="mission-tabs fade-up">
+      <button class="m-tab active" id="tab-daily" onclick="switchTab('daily')">
+        <span class="m-tab-mark">✦</span>
+        <span>Daily</span>
+        <span class="m-tab-badge" id="badge-daily"></span>
+      </button>
+      <button class="m-tab" id="tab-weekly" onclick="switchTab('weekly')">
+        <span class="m-tab-mark">☩</span>
+        <span>Weekly</span>
+        <span class="m-tab-badge" id="badge-weekly"></span>
+      </button>
+      <button class="m-tab" id="tab-special" onclick="switchTab('special')">
+        <span class="m-tab-mark">⊕</span>
+        <span>Special</span>
+        <span class="m-tab-badge" id="badge-special"></span>
+      </button>
+    </div>
+
+    <!-- DAILY PANEL — Dispatch 4b daily-hub mount point.
+         Old "ps-daily" progress bar + #daily-list inline mission cards
+         are absorbed by js/missions.js's hub render (the hub renders
+         its own progress + celebration block at the bottom). The
+         tabs themselves and the Weekly/Special panels below remain
+         intact (Pause #6 = B). -->
+    <div class="tab-panel show" id="panel-daily">
+      <div id="daily-hub"></div>
+    </div>
+
+    <!-- WEEKLY PANEL -->
+    <div class="tab-panel" id="panel-weekly">
+      <div class="progress-summary">
+        <span class="ps-label">This Week</span>
+        <div class="ps-bar-wrap"><div class="ps-bar"><div class="ps-fill" id="ps-weekly"></div></div></div>
+        <span class="ps-val" id="ps-weekly-lbl">0 / 0</span>
+      </div>
+      <div class="section-lbl">Self Report</div>
+      <div id="weekly-self-list"></div>
+      <div class="section-lbl" style="margin-top:0.75rem">Parent Verified</div>
+      <div id="weekly-verify-list"></div>
+    </div>
+
+    <!-- SPECIAL PANEL -->
+    <div class="tab-panel" id="panel-special">
+      <div id="special-list"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- BOTTOM NAV -->
+<nav class="bottom-nav" id="bottom-nav" style="display:none;">
+  <a class="nav-item" href="home.html">
+    <span class="nav-mark">✦</span>
+    <span class="nav-label">Home</span>
+  </a>
+  <a class="nav-item active" href="missions.html">
+    <span class="nav-mark">☩</span>
+    <span class="nav-label">Missions</span>
+    <span class="nav-dot" id="missions-dot"></span>
+  </a>
+  <a class="nav-item" href="curriculum.html">
+    <span class="nav-mark">⊕</span>
+    <span class="nav-label">Topics</span>
+  </a>
+  <a class="nav-item" href="bible-reader.html">
+    <span class="nav-mark">☦&#xFE0E;</span>
+    <span class="nav-label">Scriptures</span>
+  </a>
+  <a class="nav-item" href="journal.html">
+    <span class="nav-mark">✎</span>
+    <span class="nav-label">Field Manual</span>
+  </a>
+</nav>
+
+<!-- Dispatch 4b — daily-hub module dependencies.
+     Order matters: week-utils → pilgrimages → lane modules →
+     daily-anchor-card + reading-quest → missions (consumer). -->
+<script src="js/week-utils.js"></script>
+<script src="js/pilgrimages.js"></script>
+<script src="js/streak-grace.js"></script>
+<script src="js/prayers.js"></script>
+<script src="js/reading.js"></script>
+<script src="js/memorization.js"></script>
+<script src="js/daily-anchor-card.js"></script>
+<script src="js/reading-quest.js"></script>
+<script src="js/reflection-lane.js"></script>
+<script src="js/missions.js"></script>
+
+<script>
+// ── SUPABASE ──────────────────────────────────────────────────
+const SUPABASE_URL = 'https://ksfnsryfmkafwirzgjoe.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtzZm5zcnlmbWthZndpcnpnam9lIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2ODM4MTcsImV4cCI6MjA5MTI1OTgxN30.mHQty44WBnjQY8BJ8KbPk_pp-yTcOaifGxCZPUO4xpY';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ── STATE ─────────────────────────────────────────────────────
+let profile = null;
+let allMissions = [];
+let completions = [];
+let activeTab = 'daily';
+
+// ── TIME KEYS ─────────────────────────────────────────────────
+const todayKey = () => new Date().toISOString().slice(0,10);
+const weekKey  = () => {
+  const d=new Date(),j=new Date(d.getFullYear(),0,1);
+  const w=Math.ceil(((d-j)/86400000+j.getDay()+1)/7);
+  return `${d.getFullYear()}-W${String(w).padStart(2,'0')}`;
+};
+
+// ── AUTH ──────────────────────────────────────────────────────
+(async()=>{
+  try {
+    const timer = new Promise(r => setTimeout(() => r(null), 4000));
+    const res   = await Promise.race([sb.auth.getSession(), timer]);
+    const session = res?.data?.session ?? null;
+    if(!session){ window.location.href='index.html'; return; }
+    const {data:profCheck} = await sb.from('profiles').select('role').eq('id',session.user.id).single();
+    const isAdminView = new URLSearchParams(window.location.search).get('admin')==='1';
+    if(profCheck && profCheck.role === 'admin' && !isAdminView){ window.location.href='admin.html'; return; }
+    if(profCheck && profCheck.role === 'admin' && isAdminView){ showAdminBar(); }
+    await loadAll(session.user.id);
+    document.getElementById('loading').style.display='none';
+    document.getElementById('app').style.display='block';
+    document.getElementById('bottom-nav').style.display='flex';
+  } catch(e) {
+    console.error('Missions error:', e);
+    window.location.href='index.html';
+  }
+})();
+
+// ── LOAD ──────────────────────────────────────────────────────
+async function loadAll(userId){
+  const [profRes, missRes, compRes] = await Promise.all([
+    sb.from('profiles').select('*').eq('id',userId).single(),
+    sb.from('missions').select('*').eq('is_active',true).order('type').order('created_at'),
+    sb.from('mission_completions').select('*').eq('explorer_id',userId),
+  ]);
+  profile     = profRes.data;
+  allMissions = missRes.data || [];
+  completions = compRes.data || [];
+
+  updateCoinStrip();
+  renderAll();
+  updateTabBadges();
+}
+
+async function reload(){
+  if(!profile) return;
+  const [profRes, compRes] = await Promise.all([
+    sb.from('profiles').select('*').eq('id',profile.id).single(),
+    sb.from('mission_completions').select('*').eq('explorer_id',profile.id),
+  ]);
+  profile     = profRes.data;
+  completions = compRes.data || [];
+  updateCoinStrip();
+  renderAll();
+  updateTabBadges();
+}
+
+// ── COIN STRIP ────────────────────────────────────────────────
+function updateCoinStrip(){
+  const el = document.getElementById('coin-val');
+  el.textContent = (profile.coins||0).toLocaleString();
+  document.getElementById('lifetime-val').textContent = (profile.lifetime_coins||0).toLocaleString();
+}
+
+function animateCoinStrip(){
+  const el = document.getElementById('coin-val');
+  el.classList.remove('tick');
+  void el.offsetWidth;
+  el.classList.add('tick');
+  setTimeout(()=>el.classList.remove('tick'),400);
+}
+
+// ── TABS ──────────────────────────────────────────────────────
+function switchTab(tab){
+  activeTab = tab;
+  ['daily','weekly','special'].forEach(t=>{
+    document.getElementById('tab-'+t).classList.toggle('active',t===tab);
+    document.getElementById('panel-'+t).classList.toggle('show',t===tab);
+  });
+}
+
+// ── RENDER ALL ────────────────────────────────────────────────
+function renderAll(){
+  renderDaily();
+  renderWeekly();
+  renderSpecial();
+}
+
+// ── HELPERS ───────────────────────────────────────────────────
+function isDailyDone(missionId){
+  return completions.some(c=>
+    c.mission_id===missionId &&
+    c.day_key===todayKey() &&
+    (c.status==='completed'||c.status==='approved')
+  );
+}
+function isWeeklyDone(missionId){
+  return completions.some(c=>
+    c.mission_id===missionId &&
+    c.week_key===weekKey() &&
+    (c.status==='completed'||c.status==='approved')
+  );
+}
+function isWeeklyPending(missionId){
+  return completions.some(c=>
+    c.mission_id===missionId &&
+    c.week_key===weekKey() &&
+    c.status==='pending'
+  );
+}
+function isSpecialPending(missionId){
+  return completions.some(c=>c.mission_id===missionId && c.status==='pending');
+}
+function isSpecialDone(mission){
+  if(mission.repeatable) return false;
+  return completions.some(c=>c.mission_id===mission.id && c.status==='approved');
+}
+
+// ── DAILY ─────────────────────────────────────────────────────
+// Dispatch 4b: the Daily tab is now the daily-hub. We delegate to
+// js/missions.js (window.Missions.mount), which renders:
+//   • Eyebrow + day label
+//   • Pilgrimage banner (if active)
+//   • Reading mission card (state machine: pilgrimage / pending /
+//     read-not-answered / complete / complete-no-question)
+//   • Prayer, memorization rows
+//   • Session row with M/W/F day-rail (Pause #1 = B) — M/W/F only
+//   • Reflection row — T/Th only
+//   • Progress + celebration line
+// Weekly + Special tabs are untouched (Pause #6 = B).
+function renderDaily(){
+  if (!window.Missions || typeof window.Missions.mount !== 'function') {
+    const hub = document.getElementById('daily-hub');
+    if (hub) hub.innerHTML = '<div class="empty-state">Missions hub not loaded.</div>';
+    return;
+  }
+  const hub = document.getElementById('daily-hub');
+  if (!hub) return;
+  // Fire-and-forget; mount is async and self-contained. State is
+  // refreshed via visibilitychange/pageshow handlers below.
+  window.Missions.mount(hub, {
+    sb,
+    explorerId: profile && profile.id,
+    familyId:   profile && profile.family_id,
+    profile,
+  });
+}
+
+// ── DAILY HUB REFRESH ON VISIBILITY ─────────────────────────────
+// 10/10 polish #1: when Nolan returns to Missions (e.g. after
+// completing prayers on prayers.html and tapping back), refresh
+// the hub so newly-complete rows can micro-celebrate via the
+// count-up animation + gold-flash inside Missions.mount.
+(function wireMissionsRefresh(){
+  function maybeRefresh(){
+    if (document.visibilityState !== 'visible') return;
+    if (activeTab !== 'daily') return;
+    if (window.Missions && typeof window.Missions.refresh === 'function') {
+      window.Missions.refresh();
+    }
+  }
+  document.addEventListener('visibilitychange', maybeRefresh);
+  window.addEventListener('pageshow', maybeRefresh);
+})();
+
+// ── WEEKLY ────────────────────────────────────────────────────
+function renderWeekly(){
+  const selfMissions   = allMissions.filter(m=>m.type==='weekly');
+  const verifyMissions = allMissions.filter(m=>m.type==='weekly_verified');
+  const all = [...selfMissions,...verifyMissions];
+  const done = all.filter(m=>isWeeklyDone(m.id)).length;
+  const total = all.length;
+  const pct = total>0?(done/total)*100:0;
+
+  document.getElementById('ps-weekly').style.width = pct+'%';
+  document.getElementById('ps-weekly-lbl').textContent = `${done} / ${total}`;
+
+  const selfList   = document.getElementById('weekly-self-list');
+  const verifyList = document.getElementById('weekly-verify-list');
+  selfList.innerHTML='';
+  verifyList.innerHTML='';
+
+  if(!selfMissions.length) selfList.innerHTML='<div class="empty-state">No self-report missions.</div>';
+  selfMissions.forEach(m=>{
+    const d = isWeeklyDone(m.id);
+    selfList.appendChild(buildCard(m, d?'done':'available', ()=>completeWeeklyMission(m)));
+  });
+
+  if(!verifyMissions.length) verifyList.innerHTML='<div class="empty-state">No verified missions.</div>';
+  verifyMissions.forEach(m=>{
+    const done    = isWeeklyDone(m.id);
+    const pending = isWeeklyPending(m.id);
+    const status  = done?'done':pending?'pending':'available';
+    verifyList.appendChild(buildVerifyCard(m, status, ()=>submitWeeklyVerify(m)));
+  });
+}
+
+// ── SPECIAL ───────────────────────────────────────────────────
+function renderSpecial(){
+  const types = ['special','field_visit'];
+  const missions = allMissions.filter(m=>types.includes(m.type));
+  const list = document.getElementById('special-list');
+  list.innerHTML='';
+
+  // Field visits section
+  const fieldVisits = missions.filter(m=>m.type==='field_visit');
+  if(fieldVisits.length){
+    const lbl = document.createElement('div');
+    lbl.className='section-lbl';lbl.textContent='Field Expeditions';
+    list.appendChild(lbl);
+    fieldVisits.forEach(m=>{
+      const pending = isSpecialPending(m.id);
+      const status  = pending?'pending':'available';
+      list.appendChild(buildVerifyCard(m,status,()=>submitSpecial(m)));
+    });
+  }
+
+  // Special missions
+  const special = missions.filter(m=>m.type==='special');
+  if(special.length){
+    const lbl = document.createElement('div');
+    lbl.className='section-lbl';
+    lbl.style.marginTop=fieldVisits.length?'0.75rem':'0';
+    lbl.textContent='Special Missions';
+    list.appendChild(lbl);
+    special.forEach(m=>{
+      const oneTimeDone = isSpecialDone(m);
+      const pending     = isSpecialPending(m.id);
+      const status      = oneTimeDone?'special-done':pending?'pending':'available';
+      list.appendChild(buildVerifyCard(m,status,()=>submitSpecial(m)));
+    });
+  }
+
+  if(!missions.length) list.innerHTML='<div class="empty-state">No special missions yet.</div>';
+}
+
+// ── CARD BUILDERS ─────────────────────────────────────────────
+function buildCard(m, status, onDone){
+  const card = document.createElement('div');
+  card.className = `m-card ${status}`;
+  card.id = `card-${m.id}`;
+
+  const typeTag = m.repeatable===false ? '<span class="m-tag">One-time</span>' : '';
+
+  const btnHtml = status==='done'
+    ? `<button class="m-btn done-btn">✓ Done</button><span class="m-check">✦</span>`
+    : `<button class="m-btn mark">Mark Done</button>`;
+
+  card.innerHTML = `
+    <div class="m-emoji">${m.emoji}</div>
+    <div class="m-info">
+      <div class="m-name">${m.name}</div>
+      <div class="m-detail">${m.detail}</div>
+      <div class="m-meta"><span class="m-coins">+${m.coins} coins</span>${typeTag}</div>
+    </div>
+    ${btnHtml}
+  `;
+
+  if(status!=='done'){
+    card.querySelector('.m-btn').addEventListener('click', onDone);
+  }
+  return card;
+}
+
+function buildVerifyCard(m, status, onSubmit){
+  const card = document.createElement('div');
+  card.className = `m-card ${status}`;
+  card.id = `card-${m.id}`;
+
+  const repeatTag = m.repeatable===false
+    ? '<span class="m-tag">One-time</span>'
+    : m.type==='special'?'<span class="m-tag">Repeatable</span>':'';
+
+  let btnHtml = '';
+  if(status==='special-done')
+    btnHtml=`<button class="m-btn complete-badge">✦ Complete</button><span class="m-check">✦</span>`;
+  else if(status==='done')
+    btnHtml=`<button class="m-btn done-btn">✓ Done</button><span class="m-check">✦</span>`;
+  else if(status==='pending')
+    btnHtml=`<button class="m-btn pending-btn">⏳ Awaiting</button><span class="m-pending-badge">PENDING</span>`;
+  else
+    btnHtml=`<button class="m-btn submit">${m.type==='special'||m.type==='field_visit'?"I'm Ready!":"Submit"}</button>`;
+
+  card.innerHTML = `
+    <div class="m-emoji">${m.emoji}</div>
+    <div class="m-info">
+      <div class="m-name">${m.name}</div>
+      <div class="m-detail">${m.detail}</div>
+      <div class="m-meta"><span class="m-coins">+${m.coins} coins</span>${repeatTag}</div>
+    </div>
+    ${btnHtml}
+  `;
+
+  if(status==='available'){
+    card.querySelector('.m-btn').addEventListener('click', onSubmit);
+  }
+  return card;
+}
+
+// ── COMPLETE MISSIONS ─────────────────────────────────────────
+async function completeDailyMission(m){
+  if(new URLSearchParams(window.location.search).get('admin')==='1') return;
+  if(isDailyDone(m.id)) return;
+  const btn = document.querySelector(`#card-${m.id} .m-btn`);
+  if(btn) btn.disabled=true;
+
+  const {error:compErr} = await sb.from('mission_completions').insert({
+    explorer_id: profile.id,
+    mission_id:  m.id,
+    status:      'completed',
+    day_key:     todayKey(),
+    completed_at: new Date().toISOString(),
+    coins_awarded: m.coins,
+  });
+  if(compErr){console.error(compErr);if(btn)btn.disabled=false;return;}
+
+  await awardCoins(m.coins, m.name);
+  flashCard(`card-${m.id}`);
+  coinRain(m.coins);
+  animateCoinStrip();
+  await reload();
+}
+
+async function completeWeeklyMission(m){
+  if(new URLSearchParams(window.location.search).get('admin')==='1') return;
+  if(isWeeklyDone(m.id)) return;
+  const btn = document.querySelector(`#card-${m.id} .m-btn`);
+  if(btn) btn.disabled=true;
+
+  const {error} = await sb.from('mission_completions').insert({
+    explorer_id:  profile.id,
+    mission_id:   m.id,
+    status:       'completed',
+    week_key:     weekKey(),
+    completed_at: new Date().toISOString(),
+    coins_awarded: m.coins,
+  });
+  if(error){console.error(error);if(btn)btn.disabled=false;return;}
+
+  // If attendance mission, increment sessions
+  if(m.name.toLowerCase().includes('attend')||m.name.toLowerCase().includes('expedition')){
+    await sb.from('profiles').update({
+      sessions_attended: (profile.sessions_attended||0)+1,
+      streak: (profile.streak||0)+1,
+      last_session_week: weekKey(),
+    }).eq('id',profile.id);
+  }
+
+  await awardCoins(m.coins, m.name);
+  flashCard(`card-${m.id}`);
+  coinRain(m.coins);
+  animateCoinStrip();
+  await reload();
+}
+
+async function submitWeeklyVerify(m){
+  if(isWeeklyDone(m.id)||isWeeklyPending(m.id)) return;
+  const {error} = await sb.from('mission_completions').insert({
+    explorer_id: profile.id,
+    mission_id:  m.id,
+    status:      'pending',
+    week_key:    weekKey(),
+    created_at:  new Date().toISOString(),
+  });
+  if(error){console.error(error);return;}
+  await reload();
+}
+
+async function submitSpecial(m){
+  if(isSpecialPending(m.id)||isSpecialDone(m)) return;
+  const {error} = await sb.from('mission_completions').insert({
+    explorer_id: profile.id,
+    mission_id:  m.id,
+    status:      'pending',
+    created_at:  new Date().toISOString(),
+  });
+  if(error){console.error(error);return;}
+  await reload();
+}
+
+// ── AWARD COINS ───────────────────────────────────────────────
+async function awardCoins(amount, reason){
+  const newCoins    = (profile.coins||0)+amount;
+  const newLifetime = (profile.lifetime_coins||0)+amount;
+  await Promise.all([
+    sb.from('profiles').update({coins:newCoins,lifetime_coins:newLifetime}).eq('id',profile.id),
+    sb.from('activity_log').insert({explorer_id:profile.id,amount,reason,created_at:new Date().toISOString()}),
+  ]);
+}
+
+// ── ANIMATIONS ────────────────────────────────────────────────
+function flashCard(cardId){
+  const card = document.getElementById(cardId);
+  if(!card) return;
+  card.classList.add('done-flash');
+}
+
+function coinRain(amount){
+  const n = Math.min(Math.floor(amount/8)+3,18);
+  const c = document.getElementById('coin-rain');
+  const symbols = ['✦','◈','☩','⊕'];
+  for(let i=0;i<n;i++){
+    setTimeout(()=>{
+      const el=document.createElement('div');
+      el.className='coin-p';
+      el.textContent=symbols[Math.floor(Math.random()*symbols.length)];
+      el.style.left=Math.random()*92+'vw';
+      el.style.animationDuration=(1.2+Math.random()*1.8)+'s';
+      el.style.color=['#ffd700','#f0c96e','#c9922a'][Math.floor(Math.random()*3)];
+      c.appendChild(el);
+      setTimeout(()=>el.remove(),3500);
+    },i*70);
+  }
+}
+
+// ── TAB BADGES ────────────────────────────────────────────────
+// Dispatch 4b: the Daily badge now reflects pending lanes from the
+// new daily-hub (reading, prayer, memo, session/journal) rather
+// than the legacy "daily" missions table rows. Weekly + Special
+// badges are unchanged.
+async function updateTabBadges(){
+  const selfW   = allMissions.filter(m=>m.type==='weekly');
+  const verifyW = allMissions.filter(m=>m.type==='weekly_verified');
+  const special = allMissions.filter(m=>['special','field_visit'].includes(m.type));
+
+  const weeklyPending  = [...selfW,...verifyW].filter(m=>!isWeeklyDone(m.id)).length;
+  const specialPending = special.filter(m=>isSpecialPending(m.id)).length;
+
+  setBadge('weekly',  weeklyPending);
+  setBadge('special', specialPending);
+
+  // Daily badge from hub state (graceful: 0 if Missions unavailable)
+  let dailyPending = 0;
+  try {
+    if (window.Missions && typeof window.Missions.loadTodaysState === 'function'
+        && profile && profile.id && profile.family_id) {
+      const st = await window.Missions.loadTodaysState(sb, profile.id, profile.family_id);
+      dailyPending = Math.max(0, (st.totalCount || 0) - (st.completedCount || 0));
+      // On pilgrimage, the hub renders all rows as "rest" — no
+      // pending state to surface to the badge.
+      if (st.pilgrimage) dailyPending = 0;
+    }
+  } catch (e) {
+    console.warn('updateTabBadges (daily) failed (graceful):', e);
+  }
+  setBadge('daily', dailyPending);
+}
+
+function setBadge(tab, count){
+  const el = document.getElementById('badge-'+tab);
+  if(count>0){el.textContent=count;el.classList.add('show');}
+  else el.classList.remove('show');
+}
+
+function showAdminBar(){
+  const bar = document.getElementById('admin-bar');
+  if(bar) bar.classList.add('show');
+}
+
+// ── ADMIN NAV FIX ─────────────────────────────────────────────
+// When browsing as admin, preserve ?admin=1 across all nav links
+(function(){
+  if(new URLSearchParams(window.location.search).get('admin')==='1'){
+    document.querySelectorAll('.nav-item').forEach(a=>{
+      if(a.href && !a.href.includes('?admin=1') && !a.href.includes('index.html')){
+        a.href = a.href + '?admin=1';
+      }
+    });
+    // Also update any "back" or internal links
+    document.querySelectorAll('a[href]').forEach(a=>{
+      const href=a.getAttribute('href');
+      if(href && !href.startsWith('#') && !href.startsWith('http') &&
+         !href.includes('?admin=1') && !href.includes('index.html') &&
+         !href.includes('games/')){
+        a.setAttribute('href', href + '?admin=1');
+      }
+    });
+  }
+})();
+</script>
+
+<script>
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('sw.js').catch(()=>{});
+  });
+}
+</script>
+</body>
+</html>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
 function showAdminBar(){

@@ -541,6 +541,14 @@ body::before{
   box-shadow:0 4px 16px rgba(0,0,0,0.25),inset 0 1px 0 rgba(244,232,193,0.06);
 }
 .hp-pb-icon{font-size:1.65rem;flex-shrink:0;line-height:1;}
+/* Chat 4 — companion image variant (replaces ✦/🚶 textContent
+   with an <img> for both active and welcome-home banner states). */
+.hp-pb-icon img{
+  display:block;
+  width:auto;height:72px;
+  border-radius:8px;
+  object-fit:contain;
+}
 .hp-pb-text{flex:1;min-width:0;}
 .hp-pb-title{
   font-family:'Cinzel',serif;font-size:0.78rem;letter-spacing:0.14em;
@@ -2214,7 +2222,8 @@ async function loadPilgrimageBanner(){
     // (1) Active pilgrimage today?
     const active = await window.Pilgrimages.isActiveToday(sb);
     if (active) {
-      iconEl.textContent = '🚶';
+      // Chat 4 — both states emit the companion image.
+      iconEl.innerHTML = '<img src="/Orthodox-Expedition-/assets/characters/theo-christopher-companion.png" alt="Theo and Christopher walking together">';
       titleEl.textContent = 'On Pilgrimage — ' + (active.name || '');
       const fmtRange = (s, e) => {
         if (!s || !e) return '';
@@ -2231,7 +2240,7 @@ async function loadPilgrimageBanner(){
     if (ended && ended.id) {
       const flagKey = 'oe_welcome_home_' + ended.id;
       if (!localStorage.getItem(flagKey)) {
-        iconEl.textContent = '✦';
+        iconEl.innerHTML = '<img src="/Orthodox-Expedition-/assets/characters/theo-christopher-companion.png" alt="Theo and Christopher walking together">';
         titleEl.textContent = 'Welcome Home';
         detailEl.textContent = 'Welcome home, ' +
           (profile && profile.name ? profile.name : 'pilgrim') +

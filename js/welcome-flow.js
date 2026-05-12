@@ -276,6 +276,58 @@
     return { root: root, dismiss: dismiss };
   }
 
+  // ── Hero frame (Chat 4) ────────────────────────────────────────────
+  // The first frame of the welcome flow. Theo + Christopher walking
+  // toward the monastery at sunset, personalized greeting with the
+  // explorer's first name, a single "Begin →" CTA. On tap, chains to
+  // the existing video panel (which then chains to the instruction
+  // cards). The welcome flow is now: hero → video → 4 cards.
+  //
+  // opts: { modalRoot, name, onBegin }
+  //   modalRoot: container element to fill
+  //   name:      explorer's first name (already extracted, e.g. "Nolan")
+  //   onBegin:   callback invoked when Begin is tapped
+  function _renderHeroFrame(opts) {
+    var modalRoot = opts.modalRoot;
+    var name = opts.name || 'Nolan';
+    var onBegin = opts.onBegin;
+
+    modalRoot.innerHTML = '';
+
+    var panel = global.document.createElement('div');
+    panel.className = 'oe-welcome-panel oe-hero-panel';
+
+    // Portrait wrap (16:9 frame; image is JPEG-as-PNG, browser
+    // handles it correctly via magic-byte detection).
+    var portraitWrap = global.document.createElement('div');
+    portraitWrap.className = 'oe-hero-portrait-wrap';
+
+    var portrait = global.document.createElement('img');
+    portrait.className = 'oe-hero-portrait';
+    portrait.src = '/Orthodox-Expedition-/assets/characters/theo-christopher-hero.png';
+    portrait.alt = 'Theo and Christopher walking toward a monastery at sunset';
+    portraitWrap.appendChild(portrait);
+    panel.appendChild(portraitWrap);
+
+    // Personalized greeting
+    var greeting = global.document.createElement('h2');
+    greeting.className = 'oe-hero-greeting';
+    greeting.textContent = 'Welcome to The Orthodox Expedition, ' + name + '.';
+    panel.appendChild(greeting);
+
+    // Begin CTA (reuses existing primary CTA styling)
+    var cta = global.document.createElement('button');
+    cta.type = 'button';
+    cta.className = 'oe-cta oe-cta-primary';
+    cta.textContent = 'Begin \u2192';
+    cta.addEventListener('click', function () {
+      onBegin();
+    });
+    panel.appendChild(cta);
+
+    modalRoot.appendChild(panel);
+  }
+
   // ── Video panel ────────────────────────────────────────────────────
   // opts: { url, modalRoot, ctaLabel, onContinue, onDismiss }
   //   url:        full YouTube embed URL (without query string)
@@ -602,12 +654,22 @@
           });
         };
 
-        _renderVideoPanel({
-          url: VIDEOS.welcome,
+        var onHeroBegin = function () {
+          _renderVideoPanel({
+            url: VIDEOS.welcome,
+            modalRoot: root,
+            ctaLabel: 'Continue \u2192',
+            onContinue: onVideoContinue
+            // No onDismiss for welcome video — Skip lives on the cards panel.
+          });
+        };
+
+        // Chat 4 — hero frame is now the first scene; on Begin →
+        // video → cards. Preserves entire existing flow downstream.
+        _renderHeroFrame({
           modalRoot: root,
-          ctaLabel: 'Continue \u2192',
-          onContinue: onVideoContinue
-          // No onDismiss for welcome video — Skip lives on the cards panel.
+          name: resolvedName,
+          onBegin: onHeroBegin
         });
       };
 
@@ -699,6 +761,7 @@
     _getCurrentWeekNumber: _getCurrentWeekNumber,
     _todayKeyET: _todayKeyET,
     _renderModal: _renderModal,
+    _renderHeroFrame: _renderHeroFrame,
     _renderVideoPanel: _renderVideoPanel,
     _renderInstructionCards: _renderInstructionCards,
     _videos: VIDEOS,

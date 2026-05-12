@@ -415,21 +415,21 @@ const DailyAnchorCard = (() => {
     }
 
     // ── PROMPT SUB-CARD ──────────────────────────────────────────
-    // Tappable; deep-links to journal.html with prompt=daily mode
-    // and the prompt text URL-encoded. journal.html surfaces it via
-    // the existing coming-home-banner pattern (see applySessionPrompt).
+    // Visual reference only post-Chat-2A. The reflection INPUT moves
+    // to missions.js's reading two-stage lane (Stage 2 = reflect).
+    // We keep the prompt visible here so Nolan sees "what's coming"
+    // pre-read, but no longer deep-links to journal.html — the
+    // reading lane on Missions is the canonical write surface.
     let promptHtml = '';
     if (prompt && prompt.prompt_text) {
-      const href = `journal.html?prompt=daily&text=${encodeURIComponent(prompt.prompt_text)}`;
       promptHtml = `
-        <a class="dac-sub dac-prompt-sub" href="${esc(href)}">
+        <div class="dac-sub dac-prompt-sub dac-prompt-sub-static">
           <div class="dac-sub-eyebrow">Today's Reflection</div>
           <div class="dac-prompt-text">${esc(prompt.prompt_text)}</div>
-          <div class="dac-sub-cta">
-            <span>Write in your Field Manual</span>
-            <span class="dac-sub-arrow" aria-hidden="true">›</span>
+          <div class="dac-sub-cta dac-sub-cta-hint">
+            <span>Reflect after reading the Gospel</span>
           </div>
-        </a>
+        </div>
       `;
     }
 

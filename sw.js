@@ -1,4 +1,30 @@
-// Orthodox Expedition — Service Worker v39
+// Orthodox Expedition — Service Worker v40
+// v40: Chat 14 — Eucharist Sunday Morning Prayers (text-only).
+//      🟢 New page: eucharist-prayers.html — Orthodox pre-
+//          communion prayer surface. Four prayers in a single
+//          parchment-tinted .prayer-block (Chat 7 dialect):
+//          Heavenly King (invocation of the Spirit), St. John
+//          Chrysostom's Pre-Communion Confession of Faith, the
+//          Communion hymn "Of Thy Mystical Supper", and the
+//          short St. John Damascene Approach Prayer. Lean head
+//          mirroring games.html (no welcome-flow.css; no module
+//          script tags). Bottom nav canonical 5 items with
+//          ☦&#xFE0E; on Scriptures.
+//      🟢 home.html — Sunday-gated "Before Liturgy" panel
+//          surfaces between #hp-liturgical-calendar and
+//          #home-dashboard ONLY when WeekUtils.dayOfWeekET()
+//          returns 0 (Sun in America/New_York). Markup is
+//          statically hidden via [hidden]; a small inline IIFE
+//          flips the attr off on Sundays. Defensive fallback:
+//          if WeekUtils is absent the panel stays hidden (silent
+//          absence — no console warning). .hp-before-liturgy CSS
+//          mirrors games.html .game-card structurally (anchor +
+//          icon + 2-line info + gold "›"). Purely additive: the
+//          SHA-256 of home.html minus the 3 inserted blocks
+//          matches the pre-edit hash exactly.
+//      🟢 STATIC_ASSETS — adds eucharist-prayers.html so the
+//          PWA pre-caches it on first install (offline-safe for
+//          Sunday-morning use on Nolan's iPad).
 // v39: Chat 13 — Training Grounds (games.html) visual cleanup.
 //      🟢 games.html visual lift: replaced lavender-on-purple
 //          register with Chat-7 parchment+gold dialect. New
@@ -416,7 +442,7 @@
 // v4: added week.html, prayers.html, day-state, pause-card, prayers, and config JSON
 // Version bump forces cache clear and fresh install
 
-const CACHE_NAME = 'orthodox-expedition-v39';
+const CACHE_NAME = 'orthodox-expedition-v40';
 const STATIC_ASSETS = [
   '/Orthodox-Expedition-/',
   '/Orthodox-Expedition-/index.html',
@@ -424,6 +450,7 @@ const STATIC_ASSETS = [
   '/Orthodox-Expedition-/progress.html',
   '/Orthodox-Expedition-/week.html',
   '/Orthodox-Expedition-/prayers.html',
+  '/Orthodox-Expedition-/eucharist-prayers.html',
   '/Orthodox-Expedition-/missions.html',
   '/Orthodox-Expedition-/curriculum.html',
   '/Orthodox-Expedition-/bazaar.html',

@@ -1,45 +1,51 @@
 /* ─────────────────────────────────────────────────────────────────
-   Orthodox Expedition — Dispatch 4b
+   Orthodox Expedition — Dispatch 4b + Chat 2A
    js/missions.js — Daily mission hub (Missions surface)
-   May 11, 2026
+   May 11, 2026 · Chat 2A revision
 
    PURPOSE
-   Renders the new "Today's Missions" daily-action hub. Each mission
-   row is a state-bearing surface that routes to its lane page when
-   tapped. The reading mission is special: it's a state machine
-   surface that hosts either the Daily Anchor Card teaser (pending),
-   the Reading Quest question card (read-not-answered), or a
-   completed acknowledgement (complete).
+   Renders the "Today's Missions" daily-action hub. Each mission
+   row is a state-bearing surface; the reading mission is special:
+   it hosts the Daily Anchor Card teaser (pending), an in-line
+   two-stage reading+reflect form (read-not-reflected / reflected),
+   or pilgrimage rest copy. Chat 2A also adds a fifth lane — the
+   Day Complete bonus — and renames the T/Th 'journal' lane to
+   'reflection', backed by the new reflection-lane.js module.
 
-   IA POSITION (Dispatch 4b)
+   IA POSITION
    • Home  → status & welcome dashboard
    • MISSIONS → daily action hub (this module)
    • Topics → study material + Feast of the Week
    • Scriptures → free reading (bible-reader, browsable)
    • Field Manual → past reflections archive
 
-   The reading mission CARD on this surface is the relocated home
-   of TWO previously-home-anchored surfaces:
-     - Daily Anchor Card  (js/daily-anchor-card.js — Lane A)
-     - Reading Quest      (js/reading-quest.js     — Lane 3 question)
-   This module does not refactor those; it just chooses which to
-   mount in which sub-state.
+   The reading mission CARD hosts:
+     - Daily Anchor Card  (js/daily-anchor-card.js)  pending state
+     - In-line two-stage reflect form                read-not-reflected
+     - Saved-state preview                           reflected
+   The T/Th reflection slot hosts:
+     - reflection-lane.js mount                      Chat 2A
+   This module orchestrates; the lane modules execute.
 
    PUBLIC API (browser): window.Missions = { … }
 
      getMissionsForDay(dateString)
-         → ['reading','prayer','memorization','session'|'journal'?]
-         M/W/F: reading, prayer, memorization, session
-         T/Th : reading, prayer, memorization, journal
-         Sat/Sun: reading, prayer, memorization
+         → ['reading','prayer','memorization', slot4?, 'day_complete']
+         M/W/F  : reading, prayer, memorization, session,    day_complete  (5/5)
+         T/Th   : reading, prayer, memorization, reflection, day_complete  (5/5)
+         Sat/Sun: reading, prayer, memorization,             day_complete  (4/4)
 
      loadTodaysState(sb, explorerId, familyId, today)
          → {
-             reading:      'pending'|'read-not-answered'|'complete'|'pilgrimage'|'complete-no-question',
+             reading:      'pending'|'read-not-reflected'|'reflected'|'pilgrimage',
              prayer:       'pending'|'complete'|'pilgrimage',
              memorization: 'pending'|'complete'|'not_applicable'|'pilgrimage',
-             session:      'pending'|'complete'|null,
-             journal:      'pending'|'complete'|null,
+             session:      'pending'|'complete'|'pilgrimage'|null,
+             reflection:   'pending'|'complete'|'pilgrimage'|null,
+             dayComplete:  'locked'|'unlock-pending'|'paid'|'pilgrimage'|null,
+             pendingDayCompletePayout: bool,
+             readingStageRow: reading_completions row|null,
+             dayCompleteRow:  day_complete_bonus row|null,
              completedCount: int,
              totalCount: int,
              pilgrimage: row|null,
@@ -200,10 +206,18 @@
     }
 
     // 0=Sun, 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat
+    // Chat 2A · Lane structure:
+    //   M/W/F  → reading, prayer, memo, session, day_complete    (5/5)
+    //   T/Th   → reading, prayer, memo, reflection, day_complete (5/5)
+    //   Sat/Sun → reading, prayer, memo, day_complete            (4/4)
+    // Q7 ruling: weekend has no slot-4 task; Lord's Day rhythm is
+    // honored by the 4/4 denominator. Day Complete is the FINAL
+    // lane every day — on weekends it sits at slot 4 by position
+    // (no missing slot, just a smaller denominator).
     const base = ['reading', 'prayer', 'memorization'];
-    if (dow === 1 || dow === 3 || dow === 5) return base.concat(['session']);   // M/W/F
-    if (dow === 2 || dow === 4) return base.concat(['journal']);                 // T/Th
-    return base;                                                                  // Sat/Sun
+    if (dow === 1 || dow === 3 || dow === 5) return base.concat(['session', 'day_complete']);   // M/W/F: 5/5
+    if (dow === 2 || dow === 4) return base.concat(['reflection', 'day_complete']);              // T/Th : 5/5
+    return base.concat(['day_complete']);                                                        // Sat/Sun: 4/4
   }
 
   // ═════════════════════════════════════════════════════════════════
@@ -300,49 +314,55 @@
     }
   }
 
-  // Did Nolan write a reflection today? (T/Th journal mission state)
-  // entry_text LIKE 'Reflection:%' is the launch convention; matches
-  // both the 3b reading reflection prefix AND the new journal-mission
-  // page's save pattern. Dispatch 4b §G.
-  async function _loadJournaledToday(sb, explorerId, todayKey) {
+  // Did Nolan write a reflection today? (T/Th reflection mission state.)
+  // Chat 2A: switches from category='expedition_log' + ILIKE pattern
+  // to the new prescriptive category='session_reflection' per Q9 ruling.
+  // Includes the skip-sentinel row (entry_text='[skipped — prompts
+  // pending]') so the lane reads 'complete' on Tue/Thu even pre-2B.
+  async function _loadReflectionToday(sb, explorerId, todayKey) {
     try {
-      // Day-bound on created_at via the ET window. Cheapest: pull
-      // the day's row(s) and pattern-match in JS.
       const [y, m, d] = todayKey.split('-').map(n => parseInt(n, 10));
       const dayStartET = `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}T00:00:00-04:00`;
       const dayEndET   = `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}T23:59:59-04:00`;
 
       const res = await sb.from('field_journal')
-        .select('entry_text,created_at')
+        .select('id')
         .eq('explorer_id', explorerId)
-        .eq('category', 'expedition_log')
+        .eq('category', 'session_reflection')
         .gte('created_at', dayStartET)
         .lte('created_at', dayEndET)
-        .ilike('entry_text', 'Reflection:%')
         .limit(1);
 
       if (res.error) throw res.error;
       return !!(res.data && res.data.length > 0);
     } catch (e) {
-      console.warn('Missions._loadJournaledToday failed (graceful):', e);
+      console.warn('Missions._loadReflectionToday failed (graceful):', e);
       return false;
     }
   }
 
-  // Did Nolan finish reading + question today? (single SELECT;
-  // mirrors Reading.getStreak's internal day lookup.)
-  async function _loadReadCompleteToday(sb, explorerId, todayKey) {
+  // Chat 2A · Two-stage reading state loader.
+  // Returns the full reading_completions row for today (or null) so
+  // the caller can distinguish:
+  //   • row == null               → state 'pending' (or 'pilgrimage')
+  //   • row.read_at && !reflected_at → state 'read-not-reflected'
+  //   • row.read_at && row.reflected_at → state 'reflected'
+  // The flagSet localStorage check remains a fallback for the first
+  // ever Stage-1 commit (the moment after Nolan returns from
+  // bible-reader, before the DB row exists). commitReadCompletion
+  // clears the flag, so DB is the source of truth thereafter.
+  async function _loadReadingStageRow(sb, explorerId, todayKey) {
     try {
       const res = await sb.from('reading_completions')
-        .select('id')
+        .select('id, read_at, reflected_at, coins_earned, reflection_text, skipped_pastorally')
         .eq('explorer_id', explorerId)
         .eq('calendar_date', todayKey)
         .maybeSingle();
       if (res.error) throw res.error;
-      return !!res.data;
+      return res.data || null;
     } catch (e) {
-      console.warn('Missions._loadReadCompleteToday failed (graceful):', e);
-      return false;
+      console.warn('Missions._loadReadingStageRow failed (graceful):', e);
+      return null;
     }
   }
 
@@ -353,6 +373,74 @@
     if (dow === 3) return !!progressRow.day_2_completed_at;
     if (dow === 5) return !!progressRow.day_3_completed_at;
     return false;
+  }
+
+  // Chat 2A · Has the Day Complete bonus already been awarded today?
+  // Idempotent guard for the +10 payout. Returns the row when present
+  // (so the caller can render the unlocked Day Complete lane with the
+  // canonical awarded_at), else null.
+  async function _loadDayCompleteToday(sb, explorerId, todayKey) {
+    try {
+      const res = await sb.from('day_complete_bonus')
+        .select('id, awarded_at, coins_earned')
+        .eq('explorer_id', explorerId)
+        .eq('calendar_date', todayKey)
+        .maybeSingle();
+      if (res.error) throw res.error;
+      return res.data || null;
+    } catch (e) {
+      console.warn('Missions._loadDayCompleteToday failed (graceful):', e);
+      return null;
+    }
+  }
+
+  // Chat 2A · Commit the Day Complete bonus (+10 coins) idempotently.
+  // Pattern mirrors ReadingQuest.commitCompletion: INSERT first, then
+  // award coins; a 23505 unique-violation = already paid today, no
+  // coins awarded on the retry path. Caller invokes ONLY on the
+  // transition from "not all complete" → "all complete" detected at
+  // mount time, but the UNIQUE constraint is the canonical guard.
+  // Returns { ok, duplicate, row }.
+  async function _commitDayCompleteBonus(sb, explorerId, familyId, todayKey) {
+    if (!sb || !explorerId || !familyId || !todayKey) {
+      return { ok: false, duplicate: false, row: null };
+    }
+    try {
+      const insertRes = await sb.from('day_complete_bonus')
+        .insert({
+          explorer_id:   explorerId,
+          family_id:     familyId,
+          calendar_date: todayKey,
+          coins_earned:  10,
+        })
+        .select()
+        .single();
+      if (insertRes.error) {
+        const isDup = (insertRes.error.code === '23505') ||
+                      (insertRes.error.message && /duplicate/i.test(insertRes.error.message));
+        if (isDup) return { ok: false, duplicate: true, row: null };
+        console.warn('Missions._commitDayCompleteBonus insert error:', insertRes.error);
+        return { ok: false, duplicate: false, row: null };
+      }
+      // Award +10 coins via the canonical read-then-write pattern.
+      try {
+        const profRes = await sb.from('profiles')
+          .select('coins, lifetime_coins')
+          .eq('id', explorerId)
+          .single();
+        const prof = profRes.data || { coins: 0, lifetime_coins: 0 };
+        await sb.from('profiles').update({
+          coins:          (prof.coins          || 0) + 10,
+          lifetime_coins: (prof.lifetime_coins || 0) + 10,
+        }).eq('id', explorerId);
+      } catch (coinErr) {
+        console.warn('Missions._commitDayCompleteBonus coin award failed (non-fatal):', coinErr);
+      }
+      return { ok: true, duplicate: false, row: insertRes.data };
+    } catch (e) {
+      console.warn('Missions._commitDayCompleteBonus threw:', e);
+      return { ok: false, duplicate: false, row: null };
+    }
   }
 
   // ═════════════════════════════════════════════════════════════════
@@ -370,10 +458,11 @@
       prayerStatus,
       memDidToday,
       currentVerse,
-      readCompleteToday,
+      readingStageRow,
       anchorData,
       activeSession,
-      journaledToday,
+      reflectionDone,
+      dayCompleteRow,
     ] = await Promise.all([
       window.Pilgrimages && typeof window.Pilgrimages.isActiveToday === 'function'
         ? window.Pilgrimages.isActiveToday(sb).catch(() => null) : Promise.resolve(null),
@@ -383,41 +472,35 @@
         ? window.Memorization.didTodayCount(sb, explorerId).catch(() => false) : Promise.resolve(false),
       window.Memorization && typeof window.Memorization.getCurrentVerse === 'function'
         ? window.Memorization.getCurrentVerse(sb, familyId).catch(() => null) : Promise.resolve(null),
-      _loadReadCompleteToday(sb, explorerId, today),
+      _loadReadingStageRow(sb, explorerId, today),
       _loadDailyAnchorData(sb, today),
       _loadActiveSession(sb, explorerId),
-      missionsForDay.indexOf('journal') >= 0
-        ? _loadJournaledToday(sb, explorerId, today) : Promise.resolve(false),
+      missionsForDay.indexOf('reflection') >= 0
+        ? _loadReflectionToday(sb, explorerId, today) : Promise.resolve(false),
+      missionsForDay.indexOf('day_complete') >= 0
+        ? _loadDayCompleteToday(sb, explorerId, today) : Promise.resolve(null),
     ]);
 
     const isPilgrimage = !!pilgrimageActive;
 
     // ── Resolve each mission's state ──────────────────────────────
 
-    // Reading mission state machine
+    // Reading mission state machine (Chat 2A two-stage).
+    //   pilgrimage → 'pilgrimage'
+    //   DB row with reflected_at → 'reflected'  (Stage 2 done)
+    //   DB row with only read_at → 'read-not-reflected'  (Stage 1 done)
+    //   Flag set but no row     → 'read-not-reflected' transient;
+    //                              mount() commits Stage 1 + refreshes
+    //   Otherwise               → 'pending'
     let readingState;
     if (isPilgrimage) {
       readingState = 'pilgrimage';
-    } else if (readCompleteToday) {
-      // DB has a completion row. Distinguish by whether today's
-      // liturgical_calendar row carries a question payload:
-      //   • with question → 'complete' (ReadingQuest renders the
-      //     reveal view from the stored answer).
-      //   • without question → 'complete-no-question' (the always-
-      //     clickable ✓ tile; the idempotent log+coin write in mount
-      //     becomes a no-op on subsequent visits via the unique
-      //     constraint on reading_completions).
-      readingState = _hasQuestion(anchorData.row) ? 'complete' : 'complete-no-question';
+    } else if (readingStageRow && readingStageRow.reflected_at) {
+      readingState = 'reflected';
+    } else if (readingStageRow && readingStageRow.read_at) {
+      readingState = 'read-not-reflected';
     } else if (_readingFlagSet(today)) {
-      // Per Pause #2 (a): visited counts as complete EVEN on dates
-      // with no question payload (post-Jun-14 unless content
-      // extended). Otherwise, the user has read and now needs to
-      // answer the question.
-      if (_hasQuestion(anchorData.row)) {
-        readingState = 'read-not-answered';
-      } else {
-        readingState = 'complete-no-question';
-      }
+      readingState = 'read-not-reflected';
     } else {
       readingState = 'pending';
     }
@@ -447,41 +530,87 @@
       sessionState = 'pending';
     }
 
-    // Journal mission state (T/Th only)
-    let journalState;
-    if (missionsForDay.indexOf('journal') < 0) {
-      journalState = null;
+    // Reflection mission state (T/Th only; Chat 2A rename of 'journal').
+    // 'reflectionDone' = true when ANY session_reflection field_journal
+    // row exists for today (including the skip sentinel).
+    let reflectionState;
+    if (missionsForDay.indexOf('reflection') < 0) {
+      reflectionState = null;
     } else if (isPilgrimage) {
-      journalState = 'pilgrimage';
-    } else if (journaledToday) {
-      journalState = 'complete';
+      reflectionState = 'pilgrimage';
+    } else if (reflectionDone) {
+      reflectionState = 'complete';
     } else {
-      journalState = 'pending';
+      reflectionState = 'pending';
+    }
+
+    // Day Complete state (Chat 2A, every day).
+    //   pilgrimage → 'pilgrimage' (no payout; pilgrimage is rest)
+    //   bonus row exists → 'paid'
+    //   all other lanes complete and no bonus row → 'unlock-pending'
+    //                       (mount() commits +10 and refreshes)
+    //   else → 'locked'
+    let dayCompleteState;
+    let pendingDayCompletePayout = false;
+    if (missionsForDay.indexOf('day_complete') < 0) {
+      dayCompleteState = null;
+    } else if (isPilgrimage) {
+      dayCompleteState = 'pilgrimage';
+    } else if (dayCompleteRow) {
+      dayCompleteState = 'paid';
+    } else {
+      const otherStates = [readingState, prayerState, memState, sessionState, reflectionState];
+      function _isTaskComplete(s) {
+        return s === 'complete' || s === 'reflected' || s === 'pilgrimage';
+      }
+      const allOtherComplete = otherStates.every(s => s === null || s === 'not_applicable' || _isTaskComplete(s));
+      if (allOtherComplete) {
+        dayCompleteState = 'unlock-pending';
+        pendingDayCompletePayout = true;
+      } else {
+        dayCompleteState = 'locked';
+      }
     }
 
     // ── Tally completed / total for the progress card ─────────────
-    // Pilgrimage: count all as "rest" — completedCount = totalCount
-    // (full bar). Otherwise: tally non-applicable as both denominator-
-    // exempt and numerator-exempt.
+    // Pilgrimage: every lane reads 'pilgrimage' so completedCount =
+    // totalCount (full bar). Otherwise: tally non-applicable as both
+    // numerator- and denominator-exempt. New finishing states:
+    //   • 'reflected'      → reading two-stage final
+    //   • 'paid'           → Day Complete bonus already awarded
+    //   • 'unlock-pending' → bonus about to commit; count as done
+    //                        so the progress card doesn't briefly
+    //                        flash an intermediate "n-1 of n" frame
     let completedCount = 0;
     let totalCount = 0;
     function tally(state) {
       if (state == null || state === 'not_applicable') return; // skip
       totalCount++;
-      if (state === 'complete' || state === 'complete-no-question' || state === 'pilgrimage') completedCount++;
+      if (state === 'complete' ||
+          state === 'reflected' ||
+          state === 'pilgrimage' ||
+          state === 'paid' ||
+          state === 'unlock-pending') {
+        completedCount++;
+      }
     }
     tally(readingState);
     tally(prayerState);
     tally(memState);
     tally(sessionState);
-    tally(journalState);
+    tally(reflectionState);
+    tally(dayCompleteState);
 
     return {
       reading: readingState,
       prayer:  prayerState,
       memorization: memState,
       session: sessionState,
-      journal: journalState,
+      reflection: reflectionState,
+      dayComplete: dayCompleteState,
+      pendingDayCompletePayout,
+      readingStageRow,
+      dayCompleteRow,
       completedCount,
       totalCount,
       pilgrimage: pilgrimageActive,
@@ -550,11 +679,13 @@
     `;
   }
 
-  // For complete-no-question: a small, ALWAYS-CLICKABLE "✓ Today's
-  // Gospel — read · +5" mini-card. Tap re-opens bible-reader at
-  // today's Gospel for re-reading (DB row already logged on the
-  // first mount entering this state; unique constraint prevents
-  // double-log). Coin reward is flat +5 (Chat 1 Decision 1).
+  // ★ ORPHANED BY CHAT 2A — kept defined for rollback safety only.
+  // Previously rendered the "✓ Today's Gospel — read · +5" mini-card
+  // for no-question days. The Chat 2A two-stage reading model
+  // (read +3 / reflect +2) supersedes it; mount() no longer calls
+  // this function and it is not exported via _internals. Removal
+  // can happen in a future cleanup dispatch once Chat 2A is
+  // verified stable in production.
   function _readingCompleteNoQuestionHTML(row) {
     const href = _buildGospelHref(row);
     return `
@@ -734,6 +865,143 @@
   }
 
   // ═════════════════════════════════════════════════════════════════
+  // CHAT 2A · NEW RENDER HELPERS
+  //   • Reading two-stage in-line states (read-not-reflected, reflected)
+  //   • Day Complete lane (lane 5; distinct from task rows)
+  // ═════════════════════════════════════════════════════════════════
+
+  // Build the gospel reference string from a liturgical_calendar row's
+  // daily_readings.gospel. e.g. "John 11:47-54" or "John 14" when
+  // verses absent. Returns '' when unavailable.
+  function _gospelRefFromRow(row) {
+    const g = (row && row.daily_readings && row.daily_readings.gospel) || null;
+    if (!g) return '';
+    const book = g.book_name || g.book_code || '';
+    const ch = g.chapter;
+    if (!book || ch == null || ch === '') return '';
+    const vs = g.verse_start;
+    const ve = g.verse_end;
+    const vsOk = (vs !== null && vs !== undefined && vs !== '' && Number(vs) > 0);
+    const veOk = (ve !== null && ve !== undefined && ve !== '' && Number(ve) > 0);
+    if (vsOk && veOk) return `${book} ${ch}:${vs}-${ve}`;
+    return `${book} ${ch}`;
+  }
+
+  // ★ READING — Stage-1-done, Stage-2-pending inline card.
+  // Shows: ✓ gospel read pip (link back to re-read), reflection prompt,
+  // textarea, submit button. Submit is the Stage 2 commit path.
+  function _renderReadingReadNotReflectedHTML(opts) {
+    const promptText = (opts && opts.promptText) || '';
+    const gospelHref = _buildGospelHref(opts && opts.row);
+    const gospelRef  = _gospelRefFromRow(opts && opts.row);
+    const refLabel   = gospelRef ? esc(gospelRef) : 'Today\'s Gospel';
+    return `
+      <div class="mh-reading-stage" data-stage="read-not-reflected">
+        <a class="mh-reading-readpip" href="${esc(gospelHref)}">
+          <span class="mh-rrp-check" aria-hidden="true">✓</span>
+          <span class="mh-rrp-label">${refLabel} &middot; read</span>
+          <span class="mh-rrp-coins" aria-label="3 coins earned">+3</span>
+        </a>
+        ${promptText ? `
+          <div class="mh-reading-prompt-block">
+            <div class="mh-rrp-eyebrow">Today's Reflection</div>
+            <div class="mh-rrp-text">${esc(promptText)}</div>
+          </div>
+        ` : ''}
+        <div class="mh-reading-input-block">
+          <label class="mh-rri-label" for="mh-reading-textarea">Your reflection</label>
+          <textarea
+            id="mh-reading-textarea"
+            class="mh-reading-textarea"
+            rows="3"
+            placeholder="Even a sentence is enough…"
+            aria-describedby="mh-reading-input-help"
+          ></textarea>
+          <div id="mh-reading-input-help" class="mh-rri-help">+2 coins on save (gospel reading totals +5).</div>
+          <button type="button" class="mh-reading-submit-btn" data-mh-action="reflect-submit" disabled>Save reflection</button>
+        </div>
+      </div>
+    `;
+  }
+
+  // ★ READING — fully reflected card (Stage 1 + Stage 2 both done).
+  // Shows the gospel pip (still tappable to re-read) and the saved
+  // reflection text in a collapsed preview.
+  function _renderReadingReflectedHTML(opts) {
+    const reflectionText = String((opts && opts.reflectionText) || '').trim();
+    const gospelHref = _buildGospelHref(opts && opts.row);
+    const gospelRef  = _gospelRefFromRow(opts && opts.row);
+    const refLabel   = gospelRef ? esc(gospelRef) : 'Today\'s Gospel';
+    const preview    = reflectionText
+      ? `<div class="mh-reading-saved-text">${esc(reflectionText)}</div>`
+      : '';
+    return `
+      <div class="mh-reading-stage" data-stage="reflected">
+        <a class="mh-reading-readpip" href="${esc(gospelHref)}">
+          <span class="mh-rrp-check" aria-hidden="true">✓</span>
+          <span class="mh-rrp-label">${refLabel} &middot; read</span>
+        </a>
+        <div class="mh-reading-saved">
+          <div class="mh-reading-saved-eyebrow">Reflection saved &middot; <span class="mh-rrp-coins">+5 total</span></div>
+          ${preview}
+        </div>
+      </div>
+    `;
+  }
+
+  // ★ DAY COMPLETE LANE — slot 5 (or slot 4 on Sat/Sun). Distinct
+  // visual from the task rows: ✦-glyph centered, gold gradient,
+  // celebratory but not loud. States:
+  //   'locked'         → dimmed placeholder, eyebrow-only
+  //   'unlock-pending' → rendered like 'paid'; mount() commits
+  //   'paid'           → unlocked celebration (✦ + +10 pip)
+  //   'pilgrimage'     → ✦ rest tile, no coins
+  function _renderDayCompleteLane(state) {
+    if (state === 'pilgrimage') {
+      return `
+        <div class="mh-daycomplete mh-dc-pilgrimage" id="mh-row-day_complete">
+          <div class="mh-dc-glyph" aria-hidden="true">✦</div>
+          <div class="mh-dc-body">
+            <div class="mh-dc-title">Day Complete</div>
+            <div class="mh-dc-sub">Pilgrimage rest — your streak walks with you.</div>
+          </div>
+        </div>
+      `;
+    }
+    if (state === 'paid' || state === 'unlock-pending') {
+      return `
+        <div class="mh-daycomplete mh-dc-paid" id="mh-row-day_complete" data-state="${esc(state)}">
+          <div class="mh-dc-glyph" aria-hidden="true">✦</div>
+          <div class="mh-dc-body">
+            <div class="mh-dc-title">Day Complete</div>
+            <div class="mh-dc-sub">All missions offered today. Glory to God for all things.</div>
+          </div>
+          <div class="mh-dc-coins" aria-label="10 coin bonus">+10</div>
+        </div>
+      `;
+    }
+    // locked (default)
+    return `
+      <div class="mh-daycomplete mh-dc-locked" id="mh-row-day_complete">
+        <div class="mh-dc-glyph" aria-hidden="true">✦</div>
+        <div class="mh-dc-body">
+          <div class="mh-dc-title">Day Complete</div>
+          <div class="mh-dc-sub">Finish today's missions to unlock the +10 bonus.</div>
+        </div>
+        <div class="mh-dc-lock" aria-hidden="true">🔒</div>
+      </div>
+    `;
+  }
+
+  // ★ REFLECTION SLOT SHELL — empty container that ReflectionLane
+  // mounts into post-render. Single inline DOM node keyed off the
+  // lane id so we can find it from mount() and pass it to
+  // ReflectionLane.mount(slotEl, opts).
+  function _renderReflectionSlotShell() {
+    return `<div class="mh-reflection-slot" id="mh-reflection-slot"></div>`;
+  }
+
+  // ═════════════════════════════════════════════════════════════════
   // MAIN MOUNT
   // ═════════════════════════════════════════════════════════════════
 
@@ -761,14 +1029,19 @@
     const dow = _dowET(new Date());
     const state = await loadTodaysState(sb, explorerId, familyId, today);
 
-    // Build HTML
+    // Build HTML (Chat 2A lane order):
+    //   1. Eyebrow + pilgrimage banner
+    //   2. Reading mission shell (★ prominent)
+    //   3. Prayer row
+    //   4. Memorization row
+    //   5. Slot 4 — Session (M/W/F) OR Reflection slot shell (T/Th) OR absent (Sat/Sun)
+    //   6. Day Complete lane (every day)
+    //   7. Progress card
     const parts = [];
     parts.push(_renderEyebrow(today));
     parts.push(_renderPilgrimageBanner(state.pilgrimage));
     parts.push(_renderReadingMissionShell(state.reading));
 
-    // Other mission rows — render in canonical order: prayer, memo,
-    // session-or-journal.
     parts.push(_renderMissionRow({
       id: 'prayer',
       href: 'prayers.html',
@@ -794,17 +1067,16 @@
       parts.push(_renderSessionRow(state.activeSession, state.session, dow));
     }
 
-    if (state.journal !== null) {
-      parts.push(_renderMissionRow({
-        id: 'journal',
-        href: 'journal-mission.html',
-        icon: '📝',
-        name: 'Reflection',
-        sub: state.journal === 'complete'
-          ? 'Today\'s reflection is written'
-          : 'A short note about today',
-        state: state.journal,
-      }));
+    // Reflection slot (T/Th only) — ReflectionLane.mount() fills it
+    // post-renderInnerHTML. Slot is empty in markup; module owns
+    // everything inside #mh-reflection-slot.
+    if (state.reflection !== null) {
+      parts.push(_renderReflectionSlotShell());
+    }
+
+    // Day Complete lane (every day).
+    if (state.dayComplete !== null) {
+      parts.push(_renderDayCompleteLane(state.dayComplete));
     }
 
     parts.push(_renderProgress(state.completedCount, state.totalCount, !!state.pilgrimage));
@@ -816,29 +1088,12 @@
     if (innerSlot) {
       if (state.reading === 'pilgrimage') {
         innerSlot.innerHTML = _readingPilgrimageHTML();
-      } else if (state.reading === 'complete-no-question') {
-        // No-question day: the user has read the Gospel (localStorage
-        // flag set by bible-reader's pagehide hook) but there's no
-        // question payload to answer. Log a completion row + award
-        // flat +5 coins via the ReadingQuest wrapper (idempotent —
-        // unique constraint blocks dupes on re-mount). Render the
-        // tile as an always-clickable anchor so re-reads are free.
-        if (window.ReadingQuest
-            && typeof window.ReadingQuest.commitNoQuestionCompletion === 'function') {
-          try {
-            await window.ReadingQuest.commitNoQuestionCompletion(sb, {
-              explorerId, familyId, today, coins: 5,
-            });
-          } catch (e) {
-            console.warn('ReadingQuest.commitNoQuestionCompletion failed (graceful):', e);
-          }
-        }
-        innerSlot.innerHTML = _readingCompleteNoQuestionHTML(state.readingAnchorRow);
       } else if (state.reading === 'pending') {
-        // Pending → full DailyAnchorCard. Anchor card brings the
-        // gospel teaser AND the deep-link to bible-reader. Tap on
-        // the gospel link sets the localStorage flag on close
-        // (via bible-reader's pagehide hook).
+        // Pending → DailyAnchorCard (gospel teaser + tap-to-read).
+        // Tap on the gospel link sets the localStorage flag on close
+        // (via bible-reader's pagehide hook). On the next mount the
+        // flag flips state to 'read-not-reflected' and we commit
+        // Stage 1 here.
         if (window.DailyAnchorCard && typeof window.DailyAnchorCard.render === 'function') {
           try {
             const explorerName = (opts.profile && opts.profile.name)
@@ -857,24 +1112,75 @@
             innerSlot.innerHTML = '';
           }
         }
-      } else {
-        // 'read-not-answered' or 'complete' → mount ReadingQuest.
-        // ReadingQuest renders the active question or its own
-        // "Done today" reveal view, depending on DB + flag state.
-        if (window.ReadingQuest && typeof window.ReadingQuest.mount === 'function') {
+      } else if (state.reading === 'read-not-reflected') {
+        // Stage-1-done, Stage-2-pending. If readingStageRow is null,
+        // the localStorage flag is the only "read" signal — fire
+        // commitReadCompletion (Stage 1) which writes the DB row,
+        // awards +3, and clears the flag (DB becomes source of truth).
+        const needsStage1Commit = !state.readingStageRow;
+        if (needsStage1Commit
+            && window.ReadingQuest
+            && typeof window.ReadingQuest.commitReadCompletion === 'function') {
           try {
-            await window.ReadingQuest.mount(innerSlot, {
-              sb,
-              explorerId,
-              familyId,
-              today,
-              row: state.readingAnchorRow,
+            await window.ReadingQuest.commitReadCompletion(sb, {
+              explorerId, familyId, today, coins: 3,
             });
           } catch (e) {
-            console.warn('ReadingQuest.mount failed (graceful):', e);
-            innerSlot.innerHTML = '';
+            console.warn('ReadingQuest.commitReadCompletion failed (graceful):', e);
           }
         }
+        innerSlot.innerHTML = _renderReadingReadNotReflectedHTML({
+          row: state.readingAnchorRow,
+          promptText: state.todaysPrompt,
+        });
+        _wireReadingReflectSubmit(innerSlot, {
+          sb, explorerId, familyId, today,
+          gospelRef: _gospelRefFromRow(state.readingAnchorRow),
+        });
+      } else if (state.reading === 'reflected') {
+        innerSlot.innerHTML = _renderReadingReflectedHTML({
+          row: state.readingAnchorRow,
+          reflectionText: (state.readingStageRow && state.readingStageRow.reflection_text) || '',
+        });
+      }
+    }
+
+    // ── Mount the reflection lane (T/Th only) ─────────────────────
+    const reflectionSlot = container.querySelector('#mh-reflection-slot');
+    if (reflectionSlot && state.reflection !== null
+        && window.ReflectionLane && typeof window.ReflectionLane.mount === 'function') {
+      const dayKind = (dow === 2) ? 'tue' : (dow === 4) ? 'thu' : null;
+      try {
+        await window.ReflectionLane.mount(reflectionSlot, {
+          sb, explorerId, familyId, today,
+          dayKind,
+          sessionId:    state.activeSession ? state.activeSession.id : null,
+          sessionTitle: state.activeSession ? state.activeSession.title : null,
+          isPilgrimage: !!state.pilgrimage,
+          onComplete:   refresh,
+        });
+      } catch (e) {
+        console.warn('ReflectionLane.mount failed (graceful):', e);
+      }
+    }
+
+    // ── Day Complete bonus payout (idempotent on transition) ─────
+    // When all other lanes are complete and no day_complete_bonus row
+    // exists yet, the state machine flagged pendingDayCompletePayout.
+    // Commit +10 coins (UNIQUE constraint handles race) and trigger
+    // a refresh so the lane re-renders in 'paid' state.
+    if (state.pendingDayCompletePayout) {
+      try {
+        const res = await _commitDayCompleteBonus(sb, explorerId, familyId, today);
+        if (res && (res.ok || res.duplicate)) {
+          // Tail-call refresh — recursion is bounded: after this
+          // commit, dayCompleteRow exists so pendingDayCompletePayout
+          // is false on the next loadTodaysState pass.
+          await refresh();
+          return;
+        }
+      } catch (e) {
+        console.warn('Day Complete bonus commit failed (graceful):', e);
       }
     }
 
@@ -884,15 +1190,24 @@
     if (_priorCompletedCount !== null && state.completedCount > _priorCompletedCount) {
       const numEl = container.querySelector('#mh-pc-num');
       _animateCountUp(numEl, _priorCompletedCount, state.completedCount);
-      // Identify newly-complete rows by comparing prior state map.
       if (_priorStates) {
         const newlyComplete = [];
-        ['prayer','memorization','session','journal','reading'].forEach(k => {
-          if (_priorStates[k] !== 'complete' && state[k] === 'complete') newlyComplete.push(k);
-          if (_priorStates[k] !== 'complete-no-question' && state[k] === 'complete-no-question') newlyComplete.push(k);
+        // Per-lane transition keys. The 'reading' key transitions to
+        // 'reflected' (final state in two-stage). 'dayComplete' transitions
+        // to 'paid' on bonus payout.
+        ['prayer','memorization','session','reflection','reading','dayComplete'].forEach(k => {
+          const prev = _priorStates[k];
+          const cur  = state[k];
+          if (prev === cur) return;
+          if (cur === 'complete' || cur === 'reflected' || cur === 'paid') {
+            newlyComplete.push(k);
+          }
         });
         newlyComplete.forEach(k => {
-          const rowId = (k === 'reading') ? '#mh-reading-card' : `#mh-row-${k}`;
+          let rowId;
+          if (k === 'reading') rowId = '#mh-reading-card';
+          else if (k === 'dayComplete') rowId = '#mh-row-day_complete';
+          else rowId = `#mh-row-${k}`;
           const rowEl = container.querySelector(rowId);
           _microCelebrate(rowEl);
         });
@@ -904,8 +1219,64 @@
       prayer: state.prayer,
       memorization: state.memorization,
       session: state.session,
-      journal: state.journal,
+      reflection: state.reflection,
+      dayComplete: state.dayComplete,
     };
+  }
+
+  // ── Wire the Stage-2 (reflect) submit handler on the in-line card.
+  // Mirrors ReflectionLane's submit pattern: enable on non-empty input,
+  // disable + label "Saving…" during the write, on success call
+  // ReadingQuest.commitReflectCompletion and refresh the hub. Failure
+  // re-enables with an inline soft error.
+  function _wireReadingReflectSubmit(innerSlot, ctx) {
+    const ta  = innerSlot.querySelector('#mh-reading-textarea');
+    const btn = innerSlot.querySelector('[data-mh-action="reflect-submit"]');
+    if (!ta || !btn) return;
+    function refreshEnabled() {
+      const v = String(ta.value || '').trim();
+      btn.disabled = (v.length === 0);
+    }
+    ta.addEventListener('input', refreshEnabled);
+    refreshEnabled();
+    btn.addEventListener('click', async (e) => {
+      e.preventDefault();
+      if (btn.disabled) return;
+      const text = String(ta.value || '').trim();
+      if (!text) return;
+      btn.disabled = true;
+      btn.textContent = 'Saving…';
+      try {
+        if (!window.ReadingQuest || typeof window.ReadingQuest.commitReflectCompletion !== 'function') {
+          throw new Error('ReadingQuest.commitReflectCompletion unavailable');
+        }
+        const res = await window.ReadingQuest.commitReflectCompletion(ctx.sb, {
+          explorerId:      ctx.explorerId,
+          today:           ctx.today,
+          reflectionText:  text,
+          gospelRef:       ctx.gospelRef || null,
+          coinsDelta:      2,
+          cumulativeCoins: 5,
+        });
+        if (res && (res.ok || res.alreadyReflected)) {
+          await refresh();
+          return;
+        }
+        throw new Error('commitReflectCompletion returned not-ok');
+      } catch (err) {
+        console.warn('reading Stage 2 submit failed:', err);
+        btn.disabled = false;
+        btn.textContent = 'Save reflection';
+        let errEl = innerSlot.querySelector('.mh-reading-error');
+        if (!errEl) {
+          errEl = document.createElement('div');
+          errEl.className = 'mh-reading-error';
+          errEl.setAttribute('role', 'alert');
+          btn.parentNode.insertBefore(errEl, btn.nextSibling);
+        }
+        errEl.textContent = 'Saving failed — please try again.';
+      }
+    });
   }
 
   async function refresh() {
@@ -926,12 +1297,19 @@
       esc, _W, _dowET, _todayKey, _formatDayLabel,
       _readingFlagKey, _readingFlagSet, _hasQuestion,
       _gospelTeaser, _loadActiveSession, _loadDailyAnchorData,
-      _loadJournaledToday, _loadReadCompleteToday, _sessionDoneToday,
+      _loadReflectionToday, _loadReadingStageRow,
+      _loadDayCompleteToday, _commitDayCompleteBonus,
+      _sessionDoneToday,
       _renderEyebrow, _renderPilgrimageBanner,
       _renderReadingMissionShell, _readingPilgrimageHTML,
-      _readingCompleteNoQuestionHTML, _renderMissionRow,
-      _renderSessionRow, _renderProgress, _animateCountUp,
-      _microCelebrate,
+      _renderMissionRow, _renderSessionRow, _renderProgress,
+      _animateCountUp, _microCelebrate,
+      _gospelRefFromRow,
+      _renderReadingReadNotReflectedHTML,
+      _renderReadingReflectedHTML,
+      _renderDayCompleteLane,
+      _renderReflectionSlotShell,
+      _wireReadingReflectSubmit,
     },
   };
 

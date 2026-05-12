@@ -1,4 +1,52 @@
-// Orthodox Expedition — Service Worker v27
+// Orthodox Expedition — Service Worker v38
+// v38: Chat 12 — Pre-launch repo audit + 3x launch-critical fixes.
+//      🔴 ITEM A — js/prayers.js Prayers.getTodayStatus signature
+//          now accepts (sb, profileId) args; closure fallback
+//          preserves prayers.html callers. Fixes Day 1 bug where
+//          Missions hub showed prayer lane pending even after
+//          completion (missions.js was calling with args; old
+//          signature ignored them; module's closure was never
+//          seeded because missions.html doesn't call Prayers.init).
+//      🔴 SURPRISE #1 — missions.html now loads js/reflection-lane.js
+//          before missions.js. Reflection lane was silently broken
+//          on T/Th sessions because the module exported
+//          window.ReflectionLane but no HTML loaded it as a script.
+//          window.ReflectionLane was undefined; missions.js's
+//          graceful guard at line ~1154 short-circuited. First impact
+//          day: Tue May 19 (Day 2 of launch).
+//      🔴 ITEM G part A — js/missions.js + progress.html sessions
+//          select chains now use canonical .like('id','00.%') filter
+//          (matches curriculum.html convention). Excludes 7 legacy
+//          0.x rows that collide with canonical 00.x rows on
+//          order_index 4-10; Postgres tie-break returns 0.x first
+//          on 5 of 7 contested values. Would have surfaced as wrong
+//          next-session routing on Mon Jun 8 (launch Week 4).
+//          DB-side row deletion deferred to post-launch (3 saint_
+//          of_the_week FK refs to repoint).
+//      🟠 SURPRISE #4 — missions.html CSS: layout primitives added
+//          for .mh-reading-input-block / .rl-input-block (flex
+//          column) and .mh-reading-textarea / .rl-textarea
+//          (width:100%). Fixes the reading-Stage-2 layout bug
+//          Kevin screenshotted (textarea was inline-block default
+//          ~200px with inline label baseline-collapsed). Symmetric
+//          rl-* fix prevents Tue May 19 reflection-lane from
+//          shipping with the same latent bug. Layout-only; visual
+//          polish on label/help/button remains queued for post-
+//          launch ITEM E (Chat 2A class-naming pass).
+//      🟠 STATIC_ASSETS — adds 5 entries that were loaded but not
+//          cached: js/session-loader.js, js/calendar-loader.js,
+//          js/calendar-card.js, js/name-day-banner.js (all from
+//          week.html), and parent-companion.html (linked from
+//          js/topic-00-day.js). Fresh-install + offline-tap
+//          reliability.
+//      Banner-version-drift fix (was v27 banner / v37 CACHE_NAME).
+//      Now both at v38.
+//      Root-level duplicate deletions (out-of-scope of sw.js cache
+//      but noted for audit-trail continuity): pause-card.js root,
+//      pause-card.test.js root, prayers.test.js root, session-
+//      loader.js root, session-loader.test.js root, js/email-
+//      utils.js (orphan twin of root). All zero-production-
+//      reference; verified via belt-and-suspenders grep.
 // v27: Dispatch 5 — Sunday Celebration Overlay. The canonical weekly
 //      reverent moment. When Nolan opens the app on Sunday (or any
 //      later day before this week's celebration is dismissed), a
@@ -340,7 +388,7 @@
 // v4: added week.html, prayers.html, day-state, pause-card, prayers, and config JSON
 // Version bump forces cache clear and fresh install
 
-const CACHE_NAME = 'orthodox-expedition-v37';
+const CACHE_NAME = 'orthodox-expedition-v38';
 const STATIC_ASSETS = [
   '/Orthodox-Expedition-/',
   '/Orthodox-Expedition-/index.html',
@@ -398,6 +446,12 @@ const STATIC_ASSETS = [
   '/Orthodox-Expedition-/assets/characters/christopher-portrait.png',
   '/Orthodox-Expedition-/assets/characters/theo-christopher-companion.png',
   '/Orthodox-Expedition-/assets/characters/theo-christopher-hero.png',
+  // v38 — Chat 12 additions (previously loaded but uncached):
+  '/Orthodox-Expedition-/js/session-loader.js',
+  '/Orthodox-Expedition-/js/calendar-loader.js',
+  '/Orthodox-Expedition-/js/calendar-card.js',
+  '/Orthodox-Expedition-/js/name-day-banner.js',
+  '/Orthodox-Expedition-/parent-companion.html',
 ];
 
 // Install — cache static assets

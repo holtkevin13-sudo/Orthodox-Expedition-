@@ -375,6 +375,23 @@ body::before{
   .mh-portrait{width:80px;height:80px;}
 }
 
+/* ── Reading Stage 2 + T/Th reflection input layout
+   (SURPRISE #4 — was rendering with browser-default
+   inline textarea + inline label, producing the cramped
+   layout Kevin screenshotted. Latent Chat 2A bug; not a
+   Chat 4 regression. Layout primitives only — visual
+   polish on label/help/button/textarea remains queued
+   for ITEM E post-launch.) ── */
+.mh-reading-input-block,
+.rl-input-block{
+  display:flex;flex-direction:column;align-items:flex-start;
+  gap:0.5rem;margin-top:0.7rem;
+}
+.mh-reading-textarea,
+.rl-textarea{
+  width:100%;box-sizing:border-box;
+}
+
 /* ── Mission row (generic + session variant) ─────────────────── */
 .mh-row{
   display:flex;align-items:center;gap:0.7rem;
@@ -818,6 +835,7 @@ body::before{
 <script src="js/memorization.js"></script>
 <script src="js/daily-anchor-card.js"></script>
 <script src="js/reading-quest.js"></script>
+<script src="js/reflection-lane.js"></script>
 <script src="js/missions.js"></script>
 
 <script>

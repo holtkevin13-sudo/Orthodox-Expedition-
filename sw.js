@@ -340,7 +340,7 @@
 // v4: added week.html, prayers.html, day-state, pause-card, prayers, and config JSON
 // Version bump forces cache clear and fresh install
 
-const CACHE_NAME = 'orthodox-expedition-v34';
+const CACHE_NAME = 'orthodox-expedition-v35';
 const STATIC_ASSETS = [
   '/Orthodox-Expedition-/',
   '/Orthodox-Expedition-/index.html',
@@ -395,6 +395,8 @@ const STATIC_ASSETS = [
   '/Orthodox-Expedition-/config/daily-prayers.json',
   '/Orthodox-Expedition-/assets/characters/theo-portrait.png',
   '/Orthodox-Expedition-/assets/characters/christopher-portrait.png',
+  '/Orthodox-Expedition-/assets/characters/theo-christopher-companion.png',
+  '/Orthodox-Expedition-/assets/characters/theo-christopher-hero.png',
 ];
 
 // Install — cache static assets

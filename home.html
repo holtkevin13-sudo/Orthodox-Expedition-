@@ -28,6 +28,7 @@
 <script src="js/missions.js"></script>
 <script src="js/home-dashboard.js"></script>
 <script src="js/feast-of-week.js"></script>
+<script src="js/liturgical-calendar-home.js"></script>
 <script src="js/sunday-celebration.js"></script>
 <script src="js/welcome-flow.js"></script>
 <script>
@@ -1550,6 +1551,16 @@ body::before{
          the home dashboard. loadDevotionalMessage() fills this. -->
     <div id="hp-devotional-message"></div>
 
+    <!-- LITURGICAL CALENDAR (Chat 3 — This Week in the Church)
+         A 7-day at-a-glance mini-calendar of the liturgical week.
+         Each cell shows ONE primary signal (feast / saint / fast /
+         gospel ref) for the day; tap opens a full-detail drawer.
+         Sits below the family devotional message and above the
+         Today's Progress dashboard. window.LiturgicalCalendarHome
+         .mount() fills this. Read-only from liturgical_calendar;
+         no new schema. -->
+    <div id="hp-liturgical-calendar"></div>
+
     <!-- HOME DASHBOARD MOUNT (Dispatch 4b)
          Renders the new home status surfaces: Today's Progress
          card, state-aware CTA, and compact streak row. Filled by
@@ -1783,6 +1794,21 @@ async function loadData(userId){
   loadAnnouncement();
   loadPilgrimageBanner();
   loadDevotionalMessage();
+
+  // Mount the liturgical calendar (Chat 3 — This Week in the Church).
+  // Quiet status surface — 7-day glance with tap-to-open drawer.
+  // Reads from liturgical_calendar (no new schema). Graceful on
+  // missing data: the container simply renders empty.
+  if (window.LiturgicalCalendarHome && typeof window.LiturgicalCalendarHome.mount === 'function') {
+    const lcHost = document.getElementById('hp-liturgical-calendar');
+    if (lcHost) {
+      try {
+        await window.LiturgicalCalendarHome.mount(lcHost, { sb });
+      } catch (e) {
+        console.warn('LiturgicalCalendarHome.mount failed (graceful):', e);
+      }
+    }
+  }
 
   // Mount the home dashboard (Today's Progress + state-aware CTA +
   // compact streak row). Internally delegates to

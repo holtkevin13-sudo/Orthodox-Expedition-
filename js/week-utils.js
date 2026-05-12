@@ -21,6 +21,7 @@
      todayKey()              — string — 'YYYY-MM-DD' for today (ET)
      addDays(d, n)           — Date — d + n days, ET-stable
      dayOfWeekET(d)          — int 0-6 — weekday in ET (0=Sun..6=Sat)
+     hourET(d)               — int 0-23 — hour-of-day in ET (Dispatch 11)
 
    IMPLEMENTATION NOTE
    All returned Date objects are anchored at UTC-noon of the target ET
@@ -70,6 +71,21 @@
   // ── PUBLIC: dayOfWeekET ──────────────────────────────────────────
   function dayOfWeekET(d) {
     return DOW_MAP[_partsET(d || new Date()).dow];
+  }
+
+  // ── PUBLIC: hourET ───────────────────────────────────────────────
+  // Hour-of-day in the ET calendar, 0-23. Uses Intl.DateTimeFormat in
+  // America/New_York. The `% 24` modulo handles the rare edge case
+  // some engines emit at exactly midnight ET with hour12:false (a '24'
+  // instead of '00'). Added Dispatch 11 (May 11, 2026) for the prayer-
+  // lane time-of-day routing on the Missions hub.
+  function hourET(d) {
+    const fmt = new Intl.DateTimeFormat('en-US', {
+      timeZone: TZ,
+      hour: '2-digit',
+      hour12: false,
+    });
+    return parseInt(fmt.format(d || new Date()), 10) % 24;
   }
 
   // ── PUBLIC: ymd ──────────────────────────────────────────────────
@@ -130,6 +146,7 @@
     todayKey:            todayKey,
     addDays:             addDays,
     dayOfWeekET:         dayOfWeekET,
+    hourET:              hourET,
   };
 
   if (typeof window !== 'undefined') {

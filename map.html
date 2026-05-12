@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#c9922a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Expedition">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="stylesheet" href="css/viewport.css">
+<link rel="stylesheet" href="css/contrast.css">
+<link rel="stylesheet" href="css/nav-polish.css">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The Expedition Map · The Orthodox Expedition</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+
+<style>
+/* ── PALETTE TOKENS (matches curriculum.html / games.html / home.html) ─ */
+:root{
+  --gold:#c9922a;--gold-light:#f0c96e;--gold-bright:#ffd700;
+  --parchment:#f4e8c1;--parchment-dark:#e8d5a0;
+  --ink:#1a0f00;
+  --burgundy:#6b1a1a;
+  --byzantine:#2c1654;
+  --bg:#0e0800;
+  --nav-h:72px;
+}
+
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{min-height:100%;overflow-x:hidden;}
+body{
+  font-family:'Crimson Text',serif;
+  background-color:var(--bg);
+  background-image:
+    radial-gradient(ellipse at 50% 0%,rgba(107,26,26,0.45) 0%,transparent 55%),
+    radial-gradient(ellipse at 100% 100%,rgba(44,22,84,0.3) 0%,transparent 50%);
+  min-height:100vh;color:var(--parchment);
+}
+body::before{
+  content:'';position:fixed;inset:0;
+  background-image:
+    linear-gradient(rgba(201,146,42,0.022) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(201,146,42,0.022) 1px,transparent 1px);
+  background-size:44px 44px;pointer-events:none;z-index:0;
+}
+
+/* ── APP ───────────────────────────────────────────────────── */
+#app{position:relative;z-index:1;}
+.page{max-width:var(--container-max-width);margin:0 auto;padding:1.25rem 1rem calc(var(--nav-h) + 1.5rem);}
+
+/* ── HEADER (matches curriculum.html / home.html pattern) ───── */
+.app-header{
+  text-align:center;padding:1.25rem 1rem 1rem;
+  border-bottom:1px solid rgba(201,146,42,0.18);
+  margin-bottom:1.25rem;position:relative;
+}
+.app-header-row{display:flex;align-items:center;justify-content:space-between;}
+.app-name{
+  font-family:'Cinzel Decorative',serif;
+  font-size:clamp(0.95rem,3.5vw,1.2rem);
+  color:var(--gold-light);letter-spacing:0.06em;
+  text-shadow:0 0 20px rgba(201,146,42,0.35);
+  flex:1;text-align:center;
+}
+.back-btn{
+  background:none;border:none;cursor:pointer;
+  color:rgba(240,201,110,0.7);font-size:0.85rem;
+  font-family:'Cinzel',serif;padding:0.25rem 0.5rem;
+  text-decoration:none;
+}
+.app-divider{
+  color:rgba(240,201,110,0.65);letter-spacing:0.6rem;
+  font-size:0.65rem;margin-top:0.3rem;
+}
+
+/* ── PAGE TITLE BLOCK ──────────────────────────────────────── */
+.page-eyebrow{
+  font-family:'Cinzel',serif;font-size:0.7rem;letter-spacing:0.22em;
+  color:rgba(240,201,110,0.7);text-transform:uppercase;
+  text-align:center;margin-bottom:0.4rem;
+}
+.page-title{
+  font-family:'Cinzel Decorative',serif;
+  font-size:clamp(1.3rem,4.5vw,1.6rem);
+  color:var(--gold-light);text-align:center;
+  text-shadow:0 0 20px rgba(201,146,42,0.3);
+  margin-bottom:0.4rem;
+}
+.page-subtitle{
+  font-family:'Crimson Text',serif;font-size:0.85rem;
+  color:rgba(244,232,193,0.55);text-align:center;
+  font-style:italic;line-height:1.4;
+  margin-bottom:1.5rem;padding:0 0.5rem;
+}
+
+/* ── TOPIC BLOCK (parchment-on-navy panel with ✦ TL/BR corners) ─
+   Mirrors curriculum.html .topic-block dialect verbatim so the
+   map frame inherits the established visual register. */
+.topic-block{
+  position:relative;
+  padding:1.25rem 1rem 1.1rem;
+  border-radius:14px;
+  background:linear-gradient(180deg,
+    rgba(244,232,193,0.045) 0%,
+    rgba(201,146,42,0.035) 100%);
+  border:1px solid rgba(201,146,42,0.20);
+  box-shadow:
+    inset 0 1px 0 rgba(240,201,110,0.10),
+    0 2px 10px rgba(0,0,0,0.25);
+}
+.topic-block::before,
+.topic-block::after{
+  content:'✦';
+  position:absolute;
+  font-family:'Cinzel',serif;
+  font-size:0.78rem;
+  line-height:1;
+  color:rgba(240,201,110,0.55);
+  pointer-events:none;
+}
+.topic-block::before{top:0.55rem;left:0.7rem;}
+.topic-block::after{bottom:0.55rem;right:0.7rem;}
+
+/* ─────────────────────────────────────────────────────────────
+   EXPEDITION MAP — v0.1 (D4 §7.2)
+   Frame is the .topic-block above (✦ corners + parchment panel
+   on navy). Inner image is a <picture> with WebP+JPEG fallback
+   at 16:9, object-fit: contain. Caption uses italic Crimson Text
+   gold-tinted with brighter <em> region-name callouts.
+   ───────────────────────────────────────────────────────────── */
+.expedition-map-frame{
+  margin:1.5rem 0 1.25rem;
+}
+.expedition-map-image-wrap{
+  display:block;width:100%;
+  max-width:1600px;margin:0 auto;
+}
+.expedition-map-image{
+  display:block;width:100%;
+  aspect-ratio:16/9;object-fit:contain;
+  border-radius:6px;
+  box-shadow:0 2px 12px rgba(0,0,0,0.25);
+  border:1px solid rgba(201,168,76,0.20);
+}
+.expedition-map-caption{
+  margin:0.85rem auto 0;max-width:600px;
+  font-family:'Crimson Text',serif;font-style:italic;
+  font-size:0.95rem;text-align:center;line-height:1.55;
+  color:rgba(201,168,76,0.85);
+}
+.expedition-map-caption em{
+  font-style:italic;font-weight:600;
+  color:var(--gold-light,#f0c96e);
+}
+.expedition-map-portrait-hint{
+  display:none;margin:0.75rem auto 0;
+  font-family:'Crimson Text',serif;font-style:italic;
+  font-size:0.9rem;text-align:center;
+  color:rgba(201,168,76,0.65);
+}
+@media (orientation:portrait) and (max-width:1024px){
+  .expedition-map-portrait-hint{display:block;}
+}
+
+/* ── BACK LINK ─────────────────────────────────────────────── */
+.back-link{
+  text-align:center;margin:1.5rem 0 0.5rem;
+  font-family:'Crimson Text',serif;font-size:0.95rem;
+}
+.back-link a{
+  color:rgba(201,168,76,0.85);text-decoration:none;
+  border-bottom:1px solid rgba(201,168,76,0.30);
+  padding-bottom:1px;transition:color 0.2s ease,border-color 0.2s ease;
+}
+.back-link a:hover,
+.back-link a:focus-visible{
+  color:var(--gold-light,#f0c96e);
+  border-bottom-color:rgba(240,201,110,0.7);
+}
+
+/* ── BOTTOM NAV (matches curriculum.html / home.html canonical) ─ */
+.bottom-nav{
+  position:fixed;bottom:0;left:0;right:0;
+  height:var(--nav-h);
+  background:rgba(8,4,0,0.97);
+  border-top:1px solid rgba(201,146,42,0.18);
+  display:flex;align-items:stretch;
+  backdrop-filter:blur(16px);
+  z-index:200;
+  padding-bottom:env(safe-area-inset-bottom);
+}
+.nav-item{
+  flex:1;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:0.2rem;
+  cursor:pointer;border:none;background:none;
+  padding:0.5rem 0.25rem;position:relative;
+  transition:all 0.2s;text-decoration:none;
+}
+.nav-item:active{background:rgba(201,146,42,0.06);}
+.nav-mark{
+  font-size:1rem;line-height:1;
+  color:rgba(240,201,110,0.65);
+  transition:all 0.25s;
+}
+.nav-label{
+  font-family:'Cinzel',serif;font-size:0.52rem;
+  letter-spacing:0.08em;text-transform:uppercase;
+  color:rgba(240,201,110,0.65);
+  transition:all 0.25s;
+}
+.nav-item.active .nav-mark{
+  color:var(--gold-bright);
+  text-shadow:0 0 12px rgba(255,215,0,0.6);
+}
+.nav-item.active .nav-label{color:var(--gold-light);}
+.nav-item.active::before{
+  content:'';position:absolute;top:0;left:20%;right:20%;
+  height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent);
+  border-radius:0 0 2px 2px;
+}
+
+/* ── ANIMATIONS ────────────────────────────────────────────── */
+.fade-up{opacity:0;transform:translateY(12px);animation:fadeUp 0.4s ease forwards;}
+@keyframes fadeUp{to{opacity:1;transform:translateY(0);}}
+.fade-up:nth-child(1){animation-delay:0.04s;}
+.fade-up:nth-child(2){animation-delay:0.10s;}
+.fade-up:nth-child(3){animation-delay:0.16s;}
+.fade-up:nth-child(4){animation-delay:0.22s;}
+.fade-up:nth-child(5){animation-delay:0.28s;}
+.fade-up:nth-child(6){animation-delay:0.34s;}
+@media (prefers-reduced-motion: reduce){
+  .fade-up{animation:none;opacity:1;transform:none;}
+}
+</style>
+</head>
+<body>
+
+<div id="app">
+  <div class="page">
+
+    <!-- HEADER -->
+    <header class="app-header">
+      <div class="app-header-row">
+        <a class="back-btn" href="curriculum.html">‹ Topics</a>
+        <div class="app-name">The Expedition Map</div>
+        <div style="width:60px"></div>
+      </div>
+      <div class="app-divider">✦ ☩ ✦</div>
+    </header>
+
+    <!-- PAGE TITLE -->
+    <div class="page-eyebrow fade-up">✦ Sacred Geography</div>
+    <div class="page-title fade-up">The Expedition Map</div>
+    <div class="page-subtitle fade-up">Where you are. Where you're going.</div>
+
+    <!-- MAP FRAME — parchment-on-navy with ✦ corner ornaments inherited from .topic-block -->
+    <section class="expedition-map-frame topic-block fade-up">
+      <picture class="expedition-map-image-wrap">
+        <source srcset="/Orthodox-Expedition-/assets/maps/expedition-map-v0-1.webp"
+                type="image/webp">
+        <img src="/Orthodox-Expedition-/assets/maps/expedition-map-v0-1.jpg"
+             alt="The Orthodox Expedition Map — a hand-illustrated map of the catechetical journey, with Topic 00 'Coming Home' marked as the current region."
+             class="expedition-map-image"
+             loading="eager">
+      </picture>
+      <p class="expedition-map-caption">
+        You are in <em>Coming Home</em>. The path leads north to
+        <em>The Faith Itself</em>, then <em>The Sacraments</em>.
+        Beyond, the territory is yet to be charted.
+      </p>
+      <p class="expedition-map-portrait-hint">
+        Rotate your device to read the map fully.
+      </p>
+    </section>
+
+    <!-- BACK LINK -->
+    <p class="back-link fade-up">
+      <a href="curriculum.html">← Return to Topics</a>
+    </p>
+
+  </div>
+</div>
+
+<!-- BOTTOM NAV — Home · Missions · Topics · Scriptures · Field Manual -->
+<nav class="bottom-nav" id="bottom-nav">
+  <a class="nav-item" href="home.html">
+    <span class="nav-mark">✦</span>
+    <span class="nav-label">Home</span>
+  </a>
+  <a class="nav-item" href="missions.html">
+    <span class="nav-mark">☩</span>
+    <span class="nav-label">Missions</span>
+  </a>
+  <a class="nav-item active" href="curriculum.html">
+    <span class="nav-mark">⊕</span>
+    <span class="nav-label">Topics</span>
+  </a>
+  <a class="nav-item" href="bible-reader.html">
+    <span class="nav-mark">☦&#xFE0E;</span>
+    <span class="nav-label">Scriptures</span>
+  </a>
+  <a class="nav-item" href="journal.html">
+    <span class="nav-mark">✎</span>
+    <span class="nav-label">Field Manual</span>
+  </a>
+</nav>
+
+<script>
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('sw.js').catch(()=>{});
+  });
+}
+</script>
+</body>
+</html>

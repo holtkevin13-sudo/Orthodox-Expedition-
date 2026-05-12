@@ -1,4 +1,23 @@
-// Orthodox Expedition — Service Worker v40
+// Orthodox Expedition — Service Worker v41
+// v41: Chat 15 — Sacred Geography Map v0.1.
+//      🟢 New page: map.html — illuminated-manuscript expedition
+//          map. Static parchment-on-navy frame with ✦ corners
+//          (.topic-block dialect). <picture> element with WebP+JPEG
+//          fallback at 16:9, italic gold caption with <em> region
+//          names, portrait-orientation hint via media query. Lean
+//          head mirroring games.html (no welcome-flow.css). PUBLIC
+//          surface — no auth gating (no PII; same content for all
+//          viewers). Bottom nav canonical 5 items with Topics
+//          active and ☦&#xFE0E; on Scriptures.
+//      🟢 curriculum.html — quiet "✦ View the Expedition Map"
+//          entry link inserted between #feast-of-week-mount and
+//          the dynamic Topic 00 #topic-list. Topic 00 panel
+//          byte-identical pre/post (SHA-256 verified); the JS
+//          renderActiveTopic00() pipeline is never touched.
+//      🟢 STATIC_ASSETS — adds map.html and the two image asset
+//          paths (.webp + .jpg). Image files are produced
+//          separately by Kevin via Midjourney workflow; page
+//          renders gracefully with alt text until images land.
 // v40: Chat 14 — Eucharist Sunday Morning Prayers (text-only).
 //      🟢 New page: eucharist-prayers.html — Orthodox pre-
 //          communion prayer surface. Four prayers in a single
@@ -442,7 +461,7 @@
 // v4: added week.html, prayers.html, day-state, pause-card, prayers, and config JSON
 // Version bump forces cache clear and fresh install
 
-const CACHE_NAME = 'orthodox-expedition-v40';
+const CACHE_NAME = 'orthodox-expedition-v41';
 const STATIC_ASSETS = [
   '/Orthodox-Expedition-/',
   '/Orthodox-Expedition-/index.html',
@@ -526,6 +545,10 @@ const STATIC_ASSETS = [
   '/Orthodox-Expedition-/games/sacred-words.html',
   '/Orthodox-Expedition-/games/bible-trivia.html',
   '/Orthodox-Expedition-/games/church-history.html',
+  // v41 — Chat 15 additions (Sacred Geography Map v0.1):
+  '/Orthodox-Expedition-/map.html',
+  '/Orthodox-Expedition-/assets/maps/expedition-map-v0-1.webp',
+  '/Orthodox-Expedition-/assets/maps/expedition-map-v0-1.jpg',
 ];
 
 // Install — cache static assets

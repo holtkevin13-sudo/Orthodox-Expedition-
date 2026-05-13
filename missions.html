@@ -87,23 +87,42 @@ body::before{
 @keyframes coinTick{from{transform:translateY(6px);opacity:0;}to{transform:translateY(0);opacity:1;}}
 .coin-strip-val.tick{animation:coinTick 0.3s ease-out;}
 
-/* ── MISSION TABS ───────────────────────────────────────────── */
-.mission-tabs{display:flex;gap:0.4rem;margin-bottom:1rem;}
-.m-tab{
-  flex:1;padding:0.6rem 0.25rem;min-height:48px;
-  background:rgba(201,146,42,0.06);
-  border:1px solid rgba(201,146,42,0.18);
-  border-radius:10px;font-family:'Cinzel',serif;font-size:0.68rem;
-  cursor:pointer;text-align:center;transition:all 0.2s;
-  color:rgba(201,146,42,0.4);letter-spacing:0.04em;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0.15rem;
+/* ── MISSION TABS (Chat 20-IMPL-A — demoted to compact chip rail) ──
+   Phase 1 finding #7: Weekly/Special tabs earn little use during
+   Topic 00 launch. Demoting reclaims ~32px of vertical and visually
+   subordinates the secondary tabs. Daily renders as a filled gold
+   pill (current active treatment, smaller); Weekly + Special as
+   ghost-text chips with no border. Tap-to-switch behavior intact;
+   only visual treatment changes. */
+.mission-tabs{
+  display:flex;align-items:center;gap:0.75rem;
+  margin-bottom:0.9rem;
+  min-height:32px;
 }
-.m-tab.active,.m-tab:active{background:var(--gold);color:var(--ink);border-color:var(--gold-bright);box-shadow:0 0 12px rgba(255,215,0,0.2);}
-.m-tab-mark{font-size:0.9rem;line-height:1;}
+.m-tab{
+  background:none;border:none;cursor:pointer;
+  padding:0.35rem 0.65rem;min-height:32px;
+  font-family:'Cinzel',serif;font-size:0.65rem;
+  letter-spacing:0.08em;text-transform:uppercase;
+  color:rgba(201,146,42,0.45);
+  transition:all 0.2s;
+  display:inline-flex;align-items:center;gap:0.4rem;
+  border-radius:14px;
+}
+.m-tab.active,.m-tab:active{
+  background:linear-gradient(135deg,var(--gold) 0%,var(--gold-bright) 100%);
+  color:var(--ink);
+  font-weight:700;
+  box-shadow:0 0 10px rgba(255,215,0,0.18);
+  letter-spacing:0.1em;
+  padding:0.4rem 0.85rem;
+}
+.m-tab-mark{display:none;}  /* glyphs removed in demoted treatment */
 .m-tab-badge{
   background:#ef4444;color:white;border-radius:10px;
   font-size:0.5rem;padding:0.05rem 0.3rem;
   font-family:'Cinzel',serif;display:none;
+  line-height:1;
 }
 .m-tab-badge.show{display:inline-block;}
 
@@ -305,48 +324,27 @@ body::before{
   font-size:0.85rem;line-height:1.4;color:#5a3e0e;
 }
 
-/* ── Reading mission card (top, prominent) ──────────────────── */
-.mh-reading-card{
-  background:rgba(201,146,42,0.05);
-  border:1.5px solid rgba(201,146,42,0.4);
-  border-radius:14px;padding:1.1rem 1rem;margin-bottom:0.85rem;
-  box-shadow:0 3px 14px rgba(27,42,74,0.18);
-  position:relative;
+/* ── Reading lane wrapper (Chat 20-IMPL-A — trail-marker row +
+   optional inline expand panel). The reading lane in 20-IMPL-A is
+   visually a trail-marker row (.mh-row.mh-row-reading) just like
+   prayer/memo/session. When state is 'read-not-reflected' the row
+   is followed by an in-line expand panel (.mh-reading-expand)
+   carrying the existing portrait + prompt + textarea + submit form
+   — preserved verbatim from Chat 2A. 20-IMPL-B moves that surface
+   into bible-reader and the expand panel goes away entirely. ── */
+.mh-reading-block{
+  display:flex;flex-direction:column;
+  margin-bottom:0.55rem;
 }
-.mh-reading-card.mh-card-prominent{
-  border-color:var(--gold);
-  background:linear-gradient(180deg,rgba(201,146,42,0.08) 0%,rgba(44,22,84,0.08) 100%);
+.mh-reading-block .mh-row{
+  margin-bottom:0;  /* the block owns the gap; row sits flush above expand */
 }
-.mh-card-eyebrow{
-  font-family:'Cinzel',serif;font-weight:600;
-  font-size:0.7rem;letter-spacing:0.18em;text-transform:uppercase;
-  color:var(--gold-light);
-  margin-bottom:0.7rem;
-}
-.mh-reading-pilgrimage{
-  display:flex;align-items:center;gap:0.7rem;
-  padding:0.5rem 0;
-}
-.mh-rp-icon{font-size:1.3rem;color:var(--gold);}
-.mh-rp-text{
-  font-family:'Crimson Text',serif;font-style:italic;
-  color:rgba(244,232,193,0.8);
-}
-.mh-reading-done-mini{
-  display:flex;align-items:center;gap:0.65rem;
-  padding:0.3rem 0;
-}
-.mh-rdm-check{
-  display:inline-flex;align-items:center;justify-content:center;
-  width:1.6rem;height:1.6rem;border-radius:50%;
-  background:rgba(22,163,74,0.18);
-  color:rgba(134,239,172,0.9);
-  font-weight:700;font-size:0.9rem;
-  border:1px solid rgba(22,163,74,0.35);
-}
-.mh-rdm-text{
-  font-family:'Cinzel',serif;font-weight:600;
-  font-size:0.9rem;color:rgba(244,232,193,0.85);
+.mh-reading-expand{
+  margin-top:0.55rem;
+  padding:0.95rem 1rem;
+  background:rgba(244,232,193,0.045);
+  border:1px solid rgba(201,146,42,0.22);
+  border-radius:12px;
 }
 
 /* ── Character portrait block (Chat 4 — used by reading Stage 2
@@ -637,133 +635,242 @@ body::before{
 }
 .mh-session-complete .mh-row-name{color:rgba(134,239,172,0.82);}
 
-/* ── Progress + celebration ─────────────────────────────────── */
-.mh-progress{
-  margin-top:0.85rem;padding:0.95rem 1rem;
-  background:rgba(244,232,193,0.04);
-  border:1px solid rgba(201,146,42,0.2);
-  border-radius:12px;
-}
-.mh-progress-row{
-  display:flex;align-items:baseline;justify-content:space-between;
-  margin-bottom:0.5rem;
-}
-.mh-progress-label{
-  font-family:'Cinzel',serif;font-weight:600;
-  font-size:0.78rem;letter-spacing:0.12em;text-transform:uppercase;
-  color:rgba(240,201,110,0.7);
+/* ── Progress chip in eyebrow band (Chat 20-IMPL-A)
+   Relocated from BOTTOM of the panel to TOP — counter is now
+   momentum-during-work, not reward-after-work. Lives inside the
+   .mh-eyebrow region (rendered by missions.js). Phase 1 friction
+   #8 directly addressed. Existing .mh-progress* tokens reused;
+   layout simplified to a single inline row. ─────────────────── */
+.mh-progress-chip{
+  display:flex;align-items:center;gap:0.75rem;
+  margin-top:0.4rem;margin-bottom:1rem;
+  padding:0.45rem 0.85rem;
+  background:rgba(244,232,193,0.035);
+  border:1px solid rgba(201,146,42,0.18);
+  border-radius:999px;
 }
 .mh-progress-count{
-  font-family:'Cinzel',serif;font-size:0.95rem;
-  color:rgba(244,232,193,0.88);
+  font-family:'Cinzel',serif;font-weight:600;
+  font-size:0.72rem;letter-spacing:0.06em;
+  color:var(--gold-light);
+  flex-shrink:0;
 }
 .mh-pc-num{
   font-family:'Cinzel Decorative',serif;font-weight:700;
-  font-size:1.15rem;color:var(--gold-light);
-  display:inline-block;min-width:1.1ch;text-align:right;
+  font-size:0.92rem;color:var(--gold-light);
+  display:inline-block;min-width:1ch;text-align:right;
 }
-.mh-pc-total{font-weight:600;color:rgba(244,232,193,0.85);}
+.mh-pc-total{font-weight:600;color:rgba(244,232,193,0.78);}
 .mh-progress-bar{
-  height:7px;border-radius:4px;
+  flex:1;height:6px;border-radius:3px;
   background:rgba(244,232,193,0.08);
-  overflow:hidden;border:1px solid rgba(201,146,42,0.18);
+  overflow:hidden;border:1px solid rgba(201,146,42,0.14);
 }
 .mh-progress-fill{
   height:100%;
   background:linear-gradient(90deg,var(--gold) 0%,var(--gold-bright) 100%);
-  box-shadow:0 0 6px rgba(255,215,0,0.35);
+  box-shadow:0 0 6px rgba(255,215,0,0.30);
   transition:width 500ms ease;
   width:0%;
 }
-.mh-celebration-line{
-  margin-top:0.75rem;
-  font-family:'Crimson Text',serif;font-style:italic;
-  font-size:0.95rem;text-align:center;line-height:1.4;
-  color:var(--gold-light);
+.mh-progress-chip.is-complete{
+  background:rgba(201,146,42,0.10);
+  border-color:rgba(255,215,0,0.4);
 }
-.mh-celebration-rest{color:rgba(240,201,110,0.75);}
+.mh-progress-chip.is-rest{
+  /* Pilgrimage day — fraction replaced with "Pilgrimage rest" copy. */
+  background:rgba(201,146,42,0.06);
+  border-color:rgba(201,146,42,0.25);
+}
+.mh-progress-chip.is-rest .mh-progress-bar{display:none;}
+.mh-progress-chip.is-rest .mh-progress-count{font-style:italic;}
 
-/* ── Day Complete lane (Chat 2A · slot 5 on M-F, slot 4 on Sat/Sun)
-   Distinct visual register from the task rows: ✦-glyph in a circular
-   chip on the left, "Day Complete" title with prompt sub, and a
-   right-side +10 coin pip OR 🔒 lock indicator depending on state.
-   States: locked (default) / paid (+ unlock-pending alias) /
-   pilgrimage. ───────────────────────────────────────────────────── */
-.mh-daycomplete{
+/* ── Closing line (Chat 20-IMPL-A — rendered ONLY when paid or
+   pilgrimage, BELOW the trophy chip rather than the prior
+   bottom-of-list location. Compact and reverent. */
+.mh-closing-line{
+  margin-top:0.9rem;margin-bottom:0.4rem;
+  font-family:'Crimson Text',serif;font-style:italic;
+  font-size:0.92rem;text-align:center;line-height:1.45;
+  color:var(--gold-light);
+  opacity:0;
+  animation:mhClosingFadeIn 600ms ease-out 250ms forwards;
+}
+.mh-closing-line-rest{color:rgba(240,201,110,0.75);}
+@keyframes mhClosingFadeIn{
+  0%   {opacity:0;transform:translateY(4px);}
+  100% {opacity:1;transform:translateY(0);}
+}
+
+/* ── Floating "+10 ☦" toast (Chat 20-IMPL-A — celebration moment).
+   Inserted dynamically by JS at celebration time; rises ~24px and
+   fades out over 1200ms. ──────────────────────────────────────── */
+.mh-coin-toast{
+  position:fixed;
+  font-family:'Cinzel Decorative',serif;font-weight:700;
+  font-size:1.05rem;
+  color:var(--gold-bright);
+  text-shadow:0 0 14px rgba(255,215,0,0.6);
+  pointer-events:none;
+  z-index:9998;
+  animation:mhCoinToast 1200ms ease-out forwards;
+}
+@keyframes mhCoinToast{
+  0%   {opacity:0;transform:translateY(6px);}
+  20%  {opacity:1;transform:translateY(0);}
+  80%  {opacity:1;transform:translateY(-18px);}
+  100% {opacity:0;transform:translateY(-28px);}
+}
+
+/* ── Next-up pulse (Chat 20-IMPL-A — quiet gold pulse on the topmost
+   incomplete lane). 2.8s loop, dimmer + slower than the existing
+   Byzantine .m-card.pending pulse. Witness-only: invites without
+   nagging. Reduced-motion users get a static brighter border
+   instead (no animation). ─────────────────────────────────────── */
+@keyframes mhNextUpPulse{
+  0%, 100% {
+    border-color:rgba(201,146,42,0.30);
+    box-shadow:0 0 0 rgba(255,215,0,0);
+  }
+  50% {
+    border-color:rgba(255,215,0,0.55);
+    box-shadow:0 0 14px rgba(255,215,0,0.18);
+  }
+}
+.mh-row-next-up{
+  animation:mhNextUpPulse 2.8s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce){
+  .mh-row-next-up{
+    animation:none;
+    border-color:rgba(255,215,0,0.45);
+    box-shadow:0 0 6px rgba(255,215,0,0.12);
+  }
+}
+
+/* ── Trophy chip (Chat 20-IMPL-A — replaces .mh-daycomplete).
+   "Today's Devotion" lives at the bottom of the row stack as a
+   celebratory CAP, not as a 5th task. Distinct register from task
+   rows: SMALLER when locked, LARGER when paid, with the celebration
+   sequence orchestrated in JS (chip morph + coin-rain + haptic +
+   counter advance + +10 toast). Phase 2 §4 spec; Phase 2 §6
+   celebration choreography. ─────────────────────────────────── */
+
+/* Base — compact locked posture (~60px). */
+.mh-trophy{
   display:flex;align-items:center;gap:0.85rem;
-  padding:0.85rem 0.95rem;margin-bottom:0.55rem;
-  background:linear-gradient(180deg,rgba(201,146,42,0.08) 0%,rgba(44,22,84,0.06) 100%);
-  border:1px solid rgba(201,146,42,0.32);
+  padding:0.65rem 0.95rem;margin-bottom:0.55rem;
   border-radius:12px;
   position:relative;
-  transition:background 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+  transition:padding 240ms ease, background 240ms ease,
+             border-color 240ms ease, box-shadow 240ms ease;
 }
-.mh-dc-glyph{
-  width:2.4rem;height:2.4rem;flex-shrink:0;
+.mh-trophy-glyph{
+  width:2.0rem;height:2.0rem;flex-shrink:0;
   display:inline-flex;align-items:center;justify-content:center;
   background:linear-gradient(180deg,var(--parchment) 0%,var(--parchment-dark) 100%);
   border:1.5px solid var(--gold);border-radius:50%;
   font-family:'Cinzel Decorative',serif;
-  font-size:1.05rem;line-height:1;
+  font-size:1.0rem;line-height:1;
   color:var(--ink);
   /* iOS emoji defense: keep ✦ as text glyph, not multi-color emoji. */
   font-variant-emoji:text;
 }
-.mh-dc-body{flex:1;min-width:0;}
-.mh-dc-title{
+.mh-trophy-body{flex:1;min-width:0;}
+.mh-trophy-title{
   font-family:'Cinzel',serif;font-weight:600;
-  font-size:0.92rem;letter-spacing:0.06em;
-  color:rgba(244,232,193,0.92);
+  font-size:0.88rem;letter-spacing:0.05em;
+  color:rgba(244,232,193,0.78);
+  line-height:1.3;
 }
-.mh-dc-sub{
+.mh-trophy-sub{
   font-family:'Crimson Text',serif;font-style:italic;
   font-size:0.85rem;line-height:1.35;
-  color:rgba(244,232,193,0.66);
+  color:rgba(244,232,193,0.62);
   margin-top:0.15rem;
 }
-.mh-dc-coins{
+.mh-trophy-coins{
   flex-shrink:0;
   font-family:'Cinzel',serif;font-weight:700;
-  font-size:0.95rem;color:var(--gold-light);
+  font-size:1.05rem;color:var(--gold-bright);
   letter-spacing:0.04em;
+  text-shadow:0 0 12px rgba(255,215,0,0.45);
 }
-.mh-dc-lock{
+.mh-trophy-lock{
   flex-shrink:0;font-size:0.95rem;
-  color:rgba(201,146,42,0.55);
+  color:rgba(201,146,42,0.5);
 }
 
-/* Locked — dimmed; "Finish today's missions to unlock the +10 bonus." */
-.mh-dc-locked{
-  opacity:0.78;
+/* LOCKED — dimmed, compact, single-line. */
+.mh-trophy-locked{
   background:rgba(244,232,193,0.035);
-  border-color:rgba(201,146,42,0.2);
+  border:1px solid rgba(201,146,42,0.22);
 }
-.mh-dc-locked .mh-dc-glyph{
+.mh-trophy-locked .mh-trophy-glyph{
   background:rgba(244,232,193,0.06);
-  border-color:rgba(201,146,42,0.32);
+  border-color:rgba(201,146,42,0.3);
   color:rgba(201,146,42,0.55);
 }
-.mh-dc-locked .mh-dc-title{color:rgba(244,232,193,0.75);}
 
-/* Paid / unlock-pending — celebration: gold gradient, glow, +10 visible */
-.mh-dc-paid{
-  background:linear-gradient(180deg,rgba(201,146,42,0.14) 0%,rgba(255,215,0,0.06) 100%);
-  border-color:var(--gold);
-  box-shadow:0 0 12px rgba(255,215,0,0.18);
+/* UNLOCK-PENDING — gold-pulse transitional. */
+.mh-trophy-pending{
+  background:linear-gradient(180deg,rgba(201,146,42,0.10) 0%,rgba(255,215,0,0.04) 100%);
+  border:1.5px solid var(--gold);
+  animation:mhTrophyPending 1.0s ease-out;
 }
-.mh-dc-paid .mh-dc-glyph{
+.mh-trophy-pending .mh-trophy-glyph{
   background:linear-gradient(135deg,var(--gold) 0%,var(--gold-bright) 100%);
   border-color:var(--gold-bright);
   color:var(--ink);
-  box-shadow:0 0 8px rgba(255,215,0,0.35);
 }
-.mh-dc-paid .mh-dc-title{color:var(--gold-light);}
+.mh-trophy-pending .mh-trophy-title{color:var(--gold-light);}
+@keyframes mhTrophyPending{
+  0%   {transform:scale(1.00);box-shadow:0 0 0 rgba(255,215,0,0);}
+  50%  {transform:scale(1.02);box-shadow:0 0 20px rgba(255,215,0,0.35);}
+  100% {transform:scale(1.00);box-shadow:0 0 0 rgba(255,215,0,0);}
+}
 
-/* Pilgrimage — gentle; "Pilgrimage rest — your streak walks with you." */
-.mh-dc-pilgrimage{
-  background:rgba(201,146,42,0.06);
-  border-color:rgba(201,146,42,0.28);
+/* PAID — taller (~80px), gold-burst, three ornaments above title. */
+.mh-trophy-paid{
+  padding:0.85rem 1rem;
+  background:linear-gradient(180deg,rgba(201,146,42,0.18) 0%,rgba(255,215,0,0.10) 100%);
+  border:1.5px solid var(--gold-bright);
+  box-shadow:0 0 16px rgba(255,215,0,0.22);
+  animation:mhTrophyPaidEntry 600ms ease-out;
 }
+.mh-trophy-paid .mh-trophy-glyph{
+  background:linear-gradient(135deg,var(--gold) 0%,var(--gold-bright) 100%);
+  border-color:var(--gold-bright);
+  color:var(--ink);
+  box-shadow:0 0 10px rgba(255,215,0,0.4);
+  width:2.4rem;height:2.4rem;font-size:1.1rem;
+}
+.mh-trophy-paid .mh-trophy-title{color:var(--gold-light);font-size:0.95rem;}
+.mh-trophy-paid .mh-trophy-sub{color:var(--gold-light);font-style:italic;}
+.mh-trophy-paid .mh-trophy-ornament-row{
+  display:flex;align-items:center;gap:0.55rem;
+  margin-bottom:0.15rem;
+  font-family:'Cinzel Decorative',serif;
+  font-variant-emoji:text;
+  font-size:0.95rem;
+  color:var(--gold-light);
+  letter-spacing:0.05em;
+}
+@keyframes mhTrophyPaidEntry{
+  0%   {opacity:0;transform:translateY(-3px) scale(0.98);}
+  100% {opacity:1;transform:translateY(0)    scale(1.00);}
+}
+
+/* PILGRIMAGE — gentle parchment-warm rest tile. */
+.mh-trophy-pilgrimage{
+  background:rgba(201,146,42,0.06);
+  border:1px solid rgba(201,146,42,0.28);
+}
+.mh-trophy-pilgrimage .mh-trophy-glyph{
+  color:var(--gold-light);
+  background:rgba(244,232,193,0.08);
+}
+.mh-trophy-pilgrimage .mh-trophy-title{color:var(--gold-light);}
 
 /* ── 10/10 polish #1: micro-celebration on row complete ──────── */
 @keyframes mhRowCelebrate{
@@ -780,145 +887,48 @@ body::before{
   font-family:'Crimson Text',serif;font-style:italic;
   color:rgba(244,232,193,0.5);
 }
-/* ════════════════════════════════════════════════════════
- * .dac-* — DailyAnchorCard sub-card styles, originally
- * resident on home.html, mounted on missions.html in
- * Dispatch 4b. Block restored to missions.html in Chat 9
- * after Chat 8's str_replace corruption was rolled back.
- * Source: home.html lines 711-842 (HEAD as of Chat 9).
- * ════════════════════════════════════════════════════════ */
-/* ── DAILY ANCHOR CARD ("Today We Celebrate") ───────────────────
-   Lane A — devotional anchor between today-card (the day's action)
-   and rank-hero (status reflection). Carries liturgical season,
-   feast/saint, Bible verse (deep-link to bible-reader), and a daily
-   journal prompt (deep-link to journal.html). Tokens borrowed from
-   contrast.css (text tiers) and home page gold/parchment palette.
-   ─────────────────────────────────────────────────────────────── */
-.daily-anchor-card{
-  background:linear-gradient(160deg,rgba(28,16,52,0.55) 0%,rgba(60,18,28,0.4) 100%);
-  border:1px solid rgba(201,146,42,0.32);
-  border-radius:16px;
-  padding:1.15rem 1.1rem 1rem;
-  margin-bottom:1.125rem;
-  box-shadow:0 6px 22px rgba(0,0,0,0.32),inset 0 1px 0 rgba(255,215,0,0.05);
-}
-.daily-anchor-card .dac-inner{
-  display:flex;flex-direction:column;gap:0.7rem;
-}
-/* Great-feast tier — slightly thicker gold border, subtle glow. */
-.daily-anchor-card:has(.dac-inner.dac-great){
-  border-width:1.5px;
-  border-color:rgba(240,201,110,0.55);
-  box-shadow:0 6px 22px rgba(0,0,0,0.32),0 0 18px rgba(255,215,0,0.08),inset 0 1px 0 rgba(255,215,0,0.08);
-}
-/* Name-day tier (Aug 9) — even more elevated, parchment-warm. */
-.daily-anchor-card:has(.dac-inner.dac-name-day){
-  background:linear-gradient(160deg,rgba(60,30,80,0.55) 0%,rgba(80,30,30,0.4) 100%);
-  border-color:rgba(255,215,0,0.5);
-  box-shadow:0 6px 22px rgba(0,0,0,0.32),0 0 24px rgba(255,215,0,0.12),inset 0 1px 0 rgba(255,215,0,0.1);
-}
-.dac-eyebrow{
-  font-family:'Cinzel',serif;
-  font-size:0.7rem;
-  letter-spacing:0.22em;
-  color:var(--text-eyebrow-2);
-  text-transform:uppercase;
-  text-align:center;
-  font-weight:600;
-}
-.dac-framing{
-  font-family:'Cinzel Decorative',serif;
-  font-size:1.1rem;
-  color:var(--text-eyebrow);
-  text-align:center;
-  line-height:1.25;
-  display:flex;align-items:center;justify-content:center;gap:0.55rem;flex-wrap:wrap;
-}
-.dac-orn{
-  /* iOS emoji defense (Repair N pattern): keep ✦ as text glyph,
-     not multi-color emoji presentation. U+2726 BLACK FOUR POINTED
-     STAR is followed by U+FE0E TEXT VARIATION SELECTOR in the
-     rendered HTML; this CSS is the belt-and-suspenders pair. */
-  font-variant-emoji:text;
-  font-family:'Cinzel Decorative',serif;
-  color:var(--text-eyebrow);
-  font-size:0.95rem;
-  line-height:1;
-  flex-shrink:0;
-}
-.dac-framing-text{display:inline-block;}
-/* Greater elevation for great-feast / name-day on the framing line. */
-.dac-inner.dac-great .dac-framing,
-.dac-inner.dac-name-day .dac-framing{
-  font-size:1.22rem;
-}
-.dac-body{
-  font-family:'Crimson Text',serif;
-  font-size:1rem;
-  line-height:1.45;
-  color:var(--text-primary);
-  text-align:center;
-  padding:0 0.25rem;
-}
-.dac-body-great{font-size:1.1rem;}
+/* ── Mobile + reduced-motion polish (Chat 20-IMPL-A) ────────────
+   The .dac-* CSS block that previously lived here is removed.
+   The DailyAnchorCard render path on the reading lane is also
+   retired in this dispatch — the reading row now carries its
+   own compact sub-line, no DAC-as-card-content. The
+   js/daily-anchor-card.js module remains in repo (orphaned) per
+   orchestrator ruling; flag for post-launch repo audit chat.
 
-/* ── DAC sub-cards (verse + prompt) ──────────────────────────── */
-.dac-sub{
-  display:block;
-  text-decoration:none;
-  background:rgba(244,232,193,0.05);
-  border:1px solid rgba(201,146,42,0.22);
-  border-radius:12px;
-  padding:0.85rem 0.95rem 0.7rem;
-  transition:background 0.18s ease,border-color 0.18s ease,transform 0.12s ease;
-  min-height:44px;  /* iOS tap target floor */
-  color:inherit;
+   Tightening for iPhone SE (≤380px) and iPhone (≤420px) plus a
+   reduced-motion fallback for the celebration moment so the
+   coin-rain particles never fire when prefers-reduced-motion is
+   set. The chip morph, counter advance, haptic, and toast still
+   fire — they're gentle. ─────────────────────────────────── */
+
+@media (max-width: 420px){
+  .mh-trophy-paid .mh-trophy-ornament-row{
+    font-size:0.85rem;gap:0.4rem;
+  }
+  .coin-p{font-size:1.2rem;}
 }
-.dac-sub:hover{background:rgba(244,232,193,0.07);border-color:rgba(240,201,110,0.4);}
-.dac-sub:active{transform:scale(0.99);background:rgba(244,232,193,0.08);}
-.dac-sub-eyebrow{
-  font-family:'Cinzel',serif;
-  font-size:0.62rem;
-  letter-spacing:0.2em;
-  color:var(--text-eyebrow-3);
-  text-transform:uppercase;
-  margin-bottom:0.4rem;
-  font-weight:600;
+@media (max-width: 380px){
+  /* iPhone SE territory — tighten row padding + eyebrow font. */
+  .mh-row{padding:0.75rem 0.85rem;gap:0.6rem;}
+  .mh-eyebrow-title{font-size:0.95rem;}
+  .mh-trophy{padding:0.55rem 0.85rem;}
+  .mh-trophy-glyph{width:1.85rem;height:1.85rem;font-size:0.95rem;}
 }
-.dac-verse-text{
-  font-family:'Crimson Text',serif;
-  font-style:italic;
-  font-size:0.98rem;
-  line-height:1.5;
-  color:var(--text-primary);
-  margin-bottom:0.4rem;
+
+@media (prefers-reduced-motion: reduce){
+  /* Skip the coin-rain entirely; static celebration is gentler. */
+  #coin-rain{display:none;}
+  /* Disable looping/long animations; instantaneous transitions only. */
+  .mh-row-celebrate,
+  .mh-reading-card.mh-row-celebrate,
+  .mh-trophy-pending,
+  .mh-trophy-paid,
+  .mh-closing-line{
+    animation:none !important;
+  }
+  /* (mh-row-next-up reduced-motion fallback handled above with
+      its own selector — static brighter border, no pulse.) */
 }
-.dac-verse-ref{
-  font-family:'Cinzel',serif;
-  font-size:0.72rem;
-  letter-spacing:0.08em;
-  color:var(--text-eyebrow-2);
-  text-align:right;
-  margin-bottom:0.6rem;
-}
-.dac-prompt-text{
-  font-family:'Crimson Text',serif;
-  font-style:italic;
-  font-size:0.98rem;
-  line-height:1.5;
-  color:var(--text-primary);
-  margin-bottom:0.6rem;
-}
-.dac-sub-cta{
-  display:flex;align-items:center;justify-content:flex-end;gap:0.3rem;
-  font-family:'Cinzel',serif;
-  font-size:0.68rem;
-  letter-spacing:0.14em;
-  color:var(--text-eyebrow-2);
-  text-transform:uppercase;
-  font-weight:600;
-}
-.dac-sub-arrow{font-size:1rem;line-height:1;}
 </style>
 </head>
 <body>
@@ -956,20 +966,17 @@ body::before{
       </div>
     </div>
 
-    <!-- TABS -->
+    <!-- TABS (Chat 20-IMPL-A — demoted to compact chip rail) -->
     <div class="mission-tabs fade-up">
       <button class="m-tab active" id="tab-daily" onclick="switchTab('daily')">
-        <span class="m-tab-mark">✦</span>
         <span>Daily</span>
         <span class="m-tab-badge" id="badge-daily"></span>
       </button>
       <button class="m-tab" id="tab-weekly" onclick="switchTab('weekly')">
-        <span class="m-tab-mark">☩</span>
         <span>Weekly</span>
         <span class="m-tab-badge" id="badge-weekly"></span>
       </button>
       <button class="m-tab" id="tab-special" onclick="switchTab('special')">
-        <span class="m-tab-mark">⊕</span>
         <span>Special</span>
         <span class="m-tab-badge" id="badge-special"></span>
       </button>
@@ -1033,7 +1040,12 @@ body::before{
 
 <!-- Dispatch 4b — daily-hub module dependencies.
      Order matters: week-utils → pilgrimages → lane modules →
-     daily-anchor-card + reading-quest → missions (consumer). -->
+     daily-anchor-card + reading-quest → missions (consumer).
+     Chat 20-IMPL-A note: js/reflection-lane.js script tag removed
+     here (T/Th reflection lane retired per OQ2). The module file
+     remains in repo as dead code, flagged for post-launch audit.
+     js/daily-anchor-card.js stays loaded for now (orphaned on this
+     surface; module file retained). -->
 <script src="js/week-utils.js"></script>
 <script src="js/pilgrimages.js"></script>
 <script src="js/streak-grace.js"></script>
@@ -1042,7 +1054,6 @@ body::before{
 <script src="js/memorization.js"></script>
 <script src="js/daily-anchor-card.js"></script>
 <script src="js/reading-quest.js"></script>
-<script src="js/reflection-lane.js"></script>
 <script src="js/missions.js"></script>
 
 <script>

@@ -17,6 +17,12 @@
 <meta name="description" content="Read the Holy Scriptures in the Orthodox tradition — Septuagint (LXX) for the Old Testament, King James for the New Testament.">
 <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- Chat 18 · Marginalia v1 — window.Marginalia.mount() is invoked
+     at the end of loadAndRenderChapter() to render Theo/Christopher
+     speech bubbles below the verses when the URL matches a Topic 00
+     session in docs/content/topic-00-marginalia-v1.json. Module is
+     defensive: silent no-op on fetch fail or session mismatch. -->
+<script src="js/marginalia.js"></script>
 
 <style>
 /* ─────────────────────────────────────────────────────────────────
@@ -534,6 +540,151 @@ body::before{
 }
 @media (prefers-reduced-motion: reduce){
   /* No animated transitions to disable — both classes are static. */
+}
+
+/* ── Chat 18 · Marginalia v1 — post-passage banderole band ──────
+   Rendered by js/marginalia.js into #marginaliaSlot inside
+   .reading-pane, BELOW #versesContainer and ABOVE .reading-foot-nav.
+   Per Chat 18 Phase 1 orchestrator ruling (Option A) and COMIC_
+   DESIGN_BRIEF §2.2: "Bible reader closing screen (after Gospel
+   read, before reflection prompt). Marginalia closes; reflection
+   prompt opens below." Not inline interleaved with verses.
+
+   Per D1 §1.3 typography:
+     • Theo bubbles  → italic 0.95em, lighter parchment fill,
+                       1px gold border @ 60% alpha
+     • Christopher   → upright 1em, warmer parchment fill,
+                       1.5px gold border @ 70% alpha
+   Per D1 §2.6: portraits on left edge, banderoles flowing right.
+   Per D1 §1.4: witness-only static portraits, never animate, never
+   face the reader. The only animation is a gentle scroll-reveal
+   opacity fade on each row, suppressed by prefers-reduced-motion. */
+
+.marginalia-slot:empty{display:none;}
+
+.marginalia-band{
+  margin-top:1.85rem;
+  padding-top:1.5rem;
+  border-top:1px solid rgba(201,146,42,0.22);
+}
+
+/* Companions strip — rendered only when a session has fewer than
+   two speakers, so the absent companion still appears in the margin
+   at 0.85 opacity per D1 §2.2 "both characters present even when
+   only one is speaking." Topic 00 has no such sessions; this is
+   forward-compat. */
+.marginalia-companions{
+  display:flex;
+  gap:1.4rem;
+  justify-content:center;
+  align-items:center;
+  margin-bottom:1.4rem;
+}
+
+.marginalia-portrait{
+  width:64px;height:64px;
+  border-radius:50%;
+  object-fit:cover;
+  border:2px solid #c9a84c;
+  background:rgba(244,232,193,0.06);
+  box-shadow:0 2px 6px rgba(27,42,74,0.20),0 0 0 1px rgba(201,168,76,0.18);
+  flex-shrink:0;
+  display:block;
+  user-select:none;
+  -webkit-user-drag:none;
+}
+@media (min-width:600px){
+  .marginalia-portrait{width:80px;height:80px;}
+}
+.marginalia-portrait.is-non-speaking{opacity:0.85;}
+
+/* Per-bubble row: portrait left, bubble right. */
+.marginalia-row{
+  display:flex;
+  align-items:flex-start;
+  gap:0.9rem;
+  margin-bottom:1.1rem;
+  opacity:0;
+  transform:translateY(4px);
+  transition:opacity 0.55s ease-out,transform 0.55s ease-out;
+}
+.marginalia-row:last-child{margin-bottom:0;}
+.marginalia-row.is-visible{
+  opacity:1;
+  transform:translateY(0);
+}
+
+.marginalia-bubble{
+  position:relative;
+  padding:0.78rem 1.05rem;
+  border-radius:10px;
+  font-family:'Crimson Text',serif;
+  line-height:1.5;
+  color:rgba(244,232,193,0.96);
+  flex:1 1 auto;
+  min-width:0;
+  max-width:520px;
+}
+
+/* Theo — italic 0.95em, lighter parchment fill, 1px @60% gold border. */
+.marginalia-bubble-theo{
+  background:rgba(245,236,215,0.09);
+  border:1px solid rgba(201,168,76,0.60);
+  font-style:italic;
+  font-size:0.95em;
+}
+/* Theo's tail — small left-pointing pointer toward Theo's portrait.
+   Rotated-square trick with two borders showing the gold outline
+   on the leading edges; the inward-facing edges are masked by the
+   bubble body's overlap. background:inherit picks up the bubble's
+   translucent parchment fill so the tail blends seamlessly. */
+.marginalia-bubble-theo::before{
+  content:'';
+  position:absolute;
+  top:20px;left:-7px;
+  width:12px;height:12px;
+  background:inherit;
+  transform:rotate(45deg);
+  border-bottom:1px solid rgba(201,168,76,0.60);
+  border-left:1px solid rgba(201,168,76,0.60);
+}
+
+/* Christopher — upright 1em, warmer parchment fill, 1.5px @70% border. */
+.marginalia-bubble-christopher{
+  background:rgba(240,228,200,0.13);
+  border:1.5px solid rgba(201,168,76,0.70);
+  font-size:1em;
+}
+.marginalia-bubble-christopher::before{
+  content:'';
+  position:absolute;
+  top:20px;left:-8px;
+  width:13px;height:13px;
+  background:inherit;
+  transform:rotate(45deg);
+  border-bottom:1.5px solid rgba(201,168,76,0.70);
+  border-left:1.5px solid rgba(201,168,76,0.70);
+}
+
+.marginalia-line{display:block;}
+.marginalia-line + .marginalia-line{margin-top:0.34rem;}
+
+@media (max-width:480px){
+  .marginalia-row{gap:0.7rem;}
+  .marginalia-bubble{
+    padding:0.7rem 0.9rem;
+    font-size:0.96rem;
+  }
+  .marginalia-bubble-theo{font-size:0.92em;}
+  .marginalia-bubble-christopher{font-size:0.98em;}
+}
+
+@media (prefers-reduced-motion:reduce){
+  .marginalia-row{
+    transition:none;
+    opacity:1;
+    transform:none;
+  }
 }
 
 /* Verse action toolbar (appears on selection) */
@@ -1337,6 +1488,13 @@ button.reading-ref:focus-visible::after{
             <div class="reading-state-sub">Bringing the chapter from the source.</div>
           </div>
         </div>
+
+        <!-- Chat 18 · Marginalia v1 mount slot. js/marginalia.js
+             appends a <div class="marginalia-band"> here AFTER the
+             verses render, only when URL params {book,chapter,vs,ve}
+             match an authored Topic 00 session in
+             /docs/content/topic-00-marginalia-v1.json. -->
+        <div id="marginaliaSlot" class="marginalia-slot" aria-live="polite"></div>
       </div>
 
       <div class="reading-foot-nav">
@@ -1841,6 +1999,21 @@ async function loadAndRenderChapter(idx, scrollVerse){
     // range only when scrollVerse is not provided (an explicit
     // ?verse=N takes priority over the range scroll).
     applyTodaysReadingMode({ skipScroll: !!scrollVerse });
+
+    // Chat 18 · Marginalia v1 — mount post-passage banderole band
+    // into #marginaliaSlot below the verses. mount() is idempotent
+    // (any prior band is cleared first) and defensive (silent no-op
+    // on fetch failure or session mismatch). Fire-and-forget: it
+    // must never block the reading flow or the scroll behavior
+    // below. Only fires when URL params {book,chapter,vs,ve} match
+    // an authored Topic 00 session in topic-00-marginalia-v1.json.
+    try {
+      if (window.Marginalia && typeof window.Marginalia.mount === 'function') {
+        const _mgSlot = document.getElementById('marginaliaSlot');
+        if (_mgSlot) window.Marginalia.mount(_mgSlot);
+      }
+    } catch (_mgErr) { /* defensive — reading lane must not break */ }
+
     if (scrollVerse) {
       // Wait one frame for the DOM to settle, then scroll to verse
       requestAnimationFrame(() => { setTimeout(() => scrollToVerse(scrollVerse), 80); });

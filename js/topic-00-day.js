@@ -20,6 +20,17 @@
 //
 // Coin economy ceiling per session: 75 + 75 + max-80 = 230.
 //
+// Wave 2 Lead addition (May 13, 2026): on top of the existing 75/75/max-80
+// distribution, each fresh day_N_completed_at stamp awards an ADDITIONAL
+// +5 "Curriculum lane daily" bonus that the Missions hub credits as the
+// lane's completion. Per-session full-week total becomes 230 + 15 = 245
+// (3 × +5 daily Curriculum lane = +15 above the +230 session-bundle).
+// The daily +5 is injected in writeMondayCompletion + writeWednesdayCompletion
+// (here) and in quiz-runner.submitFirstAttempt (Friday day_3 fresh-stamp
+// branch). Idempotency rides on each function's existing day_N_completed_at
+// freshness short-circuit — the +5 sits inside the newly-awarded conditional
+// and inherits its dedup guard.
+//
 // Coin rollup: this module writes directly to activity_log on each award,
 // matching the rows that the existing log_*_coins triggers produce on other
 // completion tables (session_progress and handout_completions have no such
@@ -577,7 +588,25 @@
     // 4. Optimistic profile coin bump for immediate UI freshness
     await bumpProfileCoins(sb, profileId, coinAmount);
 
-    return { newlyAwarded: true, coinsThisCall: coinAmount };
+    // 5. Wave 2 Lead — Curriculum lane daily +5 bonus.
+    //    Fires ONLY on fresh day_1 stamp (this branch is gated by the
+    //    early-return at the top of writeMondayCompletion when
+    //    existing.day_1_completed_at is set, so idempotency rides on
+    //    that guard for free). Coin bump is additive to the +75 lesson
+    //    award above; activity_log row tagged for parent-admin
+    //    visibility per Wave 2 Lead OQ-12 parity.
+    try {
+      await sb.from('activity_log').insert({
+        explorer_id: profileId,
+        amount: 5,
+        reason: `[curriculum_lane_daily] ${sessionId} day 1`,
+      });
+    } catch (e) {
+      console.warn('[topic00] activity_log monday lane-daily write failed (non-fatal)', e);
+    }
+    await bumpProfileCoins(sb, profileId, 5);
+
+    return { newlyAwarded: true, coinsThisCall: coinAmount + 5 };
   }
 
   async function writeWednesdayCompletion(sb, profileId, sessionId, handout, chosenAnswers) {
@@ -628,7 +657,24 @@
     // 5. Profile coin bump
     await bumpProfileCoins(sb, profileId, coinAmount);
 
-    return { newlyAwarded: true, coinsThisCall: coinAmount };
+    // 6. Wave 2 Lead — Curriculum lane daily +5 bonus.
+    //    Fires ONLY on fresh day_2 stamp (this branch is gated by the
+    //    early-return at the top of writeWednesdayCompletion when an
+    //    existingComp handout_completions row is found, so the +5
+    //    cannot double-fire). Activity_log tagged for parent-admin
+    //    visibility parity with Mon/Fri.
+    try {
+      await sb.from('activity_log').insert({
+        explorer_id: profileId,
+        amount: 5,
+        reason: `[curriculum_lane_daily] ${sessionId} day 2`,
+      });
+    } catch (e) {
+      console.warn('[topic00] activity_log wednesday lane-daily write failed (non-fatal)', e);
+    }
+    await bumpProfileCoins(sb, profileId, 5);
+
+    return { newlyAwarded: true, coinsThisCall: coinAmount + 5 };
   }
 
   // Stamp session_progress.day_N_completed_at and add `coinDelta` to coins_awarded.

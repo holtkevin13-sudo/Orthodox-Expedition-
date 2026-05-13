@@ -1,18 +1,29 @@
 /* ─────────────────────────────────────────────────────────────────
    Orthodox Expedition — Dispatch 4b + Chat 2A + Chat 20-IMPL-A
-                       + Wave 2 Lead
+                       + Wave 2 Lead + Chat 20-IMPL-B
    js/missions.js — Daily mission hub (Missions surface)
-   May 13, 2026 · Wave 2 Lead revision
+   May 13, 2026 · Chat 20-IMPL-B revision
 
    PURPOSE
    Renders the "Today's Missions" daily-action hub. Each mission
    row is a state-bearing surface. After Chat 20-IMPL-A, all five
    lanes (M/W/F) or four lanes (T/Th/Sat/Sun) render as UNIFORM
    trail-marker rows — same icon-name-sub-coins-indicator grammar,
-   tap-to-leave behavior. The reading lane in this interim still
-   carries an inline reflect form below its row when state is
-   'read-not-reflected'; Chat 20-IMPL-B moves that surface into
-   bible-reader.html and the inline form retires.
+   tap-to-leave behavior.
+
+   Chat 20-IMPL-B (May 13, 2026) MIGRATED the Reading-lane Stage 2
+   reflect surface (textarea + submit + skip) FROM this module's
+   inline expand panel INTO bible-reader.html where the Gospel is
+   still visible while Nolan reflects. The atomic +5 commit (read
+   + reflect in a single INSERT) lives in js/reading-reflect-panel.js.
+   The localStorage flag dance (oe_bible_reader_visited_*) is
+   retired. Reading state on Missions hub simplifies to:
+     pending | reflected | pilgrimage
+   The 'read-not-reflected' state is no longer possible — by the
+   time a reading_completions row exists for today, Nolan has
+   either fully reflected (atomic path) or recorded the reading
+   alone via "Just record the reading" (skip-pastorally, +3, lane
+   closes per OQ-1 ruling A). Either way the row → 'reflected'.
 
    The Day Complete lane is replaced by a TROPHY CHIP (.mh-trophy)
    with three visual states (locked / unlock-pending / paid) plus
@@ -62,7 +73,7 @@
 
      loadTodaysState(sb, explorerId, familyId, today)
          → {
-             reading:        'pending'|'read-not-reflected'|'reflected'|'pilgrimage',
+             reading:        'pending'|'reflected'|'pilgrimage',
              prayer:         'pending'|'complete'|'pilgrimage',
              memorization:   'pending'|'complete'|'not_applicable'|'pilgrimage',
              session:        'pending'|'complete'|'pilgrimage'|null,
@@ -178,12 +189,9 @@
     }
   }
 
-  // Reading-quest's flag key — kept in lockstep with reading-quest.js:122.
-  function _readingFlagKey(today) { return `oe_bible_reader_visited_${today}`; }
-  function _readingFlagSet(today) {
-    try { return localStorage.getItem(_readingFlagKey(today)) === '1'; }
-    catch (_e) { return false; }
-  }
+  // Chat 20-IMPL-B: _readingFlagKey + _readingFlagSet retired with
+  // the oe_bible_reader_visited_* flag. The reading_completions
+  // row is now the sole source of truth for Reading lane state.
 
   // Inspect liturgical_calendar row for question payload — mirrors
   // reading-quest.js:138.
@@ -366,16 +374,15 @@
   // category='session_reflection' remain visible in journal.html;
   // we simply no longer create new ones from this surface.)
 
-  // Chat 2A · Two-stage reading state loader.
+  // Chat 20-IMPL-B · Reading state loader.
   // Returns the full reading_completions row for today (or null) so
   // the caller can distinguish:
   //   • row == null               → state 'pending' (or 'pilgrimage')
-  //   • row.read_at && !reflected_at → state 'read-not-reflected'
-  //   • row.read_at && row.reflected_at → state 'reflected'
-  // The flagSet localStorage check remains a fallback for the first
-  // ever Stage-1 commit (the moment after Nolan returns from
-  // bible-reader, before the DB row exists). commitReadCompletion
-  // clears the flag, so DB is the source of truth thereafter.
+  //   • row exists                → state 'reflected'
+  // Per OQ-1 ruling A, BOTH the atomic happy-path (read_at +
+  // reflected_at + reflection_text) and the skip-pastorally path
+  // (read_at only) close the lane for the day. Either row →
+  // 'reflected' on the Missions hub.
   async function _loadReadingStageRow(sb, explorerId, todayKey) {
     try {
       const res = await sb.from('reading_completions')
@@ -569,22 +576,21 @@
 
     // ── Resolve each mission's state ──────────────────────────────
 
-    // Reading mission state machine (Chat 2A two-stage).
+    // Reading mission state machine (Chat 20-IMPL-B — simplified).
     //   pilgrimage → 'pilgrimage'
-    //   DB row with reflected_at → 'reflected'  (Stage 2 done)
-    //   DB row with only read_at → 'read-not-reflected'  (Stage 1 done)
-    //   Flag set but no row     → 'read-not-reflected' transient;
-    //                              mount() commits Stage 1 + refreshes
-    //   Otherwise               → 'pending'
+    //   Any row in reading_completions for today → 'reflected'
+    //     Per OQ-1 ruling A: both the atomic happy-path (+5, read_at
+    //     + reflected_at) and the skip-pastorally path (+3, read_at
+    //     only) CLOSE the lane for the day. The Reading row on the
+    //     Missions hub shows ✓ complete in either case. Re-visit to
+    //     bible-reader same day renders a read-only "Today's
+    //     reflection" or skip-closed gentle note tile.
+    //   Otherwise → 'pending'
     let readingState;
     if (isPilgrimage) {
       readingState = 'pilgrimage';
-    } else if (readingStageRow && readingStageRow.reflected_at) {
+    } else if (readingStageRow) {
       readingState = 'reflected';
-    } else if (readingStageRow && readingStageRow.read_at) {
-      readingState = 'read-not-reflected';
-    } else if (_readingFlagSet(today)) {
-      readingState = 'read-not-reflected';
     } else {
       readingState = 'pending';
     }
@@ -815,26 +821,17 @@
     `;
   }
 
-  // ★ READING BLOCK (Chat 20-IMPL-A) — trail-marker row + optional
-  // inline expand panel. Replaces the prior heavy .mh-reading-card
-  // outer chrome with the unified row pattern used by every other
-  // lane. The reading row's tap target is bible-reader.html
-  // (?source=expedition) — the gospel reading surface. When state
-  // is 'read-not-reflected', an .mh-reading-expand panel is rendered
-  // BELOW the row carrying the existing portrait + prompt + textarea
-  // + submit form (verbatim from Chat 2A; preserved until 20-IMPL-B
-  // moves it into bible-reader.html).
-  //
-  // States the row sub-line copy expresses:
-  //   pending             → "<gospel ref> · Read & reflect"
-  //   read-not-reflected  → "<gospel ref> · read · reflect below"
-  //   reflected           → "<gospel ref> · read & reflected"
-  //   pilgrimage          → "Read at your own pace this week"
-  //
-  // The block returns the OUTER container (.mh-reading-block) with
-  // an inline content slot (#mh-reading-content) the mount() pass
-  // can fill with _renderReadingReadNotReflectedHTML for the form
-  // when needed.
+  // ★ READING BLOCK (Chat 20-IMPL-B) — trail-marker row only.
+  // Post-migration the Reading lane is a single tap-row whose
+  // href routes to bible-reader.html?source=expedition; the Reflect
+  // Panel mounts there (js/reading-reflect-panel.js). No inline
+  // expand panel below the row on Missions — that surface is fully
+  // retired in 20-IMPL-B. State machine collapses to:
+  //   pending     → "<gospel ref> · Read & reflect"  (○ indicator)
+  //   reflected   → "<gospel ref> · read & reflected" (✓ indicator)
+  //                  Both atomic-commit and skip-pastorally rows
+  //                  land here per OQ-1 ruling A.
+  //   pilgrimage  → "Read at your own pace this week" (✦ indicator)
   function _renderReadingBlock(state, opts) {
     const row = opts && opts.row || null;
     const gospelHref = _buildGospelHref(row);
@@ -853,13 +850,6 @@
         sub = `${refLabel} · read & reflected`;
         indicator = '<span class="mh-row-indicator mh-ri-done" aria-label="Complete">✓</span>';
         stateClass = 'mh-state-complete';
-        break;
-      case 'read-not-reflected':
-        sub = `${refLabel} · read · reflect below`;
-        // Halfway state — keep the pending indicator so Nolan reads
-        // it as "still something to do" until the form is submitted.
-        indicator = '<span class="mh-row-indicator mh-ri-pending" aria-label="Reflection pending">○</span>';
-        stateClass = 'mh-state-pending';
         break;
       default: // 'pending'
         sub = `${refLabel} · Read & reflect`;
@@ -881,16 +871,6 @@
       </a>
     `;
 
-    // For read-not-reflected, append the inline expand panel slot —
-    // mount() will fill #mh-reading-content with the existing form.
-    if (state === 'read-not-reflected') {
-      return `
-        <div class="mh-reading-block" data-state="read-not-reflected">
-          ${rowHtml}
-          <div class="mh-reading-expand" id="mh-reading-content"></div>
-        </div>
-      `;
-    }
     return `
       <div class="mh-reading-block" data-state="${esc(state)}">
         ${rowHtml}
@@ -1077,8 +1057,8 @@
   }
 
   // ═════════════════════════════════════════════════════════════════
-  // CHAT 2A · NEW RENDER HELPERS
-  //   • Reading two-stage in-line states (read-not-reflected, reflected)
+  // RENDER HELPERS (Chat 2A render + Chat 20-IMPL-B simplifications)
+  //   • Reading lane — trail-marker row only (Stage 2 form retired)
   //   • Day Complete lane (lane 5; distinct from task rows)
   // ═════════════════════════════════════════════════════════════════
 
@@ -1099,45 +1079,13 @@
     return `${book} ${ch}`;
   }
 
-  // ★ READING — Stage-1-done, Stage-2-pending inline card.
-  // Shows: ✓ gospel read pip (link back to re-read), reflection prompt,
-  // textarea, submit button. Submit is the Stage 2 commit path.
-  function _renderReadingReadNotReflectedHTML(opts) {
-    const promptText = (opts && opts.promptText) || '';
-    const gospelHref = _buildGospelHref(opts && opts.row);
-    const gospelRef  = _gospelRefFromRow(opts && opts.row);
-    const refLabel   = gospelRef ? esc(gospelRef) : 'Today\'s Gospel';
-    return `
-      <div class="mh-reading-stage" data-stage="read-not-reflected">
-        <a class="mh-reading-readpip" href="${esc(gospelHref)}">
-          <span class="mh-rrp-check" aria-hidden="true">✓</span>
-          <span class="mh-rrp-label">${refLabel} &middot; read</span>
-          <span class="mh-rrp-coins" aria-label="3 coins earned">+3</span>
-        </a>
-        ${promptText ? `
-          <div class="mh-reading-prompt-block">
-            <div class="mh-portrait-block">
-              <img class="mh-portrait" src="/Orthodox-Expedition-/assets/characters/theo-portrait.png" alt="Theo">
-              <div class="mh-portrait-speaker">Theo asks…</div>
-            </div>
-            <div class="mh-rrp-text">${esc(promptText)}</div>
-          </div>
-        ` : ''}
-        <div class="mh-reading-input-block">
-          <label class="mh-rri-label" for="mh-reading-textarea">Your reflection</label>
-          <textarea
-            id="mh-reading-textarea"
-            class="mh-reading-textarea"
-            rows="3"
-            placeholder="Even a sentence is enough…"
-            aria-describedby="mh-reading-input-help"
-          ></textarea>
-          <div id="mh-reading-input-help" class="mh-rri-help">+2 coins on save (gospel reading totals +5).</div>
-          <button type="button" class="mh-reading-submit-btn" data-mh-action="reflect-submit" disabled>Save reflection</button>
-        </div>
-      </div>
-    `;
-  }
+  // (Chat 20-IMPL-B: _renderReadingReadNotReflectedHTML retired. The
+  // Stage 2 reflect surface — portrait + prompt + textarea + submit
+  // — moved into bible-reader.html via js/reading-reflect-panel.js
+  // so Nolan reflects while the Gospel is still visible. The atomic
+  // +5 commit (read + reflect in a single INSERT) lives there.
+  // Reading lane on the Missions hub is now a pure trail-marker
+  // row with no inline panel.)
 
   // (Chat 20-IMPL-A: _renderReadingReflectedHTML retired. The
   // reflected state is now expressed by the trail-marker row's
@@ -1316,7 +1264,9 @@
   }
 
   // Wire the Session Journal submit handler on the in-line panel.
-  // Mirrors _wireReadingReflectSubmit: enable on non-empty input,
+  // Pattern (originally mirrored from the now-retired
+  // _wireReadingReflectSubmit; same pattern now lives in
+  // js/reading-reflect-panel.js): enable on non-empty input,
   // disable + label "Saving…" during the write, on success delegate
   // to ReflectionLane.saveEntry (field_journal insert + +5 profile
   // coin bump, both idempotent), write the activity_log row for
@@ -1518,7 +1468,7 @@
   //   1. Walk rows in DISPLAY ORDER (reading, prayer, memo, session).
   //   2. complete | reflected | pilgrimage | paid → COMPLETE
   //      not_applicable → SKIP (auto-credited, treat as complete)
-  //      pending | read-not-reflected → INCOMPLETE
+  //      pending → INCOMPLETE
   //   3. Find FIRST incomplete row; add class.
   //   4. Edge cases: all complete → no pulse; pilgrimage → no pulse;
   //      trophy chip never gets pulse (different register).
@@ -1576,11 +1526,12 @@
     const dow = _dowET(new Date());
     const state = await loadTodaysState(sb, explorerId, familyId, today);
 
-    // Build HTML (Wave 2 Lead lane order):
+    // Build HTML (Wave 2 Lead lane order; Chat 20-IMPL-B simplified
+    // the Reading block):
     //   1. Eyebrow (includes progress chip — Phase 2 §3)
     //   2. Pilgrimage banner
-    //   3. Reading block (trail-marker row + optional inline expand
-    //      for the read-not-reflected form)
+    //   3. Reading block (trail-marker row only — Stage 2 reflect
+    //      surface lives on bible-reader.html post-20-IMPL-B)
     //   4. Prayer row
     //   5. Memorization row
     //   6. Session row (M/W/F only)
@@ -1654,38 +1605,12 @@
 
     container.innerHTML = parts.join('');
 
-    // ── Mount the inner reading-mission content per state ────────
-    // Chat 20-IMPL-A interim: only the 'read-not-reflected' state
-    // mounts inline content (the existing form). Pending and
-    // reflected states are fully expressed by the row itself.
-    if (state.reading === 'read-not-reflected') {
-      // If readingStageRow is null, the localStorage flag is the
-      // only "read" signal — fire commitReadCompletion (Stage 1)
-      // which writes the DB row, awards +3, and clears the flag.
-      const needsStage1Commit = !state.readingStageRow;
-      if (needsStage1Commit
-          && window.ReadingQuest
-          && typeof window.ReadingQuest.commitReadCompletion === 'function') {
-        try {
-          await window.ReadingQuest.commitReadCompletion(sb, {
-            explorerId, familyId, today, coins: 3,
-          });
-        } catch (e) {
-          console.warn('ReadingQuest.commitReadCompletion failed (graceful):', e);
-        }
-      }
-      const innerSlot = container.querySelector('#mh-reading-content');
-      if (innerSlot) {
-        innerSlot.innerHTML = _renderReadingReadNotReflectedHTML({
-          row: state.readingAnchorRow,
-          promptText: state.todaysPrompt,
-        });
-        _wireReadingReflectSubmit(innerSlot, {
-          sb, explorerId, familyId, today,
-          gospelRef: _gospelRefFromRow(state.readingAnchorRow),
-        });
-      }
-    }
+    // ── Reading lane (Chat 20-IMPL-B) ────────────────────────────
+    // No inline mount step. The Reading row is a pure trail-marker
+    // whose href routes to bible-reader.html?source=expedition. The
+    // Reflect Panel (js/reading-reflect-panel.js) is mounted by
+    // bible-reader.html and handles the atomic +5 commit, the
+    // skip-pastorally +3 path, and the 1.5s redirect back to here.
 
     // ── Mount Session Journal inner content per state (Wave 2 Lead) ──
     // Only the 'pending' state mounts an expand panel; 'complete' and
@@ -1778,60 +1703,11 @@
     };
   }
 
-  // ── Wire the Stage-2 (reflect) submit handler on the in-line card.
-  // Mirrors ReflectionLane's submit pattern: enable on non-empty input,
-  // disable + label "Saving…" during the write, on success call
-  // ReadingQuest.commitReflectCompletion and refresh the hub. Failure
-  // re-enables with an inline soft error.
-  function _wireReadingReflectSubmit(innerSlot, ctx) {
-    const ta  = innerSlot.querySelector('#mh-reading-textarea');
-    const btn = innerSlot.querySelector('[data-mh-action="reflect-submit"]');
-    if (!ta || !btn) return;
-    function refreshEnabled() {
-      const v = String(ta.value || '').trim();
-      btn.disabled = (v.length === 0);
-    }
-    ta.addEventListener('input', refreshEnabled);
-    refreshEnabled();
-    btn.addEventListener('click', async (e) => {
-      e.preventDefault();
-      if (btn.disabled) return;
-      const text = String(ta.value || '').trim();
-      if (!text) return;
-      btn.disabled = true;
-      btn.textContent = 'Saving…';
-      try {
-        if (!window.ReadingQuest || typeof window.ReadingQuest.commitReflectCompletion !== 'function') {
-          throw new Error('ReadingQuest.commitReflectCompletion unavailable');
-        }
-        const res = await window.ReadingQuest.commitReflectCompletion(ctx.sb, {
-          explorerId:      ctx.explorerId,
-          today:           ctx.today,
-          reflectionText:  text,
-          gospelRef:       ctx.gospelRef || null,
-          coinsDelta:      2,
-          cumulativeCoins: 5,
-        });
-        if (res && (res.ok || res.alreadyReflected)) {
-          await refresh();
-          return;
-        }
-        throw new Error('commitReflectCompletion returned not-ok');
-      } catch (err) {
-        console.warn('reading Stage 2 submit failed:', err);
-        btn.disabled = false;
-        btn.textContent = 'Save reflection';
-        let errEl = innerSlot.querySelector('.mh-reading-error');
-        if (!errEl) {
-          errEl = document.createElement('div');
-          errEl.className = 'mh-reading-error';
-          errEl.setAttribute('role', 'alert');
-          btn.parentNode.insertBefore(errEl, btn.nextSibling);
-        }
-        errEl.textContent = 'Saving failed — please try again.';
-      }
-    });
-  }
+  // (Chat 20-IMPL-B: _wireReadingReflectSubmit retired. The Stage 2
+  // submit handler — disable/save/refresh + soft-error pattern — is
+  // now part of js/reading-reflect-panel.js, scoped to the panel on
+  // bible-reader.html. Missions hub no longer wires any inline
+  // submit for the Reading lane.)
 
   async function refresh() {
     if (!_lastMountContainer || !_lastMountOptions) return;
@@ -1849,7 +1725,7 @@
     refresh,
     _internals: {
       esc, _W, _dowET, _todayKey, _formatDayLabel,
-      _readingFlagKey, _readingFlagSet, _hasQuestion,
+      _hasQuestion,
       _gospelTeaser, _loadActiveSession, _loadDailyAnchorData,
       _loadReadingStageRow,
       _loadDayCompleteToday, _commitDayCompleteBonus,
@@ -1860,7 +1736,6 @@
       _renderMissionRow, _renderSessionRow,
       _renderClosingLine,
       _renderTrophyChip,
-      _renderReadingReadNotReflectedHTML,
       _gospelRefFromRow,
       _animateCountUp, _microCelebrate,
       // Chat 20-IMPL-A celebration + next-up
@@ -1868,8 +1743,10 @@
       _fireCoinRain, _fireToast, _fireHaptic,
       _runCelebration,
       _applyNextUpPulse,
-      // Stage 2 wiring (interim — moves to bible-reader in 20-IMPL-B)
-      _wireReadingReflectSubmit,
+      // (Chat 20-IMPL-B: _readingFlagKey, _readingFlagSet,
+      // _renderReadingReadNotReflectedHTML, _wireReadingReflectSubmit
+      // retired. Reading Stage 2 surface lives in
+      // js/reading-reflect-panel.js on bible-reader.html.)
       // Wave 2 Lead — Session Journal lane (T/Th)
       _dayKindFromDow,
       _loadTodaysSessionJournal,

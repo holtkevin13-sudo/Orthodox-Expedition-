@@ -324,27 +324,20 @@ body::before{
   font-size:0.85rem;line-height:1.4;color:#5a3e0e;
 }
 
-/* ── Reading lane wrapper (Chat 20-IMPL-A — trail-marker row +
-   optional inline expand panel). The reading lane in 20-IMPL-A is
-   visually a trail-marker row (.mh-row.mh-row-reading) just like
-   prayer/memo/session. When state is 'read-not-reflected' the row
-   is followed by an in-line expand panel (.mh-reading-expand)
-   carrying the existing portrait + prompt + textarea + submit form
-   — preserved verbatim from Chat 2A. 20-IMPL-B moves that surface
-   into bible-reader and the expand panel goes away entirely. ── */
+/* ── Reading lane wrapper (Chat 20-IMPL-B — trail-marker row only).
+   The reading lane is a trail-marker row (.mh-row.mh-row-reading)
+   just like prayer/memo/session. There is no longer an in-line
+   expand panel below the row: Chat 20-IMPL-B migrated the Stage 2
+   reflect surface (textarea + submit + skip) into bible-reader.html
+   so Nolan reflects while the Gospel is still visible. The .mh-
+   reading-block wrapper is retained for vertical-rhythm parity
+   with the Session Journal lane wrapper below. ── */
 .mh-reading-block{
   display:flex;flex-direction:column;
   margin-bottom:0.55rem;
 }
 .mh-reading-block .mh-row{
-  margin-bottom:0;  /* the block owns the gap; row sits flush above expand */
-}
-.mh-reading-expand{
-  margin-top:0.55rem;
-  padding:0.95rem 1rem;
-  background:rgba(244,232,193,0.045);
-  border:1px solid rgba(201,146,42,0.22);
-  border-radius:12px;
+  margin-bottom:0;
 }
 
 /* ── Session Journal lane wrapper (Wave 2 Lead — trail-marker row +
@@ -431,45 +424,17 @@ body::before{
   width:100%;box-sizing:border-box;
 }
 
-/* ── Reading Stage 2 post-read visuals (Chat 16 — minimum-viable
-   polish so the page READS cleanly. Full ITEM E typography sweep
-   stays queued for post-launch. Targets: read-pip, prompt text,
-   textarea visual, label/help/button, saved-state preview. ── */
-.mh-reading-stage{display:block;}
-
-/* "✓ Today's Gospel · read +3" pip — link back to re-read */
-.mh-reading-readpip{
-  display:inline-flex;align-items:center;gap:0.55rem;
-  padding:0.4rem 0.75rem;margin-bottom:0.75rem;
-  background:rgba(22,163,74,0.10);
-  border:1px solid rgba(22,163,74,0.32);
-  border-radius:999px;
-  text-decoration:none;color:inherit;
-  transition:background 180ms ease, border-color 180ms ease;
-}
-.mh-reading-readpip:hover{
-  background:rgba(22,163,74,0.16);
-  border-color:rgba(22,163,74,0.45);
-}
-.mh-rrp-check{
-  display:inline-flex;align-items:center;justify-content:center;
-  width:1.3rem;height:1.3rem;border-radius:50%;
-  background:rgba(22,163,74,0.25);
-  color:rgba(134,239,172,0.95);
-  font-weight:700;font-size:0.78rem;line-height:1;
-  border:1px solid rgba(22,163,74,0.45);
-}
-.mh-rrp-label{
-  font-family:'Cinzel',serif;font-size:0.82rem;
-  letter-spacing:0.04em;color:rgba(244,232,193,0.85);
-}
-.mh-rrp-coins{
-  font-family:'Cinzel',serif;font-weight:600;font-size:0.78rem;
-  color:var(--gold-light);letter-spacing:0.02em;
-}
+/* ── Reading lane visual fragments (Chat 20-IMPL-B — slimmed).
+   Post-migration, the Reading lane on the Missions hub is a plain
+   trail-marker row (no inline Stage 2 expand). The Stage 2 readpip +
+   stage wrapper CSS (.mh-reading-stage / .mh-reading-readpip /
+   .mh-rrp-check / .mh-rrp-label / .mh-rrp-coins) is retired. The
+   prompt block and prompt text classes below remain because the
+   Session Journal lane still consumes them. ── */
 
 /* Prompt block — Theo portrait above + question text below.
-   Portrait + speaker inherit existing .mh-portrait-block styling. */
+   Portrait + speaker inherit existing .mh-portrait-block styling.
+   Shared with the Session Journal lane (Wave 2 Lead). */
 .mh-reading-prompt-block{margin:0.4rem 0 0.2rem;}
 .mh-rrp-text{
   font-family:'Crimson Text',serif;

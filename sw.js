@@ -614,7 +614,36 @@
 // v4: added week.html, prayers.html, day-state, pause-card, prayers, and config JSON
 // Version bump forces cache clear and fresh install
 
-const CACHE_NAME = 'orthodox-expedition-v44';
+// v44 → v45: Chat 20-IMPL-A · Trail Markers + Trophy Chip redesign.
+//      missions.html + js/missions.js touched extensively:
+//      - Mission tabs demoted to compact ~32px chip rail.
+//      - Reading lane rendered as a uniform trail-marker row +
+//        optional inline expand panel for the read-not-reflected
+//        state (the existing Stage 2 form is preserved; the
+//        outer .mh-reading-card chrome retires).
+//      - Day Complete lane replaced by .mh-trophy three-state
+//        chip (locked / unlock-pending / paid / pilgrimage).
+//      - Progress counter relocated from BOTTOM of the panel to
+//        the eyebrow band at TOP (.mh-progress-chip).
+//      - Six-element celebration choreography wired on the
+//        locked→paid transition (chip morph + iOS haptic + +10
+//        toast + coin-rain + counter advance + closing line).
+//      - Quiet "next-up" gold pulse on the topmost incomplete
+//        row (.mh-row-next-up); prefers-reduced-motion compliant.
+//      - T/Th session_reflection lane retired; existing
+//        field_journal rows in that category remain visible
+//        in journal.html.
+//      - DAC CSS block (~140 lines) + reflection-lane.js script
+//        tag removed from missions.html (orphan modules kept in
+//        repo as dead code per orchestrator ruling; deferred to
+//        the post-launch repo audit chat).
+//      bible-reader.html, js/marginalia.js, and the marginalia
+//      JSON are UNTOUCHED in 20-IMPL-A (verified by pre/post
+//      SHA-256 in the completion summary). 20-IMPL-B is the
+//      next dispatch and will move the Stage 2 reflect surface
+//      into bible-reader.html.
+//      No new static assets in this bump.
+const CACHE_NAME = 'orthodox-expedition-v45';
 const STATIC_ASSETS = [
   '/Orthodox-Expedition-/',
   '/Orthodox-Expedition-/index.html',

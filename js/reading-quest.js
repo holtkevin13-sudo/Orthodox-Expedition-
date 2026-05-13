@@ -2,48 +2,49 @@
  * Orthodox Expedition — Reading Quest
  *
  * Dispatch 3b · Question Card UI + Engagement Loop
+ * Chat 20-IMPL-B (May 13, 2026) · localStorage flag retired
  *
- * Mounts the daily "Theo or Christopher asks…" question card on
- * home.html, immediately under the daily anchor card. The card only
- * appears once Nolan has tapped through to bible-reader.html (via
- * the gospel teaser on the daily anchor card) and returned — that
- * "I have read today's gospel" signal is carried by a localStorage
- * flag set by a tiny pagehide hook in bible-reader.html.
+ * STATUS (May 13, 2026):
+ *   This module exports two surfaces:
  *
- * State machine, computed from three inputs (today's question
- * payload, the localStorage flag, and the reading_completions row):
+ *   1. Commit helpers — ACTIVELY USED by js/missions.js (Reading lane
+ *      Stage 1 fallback) and js/reading-reflect-panel.js (skip path):
+ *        commitCompletion             — canonical INSERT+coin pattern
+ *        commitNoQuestionCompletion   — flat +5 path (no question)
+ *        commitReadCompletion         — Stage 1 +3 (read-only / skip)
+ *        commitReflectCompletion      — Stage 2 +2 (UPDATE-with-guard)
+ *      These remain the canonical entry points for reading-lane writes
+ *      and field_journal('reading_reflection') journaling.
  *
- *   A.  No question for today → render nothing. (Outside launch
- *       window dates, or future expansions before orchestrator
- *       populates a batch.)
- *   B.  Question exists, no flag yet → render nothing. The daily
- *       anchor card is the only "tap to read" surface; pre-read,
- *       this slot is invisible to avoid spoiling the question.
- *   C.  Flag set, no completion row → render the question card
- *       per format (multiple_choice / free_text / chips).
- *   D.  Completion row exists, was_correct=true OR row has
- *       reflection_text → render the celebratory "completed" card
- *       (smaller portrait, closing line, earned coin pip,
- *       reveal_context for MC, reflection echoed for free_text/chips).
- *   E.  Completion row exists with skipped_pastorally=true → render
- *       the gentle "you still showed up" card. Zero coin pip.
+ *   2. ReadingQuest.mount(container, …) — INERT in production. The
+ *      home-page question-card surface this was authored to render
+ *      has no consumer; home.html loads the script but never calls
+ *      mount(). Chat 20-IMPL-B kept mount() in place per OQ-12
+ *      ruling (a) "surgical retirement" — full mount() removal
+ *      deferred to a post-launch repo-audit chat.
  *
- * Coin schedule (matches dispatch §COIN AWARDING):
- *   • MC try-1 correct                       → +5
- *   • MC try-2 correct                       → +4
- *   • MC try-3 correct OR MC try-3 wrong     → +3 (floor)
- *   • free_text save                         → +5
- *   • chips non-escape select                 → +5
- *   • chips escape ("Something else…")       → opens textarea
- *                                              then +5 on save
- *   • pastoral skip                          → +0
+ * Chat 20-IMPL-B retired the oe_bible_reader_visited_{date}
+ * localStorage flag dance. The pagehide writer on bible-reader.html,
+ * the flagKey/isFlagSet/clearFlag helpers below, and their callsites
+ * (inside commitReadCompletion and inside the inert mount()) are
+ * GONE. mount()'s state machine simplifies: completion row exists →
+ * renderCompleted; else render nothing. The intermediate "Flag set,
+ * no row → State C (render question)" branch is removed.
  *
- * Field Manual integration (free_text + chips-escape only):
- *   On submit, a field_journal row is written using the existing
- *   schema (no source/title/body/calendar_date columns exist; closest
- *   equivalents are used per the approved Dispatch 3b Deviation 2):
- *     category   = 'expedition_log'
- *     entry_text = "Reflection on <gospel.reference>\n\n<text>"
+ * Coin schedule (when commit helpers are invoked from missions.js
+ * or reading-reflect-panel.js):
+ *   • commitReadCompletion           → +3 (skip-pastorally path)
+ *   • commitReflectCompletion        → +2 cumulative-to-5 (legacy
+ *                                       Stage 2 path; superseded by
+ *                                       atomic +5 INSERT in 20-IMPL-B
+ *                                       but kept for the 23505 fallback)
+ *   • commitNoQuestionCompletion     → +5 (no-question days; legacy)
+ *
+ * Field Manual integration (writeReadingReflectionEntry):
+ *   On Stage 2 commit (and on the 20-IMPL-B atomic commit, separately
+ *   in js/reading-reflect-panel.js), a field_journal row writes:
+ *     category   = 'reading_reflection'
+ *     entry_text = "Gospel Reflection on <gospelRef>\n\n<text>"
  *     explorer_id= current explorer
  *     tool_type  = 'pen'
  *     tool_color = '#1a0f00'
@@ -52,24 +53,17 @@
  * Idempotency:
  *   Insert into reading_completions has UNIQUE(explorer_id,
  *   calendar_date). A duplicate-key error (Postgres 23505) is
- *   treated as "already completed" and triggers a re-mount that
- *   reads the existing row — coins are NEVER awarded on the
- *   retry path. The order is row-insert-first, coin-award-second,
- *   so a failed row insert (for any reason) leaves coins untouched.
+ *   treated as "already completed". The order is row-insert-first,
+ *   coin-award-second, so a failed row insert leaves coins
+ *   untouched.
  *
  * Public API:
- *   ReadingQuest.mount(container, {
- *     sb,          // Supabase client
- *     explorerId,  // current explorer profile.id (uuid)
- *     familyId,    // current explorer profile.family_id (uuid)
- *     today,       // 'YYYY-MM-DD' ET key (WeekUtils.todayKey())
- *     row,         // liturgical_calendar row with daily_readings,
- *                  // OR null
- *   })
- *
- * The mount call is idempotent for purposes of re-render: calling
- * it again with the same inputs reads the current DB + localStorage
- * state and produces the right markup without side-effects.
+ *   ReadingQuest.mount(container, { sb, explorerId, familyId,
+ *                                    today, row })
+ *     — inert in production; kept for API parity per OQ-12 (a).
+ *   ReadingQuest.commitReadCompletion(sb, opts)         (used)
+ *   ReadingQuest.commitReflectCompletion(sb, opts)      (used)
+ *   ReadingQuest.commitNoQuestionCompletion(sb, opts)   (used)
  */
 
 (function () {
@@ -118,17 +112,13 @@
     christopher: 'assets/characters/christopher-portrait.png',
   };
 
-  // ── LocalStorage flag (bible-reader → reading-quest signal) ────
-  function flagKey(today) {
-    return `oe_bible_reader_visited_${today}`;
-  }
-  function isFlagSet(today) {
-    try { return localStorage.getItem(flagKey(today)) === '1'; }
-    catch (_e) { return false; }
-  }
-  function clearFlag(today) {
-    try { localStorage.removeItem(flagKey(today)); } catch (_e) { /* graceful */ }
-  }
+  // ── (Chat 20-IMPL-B) LocalStorage flag retired ────────────────
+  // The oe_bible_reader_visited_{date} flag and its flagKey/
+  // isFlagSet/clearFlag helpers are gone. The reading_completions
+  // row in Supabase is now the single source of truth for Reading
+  // lane state. mount() below is inert in production; commit
+  // helpers (commitReadCompletion / commitReflectCompletion /
+  // commitNoQuestionCompletion) remain canonical.
 
   // ── Question payload validator ─────────────────────────────────
   // Returns the question object if it has the minimum valid shape,
@@ -409,8 +399,9 @@
       reflected_at:       null,
     };
     const result = await commitCompletion(sb, payload, explorerId, coins);
-    // Clear the localStorage flag — DB read_at is now source of truth.
-    try { clearFlag(today); } catch (_e) { /* defensive */ }
+    // (Chat 20-IMPL-B: clearFlag(today) call retired — the
+    // oe_bible_reader_visited_* flag no longer exists. DB row is
+    // the sole source of truth.)
     return result;
   }
 
@@ -887,10 +878,9 @@
       return;
     }
 
-    // No question for today → State A (render nothing; clear stale flag)
+    // No question for today → State A (render nothing)
     const question = getQuestion(row);
     if (!question) {
-      if (isFlagSet(today)) clearFlag(today);
       container.innerHTML = '';
       return;
     }
@@ -907,31 +897,16 @@
       return;
     }
 
-    // Not completed; flag not set → State B (haven't read yet; render nothing)
-    if (!isFlagSet(today)) {
-      container.innerHTML = '';
-      return;
-    }
-
-    // State C — active question, render per format
-    const ctx = { sb, explorerId, familyId, today, row, remount };
-    switch (question.format) {
-      case 'multiple_choice':
-        renderMC(container, question, 1, new Set());
-        wireActiveQuestion(container, question, ctx);
-        break;
-      case 'free_text':
-        renderFreeText(container, question, {});
-        wireActiveQuestion(container, question, ctx);
-        break;
-      case 'chips':
-        renderChips(container, question);
-        wireActiveQuestion(container, question, ctx);
-        break;
-      default:
-        // Unknown format — defensive, render nothing
-        container.innerHTML = '';
-    }
+    // (Chat 20-IMPL-B: State B / State C flag-gate retired. With
+    // the localStorage flag gone, mount() now renders nothing for
+    // the not-yet-completed case rather than gating on a flag.
+    // This branch is unreachable in production — no consumer calls
+    // ReadingQuest.mount() — so the simplification is safe. State C
+    // active-question dispatch (renderMC/renderFreeText/renderChips
+    // + wireActiveQuestion) removed per OQ-12 (a) "surgical
+    // simplification". The render helpers themselves remain
+    // exported for potential test or future-surface use.)
+    container.innerHTML = '';
   }
 
   // ═══════════════════════════════════════════════════════════════
@@ -948,9 +923,8 @@
       capSpeaker,
       todayKeyET,
       PORTRAIT,
-      flagKey,
-      isFlagSet,
-      clearFlag,
+      // (Chat 20-IMPL-B: flagKey, isFlagSet, clearFlag retired
+      // alongside the oe_bible_reader_visited_* localStorage flag.)
       getQuestion,
       isChipEscapeHatch,
       getGospelReference,

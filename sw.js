@@ -1,4 +1,69 @@
-// Orthodox Expedition — Service Worker v43
+// Orthodox Expedition — Service Worker v44
+// v44: Chat 19 — Missions page repair + 5-slot daily counter (B2).
+//      🔴 REPAIR: missions.html was structurally corrupted at HEAD
+//          (df8910c, 2026-05-12 01:07). Two HTML documents had been
+//          concatenated by a GitHub web-UI paste during Chat 16's
+//          CSS deploy: lines 1–15 = old head fragment, lines 17–1565
+//          = new canonical document, lines 1566–2892 = stale prior
+//          clean (5b7de25) content with its first 16 head lines
+//          migrated to the top of the file. Documents: 2 DOCTYPE,
+//          2 <html>, 2 <head>, 2 <body>, 2 </html>. iPad PWA would
+//          not render — file was unparseable as a single document.
+//          Forensic match against project memory Op Learning #9
+//          ("Manual GitHub UI fragile"). Cache invalidation alone
+//          would not have fixed it; file was broken on disk.
+//          Fix: reconstruct missions.html = "<!DOCTYPE html>\n" +
+//          lines 17–1565 of corrupt file = 1550 lines, single
+//          self-contained document. SHA-256 fa7820bc21bf2074…
+//          Chat 16's 14× mh-daycomplete CSS preserved intact.
+//          All 91 CSS class names preserved. Inline JS (2 blocks,
+//          18205 chars) passes node --check. HTML tag balance
+//          clean. Line-by-line diff: corrupt[17–1565] == recon[2–1550]
+//          byte-for-byte (zero content loss; only the 16 duplicated
+//          head lines were shed, all of which already exist in
+//          the canonical reconstructed head).
+//      🟢 js/missions.js — Chat 19 B2 "auto-complete memo when all
+//          other lanes done." Previously: when no weekly_verses row
+//          exists for the current week, memState = 'not_applicable'
+//          and tally() skipped it from BOTH numerator AND denominator,
+//          showing "0/4" on weekdays instead of "0/5." Kevin wants
+//          "0/5 ALWAYS on weekdays." Fix:
+//            • tally() now counts 'not_applicable' toward totalCount
+//              (denominator always — 5/5 visible at all times on
+//              weekdays, 4/4 on weekends preserved).
+//            • New _memAutoComplete flag: when memState ==
+//              'not_applicable' AND every other completable lane
+//              (reading, prayer, session-or-reflection) is done,
+//              memo auto-credits the numerator. Mirrors the Day
+//              Complete unlock-pending check at L567 so the two
+//              flip together — display goes 4/5 → 5/5 ✓ at end of
+//              day on no-verse weeks.
+//            • Day Complete bonus continues firing correctly via
+//              the existing L567 short-circuit. Coin economy and
+//              idempotency unchanged. No schema work.
+//            • Comment block at L576–588 updated to reflect new
+//              "denominator-always, numerator-when-others-done"
+//              semantics.
+//      🟢 js/missions.js — Chat 19 N1 user-facing rename:
+//          _renderDayCompleteLane: "Day Complete" → "Today's Devotion"
+//          in all 3 variant renders (pilgrimage / paid / locked).
+//          Internal state name `day_complete`, lane id `day_complete`,
+//          row id `mh-row-day_complete`, CSS class `.mh-daycomplete`,
+//          and the `day_complete_bonus` Supabase table all UNCHANGED
+//          per orchestrator ruling — only the user-visible title
+//          string is renamed. Devotion is the canonical Orthodox term
+//          for disciplined daily practice (prayer + reading +
+//          reflection + study); matches the catechetical app voice
+//          alongside Field Manual / Pilgrimage / Topics / Missions.
+//      🟢 STATIC_ASSETS unchanged — missions.html and js/missions.js
+//          both already listed. CACHE_NAME bump v43 → v44 alone
+//          invalidates the cached copies on Kevin's iPad PWA after
+//          a force-quit + reopen.
+//      🟢 Chat 18 deliverables byte-identical pre/post (verified):
+//          bible-reader.html               027722d4…
+//          js/marginalia.js                cacc6b45…
+//          docs/content/topic-00-marginalia-v1.json  05384f47…
+//
 // v43: Chat 18 — Marginalia v1 on reading lane (Topic 00).
 //      🟢 NEW: js/marginalia.js — vanilla window.Marginalia module
 //          with .mount(container, { sessionId } = {}) and .unmount().
@@ -549,7 +614,7 @@
 // v4: added week.html, prayers.html, day-state, pause-card, prayers, and config JSON
 // Version bump forces cache clear and fresh install
 
-const CACHE_NAME = 'orthodox-expedition-v43';
+const CACHE_NAME = 'orthodox-expedition-v44';
 const STATIC_ASSETS = [
   '/Orthodox-Expedition-/',
   '/Orthodox-Expedition-/index.html',

@@ -1,14 +1,20 @@
 /* ─────────────────────────────────────────────────────────────────
-   Orthodox Expedition — Chat 2A
-   js/reflection-lane.js — T/Th in-line reflection lane
-   May 11, 2026
+   Orthodox Expedition — Chat 2A + Wave 2 Lead refactor
+   js/reflection-lane.js — Session Journal lane (T/Th) data layer
+   May 11, 2026 · Wave 2 Lead revision May 13, 2026
 
    PURPOSE
-   Renders the Tuesday/Thursday reflection lane IN-LINE on the
-   Missions surface. Mirrors the architectural pattern of
-   ReadingQuest.mount(): the module owns its data fetch + render
-   + submit + write + coin award. Missions.js orchestrates the
-   slot; this module executes inside it.
+   Originally rendered the Tuesday/Thursday reflection lane IN-LINE
+   on the Missions surface (Chat 2A). Retired by 20-IMPL-A. Revived
+   by Wave 2 Lead as the DATA LAYER for the Session Journal lane —
+   the trail-marker chrome (.mh-row + .mh-journal-expand) now lives
+   in js/missions.js for visual parity with the other IMPL-A lanes,
+   while this module continues to own the prompt fetch, idempotent
+   write, and +5 coin commit.
+
+   The original mount() entry-point remains exported for backwards
+   compatibility (no current caller). The new orchestration surface
+   is the pure-data trio: loadPrompt, getTodayEntry, saveEntry.
 
    DAY-OF-WEEK GATE
    Active only on Tuesday and Thursday (ET). Saturday/Sunday and
@@ -472,10 +478,51 @@
   }
 
   // ═════════════════════════════════════════════════════════════════
+  // WAVE 2 LEAD · PURE-DATA HELPERS  (consumed by js/missions.js)
+  // ═════════════════════════════════════════════════════════════════
+  // These thin public wrappers expose the existing internal helpers
+  // for use by Missions._renderSessionJournalBlock + _wireSessionJournal
+  // Submit, which own the new IMPL-A-style trail-marker row + inline
+  // expand chrome. The data contract is unchanged from Chat 2A:
+  //   • prompt source: session_reflection_prompts (session_id + day_kind)
+  //   • idempotency: ET-day-bounded SELECT on field_journal w/
+  //                  category='session_reflection'
+  //   • write: field_journal insert + read-then-write profiles.coins +=5
+  //   • activity_log row written by the caller (Missions, per OQ-12)
+
+  // Public: fetch the prompt for a session + day_kind. Returns the
+  // first active row by display_order, or null. Day_kind must be
+  // 'tue' or 'thu' (others return null).
+  async function loadPrompt(sb, sessionId, dayKind) {
+    return _loadPromptForSlot(sb, sessionId, dayKind);
+  }
+
+  // Public: fetch today's session_reflection field_journal row if any.
+  // Returns { id, entry_text, created_at } | null. ET-day-bounded.
+  async function getTodayEntry(sb, explorerId, today) {
+    return _loadTodaysReflection(sb, explorerId, today);
+  }
+
+  // Public: insert today's session_reflection row + award +5 coins.
+  // Idempotent: a prior same-day row short-circuits with
+  // alreadySaved=true and zero coin bump. Mirrors _saveReflection
+  // verbatim — caller (Missions) handles activity_log + UI updates.
+  //
+  // Returns { ok, alreadySaved, coinsAwarded, entryText }.
+  async function saveEntry(sb, opts) {
+    return _saveReflection(sb, opts);
+  }
+
+  // ═════════════════════════════════════════════════════════════════
   // PUBLIC API
   // ═════════════════════════════════════════════════════════════════
 
   const ReflectionLane = {
+    // Wave 2 Lead — primary consumers (Missions._renderSessionJournal*)
+    loadPrompt,
+    getTodayEntry,
+    saveEntry,
+    // Legacy Chat 2A exports — no current caller, kept for compat
     mount,
     getStateForToday,
     _internals: {
@@ -485,6 +532,7 @@
       _loadPromptForSlot,
       _isSentinelEntry,
       SKIP_SENTINEL_TEXT,
+      _saveReflection,
       _renderShell,
       _renderPilgrimage,
       _renderEmptyStatePreSeeding,

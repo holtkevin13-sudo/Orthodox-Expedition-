@@ -1,7 +1,8 @@
 /* ─────────────────────────────────────────────────────────────────
    Orthodox Expedition — Dispatch 4b + Chat 2A + Chat 20-IMPL-A
+                       + Wave 2 Lead
    js/missions.js — Daily mission hub (Missions surface)
-   May 13, 2026 · Chat 20-IMPL-A revision
+   May 13, 2026 · Wave 2 Lead revision
 
    PURPOSE
    Renders the "Today's Missions" daily-action hub. Each mission
@@ -19,13 +20,22 @@
    choreography: chip morph + coin-rain + iOS haptic + counter
    advance + +10 toast + coin-strip tick.
 
-   The T/Th session_reflection lane retires entirely in 20-IMPL-A.
-   Days now read:
-     M/W/F  : reading, prayer, memo, session,  trophy (5/5)
-     T/Th   : reading, prayer, memo,           trophy (4/4)
-     Sat/Sun: reading, prayer, memo,           trophy (4/4)
-   Existing field_journal rows with category='session_reflection'
-   remain visible in journal.html (preserved historical artifact).
+   Wave 2 Lead REINSTATES the T/Th journaling lane as
+   "Session Journal" — distinct from the reading reflection (which
+   is the +2 Stage 2 of the Reading lane and uses generic prompts
+   from journal_prompts). Session Journal uses SESSION-SPECIFIC
+   prompts from session_reflection_prompts, awards +5 on text
+   submission, writes to field_journal with the canonical
+   category='session_reflection'. Day cadence after Wave 2:
+     M/W/F  : reading, prayer, memo, session,         trophy (5/5)
+     T/Th   : reading, prayer, memo, session_journal, trophy (5/5)
+     Sat/Sun: reading, prayer, memo,                  trophy (4/4)
+   The retired-then-revived data layer lives in js/reflection-lane.js
+   (loadPrompt / getTodayEntry / saveEntry); this module owns the
+   trail-marker chrome + inline expand panel for visual parity with
+   the reading lane. Existing field_journal rows with
+   category='session_reflection' from before Wave 2 remain visible
+   in journal.html (preserved historical artifact).
 
    The progress counter relocates from BOTTOM of the panel to the
    eyebrow band at TOP — momentum-during-work, not reward-after-
@@ -46,20 +56,23 @@
 
      getMissionsForDay(dateString)
          → ['reading','prayer','memorization', slot4?, 'day_complete']
-         M/W/F  : reading, prayer, memo, session,    day_complete  (5/5)
-         T/Th   : reading, prayer, memo,             day_complete  (4/4)
-         Sat/Sun: reading, prayer, memo,             day_complete  (4/4)
+         M/W/F  : reading, prayer, memo, session,         day_complete  (5/5)
+         T/Th   : reading, prayer, memo, session_journal, day_complete  (5/5)
+         Sat/Sun: reading, prayer, memo,                  day_complete  (4/4)
 
      loadTodaysState(sb, explorerId, familyId, today)
          → {
-             reading:      'pending'|'read-not-reflected'|'reflected'|'pilgrimage',
-             prayer:       'pending'|'complete'|'pilgrimage',
-             memorization: 'pending'|'complete'|'not_applicable'|'pilgrimage',
-             session:      'pending'|'complete'|'pilgrimage'|null,
-             dayComplete:  'locked'|'unlock-pending'|'paid'|'pilgrimage'|null,
+             reading:        'pending'|'read-not-reflected'|'reflected'|'pilgrimage',
+             prayer:         'pending'|'complete'|'pilgrimage',
+             memorization:   'pending'|'complete'|'not_applicable'|'pilgrimage',
+             session:        'pending'|'complete'|'pilgrimage'|null,
+             sessionJournal: 'pending'|'complete'|'pilgrimage'|null,
+             dayComplete:    'locked'|'unlock-pending'|'paid'|'pilgrimage'|null,
              pendingDayCompletePayout: bool,
              readingStageRow: reading_completions row|null,
              dayCompleteRow:  day_complete_bonus row|null,
+             sessionJournalEntryRow: field_journal row|null,
+             sessionJournalPrompt:   session_reflection_prompts row|null,
              completedCount: int,
              totalCount: int,
              pilgrimage: row|null,
@@ -89,11 +102,15 @@
                     (Stage 1 / Stage 2 coin commits; preserved
                      verbatim until 20-IMPL-B moves the reflect
                      surface into bible-reader.html)
+     ReflectionLane — loadPrompt / getTodayEntry / saveEntry
+                    (Wave 2 Lead — pure-data helpers for the
+                     reinstated T/Th Session Journal lane)
      (DailyAnchorCard module remains loaded but is no longer
       consumed by this surface in 20-IMPL-A. Render path simplifies
       to a self-contained trail-marker row sub-line.)
-     (ReflectionLane module no longer loaded — script tag removed
-      from missions.html in 20-IMPL-A.)
+     (Wave 2 Lead: ReflectionLane is reloaded by missions.html; its
+      mount() is no longer called, but its pure-data helpers power
+      the inline Session Journal lane chrome owned by this module.)
 
    Op Learnings honored:
      #1  Surgical str_replace — render-path rewrite, data-layer
@@ -229,20 +246,24 @@
     }
 
     // 0=Sun, 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat
-    // Chat 20-IMPL-A · Lane structure (post T/Th reflection retire):
-    //   M/W/F   → reading, prayer, memo, session, day_complete  (5/5)
-    //   T/Th    → reading, prayer, memo,          day_complete  (4/4)
-    //   Sat/Sun → reading, prayer, memo,          day_complete  (4/4)
+    // Wave 2 Lead · Lane structure (Session Journal lane reinstated
+    // on T/Th, Curriculum lane daily +5 wired upstream at the
+    // session-day event source):
+    //   M/W/F   → reading, prayer, memo, session,         day_complete (5/5)
+    //   T/Th    → reading, prayer, memo, session_journal, day_complete (5/5)
+    //   Sat/Sun → reading, prayer, memo,                  day_complete (4/4)
     // Q7 ruling preserved: weekend has no slot-4 task; Lord's Day
     // rhythm honored by the 4/4 denominator. The trophy chip (Day
     // Complete) is the FINAL lane every day — on 4/4 days it sits
     // at slot 4 by position; no missing slot, just a smaller
-    // denominator. (Pre-IMPL-A, T/Th had a session_reflection lane
-    // here. Retired per orchestrator ruling OQ2 — daily journaling
-    // becomes the post-IMPL-B norm via the reading-reflect surface.)
+    // denominator. Trophy unlock-pending detection runs across all
+    // OTHER lanes (taskCount = totalCount-1), so the trophy locked
+    // sub-line auto-reads "unlock at 4/4" on M/W/F + T/Th and
+    // "unlock at 3/3" on Sat/Sun without further branching here.
     const base = ['reading', 'prayer', 'memorization'];
-    if (dow === 1 || dow === 3 || dow === 5) return base.concat(['session', 'day_complete']);   // M/W/F: 5/5
-    return base.concat(['day_complete']);                                                        // T/Th + Sat/Sun: 4/4
+    if (dow === 1 || dow === 3 || dow === 5) return base.concat(['session', 'day_complete']);          // M/W/F: 5/5
+    if (dow === 2 || dow === 4)               return base.concat(['session_journal', 'day_complete']); // T/Th : 5/5
+    return base.concat(['day_complete']);                                                              // Sat/Sun: 4/4
   }
 
   // ═════════════════════════════════════════════════════════════════
@@ -448,17 +469,74 @@
   }
 
   // ═════════════════════════════════════════════════════════════════
+  // WAVE 2 LEAD · SESSION JOURNAL LANE HELPERS  (T/Th only)
+  // ═════════════════════════════════════════════════════════════════
+  // The Session Journal lane reinstates the retired T/Th journaling
+  // slot. Data layer lives in js/reflection-lane.js (Wave 2 Lead-
+  // exposed pure-data helpers: loadPrompt, getTodayEntry, saveEntry).
+  // The trail-marker chrome + inline expand panel live here for
+  // visual parity with the other IMPL-A lanes (.mh-reading-* family).
+
+  // Resolve 'tue' | 'thu' | null from an ET dow integer (0=Sun..6=Sat).
+  function _dayKindFromDow(dow) {
+    if (dow === 2) return 'tue';
+    if (dow === 4) return 'thu';
+    return null;
+  }
+
+  // Did Nolan write a Session Journal entry today? Delegates to
+  // ReflectionLane.getTodayEntry, which performs an ET-day-bounded
+  // SELECT on field_journal where category='session_reflection'.
+  // Returns the entry row | null. Graceful null when ReflectionLane
+  // module is not loaded.
+  async function _loadTodaysSessionJournal(sb, explorerId, todayKey) {
+    if (typeof window === 'undefined' || !window.ReflectionLane
+        || typeof window.ReflectionLane.getTodayEntry !== 'function') {
+      return null;
+    }
+    try {
+      return await window.ReflectionLane.getTodayEntry(sb, explorerId, todayKey);
+    } catch (e) {
+      console.warn('Missions._loadTodaysSessionJournal failed (graceful):', e);
+      return null;
+    }
+  }
+
+  // Fetch the Session Journal prompt row for the given session + day
+  // kind. Returns { id, prompt_text, display_order } | null. Graceful
+  // null when ReflectionLane module is not loaded, when sessionId is
+  // unknown, or when no active prompt is seeded for this slot
+  // (pre-content-seeding fallback — Topic 00 corpus has all 30
+  // (15×2) rows active as of May 13, 2026).
+  async function _loadSessionJournalPrompt(sb, sessionId, dayKind) {
+    if (!sessionId || (dayKind !== 'tue' && dayKind !== 'thu')) return null;
+    if (typeof window === 'undefined' || !window.ReflectionLane
+        || typeof window.ReflectionLane.loadPrompt !== 'function') {
+      return null;
+    }
+    try {
+      return await window.ReflectionLane.loadPrompt(sb, sessionId, dayKind);
+    } catch (e) {
+      console.warn('Missions._loadSessionJournalPrompt failed (graceful):', e);
+      return null;
+    }
+  }
+
+  // ═════════════════════════════════════════════════════════════════
   // PUBLIC: loadTodaysState
   // ═════════════════════════════════════════════════════════════════
 
   async function loadTodaysState(sb, explorerId, familyId, today) {
     today = today || _todayKey();
     const dow = _dowET(new Date());
+    const dayKind = _dayKindFromDow(dow);
     const missionsForDay = getMissionsForDay(today);
 
     // Parallel: pilgrimage check + lane data
     // Chat 20-IMPL-A: reflectionDone fetch removed (T/Th reflection
     // lane retired). Day Complete remains last in the parallel list.
+    // Wave 2 Lead: sessionJournalEntryRow rejoins the parallel list,
+    // gated on T/Th (returns null on M/W/F/Sat/Sun).
     const [
       pilgrimageActive,
       prayerStatus,
@@ -468,6 +546,7 @@
       anchorData,
       activeSession,
       dayCompleteRow,
+      sessionJournalEntryRow,
     ] = await Promise.all([
       window.Pilgrimages && typeof window.Pilgrimages.isActiveToday === 'function'
         ? window.Pilgrimages.isActiveToday(sb).catch(() => null) : Promise.resolve(null),
@@ -482,6 +561,8 @@
       _loadActiveSession(sb, explorerId),
       missionsForDay.indexOf('day_complete') >= 0
         ? _loadDayCompleteToday(sb, explorerId, today) : Promise.resolve(null),
+      missionsForDay.indexOf('session_journal') >= 0
+        ? _loadTodaysSessionJournal(sb, explorerId, today) : Promise.resolve(null),
     ]);
 
     const isPilgrimage = !!pilgrimageActive;
@@ -533,12 +614,36 @@
       sessionState = 'pending';
     }
 
-    // Reflection mission state (T/Th) — RETIRED per Chat 20-IMPL-A.
-    // Lane is no longer in missionsForDay; reflectionState is always
-    // null. Kept here as null assignment for compatibility with any
-    // downstream code that destructures state.reflection (and for
-    // the next dispatch's regression test surface).
-    const reflectionState = null;
+    // Reflection mission state (T/Th) — RETIRED per Chat 20-IMPL-A,
+    // RE-PROVISIONED as 'sessionJournal' below per Wave 2 Lead.
+    // The legacy state.reflection key is no longer populated and is
+    // removed from the return shape; downstream code reads
+    // state.sessionJournal instead.
+
+    // Session Journal lane state (Wave 2 Lead, T/Th only).
+    //   not in missionsForDay → null (M/W/F + Sat/Sun)
+    //   pilgrimage → 'pilgrimage' (no submit UI, no +5 paid)
+    //   field_journal entry exists for today → 'complete'
+    //   otherwise → 'pending'
+    let sessionJournalState;
+    if (missionsForDay.indexOf('session_journal') < 0) {
+      sessionJournalState = null;
+    } else if (isPilgrimage) {
+      sessionJournalState = 'pilgrimage';
+    } else if (sessionJournalEntryRow) {
+      sessionJournalState = 'complete';
+    } else {
+      sessionJournalState = 'pending';
+    }
+
+    // Sequential follow-up: fetch the prompt only when we need it
+    // for render (state is 'pending' AND we know which session is
+    // active). One extra round-trip on T/Th-pending days; skipped
+    // on M/W/F/Sat/Sun and on T/Th when already complete/pilgrimage.
+    let sessionJournalPrompt = null;
+    if (sessionJournalState === 'pending' && activeSession && dayKind) {
+      sessionJournalPrompt = await _loadSessionJournalPrompt(sb, activeSession.id, dayKind);
+    }
 
     // Day Complete state (Chat 2A, every day).
     //   pilgrimage → 'pilgrimage' (no payout; pilgrimage is rest)
@@ -555,7 +660,11 @@
     } else if (dayCompleteRow) {
       dayCompleteState = 'paid';
     } else {
-      const otherStates = [readingState, prayerState, memState, sessionState];
+      // Wave 2 Lead: sessionJournalState joins the "other lanes
+      // complete" predicate. On T/Th, all 4 task lanes (reading,
+      // prayer, memo, session_journal) must finish before the
+      // trophy unlocks.
+      const otherStates = [readingState, prayerState, memState, sessionState, sessionJournalState];
       function _isTaskComplete(s) {
         return s === 'complete' || s === 'reflected' || s === 'pilgrimage';
       }
@@ -592,8 +701,11 @@
     function _isLaneDone(s) {
       return s === 'complete' || s === 'reflected' || s === 'pilgrimage';
     }
+    // Wave 2 Lead: sessionJournalState joins the sibling-lane list
+    // alongside reading/prayer/session, so memo auto-credit waits for
+    // every completable lane on T/Th too.
     const _memAutoComplete = (memState === 'not_applicable') &&
-      [readingState, prayerState, sessionState]
+      [readingState, prayerState, sessionState, sessionJournalState]
         .every(s => s == null || _isLaneDone(s));
 
     function tally(state, autoComplete) {
@@ -608,22 +720,25 @@
         completedCount++;
       }
     }
-    tally(readingState,    false);
-    tally(prayerState,     false);
-    tally(memState,        _memAutoComplete);
-    tally(sessionState,    false);
-    tally(dayCompleteState, false);
+    tally(readingState,        false);
+    tally(prayerState,         false);
+    tally(memState,            _memAutoComplete);
+    tally(sessionState,        false);
+    tally(sessionJournalState, false);
+    tally(dayCompleteState,    false);
 
     return {
       reading: readingState,
       prayer:  prayerState,
       memorization: memState,
       session: sessionState,
-      reflection: reflectionState,   // always null in 20-IMPL-A
+      sessionJournal: sessionJournalState,
       dayComplete: dayCompleteState,
       pendingDayCompletePayout,
       readingStageRow,
       dayCompleteRow,
+      sessionJournalEntryRow,
+      sessionJournalPrompt,
       completedCount,
       totalCount,
       pilgrimage: pilgrimageActive,
@@ -1097,6 +1212,179 @@
     `;
   }
 
+  // ═════════════════════════════════════════════════════════════════
+  // WAVE 2 LEAD · SESSION JOURNAL LANE RENDER  (T/Th only)
+  // ═════════════════════════════════════════════════════════════════
+  // The Session Journal lane mirrors the reading-lane block pattern:
+  //   • outer .mh-journal-block wrapping a trail-marker .mh-row
+  //   • optional .mh-journal-expand panel rendered below when
+  //     state is 'pending' (carries the prompt + textarea + submit)
+  // Coin chip on pending = +5 (parity with reading +5 total).
+  // Row is a plain <div> (not <a>): there's nowhere to navigate —
+  // tapping focuses the textarea via _wireSessionJournalSubmit.
+
+  function _renderSessionJournalBlock(state, opts) {
+    const promptRow    = (opts && opts.promptRow)    || null;
+    const entryRow     = (opts && opts.entryRow)     || null;
+    const sessionTitle = (opts && opts.sessionTitle) || '';
+
+    let sub, indicator, stateClass, showCoins;
+    switch (state) {
+      case 'pilgrimage':
+        sub = 'Your journal waits';
+        indicator = '<span class="mh-row-indicator mh-ri-pilgrimage" aria-label="On pilgrimage">&#x2726;&#xFE0E;</span>';
+        stateClass = 'mh-state-pilgrimage';
+        showCoins = false;
+        break;
+      case 'complete':
+        sub = entryRow && entryRow.entry_text
+          ? 'Today\u2019s reflection is saved'
+          : 'Today\u2019s reflection is saved';
+        indicator = '<span class="mh-row-indicator mh-ri-done" aria-label="Complete">&#x2713;</span>';
+        stateClass = 'mh-state-complete';
+        showCoins = false;
+        break;
+      default: // 'pending'
+        sub = sessionTitle ? `Reflect on ${sessionTitle}` : 'Today\u2019s reflection';
+        indicator = '<span class="mh-row-indicator mh-ri-pending" aria-label="Pending">&#x25CB;</span>';
+        stateClass = 'mh-state-pending';
+        showCoins = true;
+    }
+
+    const coinsHtml = showCoins ? '<div class="mh-row-coins">+5</div>' : '';
+    const rowHtml = `
+      <div class="mh-row mh-row-session-journal ${stateClass}" id="mh-row-session_journal">
+        <div class="mh-row-icon">&#x270D;&#xFE0E;</div>
+        <div class="mh-row-body">
+          <div class="mh-row-name">Session Journal</div>
+          <div class="mh-row-sub">${esc(sub)}</div>
+        </div>
+        ${coinsHtml}
+        ${indicator}
+      </div>
+    `;
+
+    if (state === 'pending') {
+      return `
+        <div class="mh-journal-block" data-state="pending">
+          ${rowHtml}
+          <div class="mh-journal-expand" id="mh-session-journal-content"></div>
+        </div>
+      `;
+    }
+    return `
+      <div class="mh-journal-block" data-state="${esc(state)}">
+        ${rowHtml}
+      </div>
+    `;
+  }
+
+  // Inner pending-state body — portrait + prompt + textarea + submit.
+  // Reuses the .mh-portrait-block + .mh-rrp-text + .mh-reading-input-block
+  // + .mh-reading-textarea + .mh-reading-submit-btn classes for visual
+  // parity with the reading Stage 2 inline form (per OQ-5: keep .rl-*
+  // and reading-* CSS as canonical; no new class family needed).
+  function _renderSessionJournalPendingHTML(opts) {
+    const promptText = (opts && opts.promptText) || '';
+    return `
+      <div class="mh-journal-stage" data-stage="pending">
+        ${promptText ? `
+          <div class="mh-reading-prompt-block">
+            <div class="mh-portrait-block">
+              <img class="mh-portrait" src="/Orthodox-Expedition-/assets/characters/theo-portrait.png" alt="Theo">
+              <div class="mh-portrait-speaker">Theo asks&#x2026;</div>
+            </div>
+            <div class="mh-rrp-text">${esc(promptText)}</div>
+          </div>
+        ` : `
+          <div class="mh-journal-empty mh-rrp-text">A reflection prompt is being prepared for this session. Write whatever you\u2019re carrying today &#x2014; your entry still counts.</div>
+        `}
+        <div class="mh-reading-input-block">
+          <label class="mh-rri-label" for="mh-session-journal-textarea">Your reflection</label>
+          <textarea
+            id="mh-session-journal-textarea"
+            class="mh-reading-textarea"
+            rows="3"
+            placeholder="Even a sentence is enough\u2026"
+            aria-describedby="mh-session-journal-input-help"
+          ></textarea>
+          <div id="mh-session-journal-input-help" class="mh-rri-help">+5 coins on save.</div>
+          <button type="button" class="mh-reading-submit-btn" data-mh-action="session-journal-submit" disabled>Save reflection</button>
+        </div>
+      </div>
+    `;
+  }
+
+  // Wire the Session Journal submit handler on the in-line panel.
+  // Mirrors _wireReadingReflectSubmit: enable on non-empty input,
+  // disable + label "Saving…" during the write, on success delegate
+  // to ReflectionLane.saveEntry (field_journal insert + +5 profile
+  // coin bump, both idempotent), write the activity_log row for
+  // parent-admin visibility, then refresh the hub so the row
+  // collapses to the ✓ complete state. Failure re-enables with an
+  // inline soft error.
+  function _wireSessionJournalSubmit(innerSlot, ctx) {
+    const ta  = innerSlot.querySelector('#mh-session-journal-textarea');
+    const btn = innerSlot.querySelector('[data-mh-action="session-journal-submit"]');
+    if (!ta || !btn) return;
+    function refreshEnabled() {
+      const v = String(ta.value || '').trim();
+      btn.disabled = (v.length === 0);
+    }
+    ta.addEventListener('input', refreshEnabled);
+    refreshEnabled();
+    btn.addEventListener('click', async (e) => {
+      e.preventDefault();
+      if (btn.disabled) return;
+      const text = String(ta.value || '').trim();
+      if (!text) return;
+      btn.disabled = true;
+      btn.textContent = 'Saving\u2026';
+      try {
+        if (!window.ReflectionLane || typeof window.ReflectionLane.saveEntry !== 'function') {
+          throw new Error('ReflectionLane.saveEntry unavailable');
+        }
+        const res = await window.ReflectionLane.saveEntry(ctx.sb, {
+          explorerId: ctx.explorerId,
+          today:      ctx.today,
+          promptText: ctx.promptText || '',
+          text:       text,
+        });
+        if (res && (res.ok || res.alreadySaved)) {
+          // Activity-log breadcrumb for parent-admin visibility (OQ-12).
+          // Non-fatal — failure here does not affect the lane state.
+          // Skipped on alreadySaved (no fresh write happened).
+          if (!res.alreadySaved) {
+            try {
+              await ctx.sb.from('activity_log').insert({
+                explorer_id: ctx.explorerId,
+                amount: 5,
+                reason: `[session_journal_daily] ${ctx.sessionId || ''} ${ctx.dayKind || ''}`.trim(),
+              });
+            } catch (logErr) {
+              console.warn('[Missions] session-journal activity_log write failed (non-fatal):', logErr);
+            }
+          }
+          await refresh();
+          return;
+        }
+        throw new Error('ReflectionLane.saveEntry returned not-ok');
+      } catch (err) {
+        console.warn('Session Journal submit failed:', err);
+        btn.disabled = false;
+        btn.textContent = 'Save reflection';
+        let errEl = innerSlot.querySelector('.mh-journal-error');
+        if (!errEl) {
+          errEl = document.createElement('div');
+          errEl.className = 'mh-journal-error mh-reading-error';
+          errEl.setAttribute('role', 'alert');
+          btn.parentNode.insertBefore(errEl, btn.nextSibling);
+        }
+        errEl.textContent = 'Saving failed \u2014 please try again.';
+      }
+    });
+  }
+
   // (Chat 20-IMPL-A: _renderReflectionSlotShell removed — T/Th
   // reflection lane retires; no slot to mount ReflectionLane into.)
 
@@ -1238,10 +1526,11 @@
     if (!container || !state) return;
     if (state.pilgrimage) return; // pilgrimage rest — quiet
     const order = [
-      { id: 'reading',      s: state.reading },
-      { id: 'prayer',       s: state.prayer },
-      { id: 'memorization', s: state.memorization },
-      { id: 'session',      s: state.session },
+      { id: 'reading',         s: state.reading },
+      { id: 'prayer',          s: state.prayer },
+      { id: 'memorization',    s: state.memorization },
+      { id: 'session',         s: state.session },
+      { id: 'session_journal', s: state.sessionJournal },
     ];
     function _isLaneComplete(s) {
       return s === 'complete' || s === 'reflected' ||
@@ -1287,7 +1576,7 @@
     const dow = _dowET(new Date());
     const state = await loadTodaysState(sb, explorerId, familyId, today);
 
-    // Build HTML (Chat 20-IMPL-A lane order):
+    // Build HTML (Wave 2 Lead lane order):
     //   1. Eyebrow (includes progress chip — Phase 2 §3)
     //   2. Pilgrimage banner
     //   3. Reading block (trail-marker row + optional inline expand
@@ -1295,9 +1584,12 @@
     //   4. Prayer row
     //   5. Memorization row
     //   6. Session row (M/W/F only)
-    //   7. Trophy chip (every day; states: locked / unlock-pending /
+    //   7. Session Journal block (T/Th only — trail-marker row +
+    //      optional inline expand for the prompt + textarea + submit
+    //      when state is 'pending'). Wave 2 Lead.
+    //   8. Trophy chip (every day; states: locked / unlock-pending /
     //      paid / pilgrimage)
-    //   8. Closing line (only when paid or pilgrimage)
+    //   9. Closing line (only when paid or pilgrimage)
     const parts = [];
     parts.push(_renderEyebrow(today, state.completedCount, state.totalCount, !!state.pilgrimage));
     parts.push(_renderPilgrimageBanner(state.pilgrimage));
@@ -1335,6 +1627,17 @@
 
     if (state.session !== null) {
       parts.push(_renderSessionRow(state.activeSession, state.session, dow));
+    }
+
+    // Session Journal lane (T/Th only — null on M/W/F + Sat/Sun).
+    // Wave 2 Lead. Renders after Session row so the slot-4 position
+    // visually parallels Session's slot-4 on M/W/F.
+    if (state.sessionJournal !== null) {
+      parts.push(_renderSessionJournalBlock(state.sessionJournal, {
+        sessionTitle: state.activeSession ? state.activeSession.title : '',
+        promptRow:    state.sessionJournalPrompt,
+        entryRow:     state.sessionJournalEntryRow,
+      }));
     }
 
     // Trophy chip (every day, last in stack). The taskCount is the
@@ -1384,6 +1687,27 @@
       }
     }
 
+    // ── Mount Session Journal inner content per state (Wave 2 Lead) ──
+    // Only the 'pending' state mounts an expand panel; 'complete' and
+    // 'pilgrimage' express themselves fully via the row itself.
+    if (state.sessionJournal === 'pending') {
+      const innerSlot = container.querySelector('#mh-session-journal-content');
+      if (innerSlot) {
+        const promptText = state.sessionJournalPrompt
+          ? state.sessionJournalPrompt.prompt_text
+          : '';
+        innerSlot.innerHTML = _renderSessionJournalPendingHTML({
+          promptText,
+        });
+        _wireSessionJournalSubmit(innerSlot, {
+          sb, explorerId, familyId, today,
+          sessionId:  state.activeSession ? state.activeSession.id : null,
+          dayKind:    _dayKindFromDow(dow),
+          promptText,
+        });
+      }
+    }
+
     // ── Apply next-up pulse to topmost incomplete lane ────────────
     _applyNextUpPulse(container, state);
 
@@ -1420,8 +1744,9 @@
         // Per-lane transition keys. The 'reading' key transitions to
         // 'reflected' (final state in two-stage). 'dayComplete'
         // transitions to 'paid' on bonus payout.
-        // Chat 20-IMPL-A: 'reflection' key dropped — lane retired.
-        ['prayer','memorization','session','reading','dayComplete'].forEach(k => {
+        // Wave 2 Lead: 'sessionJournal' key added; transitions to
+        // 'complete' on text submit.
+        ['prayer','memorization','session','sessionJournal','reading','dayComplete'].forEach(k => {
           const prev = _priorStates[k];
           const cur  = state[k];
           if (prev === cur) return;
@@ -1432,9 +1757,11 @@
         newlyComplete.forEach(k => {
           // Row ID lookup. Chat 20-IMPL-A: reading row is now
           // #mh-row-reading (not the old #mh-reading-card outer).
+          // Wave 2 Lead: sessionJournal row is #mh-row-session_journal.
           let rowId;
-          if (k === 'dayComplete') rowId = '#mh-row-day_complete';
-          else rowId = `#mh-row-${k}`;
+          if (k === 'dayComplete')          rowId = '#mh-row-day_complete';
+          else if (k === 'sessionJournal')  rowId = '#mh-row-session_journal';
+          else                              rowId = `#mh-row-${k}`;
           const rowEl = container.querySelector(rowId);
           _microCelebrate(rowEl);
         });
@@ -1446,6 +1773,7 @@
       prayer: state.prayer,
       memorization: state.memorization,
       session: state.session,
+      sessionJournal: state.sessionJournal,
       dayComplete: state.dayComplete,
     };
   }
@@ -1542,6 +1870,13 @@
       _applyNextUpPulse,
       // Stage 2 wiring (interim — moves to bible-reader in 20-IMPL-B)
       _wireReadingReflectSubmit,
+      // Wave 2 Lead — Session Journal lane (T/Th)
+      _dayKindFromDow,
+      _loadTodaysSessionJournal,
+      _loadSessionJournalPrompt,
+      _renderSessionJournalBlock,
+      _renderSessionJournalPendingHTML,
+      _wireSessionJournalSubmit,
     },
   };
 

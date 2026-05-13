@@ -34,6 +34,16 @@
 //   • Ceiling per Friday quiz first-attempt-perfect: 8 × 10 = 80 coins
 //   • Monthly-test variant uses identical math, just 12 questions.
 //
+// WAVE 2 LEAD ADDITION (May 13, 2026):
+//   On the FIRST submission of a Friday quiz (NOT on retake), if day_3
+//   was not already stamped on session_progress, a +5 "Curriculum lane
+//   daily" bonus is awarded ON TOP of the quiz coin total. This mirrors
+//   the +5 daily lane bonuses paid by topic-00-day.js on Mon/Wed. Per-
+//   session full-week total becomes 230 + 15 = 245 (3 × +5 Curriculum
+//   lane daily on top of the +230 session-bundle). The +5 sits inside
+//   the fresh-stamp conditional below, so retake submissions and re-
+//   submits never double-fire.
+//
 // TRIGGER ASYMMETRY (verified via pg_proc inspection May 6 2026):
 //   The log_quiz_attempt_coins trigger writes a row to activity_log for every
 //   quiz_attempts insert with coins_awarded > 0. It does NOT bump
@@ -663,11 +673,51 @@
       if (insErr) throw insErr;
     }
 
+    // Wave 2 Lead — detect whether this submission is the FIRST time
+    // day_3_completed_at lands on this session. Pre-read the
+    // session_progress row before stampDay3 fills it in. The +5
+    // Curriculum lane daily bonus fires ONLY when day_3 was unstamped
+    // going into this call. Retake submissions and idempotent re-
+    // submits short-circuit the +5 because day_3 will already be set.
+    let wasFreshDay3 = false;
+    try {
+      const { data: existingProg } = await sb
+        .from('session_progress')
+        .select('day_3_completed_at')
+        .eq('explorer_id', profileId)
+        .eq('session_id', ctx.sessionId)
+        .maybeSingle();
+      wasFreshDay3 = !(existingProg && existingProg.day_3_completed_at);
+    } catch (e) {
+      // If we can't pre-read, default to NOT paying the bonus to avoid
+      // double-fire risk. Coin invariant > engagement-state nicety.
+      console.warn('[quiz-runner] day_3 freshness pre-read failed (graceful, no +5):', e);
+      wasFreshDay3 = false;
+    }
+
     // Stamp day_3_completed_at on session_progress.
     await stampDay3(sb, profileId, ctx.sessionId, totalAwarded);
 
     // Bump profile coin counters (trigger writes activity_log; not coins).
     if (totalAwarded > 0) await bumpProfileCoins(sb, profileId, totalAwarded);
+
+    // Wave 2 Lead — Curriculum lane daily +5 bonus on fresh day_3.
+    // Activity_log row tagged for parent-admin visibility parity with
+    // Mon/Wed (topic-00-day.js). Coin bump via bumpProfileCoins; trigger
+    // asymmetry note above applies — manual profile bump required since
+    // log_quiz_attempt_coins only covers quiz_attempts inserts.
+    if (wasFreshDay3) {
+      try {
+        await sb.from('activity_log').insert({
+          explorer_id: profileId,
+          amount: 5,
+          reason: `[curriculum_lane_daily] ${ctx.sessionId} day 3`,
+        });
+      } catch (e) {
+        console.warn('[quiz-runner] activity_log friday lane-daily write failed (non-fatal)', e);
+      }
+      await bumpProfileCoins(sb, profileId, 5);
+    }
 
     return { totalAwarded };
   }

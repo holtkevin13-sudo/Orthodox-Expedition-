@@ -1,3 +1,50 @@
+// Orthodox Expedition — Service Worker v47
+// v47: Chat 20-IMPL-B — Reading Reflect Panel migration.
+//      🟢 NEW: js/reading-reflect-panel.js — vanilla
+//          window.ReadingReflectPanel module that renders the
+//          Reading-lane Stage 2 reflect surface (textarea + submit
+//          + skip-pastorally modal) directly on bible-reader.html,
+//          below the Gospel + marginalia banderoles. Mount-gated on
+//          ?source=expedition. Atomic +5 commit via single INSERT
+//          into reading_completions (read_at + reflected_at +
+//          reflection_text together) with 23505 UPDATE-with-guard
+//          fallback for any pre-IMPL-B half-state row. Skip path
+//          delegates to ReadingQuest.commitReadCompletion (+3).
+//          1.5s gentle hold → redirect to missions.html. Writes
+//          activity_log breadcrumbs [reading_atomic]/[reading_skip]
+//          for parent-admin parity with session-journal lane.
+//      🟢 STATIC_ASSETS additions (cache invalidation reason for
+//          the v46 → v47 bump):
+//            '/Orthodox-Expedition-/js/reading-reflect-panel.js',
+//          Existing reading-quest.js + missions.js + missions.html
+//          + bible-reader.html already in STATIC_ASSETS; bump alone
+//          flushes their cached copies so the 20-IMPL-B edits ship.
+//      🔴 RETIRED: oe_bible_reader_visited_{date} localStorage flag.
+//          Pagehide writer in bible-reader.html removed. flagKey /
+//          isFlagSet / clearFlag helpers and their callsites in
+//          js/reading-quest.js and js/missions.js removed. The
+//          reading_completions row in Supabase is now the sole
+//          source of truth for Reading-lane state.
+//      🟢 js/missions.js — Reading state machine simplified to
+//          pending | reflected | pilgrimage. Per OQ-1 ruling A,
+//          both the atomic happy-path row (+5) and the
+//          skip-pastorally row (+3) close the lane for the day.
+//          _renderReadingReadNotReflectedHTML, _wireReadingReflectSubmit,
+//          and the mount() inline expand branch all retired.
+//      🟢 missions.html — .mh-reading-expand, .mh-reading-stage,
+//          and .mh-reading-readpip CSS family retired. Shared
+//          .mh-portrait-*, .mh-rri-*, .mh-reading-input-block,
+//          .mh-reading-textarea, .mh-reading-submit-btn,
+//          .mh-reading-prompt-block, .mh-rrp-text preserved
+//          (Session Journal lane still consumes them).
+//      🟢 bible-reader.html — additions only outside Chat 18
+//          marginalia line ranges (script tag after L25, .brp-*
+//          CSS block after the marginalia CSS, mount-target div
+//          between .reading-pane close and .reading-foot-nav,
+//          inline mount-wire IIFE replacing the retired pagehide
+//          flag-writer). js/marginalia.js and topic-00-marginalia-
+//          v1.json BYTE-IDENTICAL (Chat 18 invariant preserved).
+//
 // Orthodox Expedition — Service Worker v44
 // v44: Chat 19 — Missions page repair + 5-slot daily counter (B2).
 //      🔴 REPAIR: missions.html was structurally corrupted at HEAD
@@ -654,7 +701,7 @@
 //        daily bonus on each fresh day_N stamp.
 //      No new STATIC_ASSETS entries — reflection-lane.js is already
 //      listed (cached since v37).
-const CACHE_NAME = 'orthodox-expedition-v46';
+const CACHE_NAME = 'orthodox-expedition-v47';
 const STATIC_ASSETS = [
   '/Orthodox-Expedition-/',
   '/Orthodox-Expedition-/index.html',
@@ -697,6 +744,7 @@ const STATIC_ASSETS = [
   '/Orthodox-Expedition-/js/sunday-celebration.js',
   '/Orthodox-Expedition-/js/daily-anchor-card.js',
   '/Orthodox-Expedition-/js/reading-quest.js',
+  '/Orthodox-Expedition-/js/reading-reflect-panel.js',  // v47 — Chat 20-IMPL-B
   '/Orthodox-Expedition-/js/reflection-lane.js',
   '/Orthodox-Expedition-/js/reading.js',
   '/Orthodox-Expedition-/js/memorization.js',

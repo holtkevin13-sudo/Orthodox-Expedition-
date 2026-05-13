@@ -347,6 +347,47 @@ body::before{
   border-radius:12px;
 }
 
+/* ── Session Journal lane wrapper (Wave 2 Lead — trail-marker row +
+   optional inline expand panel). The Session Journal lane is the
+   T/Th slot-4 lane. Visually it mirrors the reading lane block:
+   .mh-row.mh-row-session-journal as the trail-marker row, plus an
+   in-line .mh-journal-expand panel below carrying the portrait +
+   prompt + textarea + submit form. Form inner classes reuse the
+   reading lane's .mh-reading-input-block / .mh-reading-textarea /
+   .mh-reading-submit-btn / .mh-portrait-block / .mh-rrp-text per
+   orchestrator ruling OQ-5 (CSS namespace reuse). The row itself
+   is a plain non-link container (no href) — there is nowhere to
+   navigate. ── */
+.mh-journal-block{
+  display:flex;flex-direction:column;
+  margin-bottom:0.55rem;
+}
+.mh-journal-block .mh-row{
+  margin-bottom:0;  /* the block owns the gap; row sits flush above expand */
+}
+.mh-journal-expand{
+  margin-top:0.55rem;
+  padding:0.95rem 1rem;
+  background:rgba(244,232,193,0.045);
+  border:1px solid rgba(201,146,42,0.22);
+  border-radius:12px;
+}
+/* Empty-state copy when no prompt is seeded for this slot.
+   Topic 00 has all 30 (15×2) rows active as of May 13, 2026 —
+   this fallback is a defensive net for future topics where
+   content authoring may lag the launch window. */
+.mh-journal-empty{
+  font-style:italic;
+  color:rgba(240,201,110,0.7);
+  margin:0.4rem 0 0.6rem;
+}
+/* Inline error toast for save failures (parallel to .mh-reading-error). */
+.mh-journal-error{
+  margin-top:0.55rem;
+  font-size:0.82rem;
+  color:rgba(220,90,90,0.95);
+}
+
 /* ── Character portrait block (Chat 4 — used by reading Stage 2
    reflect render in js/missions.js AND T/Th reflection lane in
    js/reflection-lane.js). Theo's face above the prompt text turns
@@ -1038,14 +1079,18 @@ body::before{
   </a>
 </nav>
 
-<!-- Dispatch 4b — daily-hub module dependencies.
+<!-- Dispatch 4b + Wave 2 Lead — daily-hub module dependencies.
      Order matters: week-utils → pilgrimages → lane modules →
-     daily-anchor-card + reading-quest → missions (consumer).
-     Chat 20-IMPL-A note: js/reflection-lane.js script tag removed
-     here (T/Th reflection lane retired per OQ2). The module file
-     remains in repo as dead code, flagged for post-launch audit.
-     js/daily-anchor-card.js stays loaded for now (orphaned on this
-     surface; module file retained). -->
+     daily-anchor-card + reading-quest + reflection-lane → missions
+     (consumer).
+     Wave 2 Lead REVIVES js/reflection-lane.js as the data layer for
+     the Session Journal lane (T/Th). The trail-marker chrome lives
+     in js/missions.js; ReflectionLane.mount() is no longer called,
+     but its loadPrompt / getTodayEntry / saveEntry helpers are
+     consumed by Missions._renderSessionJournalBlock +
+     _wireSessionJournalSubmit. js/daily-anchor-card.js stays
+     loaded for now (orphaned on this surface; module file
+     retained). -->
 <script src="js/week-utils.js"></script>
 <script src="js/pilgrimages.js"></script>
 <script src="js/streak-grace.js"></script>
@@ -1054,6 +1099,7 @@ body::before{
 <script src="js/memorization.js"></script>
 <script src="js/daily-anchor-card.js"></script>
 <script src="js/reading-quest.js"></script>
+<script src="js/reflection-lane.js"></script>
 <script src="js/missions.js"></script>
 
 <script>

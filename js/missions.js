@@ -1,16 +1,39 @@
 /* ─────────────────────────────────────────────────────────────────
-   Orthodox Expedition — Dispatch 4b + Chat 2A
+   Orthodox Expedition — Dispatch 4b + Chat 2A + Chat 20-IMPL-A
    js/missions.js — Daily mission hub (Missions surface)
-   May 11, 2026 · Chat 2A revision
+   May 13, 2026 · Chat 20-IMPL-A revision
 
    PURPOSE
    Renders the "Today's Missions" daily-action hub. Each mission
-   row is a state-bearing surface; the reading mission is special:
-   it hosts the Daily Anchor Card teaser (pending), an in-line
-   two-stage reading+reflect form (read-not-reflected / reflected),
-   or pilgrimage rest copy. Chat 2A also adds a fifth lane — the
-   Day Complete bonus — and renames the T/Th 'journal' lane to
-   'reflection', backed by the new reflection-lane.js module.
+   row is a state-bearing surface. After Chat 20-IMPL-A, all five
+   lanes (M/W/F) or four lanes (T/Th/Sat/Sun) render as UNIFORM
+   trail-marker rows — same icon-name-sub-coins-indicator grammar,
+   tap-to-leave behavior. The reading lane in this interim still
+   carries an inline reflect form below its row when state is
+   'read-not-reflected'; Chat 20-IMPL-B moves that surface into
+   bible-reader.html and the inline form retires.
+
+   The Day Complete lane is replaced by a TROPHY CHIP (.mh-trophy)
+   with three visual states (locked / unlock-pending / paid) plus
+   pilgrimage. The locked → paid transition fires a celebration
+   choreography: chip morph + coin-rain + iOS haptic + counter
+   advance + +10 toast + coin-strip tick.
+
+   The T/Th session_reflection lane retires entirely in 20-IMPL-A.
+   Days now read:
+     M/W/F  : reading, prayer, memo, session,  trophy (5/5)
+     T/Th   : reading, prayer, memo,           trophy (4/4)
+     Sat/Sun: reading, prayer, memo,           trophy (4/4)
+   Existing field_journal rows with category='session_reflection'
+   remain visible in journal.html (preserved historical artifact).
+
+   The progress counter relocates from BOTTOM of the panel to the
+   eyebrow band at TOP — momentum-during-work, not reward-after-
+   work (Phase 1 friction #8).
+
+   The topmost incomplete lane gets a subtle gold pulse (.mh-row-
+   next-up, 2.8s loop) — quiet executive-function scaffolding,
+   honors prefers-reduced-motion with a static brighter border.
 
    IA POSITION
    • Home  → status & welcome dashboard
@@ -19,21 +42,13 @@
    • Scriptures → free reading (bible-reader, browsable)
    • Field Manual → past reflections archive
 
-   The reading mission CARD hosts:
-     - Daily Anchor Card  (js/daily-anchor-card.js)  pending state
-     - In-line two-stage reflect form                read-not-reflected
-     - Saved-state preview                           reflected
-   The T/Th reflection slot hosts:
-     - reflection-lane.js mount                      Chat 2A
-   This module orchestrates; the lane modules execute.
-
    PUBLIC API (browser): window.Missions = { … }
 
      getMissionsForDay(dateString)
          → ['reading','prayer','memorization', slot4?, 'day_complete']
-         M/W/F  : reading, prayer, memorization, session,    day_complete  (5/5)
-         T/Th   : reading, prayer, memorization, reflection, day_complete  (5/5)
-         Sat/Sun: reading, prayer, memorization,             day_complete  (4/4)
+         M/W/F  : reading, prayer, memo, session,    day_complete  (5/5)
+         T/Th   : reading, prayer, memo,             day_complete  (4/4)
+         Sat/Sun: reading, prayer, memo,             day_complete  (4/4)
 
      loadTodaysState(sb, explorerId, familyId, today)
          → {
@@ -41,7 +56,6 @@
              prayer:       'pending'|'complete'|'pilgrimage',
              memorization: 'pending'|'complete'|'not_applicable'|'pilgrimage',
              session:      'pending'|'complete'|'pilgrimage'|null,
-             reflection:   'pending'|'complete'|'pilgrimage'|null,
              dayComplete:  'locked'|'unlock-pending'|'paid'|'pilgrimage'|null,
              pendingDayCompletePayout: bool,
              readingStageRow: reading_completions row|null,
@@ -71,17 +85,26 @@
      Pilgrimages  — isActiveToday
      Prayers      — getTodayStatus (derive prayedToday = morning||evening)
      Memorization — didTodayCount, getCurrentVerse
-     ReadingQuest — mount (inline, into our reading-quest-mount slot)
-     DailyAnchorCard — render (HTML string into our anchor slot)
+     ReadingQuest — commitReadCompletion / commitReflectCompletion
+                    (Stage 1 / Stage 2 coin commits; preserved
+                     verbatim until 20-IMPL-B moves the reflect
+                     surface into bible-reader.html)
+     (DailyAnchorCard module remains loaded but is no longer
+      consumed by this surface in 20-IMPL-A. Render path simplifies
+      to a self-contained trail-marker row sub-line.)
+     (ReflectionLane module no longer loaded — script tag removed
+      from missions.html in 20-IMPL-A.)
 
    Op Learnings honored:
-     #4  Schema-first — all queries verified against
-         information_schema before this module was written
+     #1  Surgical str_replace — render-path rewrite, data-layer
+         preserved
+     #4  Schema-first — reading_completions, day_complete_bonus,
+         field_journal shapes unchanged
      #7  ET timezone via WeekUtils
      #13 Staged deliverables
      #15 CSS rules over UA [hidden]: style="display:none" toggle
-     #16 Structural mirror — mirrors the pattern home.html uses
-         (parallel data load → render section by section)
+     #16 Structural mirror — trail-marker row pattern uniform
+         across all lanes
    ─────────────────────────────────────────────────────────────── */
 
 (function () {
@@ -206,18 +229,20 @@
     }
 
     // 0=Sun, 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat
-    // Chat 2A · Lane structure:
-    //   M/W/F  → reading, prayer, memo, session, day_complete    (5/5)
-    //   T/Th   → reading, prayer, memo, reflection, day_complete (5/5)
-    //   Sat/Sun → reading, prayer, memo, day_complete            (4/4)
-    // Q7 ruling: weekend has no slot-4 task; Lord's Day rhythm is
-    // honored by the 4/4 denominator. Day Complete is the FINAL
-    // lane every day — on weekends it sits at slot 4 by position
-    // (no missing slot, just a smaller denominator).
+    // Chat 20-IMPL-A · Lane structure (post T/Th reflection retire):
+    //   M/W/F   → reading, prayer, memo, session, day_complete  (5/5)
+    //   T/Th    → reading, prayer, memo,          day_complete  (4/4)
+    //   Sat/Sun → reading, prayer, memo,          day_complete  (4/4)
+    // Q7 ruling preserved: weekend has no slot-4 task; Lord's Day
+    // rhythm honored by the 4/4 denominator. The trophy chip (Day
+    // Complete) is the FINAL lane every day — on 4/4 days it sits
+    // at slot 4 by position; no missing slot, just a smaller
+    // denominator. (Pre-IMPL-A, T/Th had a session_reflection lane
+    // here. Retired per orchestrator ruling OQ2 — daily journaling
+    // becomes the post-IMPL-B norm via the reading-reflect surface.)
     const base = ['reading', 'prayer', 'memorization'];
     if (dow === 1 || dow === 3 || dow === 5) return base.concat(['session', 'day_complete']);   // M/W/F: 5/5
-    if (dow === 2 || dow === 4) return base.concat(['reflection', 'day_complete']);              // T/Th : 5/5
-    return base.concat(['day_complete']);                                                        // Sat/Sun: 4/4
+    return base.concat(['day_complete']);                                                        // T/Th + Sat/Sun: 4/4
   }
 
   // ═════════════════════════════════════════════════════════════════
@@ -315,32 +340,10 @@
     }
   }
 
-  // Did Nolan write a reflection today? (T/Th reflection mission state.)
-  // Chat 2A: switches from category='expedition_log' + ILIKE pattern
-  // to the new prescriptive category='session_reflection' per Q9 ruling.
-  // Includes the skip-sentinel row (entry_text='[skipped — prompts
-  // pending]') so the lane reads 'complete' on Tue/Thu even pre-2B.
-  async function _loadReflectionToday(sb, explorerId, todayKey) {
-    try {
-      const [y, m, d] = todayKey.split('-').map(n => parseInt(n, 10));
-      const dayStartET = `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}T00:00:00-04:00`;
-      const dayEndET   = `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}T23:59:59-04:00`;
-
-      const res = await sb.from('field_journal')
-        .select('id')
-        .eq('explorer_id', explorerId)
-        .eq('category', 'session_reflection')
-        .gte('created_at', dayStartET)
-        .lte('created_at', dayEndET)
-        .limit(1);
-
-      if (res.error) throw res.error;
-      return !!(res.data && res.data.length > 0);
-    } catch (e) {
-      console.warn('Missions._loadReflectionToday failed (graceful):', e);
-      return false;
-    }
-  }
+  // (Chat 20-IMPL-A: _loadReflectionToday helper removed — T/Th
+  // reflection lane retired. Existing field_journal rows with
+  // category='session_reflection' remain visible in journal.html;
+  // we simply no longer create new ones from this surface.)
 
   // Chat 2A · Two-stage reading state loader.
   // Returns the full reading_completions row for today (or null) so
@@ -454,6 +457,8 @@
     const missionsForDay = getMissionsForDay(today);
 
     // Parallel: pilgrimage check + lane data
+    // Chat 20-IMPL-A: reflectionDone fetch removed (T/Th reflection
+    // lane retired). Day Complete remains last in the parallel list.
     const [
       pilgrimageActive,
       prayerStatus,
@@ -462,7 +467,6 @@
       readingStageRow,
       anchorData,
       activeSession,
-      reflectionDone,
       dayCompleteRow,
     ] = await Promise.all([
       window.Pilgrimages && typeof window.Pilgrimages.isActiveToday === 'function'
@@ -476,8 +480,6 @@
       _loadReadingStageRow(sb, explorerId, today),
       _loadDailyAnchorData(sb, today),
       _loadActiveSession(sb, explorerId),
-      missionsForDay.indexOf('reflection') >= 0
-        ? _loadReflectionToday(sb, explorerId, today) : Promise.resolve(false),
       missionsForDay.indexOf('day_complete') >= 0
         ? _loadDayCompleteToday(sb, explorerId, today) : Promise.resolve(null),
     ]);
@@ -531,19 +533,12 @@
       sessionState = 'pending';
     }
 
-    // Reflection mission state (T/Th only; Chat 2A rename of 'journal').
-    // 'reflectionDone' = true when ANY session_reflection field_journal
-    // row exists for today (including the skip sentinel).
-    let reflectionState;
-    if (missionsForDay.indexOf('reflection') < 0) {
-      reflectionState = null;
-    } else if (isPilgrimage) {
-      reflectionState = 'pilgrimage';
-    } else if (reflectionDone) {
-      reflectionState = 'complete';
-    } else {
-      reflectionState = 'pending';
-    }
+    // Reflection mission state (T/Th) — RETIRED per Chat 20-IMPL-A.
+    // Lane is no longer in missionsForDay; reflectionState is always
+    // null. Kept here as null assignment for compatibility with any
+    // downstream code that destructures state.reflection (and for
+    // the next dispatch's regression test surface).
+    const reflectionState = null;
 
     // Day Complete state (Chat 2A, every day).
     //   pilgrimage → 'pilgrimage' (no payout; pilgrimage is rest)
@@ -560,7 +555,7 @@
     } else if (dayCompleteRow) {
       dayCompleteState = 'paid';
     } else {
-      const otherStates = [readingState, prayerState, memState, sessionState, reflectionState];
+      const otherStates = [readingState, prayerState, memState, sessionState];
       function _isTaskComplete(s) {
         return s === 'complete' || s === 'reflected' || s === 'pilgrimage';
       }
@@ -591,14 +586,14 @@
 
     // Chat 19 B2: memo auto-credits the numerator once every other
     // completable lane is done. Mirrors the Day Complete unlock-
-    // pending check at L567 (same definition of "other lanes
+    // pending check above (same definition of "other lanes
     // complete") so the two flip together at end-of-day on no-
     // verse weekdays — display goes 4/5 → 5/5 ✓.
     function _isLaneDone(s) {
       return s === 'complete' || s === 'reflected' || s === 'pilgrimage';
     }
     const _memAutoComplete = (memState === 'not_applicable') &&
-      [readingState, prayerState, sessionState, reflectionState]
+      [readingState, prayerState, sessionState]
         .every(s => s == null || _isLaneDone(s));
 
     function tally(state, autoComplete) {
@@ -617,7 +612,6 @@
     tally(prayerState,     false);
     tally(memState,        _memAutoComplete);
     tally(sessionState,    false);
-    tally(reflectionState, false);
     tally(dayCompleteState, false);
 
     return {
@@ -625,7 +619,7 @@
       prayer:  prayerState,
       memorization: memState,
       session: sessionState,
-      reflection: reflectionState,
+      reflection: reflectionState,   // always null in 20-IMPL-A
       dayComplete: dayCompleteState,
       pendingDayCompletePayout,
       readingStageRow,
@@ -646,13 +640,44 @@
   // RENDER — sub-components
   // ═════════════════════════════════════════════════════════════════
 
-  // Section title above the daily list. Format: "Today's Missions"
-  // + day-name eyebrow.
-  function _renderEyebrow(today) {
+  // Section title above the daily list + progress chip below it.
+  // Chat 20-IMPL-A: progress counter relocates from BOTTOM of the
+  // panel to TOP — momentum-during-work, not reward-after-work
+  // (Phase 1 friction #8). The chip stays visible as Nolan works.
+  function _renderEyebrow(today, completedCount, totalCount, isPilgrimage) {
     return `
       <div class="mh-eyebrow">
         <div class="mh-eyebrow-title">Today's Missions</div>
         <div class="mh-eyebrow-day">${esc(_formatDayLabel(today))}</div>
+      </div>
+      ${_renderProgressChip(completedCount, totalCount, isPilgrimage)}
+    `;
+  }
+
+  // Progress chip in the eyebrow band — "X of Y today" + bar.
+  // Pilgrimage day: replaces the fraction with "Pilgrimage rest"
+  // copy and hides the bar (CSS handles via .is-rest).
+  function _renderProgressChip(completedCount, totalCount, isPilgrimage) {
+    if (isPilgrimage) {
+      return `
+        <div class="mh-progress-chip is-rest" id="mh-progress-chip">
+          <span class="mh-progress-count">Pilgrimage rest</span>
+        </div>
+      `;
+    }
+    if (!totalCount || totalCount <= 0) return '';
+    const pct = Math.round((completedCount / totalCount) * 100);
+    const allDone = completedCount >= totalCount;
+    const completeClass = allDone ? ' is-complete' : '';
+    const cap = allDone ? ' ✓' : ' today';
+    return `
+      <div class="mh-progress-chip${completeClass}" id="mh-progress-chip">
+        <span class="mh-progress-count" id="mh-progress-count">
+          <span class="mh-pc-num" id="mh-pc-num" data-count="${completedCount}">${completedCount}</span>
+          of
+          <span class="mh-pc-total">${totalCount}</span>${cap}
+        </span>
+        <div class="mh-progress-bar"><div class="mh-progress-fill" style="width:${pct}%"></div></div>
       </div>
     `;
   }
@@ -675,55 +700,106 @@
     `;
   }
 
-  // ★ READING MISSION CARD — state-dependent reading mission renderer.
-  // Returns OUTER HTML (the card frame); the actual content slot is
-  // marked with #mh-reading-content for post-render mounting of
-  // ReadingQuest or DailyAnchorCard.
-  function _renderReadingMissionShell(state) {
-    return `
-      <div class="mh-reading-card mh-card-prominent" id="mh-reading-card" data-state="${esc(state)}">
-        <div class="mh-card-eyebrow">★ Today's Gospel Reading</div>
-        <div id="mh-reading-content"></div>
-      </div>
-    `;
-  }
+  // ★ READING BLOCK (Chat 20-IMPL-A) — trail-marker row + optional
+  // inline expand panel. Replaces the prior heavy .mh-reading-card
+  // outer chrome with the unified row pattern used by every other
+  // lane. The reading row's tap target is bible-reader.html
+  // (?source=expedition) — the gospel reading surface. When state
+  // is 'read-not-reflected', an .mh-reading-expand panel is rendered
+  // BELOW the row carrying the existing portrait + prompt + textarea
+  // + submit form (verbatim from Chat 2A; preserved until 20-IMPL-B
+  // moves it into bible-reader.html).
+  //
+  // States the row sub-line copy expresses:
+  //   pending             → "<gospel ref> · Read & reflect"
+  //   read-not-reflected  → "<gospel ref> · read · reflect below"
+  //   reflected           → "<gospel ref> · read & reflected"
+  //   pilgrimage          → "Read at your own pace this week"
+  //
+  // The block returns the OUTER container (.mh-reading-block) with
+  // an inline content slot (#mh-reading-content) the mount() pass
+  // can fill with _renderReadingReadNotReflectedHTML for the form
+  // when needed.
+  function _renderReadingBlock(state, opts) {
+    const row = opts && opts.row || null;
+    const gospelHref = _buildGospelHref(row);
+    const gospelRef = _gospelRefFromRow(row);
+    const refLabel = gospelRef || 'Today\'s Gospel';
 
-  // For pilgrimage: render gentle rest copy in place of gospel content.
-  function _readingPilgrimageHTML() {
-    return `
-      <div class="mh-reading-pilgrimage">
-        <div class="mh-rp-icon">✦</div>
-        <div class="mh-rp-text">Read at your own pace this week — your streak walks with you.</div>
-      </div>
-    `;
-  }
+    // State-aware sub-line + indicator + tap target.
+    let sub, indicator, stateClass;
+    switch (state) {
+      case 'pilgrimage':
+        sub = 'Read at your own pace this week';
+        indicator = '<span class="mh-row-indicator mh-ri-pilgrimage" aria-label="On pilgrimage">✦</span>';
+        stateClass = 'mh-state-pilgrimage';
+        break;
+      case 'reflected':
+        sub = `${refLabel} · read & reflected`;
+        indicator = '<span class="mh-row-indicator mh-ri-done" aria-label="Complete">✓</span>';
+        stateClass = 'mh-state-complete';
+        break;
+      case 'read-not-reflected':
+        sub = `${refLabel} · read · reflect below`;
+        // Halfway state — keep the pending indicator so Nolan reads
+        // it as "still something to do" until the form is submitted.
+        indicator = '<span class="mh-row-indicator mh-ri-pending" aria-label="Reflection pending">○</span>';
+        stateClass = 'mh-state-pending';
+        break;
+      default: // 'pending'
+        sub = `${refLabel} · Read & reflect`;
+        indicator = '<span class="mh-row-indicator mh-ri-pending" aria-label="Pending">○</span>';
+        stateClass = 'mh-state-pending';
+    }
 
-  // ★ ORPHANED BY CHAT 2A — kept defined for rollback safety only.
-  // Previously rendered the "✓ Today's Gospel — read · +5" mini-card
-  // for no-question days. The Chat 2A two-stage reading model
-  // (read +3 / reflect +2) supersedes it; mount() no longer calls
-  // this function and it is not exported via _internals. Removal
-  // can happen in a future cleanup dispatch once Chat 2A is
-  // verified stable in production.
-  function _readingCompleteNoQuestionHTML(row) {
-    const href = _buildGospelHref(row);
-    return `
-      <a class="mh-reading-done-mini" href="${esc(href)}">
-        <div class="mh-rdm-check">✓</div>
-        <div class="mh-rdm-text">Today's Gospel — read &middot; <span class="mh-rdm-coins">+5</span></div>
+    const rowHtml = `
+      <a class="mh-row mh-row-reading ${stateClass}" id="mh-row-reading" href="${esc(gospelHref)}">
+        <div class="mh-row-icon">📖</div>
+        <div class="mh-row-body">
+          <div class="mh-row-name">Today's Gospel Reading</div>
+          <div class="mh-row-sub">${esc(sub)}</div>
+        </div>
+        ${state === 'pilgrimage' || state === 'reflected'
+            ? ''
+            : '<div class="mh-row-coins">+5</div>'}
+        ${indicator}
       </a>
     `;
+
+    // For read-not-reflected, append the inline expand panel slot —
+    // mount() will fill #mh-reading-content with the existing form.
+    if (state === 'read-not-reflected') {
+      return `
+        <div class="mh-reading-block" data-state="read-not-reflected">
+          ${rowHtml}
+          <div class="mh-reading-expand" id="mh-reading-content"></div>
+        </div>
+      `;
+    }
+    return `
+      <div class="mh-reading-block" data-state="${esc(state)}">
+        ${rowHtml}
+      </div>
+    `;
   }
 
+  // (Chat 20-IMPL-A: prior _readingPilgrimageHTML and
+  // _readingCompleteNoQuestionHTML helpers retired — pilgrimage
+  // and completion states are now expressed via the trail-marker
+  // row sub-line, not via dedicated mini-cards.)
+
   // Generic mission row. Whole row is a tappable <a>.
+  // Chat 20-IMPL-A: coin chip defaults to '+5' on incomplete states
+  // for visual consistency across trail markers (Phase 1 friction #4
+  // — Stage 2 reward parity). Hidden on complete/pilgrimage/na
+  // since the indicator already telegraphs the state.
   // Op Learning #15 — visible state via class names; row hidden via
   // inline `display:none` if ever needed (here it isn't — we render
   // null states as `not_applicable` rows or skip entirely).
   function _renderMissionRow(opts) {
     const {
-      id, href, icon, name, sub, state, coinsLabel,
+      id, href, icon, name, sub, state,
     } = opts;
-    const stateClass = `mh-state-${state}`;
     // Right-side state indicator glyph
     let indicator;
     switch (state) {
@@ -732,6 +808,9 @@
       case 'not_applicable': indicator = '<span class="mh-row-indicator mh-ri-na" aria-label="Not applicable">—</span>'; break;
       default:             indicator = '<span class="mh-row-indicator mh-ri-pending" aria-label="Pending">○</span>';
     }
+    const showCoins = (state !== 'complete' && state !== 'pilgrimage' && state !== 'not_applicable');
+    const coinsLabel = (typeof opts.coinsLabel === 'string') ? opts.coinsLabel : '+5';
+    const stateClass = `mh-state-${state}`;
     return `
       <a class="mh-row ${stateClass}" id="mh-row-${esc(id)}" href="${esc(href)}">
         <div class="mh-row-icon">${icon}</div>
@@ -739,7 +818,7 @@
           <div class="mh-row-name">${esc(name)}</div>
           <div class="mh-row-sub">${esc(sub)}</div>
         </div>
-        ${coinsLabel ? `<div class="mh-row-coins">${esc(coinsLabel)}</div>` : ''}
+        ${showCoins ? `<div class="mh-row-coins">${esc(coinsLabel)}</div>` : ''}
         ${indicator}
       </a>
     `;
@@ -803,6 +882,10 @@
     else if (sessionState === 'pilgrimage') indicator = '<span class="mh-row-indicator mh-ri-pilgrimage">✦</span>';
     else indicator = '<span class="mh-row-indicator mh-ri-pending">○</span>';
 
+    // Chat 20-IMPL-A: parity coin chip with other trail markers.
+    const showCoins = (sessionState !== 'complete' && sessionState !== 'pilgrimage');
+    const coinsHtml = showCoins ? '<div class="mh-row-coins">+5</div>' : '';
+
     return `
       <a class="mh-row mh-row-session ${stateClass}${completeClass}" id="mh-row-session" href="week.html">
         <div class="mh-row-icon">🎓</div>
@@ -815,41 +898,36 @@
             ${dotMarkup(p, 3, 'Fri', catchUpDay)}
           </div>
         </div>
+        ${coinsHtml}
         ${indicator}
       </a>
     `;
   }
 
-  // Progress bar + celebration line (when all done).
-  function _renderProgress(completedCount, totalCount, isPilgrimage) {
-    if (totalCount === 0) return '';
-    const pct = Math.round((completedCount / totalCount) * 100);
-    const allDone = completedCount >= totalCount && !isPilgrimage;
-    const restMode = isPilgrimage;
-    return `
-      <div class="mh-progress" id="mh-progress">
-        <div class="mh-progress-row">
-          <span class="mh-progress-label">Today's Progress</span>
-          <span class="mh-progress-count" id="mh-progress-count">
-            <span class="mh-pc-num" id="mh-pc-num" data-count="${completedCount}">${completedCount}</span>
-            of
-            <span class="mh-pc-total">${totalCount}</span>
-            ${allDone ? ' ✓' : ' today'}
-          </span>
+  // Chat 20-IMPL-A — closing line, rendered ONLY below the trophy
+  // chip when state.dayComplete === 'paid' (or 'pilgrimage'). The
+  // prior _renderProgress at the BOTTOM of the panel goes away
+  // entirely; the counter lives in the eyebrow band now
+  // (_renderProgressChip).
+  function _renderClosingLine(dayCompleteState, profile) {
+    const firstName = (profile && profile.name)
+      ? String(profile.name).trim().split(/\s+/)[0]
+      : 'friend';
+    if (dayCompleteState === 'paid') {
+      return `
+        <div class="mh-closing-line">
+          Glory to God for all things, ${esc(firstName)}. <span aria-hidden="true">☦&#xFE0E;</span> See you tomorrow.
         </div>
-        <div class="mh-progress-bar"><div class="mh-progress-fill" style="width:${pct}%"></div></div>
-        ${allDone ? `
-          <div class="mh-celebration-line">
-            Glory to God for all things, Nolan. ☦ See you tomorrow.
-          </div>
-        ` : ''}
-        ${restMode ? `
-          <div class="mh-celebration-line mh-celebration-rest">
-            Walk in peace. Your streak walks with you.
-          </div>
-        ` : ''}
-      </div>
-    `;
+      `;
+    }
+    if (dayCompleteState === 'pilgrimage') {
+      return `
+        <div class="mh-closing-line mh-closing-line-rest">
+          Walk in peace. Your streak walks with you.
+        </div>
+      `;
+    }
+    return '';
   }
 
   // ═════════════════════════════════════════════════════════════════
@@ -946,81 +1024,239 @@
     `;
   }
 
-  // ★ READING — fully reflected card (Stage 1 + Stage 2 both done).
-  // Shows the gospel pip (still tappable to re-read) and the saved
-  // reflection text in a collapsed preview.
-  function _renderReadingReflectedHTML(opts) {
-    const reflectionText = String((opts && opts.reflectionText) || '').trim();
-    const gospelHref = _buildGospelHref(opts && opts.row);
-    const gospelRef  = _gospelRefFromRow(opts && opts.row);
-    const refLabel   = gospelRef ? esc(gospelRef) : 'Today\'s Gospel';
-    const preview    = reflectionText
-      ? `<div class="mh-reading-saved-text">${esc(reflectionText)}</div>`
-      : '';
-    return `
-      <div class="mh-reading-stage" data-stage="reflected">
-        <a class="mh-reading-readpip" href="${esc(gospelHref)}">
-          <span class="mh-rrp-check" aria-hidden="true">✓</span>
-          <span class="mh-rrp-label">${refLabel} &middot; read</span>
-        </a>
-        <div class="mh-reading-saved">
-          <div class="mh-reading-saved-eyebrow">Reflection saved &middot; <span class="mh-rrp-coins">+5 total</span></div>
-          ${preview}
-        </div>
-      </div>
-    `;
-  }
+  // (Chat 20-IMPL-A: _renderReadingReflectedHTML retired. The
+  // reflected state is now expressed by the trail-marker row's
+  // sub-line ("<gospel ref> · read & reflected") with a green ✓
+  // indicator. No separate saved-card surface on the missions
+  // page — Nolan re-opens bible-reader from the row link to see
+  // his saved reflection echoed back, OR opens the Field Manual.)
 
-  // ★ DAY COMPLETE LANE — slot 5 (or slot 4 on Sat/Sun). Distinct
-  // visual from the task rows: ✦-glyph centered, gold gradient,
-  // celebratory but not loud. States:
-  //   'locked'         → dimmed placeholder, eyebrow-only
-  //   'unlock-pending' → rendered like 'paid'; mount() commits
-  //   'paid'           → unlocked celebration (✦ + +10 pip)
-  //   'pilgrimage'     → ✦ rest tile, no coins
-  function _renderDayCompleteLane(state) {
+  // ★ TROPHY CHIP (Chat 20-IMPL-A · replaces _renderDayCompleteLane).
+  // "Today's Devotion" as a celebratory CAP at the bottom of the
+  // task-row stack, distinct register from task rows:
+  //   • Locked         → compact ~60px, parchment-dim, lock glyph,
+  //                       sub-line "unlock at N/N"
+  //   • Unlock-pending → gold-pulse 1.0s transitional; mount() then
+  //                       commits the +10 bonus and refresh re-
+  //                       renders this chip as 'paid'
+  //   • Paid           → taller ~80px, gold-burst, three ✦ ornaments,
+  //                       +10 coin pip + "Glory to God for all things"
+  //   • Pilgrimage     → gentle parchment-warm rest tile
+  //
+  // The taskCount param expresses the denominator for the locked
+  // sub-line — task lanes excluding the trophy itself.
+  function _renderTrophyChip(state, taskCount) {
+    const n = Number(taskCount) || 4; // safe default
     if (state === 'pilgrimage') {
       return `
-        <div class="mh-daycomplete mh-dc-pilgrimage" id="mh-row-day_complete">
-          <div class="mh-dc-glyph" aria-hidden="true">✦</div>
-          <div class="mh-dc-body">
-            <div class="mh-dc-title">Today's Devotion</div>
-            <div class="mh-dc-sub">Pilgrimage rest — your streak walks with you.</div>
+        <div class="mh-trophy mh-trophy-pilgrimage" id="mh-row-day_complete">
+          <div class="mh-trophy-glyph" aria-hidden="true">&#x2726;&#xFE0E;</div>
+          <div class="mh-trophy-body">
+            <div class="mh-trophy-title">Today's Devotion</div>
+            <div class="mh-trophy-sub">Pilgrimage rest — your streak walks with you.</div>
           </div>
         </div>
       `;
     }
-    if (state === 'paid' || state === 'unlock-pending') {
+    if (state === 'unlock-pending') {
       return `
-        <div class="mh-daycomplete mh-dc-paid" id="mh-row-day_complete" data-state="${esc(state)}">
-          <div class="mh-dc-glyph" aria-hidden="true">✦</div>
-          <div class="mh-dc-body">
-            <div class="mh-dc-title">Today's Devotion</div>
-            <div class="mh-dc-sub">All missions offered today. Glory to God for all things.</div>
+        <div class="mh-trophy mh-trophy-pending" id="mh-row-day_complete" data-state="unlock-pending">
+          <div class="mh-trophy-glyph" aria-hidden="true">&#x2726;&#xFE0E;</div>
+          <div class="mh-trophy-body">
+            <div class="mh-trophy-title">Today's Devotion is complete — your bonus is on its way…</div>
           </div>
-          <div class="mh-dc-coins" aria-label="10 coin bonus">+10</div>
+        </div>
+      `;
+    }
+    if (state === 'paid') {
+      return `
+        <div class="mh-trophy mh-trophy-paid" id="mh-row-day_complete" data-state="paid">
+          <div class="mh-trophy-glyph" aria-hidden="true">&#x2726;&#xFE0E;</div>
+          <div class="mh-trophy-body">
+            <div class="mh-trophy-ornament-row" aria-hidden="true">
+              <span>&#x2726;&#xFE0E;</span>
+              <span>&#x2726;&#xFE0E;</span>
+              <span>&#x2726;&#xFE0E;</span>
+            </div>
+            <div class="mh-trophy-title">Today's Devotion</div>
+            <div class="mh-trophy-sub">Glory to God for all things.</div>
+          </div>
+          <div class="mh-trophy-coins" aria-label="10 coin bonus">+10 <span aria-hidden="true">☦&#xFE0E;</span></div>
         </div>
       `;
     }
     // locked (default)
     return `
-      <div class="mh-daycomplete mh-dc-locked" id="mh-row-day_complete">
-        <div class="mh-dc-glyph" aria-hidden="true">✦</div>
-        <div class="mh-dc-body">
-          <div class="mh-dc-title">Today's Devotion</div>
-          <div class="mh-dc-sub">Finish today's missions to unlock the +10 bonus.</div>
+      <div class="mh-trophy mh-trophy-locked" id="mh-row-day_complete">
+        <div class="mh-trophy-glyph" aria-hidden="true">&#x2726;&#xFE0E;</div>
+        <div class="mh-trophy-body">
+          <div class="mh-trophy-title">Today's Devotion · unlock at ${esc(String(n))}/${esc(String(n))}</div>
         </div>
-        <div class="mh-dc-lock" aria-hidden="true">🔒</div>
+        <div class="mh-trophy-lock" aria-hidden="true">🔒</div>
       </div>
     `;
   }
 
-  // ★ REFLECTION SLOT SHELL — empty container that ReflectionLane
-  // mounts into post-render. Single inline DOM node keyed off the
-  // lane id so we can find it from mount() and pass it to
-  // ReflectionLane.mount(slotEl, opts).
-  function _renderReflectionSlotShell() {
-    return `<div class="mh-reflection-slot" id="mh-reflection-slot"></div>`;
+  // (Chat 20-IMPL-A: _renderReflectionSlotShell removed — T/Th
+  // reflection lane retires; no slot to mount ReflectionLane into.)
+
+  // ═════════════════════════════════════════════════════════════════
+  // CHAT 20-IMPL-A · CELEBRATION ORCHESTRATOR + NEXT-UP PULSE
+  // ═════════════════════════════════════════════════════════════════
+
+  // Quick check for prefers-reduced-motion. Used to skip the
+  // motion-heavy coin-rain on accessibility-sensitive devices.
+  function _prefersReducedMotion() {
+    try {
+      return typeof window !== 'undefined' &&
+             window.matchMedia &&
+             window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    } catch (_e) { return false; }
+  }
+
+  // Coin-rain: short ✦ shower from above the page. 8 particles by
+  // default, randomized horizontal positions + staggered delays so
+  // they don't all hit the GPU at frame 1. Uses the existing
+  // #coin-rain container + .coin-p elements + @keyframes coinFall
+  // (all defined in missions.html — wired here for the first time).
+  function _fireCoinRain(particleCount, glyph) {
+    if (_prefersReducedMotion()) return; // Note F: skip entirely
+    const container = document.getElementById('coin-rain');
+    if (!container) return;
+    const count = Number(particleCount) || 8;
+    // U+2726 BLACK FOUR POINTED STAR + U+FE0E text-variant defense.
+    const g = glyph || '\u2726\uFE0E';
+    for (let i = 0; i < count; i++) {
+      const p = document.createElement('span');
+      p.className = 'coin-p';
+      p.style.fontVariantEmoji = 'text';
+      p.style.left = (10 + Math.random() * 80) + '%';
+      p.style.animationDelay = (Math.random() * 0.7) + 's';
+      p.textContent = g;
+      container.appendChild(p);
+      // Each particle self-cleans after the animation ends so the
+      // container doesn't accumulate DOM nodes.
+      const _cleanup = () => { try { p.remove(); } catch (_e) {} };
+      p.addEventListener('animationend', _cleanup, { once: true });
+      // Belt-and-suspenders: clear after 4s even if event misses.
+      setTimeout(_cleanup, 4000);
+    }
+  }
+
+  // Floating "+10 ☦" toast that rises ~24px and fades over 1200ms.
+  // Anchored to the coin-strip's value position so it reads as a
+  // visual extension of the coin balance changing.
+  function _fireToast(text, anchorEl) {
+    if (!text) return;
+    const anchor = anchorEl || document.getElementById('coin-val');
+    if (!anchor) return;
+    let rect;
+    try { rect = anchor.getBoundingClientRect(); } catch (_e) { return; }
+    if (!rect) return;
+    const toast = document.createElement('div');
+    toast.className = 'mh-coin-toast';
+    toast.textContent = text;
+    toast.style.left = (rect.left + window.scrollX + rect.width / 2) + 'px';
+    toast.style.top  = (rect.top  + window.scrollY) + 'px';
+    toast.style.transform = 'translate(-50%, -100%)';
+    document.body.appendChild(toast);
+    const _cleanup = () => { try { toast.remove(); } catch (_e) {} };
+    toast.addEventListener('animationend', _cleanup, { once: true });
+    setTimeout(_cleanup, 2000);
+  }
+
+  // iOS haptic — single short pulse via navigator.vibrate. PWA-safe
+  // on iOS 17+, gracefully no-ops elsewhere. Reduced-motion users
+  // STILL get haptic (it's not a motion concern).
+  function _fireHaptic(pattern) {
+    try {
+      if (typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function') {
+        navigator.vibrate(pattern == null ? 25 : pattern);
+      }
+    } catch (_e) { /* graceful */ }
+  }
+
+  // Six-element celebration choreography (Phase 2 §6).
+  // Sequence assumes:
+  //   • The day_complete_bonus row has just been committed (caller
+  //     gates this on a successful _commitDayCompleteBonus call).
+  //   • The trophy chip in the current DOM is in 'unlock-pending'
+  //     state OR will be replaced shortly by 'paid' via refresh().
+  //   • The container variable points at the missions hub DOM.
+  //
+  // We do NOT touch the trophy chip DOM directly here — the caller
+  // sequence is: commit → _runCelebration() → refresh() → the
+  // refresh re-renders the trophy in 'paid' state with the
+  // mhTrophyPaidEntry keyframe firing automatically.
+  //
+  // The toast + coin-rain + haptic + counter animation all fire
+  // INSIDE this function. The counter animation reads the current
+  // .mh-pc-num element from the eyebrow progress chip.
+  //
+  // Idempotency: callers gate on state.pendingDayCompletePayout
+  // which is true only on the mount transitioning from locked → paid.
+  // Subsequent mounts of the same day see state.dayComplete='paid'
+  // and skip the celebration entirely.
+  async function _runCelebration(opts) {
+    const o = opts || {};
+    // t=0..t=100ms: pre-pause. Let the brain register "all task
+    // lanes are now ✓" before celebration begins. (Per Phase 2 §6
+    // human-perceptual-beat reasoning.)
+    await new Promise(r => setTimeout(r, 100));
+
+    // t=180ms: iOS haptic (single 25ms pulse). Lands during the
+    // chip morph window, reinforcing without competing.
+    setTimeout(() => _fireHaptic(25), 80);
+
+    // t=200ms: +10 ☦ floating toast over coin-strip-val.
+    setTimeout(() => {
+      const anchor = document.getElementById('coin-val');
+      _fireToast('+10 \u2626\uFE0E', anchor);
+    }, 100);
+
+    // t=250ms: coin-rain begins (8 ✦ particles, staggered).
+    setTimeout(() => _fireCoinRain(8, '\u2726\uFE0E'), 150);
+
+    // t=700ms: counter animates 4 → 5 (handled by refresh()'s
+    // animateCountUp pass — see mount() for the wiring). We just
+    // wait long enough here for the celebration to settle before
+    // the caller invokes refresh().
+    await new Promise(r => setTimeout(r, 600));
+    // Return; caller calls refresh() to render the paid trophy chip.
+  }
+
+  // Apply the .mh-row-next-up class to the topmost incomplete row.
+  // Phase 2 §7 selector logic:
+  //   1. Walk rows in DISPLAY ORDER (reading, prayer, memo, session).
+  //   2. complete | reflected | pilgrimage | paid → COMPLETE
+  //      not_applicable → SKIP (auto-credited, treat as complete)
+  //      pending | read-not-reflected → INCOMPLETE
+  //   3. Find FIRST incomplete row; add class.
+  //   4. Edge cases: all complete → no pulse; pilgrimage → no pulse;
+  //      trophy chip never gets pulse (different register).
+  function _applyNextUpPulse(container, state) {
+    if (!container || !state) return;
+    if (state.pilgrimage) return; // pilgrimage rest — quiet
+    const order = [
+      { id: 'reading',      s: state.reading },
+      { id: 'prayer',       s: state.prayer },
+      { id: 'memorization', s: state.memorization },
+      { id: 'session',      s: state.session },
+    ];
+    function _isLaneComplete(s) {
+      return s === 'complete' || s === 'reflected' ||
+             s === 'pilgrimage' || s === 'paid' || s === 'not_applicable';
+    }
+    for (const lane of order) {
+      if (lane.s == null) continue; // not present this dow
+      if (_isLaneComplete(lane.s)) continue;
+      // First incomplete lane — apply the pulse.
+      const rowEl = container.querySelector(`#mh-row-${lane.id}`);
+      if (rowEl) rowEl.classList.add('mh-row-next-up');
+      return;
+    }
+    // No incomplete row → no pulse (trophy chip carries its own
+    // register if it's in unlock-pending or paid state).
   }
 
   // ═════════════════════════════════════════════════════════════════
@@ -1051,31 +1287,43 @@
     const dow = _dowET(new Date());
     const state = await loadTodaysState(sb, explorerId, familyId, today);
 
-    // Build HTML (Chat 2A lane order):
-    //   1. Eyebrow + pilgrimage banner
-    //   2. Reading mission shell (★ prominent)
-    //   3. Prayer row
-    //   4. Memorization row
-    //   5. Slot 4 — Session (M/W/F) OR Reflection slot shell (T/Th) OR absent (Sat/Sun)
-    //   6. Day Complete lane (every day)
-    //   7. Progress card
+    // Build HTML (Chat 20-IMPL-A lane order):
+    //   1. Eyebrow (includes progress chip — Phase 2 §3)
+    //   2. Pilgrimage banner
+    //   3. Reading block (trail-marker row + optional inline expand
+    //      for the read-not-reflected form)
+    //   4. Prayer row
+    //   5. Memorization row
+    //   6. Session row (M/W/F only)
+    //   7. Trophy chip (every day; states: locked / unlock-pending /
+    //      paid / pilgrimage)
+    //   8. Closing line (only when paid or pilgrimage)
     const parts = [];
-    parts.push(_renderEyebrow(today));
+    parts.push(_renderEyebrow(today, state.completedCount, state.totalCount, !!state.pilgrimage));
     parts.push(_renderPilgrimageBanner(state.pilgrimage));
-    parts.push(_renderReadingMissionShell(state.reading));
+    parts.push(_renderReadingBlock(state.reading, { row: state.readingAnchorRow }));
 
     parts.push(_renderMissionRow({
       id: 'prayer',
       href: 'prayers.html?pray=' + (window.WeekUtils && window.WeekUtils.hourET(new Date()) < 12 ? 'morning' : 'evening'),
       icon: '🕊️',
       name: 'Pray today',
-      sub: state.prayer === 'complete' ? 'Today\'s prayer is offered' : 'Morning or evening',
+      sub: state.prayer === 'complete' ? 'Today\'s prayer is offered'
+         : state.prayer === 'pilgrimage' ? 'Your prayer walks with you'
+         : 'Morning or evening',
       state: state.prayer,
     }));
 
-    const memSub = state.memorization === 'not_applicable'
-      ? 'No verse this week'
-      : (state.currentVerse ? state.currentVerse.reference : 'This week\'s verse');
+    let memSub;
+    if (state.memorization === 'not_applicable') {
+      memSub = 'No verse this week';
+    } else if (state.memorization === 'complete') {
+      memSub = state.currentVerse ? state.currentVerse.reference + ' · learned' : 'Learned';
+    } else if (state.memorization === 'pilgrimage') {
+      memSub = 'The verse waits gently';
+    } else {
+      memSub = state.currentVerse ? state.currentVerse.reference : 'This week\'s verse';
+    }
     parts.push(_renderMissionRow({
       id: 'memorization',
       href: 'memorization.html',
@@ -1089,68 +1337,42 @@
       parts.push(_renderSessionRow(state.activeSession, state.session, dow));
     }
 
-    // Reflection slot (T/Th only) — ReflectionLane.mount() fills it
-    // post-renderInnerHTML. Slot is empty in markup; module owns
-    // everything inside #mh-reflection-slot.
-    if (state.reflection !== null) {
-      parts.push(_renderReflectionSlotShell());
-    }
-
-    // Day Complete lane (every day).
+    // Trophy chip (every day, last in stack). The taskCount is the
+    // lane count EXCLUDING the trophy itself — total minus 1 — so
+    // the locked sub-line reads accurately ("unlock at 4/4" on
+    // M/W/F; "unlock at 3/3" on T/Th and weekends).
     if (state.dayComplete !== null) {
-      parts.push(_renderDayCompleteLane(state.dayComplete));
+      const taskCount = Math.max(0, (state.totalCount || 0) - 1);
+      parts.push(_renderTrophyChip(state.dayComplete, taskCount));
     }
 
-    parts.push(_renderProgress(state.completedCount, state.totalCount, !!state.pilgrimage));
+    // Closing line (paid or pilgrimage only).
+    parts.push(_renderClosingLine(state.dayComplete, opts.profile));
 
     container.innerHTML = parts.join('');
 
     // ── Mount the inner reading-mission content per state ────────
-    const innerSlot = container.querySelector('#mh-reading-content');
-    if (innerSlot) {
-      if (state.reading === 'pilgrimage') {
-        innerSlot.innerHTML = _readingPilgrimageHTML();
-      } else if (state.reading === 'pending') {
-        // Pending → DailyAnchorCard (gospel teaser + tap-to-read).
-        // Tap on the gospel link sets the localStorage flag on close
-        // (via bible-reader's pagehide hook). On the next mount the
-        // flag flips state to 'read-not-reflected' and we commit
-        // Stage 1 here.
-        if (window.DailyAnchorCard && typeof window.DailyAnchorCard.render === 'function') {
-          try {
-            const explorerName = (opts.profile && opts.profile.name)
-              ? String(opts.profile.name).trim().split(/\s+/)[0]
-              : null;
-            const html = window.DailyAnchorCard.render({
-              row: state.readingAnchorRow,
-              verse: state.readingAnchorVerse,
-              prompt: state.readingAnchorPrompt,
-              today: new Date(),
-              explorerName,
-            });
-            innerSlot.innerHTML = html || '';
-          } catch (e) {
-            console.warn('DailyAnchorCard.render failed (graceful):', e);
-            innerSlot.innerHTML = '';
-          }
+    // Chat 20-IMPL-A interim: only the 'read-not-reflected' state
+    // mounts inline content (the existing form). Pending and
+    // reflected states are fully expressed by the row itself.
+    if (state.reading === 'read-not-reflected') {
+      // If readingStageRow is null, the localStorage flag is the
+      // only "read" signal — fire commitReadCompletion (Stage 1)
+      // which writes the DB row, awards +3, and clears the flag.
+      const needsStage1Commit = !state.readingStageRow;
+      if (needsStage1Commit
+          && window.ReadingQuest
+          && typeof window.ReadingQuest.commitReadCompletion === 'function') {
+        try {
+          await window.ReadingQuest.commitReadCompletion(sb, {
+            explorerId, familyId, today, coins: 3,
+          });
+        } catch (e) {
+          console.warn('ReadingQuest.commitReadCompletion failed (graceful):', e);
         }
-      } else if (state.reading === 'read-not-reflected') {
-        // Stage-1-done, Stage-2-pending. If readingStageRow is null,
-        // the localStorage flag is the only "read" signal — fire
-        // commitReadCompletion (Stage 1) which writes the DB row,
-        // awards +3, and clears the flag (DB becomes source of truth).
-        const needsStage1Commit = !state.readingStageRow;
-        if (needsStage1Commit
-            && window.ReadingQuest
-            && typeof window.ReadingQuest.commitReadCompletion === 'function') {
-          try {
-            await window.ReadingQuest.commitReadCompletion(sb, {
-              explorerId, familyId, today, coins: 3,
-            });
-          } catch (e) {
-            console.warn('ReadingQuest.commitReadCompletion failed (graceful):', e);
-          }
-        }
+      }
+      const innerSlot = container.querySelector('#mh-reading-content');
+      if (innerSlot) {
         innerSlot.innerHTML = _renderReadingReadNotReflectedHTML({
           row: state.readingAnchorRow,
           promptText: state.todaysPrompt,
@@ -1159,45 +1381,26 @@
           sb, explorerId, familyId, today,
           gospelRef: _gospelRefFromRow(state.readingAnchorRow),
         });
-      } else if (state.reading === 'reflected') {
-        innerSlot.innerHTML = _renderReadingReflectedHTML({
-          row: state.readingAnchorRow,
-          reflectionText: (state.readingStageRow && state.readingStageRow.reflection_text) || '',
-        });
       }
     }
 
-    // ── Mount the reflection lane (T/Th only) ─────────────────────
-    const reflectionSlot = container.querySelector('#mh-reflection-slot');
-    if (reflectionSlot && state.reflection !== null
-        && window.ReflectionLane && typeof window.ReflectionLane.mount === 'function') {
-      const dayKind = (dow === 2) ? 'tue' : (dow === 4) ? 'thu' : null;
-      try {
-        await window.ReflectionLane.mount(reflectionSlot, {
-          sb, explorerId, familyId, today,
-          dayKind,
-          sessionId:    state.activeSession ? state.activeSession.id : null,
-          sessionTitle: state.activeSession ? state.activeSession.title : null,
-          isPilgrimage: !!state.pilgrimage,
-          onComplete:   refresh,
-        });
-      } catch (e) {
-        console.warn('ReflectionLane.mount failed (graceful):', e);
-      }
-    }
+    // ── Apply next-up pulse to topmost incomplete lane ────────────
+    _applyNextUpPulse(container, state);
 
     // ── Day Complete bonus payout (idempotent on transition) ─────
     // When all other lanes are complete and no day_complete_bonus row
     // exists yet, the state machine flagged pendingDayCompletePayout.
-    // Commit +10 coins (UNIQUE constraint handles race) and trigger
-    // a refresh so the lane re-renders in 'paid' state.
+    // Commit +10 coins (UNIQUE constraint handles race), fire the
+    // celebration choreography, then refresh so the trophy chip re-
+    // renders in 'paid' state and the closing line appears.
     if (state.pendingDayCompletePayout) {
       try {
         const res = await _commitDayCompleteBonus(sb, explorerId, familyId, today);
         if (res && (res.ok || res.duplicate)) {
-          // Tail-call refresh — recursion is bounded: after this
-          // commit, dayCompleteRow exists so pendingDayCompletePayout
-          // is false on the next loadTodaysState pass.
+          // Fire the six-element celebration sequence (Phase 2 §6).
+          // Then tail-call refresh — recursion bounded because next
+          // loadTodaysState pass sees the bonus row and short-circuits.
+          await _runCelebration({ container });
           await refresh();
           return;
         }
@@ -1215,9 +1418,10 @@
       if (_priorStates) {
         const newlyComplete = [];
         // Per-lane transition keys. The 'reading' key transitions to
-        // 'reflected' (final state in two-stage). 'dayComplete' transitions
-        // to 'paid' on bonus payout.
-        ['prayer','memorization','session','reflection','reading','dayComplete'].forEach(k => {
+        // 'reflected' (final state in two-stage). 'dayComplete'
+        // transitions to 'paid' on bonus payout.
+        // Chat 20-IMPL-A: 'reflection' key dropped — lane retired.
+        ['prayer','memorization','session','reading','dayComplete'].forEach(k => {
           const prev = _priorStates[k];
           const cur  = state[k];
           if (prev === cur) return;
@@ -1226,9 +1430,10 @@
           }
         });
         newlyComplete.forEach(k => {
+          // Row ID lookup. Chat 20-IMPL-A: reading row is now
+          // #mh-row-reading (not the old #mh-reading-card outer).
           let rowId;
-          if (k === 'reading') rowId = '#mh-reading-card';
-          else if (k === 'dayComplete') rowId = '#mh-row-day_complete';
+          if (k === 'dayComplete') rowId = '#mh-row-day_complete';
           else rowId = `#mh-row-${k}`;
           const rowEl = container.querySelector(rowId);
           _microCelebrate(rowEl);
@@ -1241,7 +1446,6 @@
       prayer: state.prayer,
       memorization: state.memorization,
       session: state.session,
-      reflection: state.reflection,
       dayComplete: state.dayComplete,
     };
   }
@@ -1319,18 +1523,24 @@
       esc, _W, _dowET, _todayKey, _formatDayLabel,
       _readingFlagKey, _readingFlagSet, _hasQuestion,
       _gospelTeaser, _loadActiveSession, _loadDailyAnchorData,
-      _loadReflectionToday, _loadReadingStageRow,
+      _loadReadingStageRow,
       _loadDayCompleteToday, _commitDayCompleteBonus,
       _sessionDoneToday,
-      _renderEyebrow, _renderPilgrimageBanner,
-      _renderReadingMissionShell, _readingPilgrimageHTML,
-      _renderMissionRow, _renderSessionRow, _renderProgress,
-      _animateCountUp, _microCelebrate,
-      _gospelRefFromRow,
+      // Chat 20-IMPL-A render helpers
+      _renderEyebrow, _renderProgressChip, _renderPilgrimageBanner,
+      _renderReadingBlock,
+      _renderMissionRow, _renderSessionRow,
+      _renderClosingLine,
+      _renderTrophyChip,
       _renderReadingReadNotReflectedHTML,
-      _renderReadingReflectedHTML,
-      _renderDayCompleteLane,
-      _renderReflectionSlotShell,
+      _gospelRefFromRow,
+      _animateCountUp, _microCelebrate,
+      // Chat 20-IMPL-A celebration + next-up
+      _prefersReducedMotion,
+      _fireCoinRain, _fireToast, _fireHaptic,
+      _runCelebration,
+      _applyNextUpPulse,
+      // Stage 2 wiring (interim — moves to bible-reader in 20-IMPL-B)
       _wireReadingReflectSubmit,
     },
   };

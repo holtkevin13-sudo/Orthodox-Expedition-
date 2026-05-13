@@ -1,3 +1,54 @@
+// Orthodox Expedition — Service Worker v43
+// v43: Chat 18 — Marginalia v1 on reading lane (Topic 00).
+//      🟢 NEW: js/marginalia.js — vanilla window.Marginalia module
+//          with .mount(container, { sessionId } = {}) and .unmount().
+//          Renders a post-passage banderole band (D1 §2.2 canonical
+//          layout per Chat 18 Phase 1 ruling) below #versesContainer
+//          and above .reading-foot-nav, populated from C1's authored
+//          content at docs/content/topic-00-marginalia-v1.json
+//          (42 bubbles, 15 sessions: 00.1 → 00.15).
+//          Session_id is derived inside marginalia.js by parsing each
+//          session's gospel_reference string into {book_code, chapter,
+//          vs, ve} and matching against URL params — no upstream
+//          edits to missions.js or daily-anchor-card.js (Path A per
+//          Phase 1 ruling). Defensive: silent failure on fetch,
+//          parse, or session mismatch — the reading lane MUST NOT
+//          break if marginalia fails to load.
+//          v1 renders 3 placement_hint values (after_reading_start,
+//          middle_passage, after_reading_end) in sequence order;
+//          before_reading and after_question are deferred (zero
+//          content in C1).
+//      🟢 bible-reader.html ADDITIVE-ONLY edits (verified by SHA-256
+//          strip-and-match against v42 baseline):
+//          • CSS block .marginalia-band / .marginalia-row /
+//            .marginalia-portrait / .marginalia-bubble-{theo,
+//            christopher} added near the existing brm-verse-*
+//            (Today's Reading mode) styles. Honors D1 §1.3
+//            typography (Theo italic 0.95em / 1px 60%-gold border;
+//            Christopher upright 1em / 1.5px 70%-gold border) and
+//            D1 §1.5 prefers-reduced-motion compliance.
+//          • <div id="marginaliaSlot"> appended as last child of
+//            .reading-pane (after #versesContainer, before
+//            .reading-foot-nav). Empty slot hidden via
+//            .marginalia-slot:empty{display:none;}.
+//          • <script src="js/marginalia.js"></script> added in
+//            <head> after the Supabase CDN script.
+//          • One fire-and-forget Marginalia.mount() call at the
+//            end of loadAndRenderChapter(), after
+//            applyTodaysReadingMode(). Idempotent: any prior band
+//            cleared first; no-match URLs leave the slot empty.
+//      🟢 STATIC_ASSETS additions (cache invalidation reason for
+//          the v42 → v43 bump):
+//            '/Orthodox-Expedition-/js/marginalia.js',
+//            '/Orthodox-Expedition-/docs/content/topic-00-marginalia-v1.json',
+//          Character portraits theo-portrait.png and christopher-
+//          portrait.png are already in STATIC_ASSETS as of v39, so
+//          no portrait additions needed.
+//      🟢 NO Supabase schema changes. NO upstream edits to
+//          missions.js, daily-anchor-card.js, reading-quest.js, or
+//          any other module. The session_id derivation is fully
+//          contained inside marginalia.js.
+//
 // Orthodox Expedition — Service Worker v42
 // v42: Chat 16 — Missions hub visual polish (Day Complete lane +
 //      reading post-read state). HTML/JS architecture unchanged;
@@ -498,7 +549,7 @@
 // v4: added week.html, prayers.html, day-state, pause-card, prayers, and config JSON
 // Version bump forces cache clear and fresh install
 
-const CACHE_NAME = 'orthodox-expedition-v42';
+const CACHE_NAME = 'orthodox-expedition-v43';
 const STATIC_ASSETS = [
   '/Orthodox-Expedition-/',
   '/Orthodox-Expedition-/index.html',
@@ -582,6 +633,9 @@ const STATIC_ASSETS = [
   '/Orthodox-Expedition-/games/sacred-words.html',
   '/Orthodox-Expedition-/games/bible-trivia.html',
   '/Orthodox-Expedition-/games/church-history.html',
+  // v43 — Chat 18 additions (Marginalia v1 on reading lane):
+  '/Orthodox-Expedition-/js/marginalia.js',
+  '/Orthodox-Expedition-/docs/content/topic-00-marginalia-v1.json',
 ];
 
 // Install — cache static assets

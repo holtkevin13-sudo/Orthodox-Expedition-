@@ -575,8 +575,12 @@
 
     // ── Tally completed / total for the progress card ─────────────
     // Pilgrimage: every lane reads 'pilgrimage' so completedCount =
-    // totalCount (full bar). Otherwise: tally non-applicable as both
-    // numerator- and denominator-exempt. New finishing states:
+    // totalCount (full bar). Otherwise: 'not_applicable' (memo with
+    // no weekly verse seeded) counts toward the DENOMINATOR always
+    // AND toward the NUMERATOR once every other completable lane
+    // is done (Chat 19 B2 — so "0/5" displays at day-start and
+    // "5/5 ✓" displays at day-end even on no-verse weeks).
+    // Finishing states:
     //   • 'reflected'      → reading two-stage final
     //   • 'paid'           → Day Complete bonus already awarded
     //   • 'unlock-pending' → bonus about to commit; count as done
@@ -584,10 +588,24 @@
     //                        flash an intermediate "n-1 of n" frame
     let completedCount = 0;
     let totalCount = 0;
-    function tally(state) {
-      if (state == null || state === 'not_applicable') return; // skip
-      totalCount++;
-      if (state === 'complete' ||
+
+    // Chat 19 B2: memo auto-credits the numerator once every other
+    // completable lane is done. Mirrors the Day Complete unlock-
+    // pending check at L567 (same definition of "other lanes
+    // complete") so the two flip together at end-of-day on no-
+    // verse weekdays — display goes 4/5 → 5/5 ✓.
+    function _isLaneDone(s) {
+      return s === 'complete' || s === 'reflected' || s === 'pilgrimage';
+    }
+    const _memAutoComplete = (memState === 'not_applicable') &&
+      [readingState, prayerState, sessionState, reflectionState]
+        .every(s => s == null || _isLaneDone(s));
+
+    function tally(state, autoComplete) {
+      if (state == null) return; // skip lanes not present this dow
+      totalCount++; // 'not_applicable' now counts toward denominator
+      if (autoComplete ||
+          state === 'complete' ||
           state === 'reflected' ||
           state === 'pilgrimage' ||
           state === 'paid' ||
@@ -595,12 +613,12 @@
         completedCount++;
       }
     }
-    tally(readingState);
-    tally(prayerState);
-    tally(memState);
-    tally(sessionState);
-    tally(reflectionState);
-    tally(dayCompleteState);
+    tally(readingState,    false);
+    tally(prayerState,     false);
+    tally(memState,        _memAutoComplete);
+    tally(sessionState,    false);
+    tally(reflectionState, false);
+    tally(dayCompleteState, false);
 
     return {
       reading: readingState,
@@ -966,7 +984,7 @@
         <div class="mh-daycomplete mh-dc-pilgrimage" id="mh-row-day_complete">
           <div class="mh-dc-glyph" aria-hidden="true">✦</div>
           <div class="mh-dc-body">
-            <div class="mh-dc-title">Day Complete</div>
+            <div class="mh-dc-title">Today's Devotion</div>
             <div class="mh-dc-sub">Pilgrimage rest — your streak walks with you.</div>
           </div>
         </div>
@@ -977,7 +995,7 @@
         <div class="mh-daycomplete mh-dc-paid" id="mh-row-day_complete" data-state="${esc(state)}">
           <div class="mh-dc-glyph" aria-hidden="true">✦</div>
           <div class="mh-dc-body">
-            <div class="mh-dc-title">Day Complete</div>
+            <div class="mh-dc-title">Today's Devotion</div>
             <div class="mh-dc-sub">All missions offered today. Glory to God for all things.</div>
           </div>
           <div class="mh-dc-coins" aria-label="10 coin bonus">+10</div>
@@ -989,7 +1007,7 @@
       <div class="mh-daycomplete mh-dc-locked" id="mh-row-day_complete">
         <div class="mh-dc-glyph" aria-hidden="true">✦</div>
         <div class="mh-dc-body">
-          <div class="mh-dc-title">Day Complete</div>
+          <div class="mh-dc-title">Today's Devotion</div>
           <div class="mh-dc-sub">Finish today's missions to unlock the +10 bonus.</div>
         </div>
         <div class="mh-dc-lock" aria-hidden="true">🔒</div>

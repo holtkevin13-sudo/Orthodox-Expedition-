@@ -643,7 +643,18 @@
 //      next dispatch and will move the Stage 2 reflect surface
 //      into bible-reader.html.
 //      No new static assets in this bump.
-const CACHE_NAME = 'orthodox-expedition-v45';
+//
+// v46: Wave 2 Lead — Coin model update + Session Journal lane.
+//      ─ js/missions.js: Session Journal lane state + render + wire.
+//      ─ js/reflection-lane.js: exposes pure-data helpers; revived
+//        in missions.html script load order.
+//      ─ missions.html: reflection-lane.js script tag re-added;
+//        .mh-journal-block / .mh-journal-expand CSS added.
+//      ─ js/topic-00-day.js + js/quiz-runner.js: +5 Curriculum lane
+//        daily bonus on each fresh day_N stamp.
+//      No new STATIC_ASSETS entries — reflection-lane.js is already
+//      listed (cached since v37).
+const CACHE_NAME = 'orthodox-expedition-v46';
 const STATIC_ASSETS = [
   '/Orthodox-Expedition-/',
   '/Orthodox-Expedition-/index.html',

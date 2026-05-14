@@ -11,6 +11,7 @@
 <meta name="theme-color" content="#c9922a">
 <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400;1,600&family=Caveat:wght@400;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/saint-cards.js"></script>
 <style>
 :root{
   --gold:#c9922a;--gold-light:#f0c96e;--gold-bright:#ffd700;
@@ -661,6 +662,22 @@ body.admin-view-active .entry-delete{
     <div id="entries-list"></div>
   </div>
 
+  <!-- DIVIDER: SAINTS I'VE MET (Chat 20) -->
+  <div class="journal-divider">
+    <div class="divider-line"></div>
+    <div class="divider-mark">✦ Saints I've Met ✦</div>
+    <div class="divider-line"></div>
+  </div>
+
+  <!-- SAINTS ARCHIVE (Chat 20 — system-generated, not user-authored) -->
+  <div class="saints-archive-section">
+    <div class="saints-archive-header">
+      <div class="saints-archive-title" id="saints-archive-title">Your Saints Archive</div>
+      <div class="saints-archive-count" id="saints-archive-count"></div>
+    </div>
+    <div id="saints-archive-list"></div>
+  </div>
+
 </div><!-- /journal-wrap -->
 </div><!-- /app -->
 
@@ -802,6 +819,7 @@ const STAMPS = ['☩','✦','⊕','◈','⚔','🗺','📜','🏺','🔍','⭐',
 
     buildUI();
     await loadEntries();
+    await loadSaintsArchive();
 
     document.getElementById('loading').style.display='none';
     document.getElementById('app').style.display='block';
@@ -919,6 +937,7 @@ async function onAdminExplorerChange(newId){
   if (entriesTitleEl) entriesTitleEl.textContent = `${viewingExplorerName}'s Field Manual`;
 
   await loadEntries();
+  await loadSaintsArchive();
 }
 
 // ── BUILD UI ──────────────────────────────────────────────────
@@ -1225,6 +1244,49 @@ async function loadEntries(){
   if(error){ console.error(error); return; }
   allEntries = data || [];
   renderEntries();
+}
+
+// ── LOAD SAINTS ARCHIVE (Chat 20) ─────────────────────────────
+// Reads profiles.onboarding_state.saints_met for whichever explorer
+// is currently being viewed and renders the "Saints I've Met"
+// archive section below Past Entries. Mirrors the loadEntries
+// admin/own-view duality: in normal flow viewingExplorerId ===
+// profile.id (own archive, tap-to-reopen enabled); in admin view
+// the archive is rendered read-only with admin-variant empty copy.
+// Graceful: missing SaintCards module → no-op (no errors logged).
+// Graceful: no corpus / no archive → empty-state copy.
+async function loadSaintsArchive(){
+  if(!profile) return;
+  if(!window.SaintCards || typeof window.SaintCards.loadCorpus !== 'function'){
+    return;
+  }
+  const listEl = document.getElementById('saints-archive-list');
+  if(!listEl) return;
+
+  if(!viewingExplorerId){
+    // Admin view with no children in family — render empty state with
+    // a generic message and exit.
+    window.SaintCards.renderArchive(listEl, [], {
+      isAdminView: isAdminView,
+      viewerName:  viewingExplorerName || ''
+    });
+    return;
+  }
+
+  try {
+    await window.SaintCards.loadCorpus(sb);
+    const items = await window.SaintCards.loadArchiveFor(sb, viewingExplorerId);
+    window.SaintCards.renderArchive(listEl, items, {
+      isAdminView: isAdminView,
+      viewerName:  viewingExplorerName || '',
+      readOnly:    isAdminView,
+      sb:          sb,
+      explorerId:  viewingExplorerId
+    });
+  } catch(_e){
+    // Defensive — never let archive load crash the journal page.
+    try { console.debug('[journal] saints archive load failed:', _e); } catch(_ee){}
+  }
 }
 
 function filterEntries(cat, btn){

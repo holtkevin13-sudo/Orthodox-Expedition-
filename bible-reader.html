@@ -3290,6 +3290,35 @@ document.addEventListener('DOMContentLoaded', () => {
   // Next/Previous chapter (which drops the param), the panel that
   // already mounted stays. OQ-10: explorerId resolves from
   // supabaseUser.id; family_id is fetched once inside the module.
+
+  // ── DP-micro · Stale-draft sweep (May 13, 2026) ────────────────
+  // Cleans any oe_draft_*_<YYYY-MM-DD> keys whose date != today's
+  // ET key. Catches both oe_draft_reading_* and
+  // oe_draft_session_journal_* (OQ-6 ruling — broad prefix scope;
+  // either page's sweep cleans both surfaces). Gated on
+  // ?source=expedition (matches Reflect Panel mount gate).
+  (function purgeStaleReadingDrafts(){
+    var fromExpedition = new URLSearchParams(window.location.search).get('source') === 'expedition';
+    if (!fromExpedition) return;
+    try {
+      var parts = new Intl.DateTimeFormat('en-US', {
+        timeZone:'America/New_York', year:'numeric', month:'2-digit', day:'2-digit'
+      }).formatToParts(new Date()).reduce(function(o,x){ o[x.type]=x.value; return o; }, {});
+      var todayKey = parts.year + '-' + parts.month + '-' + parts.day;
+      var datePat = /^\d{4}-\d{2}-\d{2}$/;
+      for (var i = localStorage.length - 1; i >= 0; i--) {
+        var k = localStorage.key(i);
+        if (!k || k.indexOf('oe_draft_') !== 0) continue;
+        var lastUnderscore = k.lastIndexOf('_');
+        if (lastUnderscore < 0) continue;
+        var dateInKey = k.substring(lastUnderscore + 1);
+        if (datePat.test(dateInKey) && dateInKey !== todayKey) {
+          try { localStorage.removeItem(k); } catch (_e) { /* graceful */ }
+        }
+      }
+    } catch (_e) { /* graceful — quota / private-mode / no localStorage */ }
+  })();
+
   (function wireReadingReflectPanel(){
     var fromExpedition = new URLSearchParams(window.location.search).get('source') === 'expedition';
     if (!fromExpedition) return;

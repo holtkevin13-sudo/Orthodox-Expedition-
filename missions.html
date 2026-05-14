@@ -1087,6 +1087,32 @@ const weekKey  = () => {
   return `${d.getFullYear()}-W${String(w).padStart(2,'0')}`;
 };
 
+// ── DP-micro · Stale-draft sweep (May 13, 2026) ───────────────
+// Cleans any oe_draft_*_<YYYY-MM-DD> keys whose date != today's
+// ET key. Catches both oe_draft_reading_* and
+// oe_draft_session_journal_* (OQ-6 ruling — broad prefix scope).
+// Uses WeekUtils.todayKey() (ET — already loaded at line ~1059)
+// NOT the file-local `todayKey` const above (which is UTC and a
+// pre-existing inconsistency; OQ-7 ruling leaves it for a later
+// dispatch).
+(function purgeStaleMissionDrafts(){
+  try {
+    if (!window.WeekUtils || typeof window.WeekUtils.todayKey !== 'function') return;
+    const etTodayKey = window.WeekUtils.todayKey();
+    const datePat = /^\d{4}-\d{2}-\d{2}$/;
+    for (let i = localStorage.length - 1; i >= 0; i--) {
+      const k = localStorage.key(i);
+      if (!k || k.indexOf('oe_draft_') !== 0) continue;
+      const lastUnderscore = k.lastIndexOf('_');
+      if (lastUnderscore < 0) continue;
+      const dateInKey = k.substring(lastUnderscore + 1);
+      if (datePat.test(dateInKey) && dateInKey !== etTodayKey) {
+        try { localStorage.removeItem(k); } catch (_e) { /* graceful */ }
+      }
+    }
+  } catch (_e) { /* graceful — quota / private-mode / no localStorage */ }
+})();
+
 // ── AUTH ──────────────────────────────────────────────────────
 (async()=>{
   try {

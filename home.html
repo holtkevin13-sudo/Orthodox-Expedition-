@@ -27,6 +27,7 @@
 <script src="js/memorization.js"></script>
 <script src="js/missions.js"></script>
 <script src="js/home-dashboard.js"></script>
+<script src="js/streak-heatmap.js"></script>
 <script src="js/feast-of-week.js"></script>
 <script src="js/liturgical-calendar-home.js"></script>
 <script src="js/sunday-celebration.js"></script>
@@ -1455,6 +1456,175 @@ body::before{
   color:rgba(240,201,110,0.55);font-size:1.1rem;flex-shrink:0;
   align-self:center;
 }
+
+/* ── STREAK HEATMAP (Chat 19) ───────────────────────────────
+   GitHub-style contribution graph rendered between
+   #home-dashboard (Today's Progress) and .next-rank-card.
+   Byzantine palette only; uses --gold-bright / --gold-light /
+   --parchment / --parchment-deeper from :root. The .sh-* prefix
+   prevents collision with the legacy .streak-* + .hd-streak-*
+   namespaces (which render the HomeDashboard weekly tiles). */
+.sh-wrap{
+  background:linear-gradient(180deg,rgba(244,232,193,0.06) 0%,rgba(244,232,193,0.02) 100%);
+  border:1px solid rgba(201,168,76,0.18);
+  border-radius:14px;
+  padding:1rem 0.875rem 0.875rem;
+  margin:0.75rem 0;
+  position:relative;
+  overflow:visible;
+}
+.sh-eyebrow{
+  font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.18em;
+  color:rgba(240,201,110,0.65);text-transform:uppercase;
+  margin-bottom:0.45rem;
+}
+.sh-counter{
+  font-family:'Cinzel',serif;font-size:0.82rem;
+  color:var(--gold-light);
+  letter-spacing:0.04em;
+  margin-bottom:0.75rem;
+  display:flex;align-items:baseline;gap:0.3rem;flex-wrap:wrap;
+}
+.sh-counter--zero{color:rgba(240,201,110,0.75);font-style:italic;}
+.sh-counter--prelaunch{
+  font-family:'Cinzel',serif;font-size:0.85rem;
+  color:var(--gold-bright);
+  letter-spacing:0.06em;font-weight:600;
+  margin-bottom:0.75rem;
+}
+.sh-cn-mark{color:var(--gold-bright);font-size:0.95rem;}
+.sh-cn-label{font-weight:400;}
+.sh-cn-num{
+  font-family:'Cinzel Decorative',serif;font-size:1.15rem;
+  color:var(--gold-bright);text-shadow:0 0 8px rgba(255,215,0,0.25);
+  font-weight:700;line-height:1;
+}
+.sh-cn-unit{color:rgba(240,201,110,0.7);font-size:0.8rem;}
+.sh-grid{
+  display:flex;flex-direction:column;gap:4px;
+  position:relative;
+}
+.sh-dow-header{
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  gap:4px;
+  margin-bottom:2px;
+  font-family:'Cinzel',serif;font-size:0.55rem;
+  letter-spacing:0.08em;
+  color:rgba(240,201,110,0.5);
+  text-align:center;
+}
+.sh-dow-header > span{padding:1px 0;}
+.sh-week{
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  gap:4px;
+}
+.sh-cell{
+  aspect-ratio:1/1;
+  border-radius:4px;
+  background:rgba(244,232,193,0.06);
+  border:1px solid rgba(201,168,76,0.12);
+  transition:transform 120ms ease, box-shadow 120ms ease;
+  cursor:default;
+  position:relative;
+}
+.sh-cell[tabindex]{cursor:pointer;}
+.sh-cell[tabindex]:hover{transform:scale(1.08);}
+.sh-cell[tabindex]:focus-visible{
+  outline:2px solid var(--gold-bright);
+  outline-offset:1px;
+}
+/* Intensity ramp: i0 (empty) → i4 (full task completion). */
+.sh-cell--i0{
+  background:rgba(244,232,193,0.05);
+  border-color:rgba(201,168,76,0.10);
+}
+.sh-cell--i1{
+  background:rgba(201,146,42,0.28);
+  border-color:rgba(201,146,42,0.35);
+}
+.sh-cell--i2{
+  background:rgba(201,146,42,0.52);
+  border-color:rgba(201,146,42,0.55);
+}
+.sh-cell--i3{
+  background:rgba(201,146,42,0.78);
+  border-color:rgba(201,146,42,0.80);
+}
+.sh-cell--i4{
+  background:linear-gradient(135deg,var(--gold) 0%,var(--gold-bright) 100%);
+  border-color:var(--gold-bright);
+  box-shadow:0 0 6px rgba(255,215,0,0.25);
+}
+/* Trophy paid: 1.5px inset gold ring + subtle outset glow (OQ-4). */
+.sh-cell--trophy{
+  box-shadow:
+    inset 0 0 0 1.5px var(--gold-bright),
+    0 0 6px rgba(255,215,0,0.35);
+}
+/* Pilgrimage rest day: ✦ glyph, no intensity ramp (OQ-2). */
+.sh-cell--pilg{
+  background:rgba(201,168,76,0.14);
+  border-color:rgba(201,146,42,0.35);
+  display:flex;align-items:center;justify-content:center;
+  color:var(--gold-bright);
+  font-size:0.7rem;line-height:1;
+}
+.sh-cell--pilg::before{content:'✦';}
+/* Today: outlined cell (Op #15 — CSS class, not [hidden] gymnastics). */
+.sh-cell--today{
+  outline:2px solid var(--gold-bright);
+  outline-offset:1px;
+}
+/* Future cell (not yet reached). */
+.sh-cell--future{
+  background:rgba(244,232,193,0.04);
+  border-color:rgba(201,168,76,0.08);
+  opacity:0.5;
+}
+/* Pre-launch placeholder cell (faintest — anticipation, OQ-12). */
+.sh-cell--prelaunch{
+  background:rgba(244,232,193,0.03);
+  border-color:rgba(201,168,76,0.06);
+  opacity:0.35;
+}
+.sh-mode-toggle{
+  display:block;margin:0.875rem auto 0;
+  background:transparent;border:none;
+  color:var(--gold-light);
+  font-family:'Cinzel',serif;font-size:0.7rem;
+  letter-spacing:0.1em;text-transform:uppercase;
+  cursor:pointer;padding:0.4rem 0.6rem;
+  border-radius:4px;
+  transition:background 120ms ease,color 120ms ease;
+}
+.sh-mode-toggle:hover{
+  background:rgba(201,146,42,0.10);
+  color:var(--gold-bright);
+}
+.sh-mode-toggle:focus-visible{
+  outline:1px solid var(--gold-bright);
+  outline-offset:2px;
+}
+.sh-tooltip{
+  position:absolute;
+  transform:translate(-50%,-100%);
+  background:rgba(20,12,2,0.95);
+  border:1px solid rgba(201,168,76,0.35);
+  color:var(--gold-light);
+  font-family:'Crimson Text',serif;font-size:0.78rem;
+  padding:0.35rem 0.625rem;
+  border-radius:6px;
+  pointer-events:none;
+  white-space:nowrap;
+  z-index:5;
+  box-shadow:0 4px 12px rgba(0,0,0,0.4);
+  letter-spacing:0.01em;
+}
+.sh-tooltip[hidden]{display:none;}
+.sh-wrap--prelaunch .sh-cell{cursor:default;}
+.sh-wrap--prelaunch .sh-cell[tabindex]:hover{transform:none;}
 </style>
 </head>
 <body>
@@ -1652,6 +1822,17 @@ body::before{
          below. Delegates state to Missions.loadTodaysState so home
          and missions can never drift. -->
     <div id="home-dashboard"></div>
+
+    <!-- STREAK HEATMAP (Chat 19)
+         GitHub-style contribution graph showing Nolan's daily
+         engagement across the Topic 00 run. Sunday-anchored week
+         rows × day-of-week columns. Compact (last 6 weeks) default
+         with a toggle to the full 15-week Topic 00 view. Filled
+         by window.StreakHeatmap.mount() from the script section
+         below. Reads from the same lane tables Missions does, so
+         the heatmap and the missions hub agree on what "done"
+         means (Phase 1 lane predicates). -->
+    <div id="hp-streak-heatmap"></div>
 
     <!-- NEXT RANK -->
     <div class="next-rank-card fade-up" id="next-rank-card">
@@ -1912,6 +2093,26 @@ async function loadData(userId){
       }
     }
   }
+
+  // Mount the streak heatmap (Chat 19). Sunday-anchored week ×
+  // day-of-week grid showing daily engagement across Topic 00.
+  // Reads the same lane tables Missions does so the two surfaces
+  // never drift. Pre-launch render shows the first week as future
+  // cells with "Topic 00 begins May 18" (OQ-12).
+  if (window.StreakHeatmap && typeof window.StreakHeatmap.mount === 'function') {
+    const shHost = document.getElementById('hp-streak-heatmap');
+    if (shHost && profile && profile.id && profile.family_id) {
+      try {
+        await window.StreakHeatmap.mount(shHost, {
+          sb,
+          explorerId: profile.id,
+          familyId:   profile.family_id,
+        });
+      } catch (e) {
+        console.warn('StreakHeatmap.mount failed (graceful):', e);
+      }
+    }
+  }
 }
 
 // ── HOME DASHBOARD REFRESH ON VISIBILITY ─────────────────────
@@ -1919,21 +2120,38 @@ async function loadData(userId){
 // completing a lane on missions.html → tapping Home), refresh
 // the dashboard so the count-up animation fires for the new
 // completed count, and the CTA copy may switch (pending → done).
+// Chat 19: the streak heatmap re-renders on the same trigger so
+// the just-completed lane fills in its cell and the streak
+// counter ticks up (or stays put on a partial day).
 (function wireHomeDashboardRefresh(){
   async function maybeRefresh(){
     if (document.visibilityState !== 'visible') return;
-    if (!window.HomeDashboard || !window.HomeDashboard.mount) return;
     if (!profile || !profile.id || !profile.family_id) return;
-    const host = document.getElementById('home-dashboard');
-    if (!host) return;
-    try {
-      await window.HomeDashboard.mount(host, {
-        sb,
-        explorerId: profile.id,
-        familyId:   profile.family_id,
-        profile,
-      });
-    } catch (_e) { /* graceful */ }
+    if (window.HomeDashboard && window.HomeDashboard.mount) {
+      const host = document.getElementById('home-dashboard');
+      if (host) {
+        try {
+          await window.HomeDashboard.mount(host, {
+            sb,
+            explorerId: profile.id,
+            familyId:   profile.family_id,
+            profile,
+          });
+        } catch (_e) { /* graceful */ }
+      }
+    }
+    if (window.StreakHeatmap && window.StreakHeatmap.mount) {
+      const shHost = document.getElementById('hp-streak-heatmap');
+      if (shHost) {
+        try {
+          await window.StreakHeatmap.mount(shHost, {
+            sb,
+            explorerId: profile.id,
+            familyId:   profile.family_id,
+          });
+        } catch (_e) { /* graceful */ }
+      }
+    }
   }
   document.addEventListener('visibilitychange', maybeRefresh);
   window.addEventListener('pageshow', maybeRefresh);

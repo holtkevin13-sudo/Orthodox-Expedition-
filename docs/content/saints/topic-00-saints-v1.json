@@ -57,7 +57,7 @@
       "rank": "major",
       "honorific": "Equal-to-the-Apostles",
       "icon": {
-        "asset_path": "/Orthodox-Expedition-/assets/saints/constantine-and-helen.png",
+        "asset_path": "/Orthodox-Expedition-/assets/saints/constantine-and-helen.jpg",
         "source": "Wikimedia Commons",
         "source_url": "https://commons.wikimedia.org/wiki/Category:Icons_of_Constantine_and_Helen",
         "license": "Public Domain",
@@ -103,7 +103,7 @@
       "rank": "minor",
       "honorific": "the Myrrhbearer",
       "icon": {
-        "asset_path": "/Orthodox-Expedition-/assets/saints/mary-myrrhbearer-cleopas.png",
+        "asset_path": "/Orthodox-Expedition-/assets/saints/mary-myrrhbearer-cleopas.jpg",
         "source": "TBD \u2014 pending Kevin sourcing per D5 \u00a75.1",
         "source_url": "TBD",
         "license": "Public Domain",
@@ -146,7 +146,7 @@
       "rank": "major",
       "honorific": null,
       "icon": {
-        "asset_path": "/Orthodox-Expedition-/assets/saints/fathers-first-council.png",
+        "asset_path": "/Orthodox-Expedition-/assets/saints/fathers-first-council.jpg",
         "source": "TBD \u2014 pending Kevin sourcing per D5 \u00a75.1",
         "source_url": "TBD",
         "license": "Public Domain",
@@ -192,7 +192,7 @@
       "rank": "minor",
       "honorific": "the Forerunner",
       "icon": {
-        "asset_path": "/Orthodox-Expedition-/assets/saints/john-baptist-third-finding.png",
+        "asset_path": "/Orthodox-Expedition-/assets/saints/john-baptist-third-finding.jpg",
         "source": "TBD \u2014 pending Kevin sourcing per D5 \u00a75.1",
         "source_url": "TBD",
         "license": "Public Domain",
@@ -235,7 +235,7 @@
       "rank": "minor",
       "honorific": "the Venerable",
       "icon": {
-        "asset_path": "/Orthodox-Expedition-/assets/saints/venerable-bede.png",
+        "asset_path": "/Orthodox-Expedition-/assets/saints/venerable-bede.jpg",
         "source": "TBD \u2014 pending Kevin sourcing per D5 \u00a75.1",
         "source_url": "TBD",
         "license": "Public Domain",
@@ -281,7 +281,7 @@
       "rank": "minor",
       "honorific": null,
       "icon": {
-        "asset_path": "/Orthodox-Expedition-/assets/saints/macrina-and-emilia.png",
+        "asset_path": "/Orthodox-Expedition-/assets/saints/macrina-and-emilia.jpg",
         "source": "TBD \u2014 pending Kevin sourcing per D5 \u00a75.1",
         "source_url": "TBD",
         "license": "Public Domain",
@@ -323,7 +323,7 @@
       "rank": "great",
       "honorific": null,
       "icon": {
-        "asset_path": "/Orthodox-Expedition-/assets/saints/holy-pentecost.png",
+        "asset_path": "/Orthodox-Expedition-/assets/saints/holy-pentecost.jpg",
         "source": "TBD \u2014 pending Kevin sourcing per D5 \u00a75.1",
         "source_url": "TBD",
         "license": "Public Domain",
@@ -367,7 +367,7 @@
       "rank": "minor",
       "honorific": "the Philosopher and Martyr",
       "icon": {
-        "asset_path": "/Orthodox-Expedition-/assets/saints/justin-philosopher.png",
+        "asset_path": "/Orthodox-Expedition-/assets/saints/justin-philosopher.jpg",
         "source": "TBD \u2014 pending Kevin sourcing per D5 \u00a75.1",
         "source_url": "TBD",
         "license": "Public Domain",
@@ -415,7 +415,7 @@
       "rank": "minor",
       "honorific": "Abbot of Glendalough",
       "icon": {
-        "asset_path": "/Orthodox-Expedition-/assets/saints/kevin-of-glendalough.png",
+        "asset_path": "/Orthodox-Expedition-/assets/saints/kevin-of-glendalough.jpg",
         "source": "TBD \u2014 pending Kevin sourcing per D5 \u00a75.1",
         "source_url": "TBD",
         "license": "Public Domain",
@@ -459,7 +459,7 @@
       "rank": "minor",
       "honorific": "Sisters of Lazarus",
       "icon": {
-        "asset_path": "/Orthodox-Expedition-/assets/saints/mary-and-martha.png",
+        "asset_path": "/Orthodox-Expedition-/assets/saints/mary-and-martha.jpg",
         "source": "TBD \u2014 pending Kevin sourcing per D5 \u00a75.1",
         "source_url": "TBD",
         "license": "Public Domain",
@@ -501,7 +501,7 @@
       "rank": "major",
       "honorific": null,
       "icon": {
-        "asset_path": "/Orthodox-Expedition-/assets/saints/sunday-of-all-saints.png",
+        "asset_path": "/Orthodox-Expedition-/assets/saints/sunday-of-all-saints.jpg",
         "source": "TBD \u2014 pending Kevin sourcing per D5 \u00a75.1",
         "source_url": "TBD",
         "license": "Public Domain",
@@ -544,7 +544,7 @@
       "rank": "minor",
       "honorific": "Patriarch of Alexandria",
       "icon": {
-        "asset_path": "/Orthodox-Expedition-/assets/saints/cyril-of-alexandria.png",
+        "asset_path": "/Orthodox-Expedition-/assets/saints/cyril-of-alexandria.jpg",
         "source": "TBD \u2014 pending Kevin sourcing per D5 \u00a75.1",
         "source_url": "TBD",
         "license": "Public Domain",
@@ -594,7 +594,7 @@
       "rank": "minor",
       "honorific": "the Holy Apostles",
       "icon": {
-        "asset_path": "/Orthodox-Expedition-/assets/saints/bartholomew-and-barnabas.png",
+        "asset_path": "/Orthodox-Expedition-/assets/saints/bartholomew-and-barnabas.jpg",
         "source": "TBD \u2014 pending Kevin sourcing per D5 \u00a75.1",
         "source_url": "TBD",
         "license": "Public Domain",
@@ -639,7 +639,7 @@
       "rank": "minor",
       "honorific": "Bishop of Hippo",
       "icon": {
-        "asset_path": "/Orthodox-Expedition-/assets/saints/augustine-of-hippo.png",
+        "asset_path": "/Orthodox-Expedition-/assets/saints/augustine-of-hippo.jpg",
         "source": "TBD \u2014 pending Kevin sourcing per D5 \u00a75.1",
         "source_url": "TBD",
         "license": "Public Domain",

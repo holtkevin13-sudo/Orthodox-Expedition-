@@ -30,6 +30,7 @@
 <script src="js/streak-heatmap.js"></script>
 <script src="js/feast-of-week.js"></script>
 <script src="js/liturgical-calendar-home.js"></script>
+<script src="js/saint-cards.js"></script>
 <script src="js/sunday-celebration.js"></script>
 <script src="js/welcome-flow.js"></script>
 <script>
@@ -2064,11 +2065,24 @@ async function loadData(userId){
   // Quiet status surface — 7-day glance with tap-to-open drawer.
   // Reads from liturgical_calendar (no new schema). Graceful on
   // missing data: the container simply renders empty.
+  // Chat 20: pass explorerId so the drawer's saint tap delegate can
+  // fire SaintCards.openCard with full first-meet state context.
+  // SaintCards.loadCorpus is kicked off in parallel (fire-and-forget)
+  // so the JSON fetch doesn't gate LC mount. The slug-matcher in
+  // _renderDrawerBody safely returns null until the corpus resolves,
+  // and the drawer's first open after that point picks up tap-state
+  // automatically (fresh markup on every _renderDrawerBody call).
+  if (window.SaintCards && typeof window.SaintCards.loadCorpus === 'function') {
+    try { window.SaintCards.loadCorpus(sb).catch(function(){}); } catch(_e) { /* graceful */ }
+  }
   if (window.LiturgicalCalendarHome && typeof window.LiturgicalCalendarHome.mount === 'function') {
     const lcHost = document.getElementById('hp-liturgical-calendar');
     if (lcHost) {
       try {
-        await window.LiturgicalCalendarHome.mount(lcHost, { sb });
+        await window.LiturgicalCalendarHome.mount(lcHost, {
+          sb,
+          explorerId: (profile && profile.id) || null
+        });
       } catch (e) {
         console.warn('LiturgicalCalendarHome.mount failed (graceful):', e);
       }

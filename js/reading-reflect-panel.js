@@ -252,6 +252,46 @@
   }
 
   // ═══════════════════════════════════════════════════════════════
+  // DRAFT PERSISTENCE (DP-micro · May 13, 2026)
+  // ═══════════════════════════════════════════════════════════════
+  // Survives navigation / app-kill until Nolan submits or skips.
+  // localStorage key: oe_draft_reading_{explorerId}_{todayKeyET}
+  // Date portion lets the per-page startup sweep orphan-clean any
+  // previous-day keys (see bible-reader.html sibling IIFE).
+
+  function _draftKey(explorerId, today) {
+    return 'oe_draft_reading_' + explorerId + '_' + today;
+  }
+
+  // Wire restore-on-mount + debounced save on textarea input.
+  // Only invoked when renderPending has placed #brp-textarea in
+  // the DOM (i.e. NOT pilgrimage, NOT saved-display). Two listeners
+  // on the same input event are independent — refreshEnabled stays
+  // untouched in wireSubmitButton.
+  function wireDraftPersistence(host, ctx) {
+    const ta = host.querySelector('#brp-textarea');
+    if (!ta) return;
+    const KEY = _draftKey(ctx.explorerId, ctx.today);
+    // Silent restore on mount (OQ-3 ruling — no toast).
+    try {
+      const saved = localStorage.getItem(KEY);
+      if (saved) ta.value = saved;
+    } catch (_e) { /* graceful — quota / private-mode */ }
+    // Debounced save on input (OQ-2 ruling — 200ms idle window).
+    let _saveT;
+    ta.addEventListener('input', () => {
+      clearTimeout(_saveT);
+      _saveT = setTimeout(() => {
+        try {
+          const v = String(ta.value || '').trim();
+          if (v.length === 0) localStorage.removeItem(KEY);          // OQ-8 ruling
+          else                localStorage.setItem(KEY, v);
+        } catch (_e) { /* graceful */ }
+      }, 200);
+    });
+  }
+
+  // ═══════════════════════════════════════════════════════════════
   // COMMIT PATHS
   // ═══════════════════════════════════════════════════════════════
 
@@ -451,6 +491,10 @@
         text,
       });
       if (res && res.ok) {
+        // DP-micro · clear draft on success (covers atomic +5,
+        // 23505 UPDATE fallback, and alreadyReflected idempotent).
+        try { localStorage.removeItem(_draftKey(ctx.explorerId, ctx.today)); }
+        catch (_e) { /* graceful */ }
         // Soft saved-state nudge while the 1.5s hold elapses.
         ta.disabled = true;
         btn.textContent = 'Saved \u2713';
@@ -504,6 +548,10 @@
         gospelRef:  ctx.gospelRef,
       });
       if (res && res.ok) {
+        // DP-micro · clear draft on skip-pastorally success (OQ-1
+        // ruling — lane is closed at +3, draft would orphan).
+        try { localStorage.removeItem(_draftKey(ctx.explorerId, ctx.today)); }
+        catch (_e) { /* graceful */ }
         confirm.textContent = 'Recorded \u2713';
         redirectToMissions();
         return;
@@ -559,6 +607,10 @@
     const promptText = promptRow ? promptRow.prompt_text : '';
 
     slot.innerHTML = renderPending(promptText, gospelRef);
+    // DP-micro · restore draft + arm debounced save BEFORE the
+    // submit/skip handlers wire. Two input listeners (this one
+    // and refreshEnabled in wireSubmitButton) coexist safely.
+    wireDraftPersistence(slot, { explorerId, today });
     wireSubmitButton(slot, {
       sb, explorerId, familyId, today, gospelRef,
     });
@@ -578,6 +630,7 @@
       resolveFamilyId, resolveTodaysPrompt, isPilgrimageToday,
       loadTodaysRow, commitAtomicReflection, commitSkip,
       renderShell, renderPilgrimage, renderPending, renderSaved,
+      _draftKey, wireDraftPersistence,
     },
   };
 

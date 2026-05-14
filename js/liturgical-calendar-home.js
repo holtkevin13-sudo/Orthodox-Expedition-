@@ -159,6 +159,13 @@
     return feast_rank === 'great' || feast_rank === 'major';
   }
 
+  // Chat 20: closure-scoped explorer context. mount() captures
+  // { sb, explorerId } so _openDrawer's tap-delegate can pass them
+  // to SaintCards.openCard() without prop-drilling through cell
+  // objects. Read-only post-mount; never mutated.
+  let _mountSb         = null;
+  let _mountExplorerId = null;
+
   // ── SIGNAL HIERARCHY — orchestrator-approved (Chat 3 Q2) ─────────
   // Returns { kind, text } describing the single primary atom to
   // display in the compact cell. If row is null (missing data for
@@ -641,16 +648,40 @@
         ? row.feast_name                      /* feast wins over Sunday name when both populated and feast is major */
         : (row.sunday_name || row.feast_name);
       const rankLabel = RANK_LABELS[row.feast_rank] || '';
+      /* Chat 20: feast-name slug resolution — when the headline
+         resolves to a corpus saint (e.g., Sunday of All Saints,
+         Pentecost, Bartholomew the Holy Apostle), wrap the
+         feast-name div as tappable. */
+      const _headlineSlug = (window.SaintCards && typeof window.SaintCards.resolveSlug === 'function')
+        ? window.SaintCards.resolveSlug(headline)
+        : null;
+      const _feastNameOpen = _headlineSlug
+        ? '<div class="lc-card-feast-name lc-saint-tappable" '
+          + 'data-saint-slug="' + esc(_headlineSlug) + '" '
+          + 'role="button" tabindex="0" '
+          + 'aria-label="Open Saint ' + esc(headline) + '">'
+        : '<div class="lc-card-feast-name">';
       feastBlock = ''
         + '<div class="lc-card-feast">'
-        +   '<div class="lc-card-feast-name">' + esc(headline) + '</div>'
+        +   _feastNameOpen + esc(headline) + '</div>'
         +   (rankLabel ? '<div class="lc-card-feast-rank">' + esc(rankLabel) + '</div>' : '')
         + '</div>';
     } else if (row.feast_name) {
       /* Minor commemoration — still surface as the day's headline */
+      /* Chat 20: same slug-resolution path for minor headlines
+         (e.g., "Cyril, Patriarch of Alexandria"). */
+      const _minorSlug = (window.SaintCards && typeof window.SaintCards.resolveSlug === 'function')
+        ? window.SaintCards.resolveSlug(row.feast_name)
+        : null;
+      const _minorNameOpen = _minorSlug
+        ? '<div class="lc-card-feast-name lc-saint-tappable" '
+          + 'data-saint-slug="' + esc(_minorSlug) + '" '
+          + 'role="button" tabindex="0" '
+          + 'aria-label="Open Saint ' + esc(row.feast_name) + '">'
+        : '<div class="lc-card-feast-name">';
       feastBlock = ''
         + '<div class="lc-card-feast">'
-        +   '<div class="lc-card-feast-name">' + esc(row.feast_name) + '</div>'
+        +   _minorNameOpen + esc(row.feast_name) + '</div>'
         +   '<div class="lc-card-feast-rank">Commemoration</div>'
         + '</div>';
     }
@@ -699,7 +730,12 @@
         + '<div class="lc-card-readings">' + rows.join('') + '</div>';
     }
 
-    /* Saints block — full list (no truncation, per orchestrator Q9) */
+    /* Saints block — full list (no truncation, per orchestrator Q9)
+       Chat 20: each <li> is run through SaintCards.resolveSlug; on
+       a corpus hit we wrap with lc-saint-tappable + data-slug for
+       the modal tap-open path. ✦ tap glyph is rendered by the
+       saint-cards.js CSS rule on .lc-saint-tappable. Plain <li>
+       remains for un-matched saints. */
     let saintsBlock = '';
     const saints = Array.isArray(row.saint_commemorations) ? row.saint_commemorations : [];
     if (saints.length > 0) {
@@ -707,7 +743,19 @@
         + '<hr class="lc-card-divider" />'
         + '<div class="lc-card-section-title">Also Commemorated</div>'
         + '<ul class="lc-card-saints">'
-        +   saints.map(s => '<li>' + esc(s) + '</li>').join('')
+        +   saints.map(s => {
+              const slug = (window.SaintCards && typeof window.SaintCards.resolveSlug === 'function')
+                ? window.SaintCards.resolveSlug(s)
+                : null;
+              if (slug) {
+                return '<li class="lc-saint-tappable" data-saint-slug="' + esc(slug) + '" '
+                     +     'role="button" tabindex="0" '
+                     +     'aria-label="Open Saint ' + esc(s) + '">'
+                     +   '<span class="lc-saint-name">' + esc(s) + '</span>'
+                     + '</li>';
+              }
+              return '<li>' + esc(s) + '</li>';
+            }).join('')
         + '</ul>';
     }
 
@@ -783,6 +831,42 @@
       }
     });
 
+    /* Chat 20: SaintCards tap delegate. Any element inside the
+       drawer with a data-saint-slug attribute opens the saint card
+       modal on top of this drawer (per orchestrator OQ-4 stacked-
+       modal pattern). The drawer stays open underneath; closing
+       the saint card returns to the drawer. */
+    overlay.addEventListener('click', function (ev) {
+      const tappable = ev.target && ev.target.closest && ev.target.closest('[data-saint-slug]');
+      if (!tappable) return;
+      const slug = tappable.getAttribute('data-saint-slug');
+      if (!slug) return;
+      ev.preventDefault();
+      ev.stopPropagation();
+      if (window.SaintCards && typeof window.SaintCards.openCard === 'function') {
+        window.SaintCards.openCard(slug, {
+          sb:         _mountSb,
+          explorerId: _mountExplorerId
+        });
+      }
+    });
+    /* Keyboard activation parity for tappable saints (Enter/Space) */
+    overlay.addEventListener('keydown', function (ev) {
+      if (ev.key !== 'Enter' && ev.key !== ' ') return;
+      const tappable = ev.target && ev.target.closest && ev.target.closest('[data-saint-slug]');
+      if (!tappable) return;
+      const slug = tappable.getAttribute('data-saint-slug');
+      if (!slug) return;
+      ev.preventDefault();
+      ev.stopPropagation();
+      if (window.SaintCards && typeof window.SaintCards.openCard === 'function') {
+        window.SaintCards.openCard(slug, {
+          sb:         _mountSb,
+          explorerId: _mountExplorerId
+        });
+      }
+    });
+
     const closeBtn = overlay.querySelector('#lc-card-close');
     if (closeBtn) closeBtn.addEventListener('click', _dismiss);
 
@@ -805,6 +889,14 @@
       console.warn('LiturgicalCalendarHome.mount: WeekUtils unavailable');
       return;
     }
+
+    // Chat 20: capture explorer context for the tap-delegate path
+    // wired in _openDrawer. Optional — when absent, taps on a saint
+    // li/feast-name still fire but SaintCards.openCard renders the
+    // card without first-meet state writes (graceful for unauth'd
+    // page loads).
+    _mountSb         = sb;
+    _mountExplorerId = (opts && opts.explorerId) || null;
 
     injectCSS();
 

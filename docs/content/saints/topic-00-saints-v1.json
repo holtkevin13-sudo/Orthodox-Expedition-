@@ -1,0 +1,63 @@
+{
+  "version": "1.0",
+  "topic_id": "00",
+  "topic_title": "Coming Home",
+  "saints_count": 1,
+  "authored": "2026-05-13",
+  "voice_anchor": "D5 \u00a76.3 \u2014 Father Stephen Freeman at his best; narrator third-person; no character dialogue inside cards",
+  "iconography_lessons": [
+    { "id": 1, "title": "The Halo",            "key": "halo" },
+    { "id": 2, "title": "Hands",               "key": "hands" },
+    { "id": 3, "title": "What Saints Hold",    "key": "held_objects" },
+    { "id": 4, "title": "Robes and Colors",    "key": "robes_colors" },
+    { "id": 5, "title": "Greek Letters",       "key": "greek_inscriptions" },
+    { "id": 6, "title": "Face and Gaze",       "key": "face_gaze" }
+  ],
+  "saints": [
+    {
+      "slug": "constantine-and-helen",
+      "display_name": "Saints Constantine and Helen",
+      "alternate_names": [
+        "Constantine and Helen, Equal-to-the Apostles",
+        "Constantine and Helen Equal-to-the-Apostles",
+        "Saints Constantine and Helen",
+        "Constantine the Great",
+        "Helen, Equal-to-the-Apostles",
+        "Empress Helen",
+        "Saint Constantine",
+        "Saint Helen"
+      ],
+      "commemoration_date": "05-21",
+      "card_type": "paired",
+      "rank": "major",
+      "honorific": "Equal-to-the-Apostles",
+      "icon": {
+        "asset_path": "/Orthodox-Expedition-/assets/saints/constantine-and-helen.png",
+        "source": "Wikimedia Commons",
+        "source_url": "https://commons.wikimedia.org/wiki/Category:Icons_of_Constantine_and_Helen",
+        "license": "Public Domain",
+        "attribution": "Anonymous Byzantine iconographer, 14th c.; photograph public domain via Wikimedia Commons",
+        "alt_text": "Orthodox icon of Saints Constantine and Helen flanking the True Cross, both crowned and robed in royal red and gold, with Greek inscriptions above their heads"
+      },
+      "life_story": "Constantine was the Roman emperor in the years just after Christianity stopped being illegal. For three hundred years before him, being a Christian could get you killed by the Roman state. Constantine changed that. In the year 313 he signed an edict that gave Christians freedom to worship openly. Twelve years later, in 325, he called the great gathering of bishops at Nicaea that gave the Church the Creed Orthodox Christians still say every Sunday.\n\nHelen was his mother. She became a Christian later in life and turned out to be one of the most determined pilgrims the Church has ever known. When she was already in her seventies, she made the long journey from Constantinople to Jerusalem and walked the holy places herself, asking the local Christians to show her where Christ had lived and died. She found the place of the crucifixion, had it excavated, and uncovered the True Cross \u2014 the actual cross Jesus had been nailed to. Constantine built churches there, at her direction, that still stand.\n\nThe Church calls them both Equal-to-the-Apostles. The apostles preached Christ; Constantine and Helen gave Christ's Church a place to stand in the world. They are commemorated together on May 21.",
+      "callouts": [
+        {
+          "lesson_ref": "halo",
+          "title": "THE GOLD HALOS",
+          "body": "Look at the gold circles around both their heads. That's how an icon says they are holy. Every saint has one \u2014 it's the first thing to look for. The gold isn't paint pretending to be light; it's the icon telling you the light of God is in them."
+        },
+        {
+          "lesson_ref": "held_objects",
+          "title": "THE TRUE CROSS BETWEEN THEM",
+          "body": "Between Constantine and Helen the icon almost always shows a tall cross. That's the True Cross \u2014 the one Helen found in Jerusalem. The icon is saying: she went looking, she found it, and the cross still stands between them. It's the reason they share a feast day."
+        },
+        {
+          "lesson_ref": "robes_colors",
+          "title": "ROYAL RED AND GOLD",
+          "body": "Their robes are royal red and gold. Real Roman emperors and empresses wore this kind of color \u2014 but the icon dresses them this way for a deeper reason too. They were a king and queen on earth, but the icon is naming them king and queen of a much bigger kingdom. The colors say: they belong to it now."
+        }
+      ],
+      "quoted_attribution": null
+    }
+  ]
+}

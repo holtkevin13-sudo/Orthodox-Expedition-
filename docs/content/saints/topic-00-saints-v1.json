@@ -1,17 +1,42 @@
 {
-  "version": "1.0",
+  "version": "1.0.0",
   "topic_id": "00",
   "topic_title": "Coming Home",
-  "saints_count": 1,
-  "authored": "2026-05-13",
+  "saints_count": 14,
+  "authored": "2026-05-14",
   "voice_anchor": "D5 \u00a76.3 \u2014 Father Stephen Freeman at his best; narrator third-person; no character dialogue inside cards",
+  "schema_ref": "docs/design/iconography-saint-bio-micro-cards.md \u00a77.2",
   "iconography_lessons": [
-    { "id": 1, "title": "The Halo",            "key": "halo" },
-    { "id": 2, "title": "Hands",               "key": "hands" },
-    { "id": 3, "title": "What Saints Hold",    "key": "held_objects" },
-    { "id": 4, "title": "Robes and Colors",    "key": "robes_colors" },
-    { "id": 5, "title": "Greek Letters",       "key": "greek_inscriptions" },
-    { "id": 6, "title": "Face and Gaze",       "key": "face_gaze" }
+    {
+      "id": 1,
+      "title": "The Halo",
+      "key": "halo"
+    },
+    {
+      "id": 2,
+      "title": "Hands",
+      "key": "hands"
+    },
+    {
+      "id": 3,
+      "title": "What Saints Hold",
+      "key": "held_objects"
+    },
+    {
+      "id": 4,
+      "title": "Robes and Colors",
+      "key": "robes_colors"
+    },
+    {
+      "id": 5,
+      "title": "Greek Letters",
+      "key": "greek_inscriptions"
+    },
+    {
+      "id": 6,
+      "title": "Face and Gaze",
+      "key": "face_gaze"
+    }
   ],
   "saints": [
     {
@@ -58,6 +83,592 @@
         }
       ],
       "quoted_attribution": null
+    },
+    {
+      "slug": "mary-myrrhbearer-cleopas",
+      "display_name": "Saint Mary the Myrrhbearer",
+      "alternate_names": [
+        "Mary the Myrrhbearer & wife of Cleopas",
+        "Mary the Myrrhbearer and wife of Cleopas",
+        "Mary, the Myrrhbearer",
+        "Mary the Myrrhbearer",
+        "Saint Mary the Myrrhbearer",
+        "Mary, wife of Cleopas",
+        "Mary the Wife of Cleopas",
+        "Mary of Clopas",
+        "Mary of Cleopas"
+      ],
+      "commemoration_date": "05-23",
+      "card_type": "single",
+      "rank": "minor",
+      "honorific": "the Myrrhbearer",
+      "icon": {
+        "asset_path": "/Orthodox-Expedition-/assets/saints/mary-myrrhbearer-cleopas.png",
+        "source": "TBD \u2014 pending Kevin sourcing per D5 \u00a75.1",
+        "source_url": "TBD",
+        "license": "Public Domain",
+        "attribution": "Anonymous Byzantine iconographer; canonical icon to be sourced per D5 \u00a75.1",
+        "alt_text": "Orthodox icon of Saint Mary the Myrrhbearer holding a small alabaster jar of myrrh, haloed, wearing a deep red maphorion over a darker tunic"
+      },
+      "life_story": "Mary lived in Jerusalem in the last days of Christ's life. She was the wife of Cleopas \u2014 the same Cleopas who, with another disciple, would meet the risen Christ on the road to Emmaus and not recognize him until he broke bread with them. The Gospel of John names her as a kinswoman of the Mother of God.\n\nShe stood at the cross. When most of the men ran, she did not. Before dawn on the third day she went with the other myrrhbearing women to the tomb, carrying spices to anoint Christ's body. They did not yet know he had risen. They asked each other as they walked, \"Who will roll away the stone for us?\" The stone was already moved when they arrived. An angel told them what no one else yet knew: \"He is not here. He is risen.\"\n\nThe Church remembers Mary the Myrrhbearer because she stood when most fled, and she brought what she had to where Christ lay. The women carrying the spices were the first to be told the news that changed the world.",
+      "callouts": [
+        {
+          "lesson_ref": "hands",
+          "title": "THE HANDS HOLDING MYRRH",
+          "body": "See how she holds the small jar with both hands at the level of her heart. That's not just a way to carry it. In icons, hands always say something. Hers say: she brought what she had \u2014 burial spices for the body of a friend \u2014 and she walked to the place of death to give them."
+        },
+        {
+          "lesson_ref": "held_objects",
+          "title": "THE ALABASTER JAR",
+          "body": "The little vessel she holds is the alabaster jar of myrrh \u2014 the perfumed oil her people used to anoint the dead. Saints often hold the thing that tells you who they are. Mary holds the jar she carried to the tomb. The icon names her by what she brought."
+        },
+        {
+          "lesson_ref": "robes_colors",
+          "title": "THE RED VEIL",
+          "body": "Her head is wrapped in a deep red veil \u2014 the maphorion. The Mother of God wears one too, usually larger and reaching her shoulders. In icons, women who walked with Christ wear this veil. It says she belongs to the people who stood beneath the cross."
+        }
+      ],
+      "quoted_attribution": null
+    },
+    {
+      "slug": "fathers-first-council",
+      "display_name": "The Holy Fathers of the First Council",
+      "alternate_names": [
+        "Fathers of the 1st Council",
+        "Fathers of the First Council",
+        "Holy Fathers of the First Ecumenical Council",
+        "Fathers of Nicaea",
+        "The 318 Fathers of Nicaea",
+        "Holy Fathers of the 1st Ecumenical Council"
+      ],
+      "commemoration_date": "05-24",
+      "card_type": "group",
+      "rank": "major",
+      "honorific": null,
+      "icon": {
+        "asset_path": "/Orthodox-Expedition-/assets/saints/fathers-first-council.png",
+        "source": "TBD \u2014 pending Kevin sourcing per D5 \u00a75.1",
+        "source_url": "TBD",
+        "license": "Public Domain",
+        "attribution": "Anonymous Byzantine iconographer; canonical icon to be sourced per D5 \u00a75.1",
+        "alt_text": "Orthodox icon of the Holy Fathers of the First Ecumenical Council at Nicaea, bishops seated in tiers holding a long scroll of the Creed between them, the heretic Arius cast down at the foot of the composition"
+      },
+      "life_story": "In the year 325, three hundred and eighteen bishops came from all across the Christian world and gathered in a Roman city called Nicaea. The emperor Constantine \u2014 the same Constantine the Church commemorates on May 21 \u2014 had called them. The Church had a problem to settle. A priest named Arius was teaching that Christ was not truly God but only the highest of God's creatures. If Arius was right, the Christian faith would no longer be Christian.\n\nThe bishops came from Egypt, Syria, Greece, Italy, the lands of the Goths, and even further east. Among them was Athanasius, then a young deacon helping his bishop, who would spend the next fifty years of his life defending what was decided at Nicaea. Spyridon of Trimythous came from Cyprus \u2014 a shepherd-bishop who held up a brick to show how the Trinity could be three and one. Nicholas of Myra was there \u2014 the bishop whose name children still know.\n\nTogether the bishops wrote down what the Church had always believed: that Christ is God \"of one essence with the Father, begotten not made.\" We call what they wrote the Creed. Orthodox Christians still stand and say it every Sunday.",
+      "callouts": [
+        {
+          "lesson_ref": "held_objects",
+          "title": "THE SCROLL THEY HOLD",
+          "body": "In most icons of this feast, the bishops are shown together holding a single long scroll between them. The scroll is the Creed \u2014 the words they wrote at Nicaea. Saints often hold the thing that names them. These bishops are named by the words the Church says every Sunday because of them."
+        },
+        {
+          "lesson_ref": "robes_colors",
+          "title": "THE BISHOP'S BAND",
+          "body": "Look at the long bands of cloth running over their shoulders, marked with black crosses. That's the omophorion \u2014 what bishops wear in icons and still wear at the altar today. The crosses on it say: this is the shepherd who carries the cross of Christ for the people in his care."
+        },
+        {
+          "lesson_ref": "halo",
+          "title": "A WHOLE ROW OF HALOS",
+          "body": "Look at the row of gold halos. Three hundred and eighteen bishops came to Nicaea; not all of them are shown, but the ones in the icon all have halos. The icon is saying these are not just men who met in a city. The Church is naming all of them holy."
+        }
+      ],
+      "quoted_attribution": null
+    },
+    {
+      "slug": "john-baptist-third-finding",
+      "display_name": "Saint John the Baptist \u2014 Third Finding of the Head",
+      "alternate_names": [
+        "Third Finding of the Precious Head of St. John the Baptist",
+        "Third Finding of the Head of St. John the Baptist",
+        "Third Finding of the Honorable Head of St. John the Baptist",
+        "Third Finding of the Precious Head of the Forerunner",
+        "John the Baptist, Third Finding of the Head",
+        "St. John the Baptist",
+        "John the Baptist",
+        "John the Forerunner",
+        "St. John the Forerunner"
+      ],
+      "commemoration_date": "05-25",
+      "card_type": "single",
+      "rank": "minor",
+      "honorific": "the Forerunner",
+      "icon": {
+        "asset_path": "/Orthodox-Expedition-/assets/saints/john-baptist-third-finding.png",
+        "source": "TBD \u2014 pending Kevin sourcing per D5 \u00a75.1",
+        "source_url": "TBD",
+        "license": "Public Domain",
+        "attribution": "Anonymous Byzantine iconographer; canonical icon to be sourced per D5 \u00a75.1",
+        "alt_text": "Orthodox icon of Saint John the Forerunner in the wilderness, gaunt and bearded, wearing a camel-hair tunic under a green-brown mantle, haloed, holding a small scroll with the words 'Behold the Lamb of God'"
+      },
+      "life_story": "John was the cousin of Christ. His mother Elizabeth and the Mother of God were kin. He was born to elderly parents who had given up hope of having children, and he grew up in the wilderness, in the rough country east of Jerusalem.\n\nThe Gospels remember what he wore: a tunic of camel's hair tied with a leather belt around his waist. He ate locusts and wild honey. He came out of the wilderness preaching repentance and baptizing people in the Jordan river. When Christ came to him to be baptized, the Father spoke from heaven and the Spirit descended on Christ as a dove. John was the last and greatest of the prophets \u2014 the voice in the wilderness sent ahead of Christ to make the way ready.\n\nHe pointed to Christ and said, \"Behold the Lamb of God who takes away the sin of the world.\" He was imprisoned by King Herod for telling the king he could not marry his brother's wife, and he was beheaded in prison. The Church calls him the Forerunner \u2014 the one who ran ahead.\n\nToday the Church remembers a specific moment in her history: the third time the Forerunner's relics were found and returned to the faithful, after being hidden for safekeeping in dangerous times.",
+      "callouts": [
+        {
+          "lesson_ref": "robes_colors",
+          "title": "CAMEL-HAIR AND WILDERNESS GREEN",
+          "body": "In every icon John wears the same distinctive clothing: a rough tunic of camel hair under a deeper outer mantle, often a dark green or olive. No other saint is dressed this way. The icon is saying who he is by what he wore \u2014 the prophet from the wilderness, not from any city or palace."
+        },
+        {
+          "lesson_ref": "face_gaze",
+          "title": "THE PROPHET'S GAZE",
+          "body": "His face is gaunt, his eyes deep-set, his hair wild. He looks out at you with the gaze of someone who has spent his life in the wilderness watching for the Lord. The icon does not soften him. It shows him the way he was \u2014 a voice crying in the desert."
+        },
+        {
+          "lesson_ref": "held_objects",
+          "title": "THE SCROLL HE HOLDS",
+          "body": "Often in his icon, John holds a small scroll with words written on it: \"Behold the Lamb of God who takes away the sin of the world.\" That was the thing he said when he saw Christ. The icon is naming him by what he said. His scroll is his life's one sentence."
+        }
+      ],
+      "quoted_attribution": null
+    },
+    {
+      "slug": "venerable-bede",
+      "display_name": "Venerable Bede",
+      "alternate_names": [
+        "Venerable Bede",
+        "The Venerable Bede",
+        "St. Bede",
+        "Saint Bede",
+        "Bede the Venerable",
+        "Bede of Jarrow"
+      ],
+      "commemoration_date": "05-27",
+      "card_type": "single",
+      "rank": "minor",
+      "honorific": "the Venerable",
+      "icon": {
+        "asset_path": "/Orthodox-Expedition-/assets/saints/venerable-bede.png",
+        "source": "TBD \u2014 pending Kevin sourcing per D5 \u00a75.1",
+        "source_url": "TBD",
+        "license": "Public Domain",
+        "attribution": "Anonymous Byzantine iconographer; canonical icon to be sourced per D5 \u00a75.1",
+        "alt_text": "Orthodox icon of the Venerable Bede in a monk's black robe, haloed, seated or standing with an open Gospel book in his hands, a quill at his side"
+      },
+      "life_story": "Bede was an English monk who lived from 672 to 735. He was sent to a monastery in northern England when he was seven years old and never left it. He spent the rest of his life there \u2014 almost sixty years \u2014 praying, copying manuscripts, and writing.\n\nHe wrote a book called the Ecclesiastical History of the English People, the great history of how Christianity came to the people of England. Without his writing, we would have lost most of what we know about the early English Christians. The Church has called him \"Venerable\" for thirteen hundred years \u2014 a title given to almost no other saint.\n\nOn the last morning of his life he was dictating a translation of the Gospel of John, sentence by sentence, to a young monk who was writing it down. The boy said, \"There is only one chapter left, but it is hard for you to speak.\" Bede answered, \"Write quickly.\" When the boy said the work was finished, Bede said, \"It is finished,\" and he died.\n\nBede lived three hundred years before the Christian Church of the East and the Church of the West were divided. The Orthodox Church still honors him on May 27 \u2014 one of her saints, the same as any other.",
+      "callouts": [
+        {
+          "lesson_ref": "greek_inscriptions",
+          "title": "THE LETTERS ABOVE HIS HEAD",
+          "body": "Look at the letters above his head. In Orthodox icons the Church writes saint names in Greek \u2014 even an English saint like Bede. The pattern is the same: \u039f \u0391\u0393\u0399\u039f\u03a3 for a man, \u0397 \u0391\u0393\u0399\u0391 for a woman, meaning \"the holy one,\" then the saint's name. The Church names her saints in the language she first prayed in."
+        },
+        {
+          "lesson_ref": "held_objects",
+          "title": "THE BOOK IN HIS HANDS",
+          "body": "Bede is almost always shown holding a book \u2014 the Gospels he loved and translated, or his own history of the English Church. Saints often hold what they made or what they kept. He was a writer his whole life. The icon hands him back the book that was always in his hands."
+        },
+        {
+          "lesson_ref": "robes_colors",
+          "title": "A MONK'S BLACK ROBE",
+          "body": "He wears the black robe of a monk. In icons, black says the world is dead to him \u2014 he has given his life entirely to prayer. Bede entered the monastery at seven and never left. The robe is the visible sign of a life that belonged to one place and one God."
+        }
+      ],
+      "quoted_attribution": null
+    },
+    {
+      "slug": "macrina-and-emilia",
+      "display_name": "Saints Macrina the Elder and Emilia",
+      "alternate_names": [
+        "Macrina, grandmother of St. Basil the Great",
+        "Emilia, mother of Saint Basil the Great",
+        "Macrina the Elder",
+        "St. Macrina the Elder",
+        "Emilia of Caesarea",
+        "Emmelia",
+        "Saint Emilia",
+        "Macrina and Emilia",
+        "Saints Macrina and Emilia"
+      ],
+      "commemoration_date": "05-30",
+      "card_type": "paired",
+      "rank": "minor",
+      "honorific": null,
+      "icon": {
+        "asset_path": "/Orthodox-Expedition-/assets/saints/macrina-and-emilia.png",
+        "source": "TBD \u2014 pending Kevin sourcing per D5 \u00a75.1",
+        "source_url": "TBD",
+        "license": "Public Domain",
+        "attribution": "Anonymous Byzantine iconographer; canonical icon to be sourced per D5 \u00a75.1",
+        "alt_text": "Orthodox icon of Saints Macrina the Elder and Emilia, two haloed women side by side, both in dark robes and head-veils, faces frontal, Greek inscriptions naming each saint above her head"
+      },
+      "life_story": "Macrina was the grandmother of St. Basil the Great. She lived in Cappadocia during the worst years of the Roman persecutions, and as a young woman she fled with her husband into the forests and lived hidden there for seven years. When the persecutions ended, she came back and taught her family the faith she had carried into the wilderness.\n\nEmilia was her granddaughter-in-law, the wife of Macrina's grown son. Emilia raised ten children with him in the same household in Caesarea. Of those ten, five became saints. Her oldest son Basil became one of the greatest bishops the Church has ever known. Her daughter Macrina the Younger followed her grandmother's name into a life of prayer. Two more of her sons, Gregory of Nyssa and Peter of Sebaste, became bishops.\n\nThe Church remembers these two women on the same day because the holiness of one became the foundation of the holiness of the next. The grandmother who hid in the forest taught the mother. The mother bore the saints. Both names belong together at the root of a family the Church will never stop thanking God for.",
+      "callouts": [
+        {
+          "lesson_ref": "face_gaze",
+          "title": "THE FACES THAT LOOK OUT",
+          "body": "Both women face forward, eyes open, looking out at whoever holds the icon. Icons almost always do this. It is the way the Church says: these saints are not somewhere far away or long ago \u2014 they are alive in Christ now, and the icon is the window where you can meet them. Macrina and Emilia are looking back."
+        },
+        {
+          "lesson_ref": "greek_inscriptions",
+          "title": "THEIR NAMES IN GREEK",
+          "body": "Above each head, written in Greek: \u0397 \u0391\u0393\u0399\u0391 \u039c\u0391\u039a\u03a1\u0399\u039d\u0391 over the grandmother, \u0397 \u0391\u0393\u0399\u0391 \u0395\u039c\u039c\u0395\u039b\u0395\u0399\u0391 over Emilia. The \u0397 \u0391\u0393\u0399\u0391 means \"the holy one\" \u2014 feminine. The same form as the \u039f \u0391\u0393\u0399\u039f\u03a3 that names a male saint, but the ending changes. The Church writes their names the way she speaks of them in her prayers."
+        },
+        {
+          "lesson_ref": "robes_colors",
+          "title": "THE DARK ROBES OF MOTHERS",
+          "body": "Both women wear deep dark robes and head-veils. Macrina the elder lived as a wife and grandmother, hidden in the forest in dangerous years; Emilia raised her children at home. Yet both are shown wearing the deep dark colors more often seen on monastics. The icon is saying that their lives, however lived, belonged wholly to God."
+        }
+      ],
+      "quoted_attribution": null
+    },
+    {
+      "slug": "holy-pentecost",
+      "display_name": "Holy Pentecost",
+      "alternate_names": [
+        "Holy Pentecost",
+        "Pentecost",
+        "The Feast of Pentecost",
+        "The Descent of the Holy Spirit",
+        "The Feast of the Holy Spirit"
+      ],
+      "commemoration_date": "05-31",
+      "card_type": "feast-as-card",
+      "rank": "great",
+      "honorific": null,
+      "icon": {
+        "asset_path": "/Orthodox-Expedition-/assets/saints/holy-pentecost.png",
+        "source": "TBD \u2014 pending Kevin sourcing per D5 \u00a75.1",
+        "source_url": "TBD",
+        "license": "Public Domain",
+        "attribution": "Anonymous Byzantine iconographer; canonical icon to be sourced per D5 \u00a75.1",
+        "alt_text": "Orthodox icon of the Holy Pentecost: the twelve apostles seated in a horseshoe composition, each with a small tongue of fire above his halo, the figure of Cosmos crowned and aged in the lower arch holding scrolls representing the nations"
+      },
+      "life_story": "Fifty days after Pascha, the apostles were together in a room in Jerusalem. Christ had told them to wait. Suddenly a sound like a great wind filled the house, and what looked like tongues of fire came down and rested on each of them. They were filled with the Holy Spirit.\n\nWhen they went out into the streets, every person there \u2014 and Jerusalem was full of people from every nation that had come for the feast \u2014 heard them speaking in his own language. Some of the crowd thought the apostles were drunk. Peter stood up and explained: the Spirit promised by the prophets had come, and the kingdom of God was beginning.\n\nThat day three thousand people were baptized.\n\nThe Church calls Pentecost her own birthday. Before that morning, the disciples were a frightened group hiding behind locked doors. After it, they were the Church \u2014 sent out, speaking, healing, gathering people from every nation into one body. The Holy Spirit who descended on them is the same Spirit who is poured out on every Christian at chrismation. He does not stop coming.",
+      "callouts": [
+        {
+          "lesson_ref": "held_objects",
+          "title": "THE BOOKS THEY HOLD",
+          "body": "In the icon, the apostles sit in a half-circle, and almost all of them hold a small book or a scroll. The books are the Gospels they will go preach. The scrolls are the prophecies come true. The icon is saying: the Spirit did not leave them empty-handed. He sent them out with the Word."
+        },
+        {
+          "lesson_ref": "halo",
+          "title": "TWELVE HALOS, ONE FIRE",
+          "body": "Look at the row of haloed heads. Each apostle has his own circle of gold; above each one, a small tongue of fire. The icon is saying the Spirit does not give one big light to all of them at once \u2014 he gives a tongue of fire to each, by name. The Church remembers them one by one."
+        },
+        {
+          "lesson_ref": "face_gaze",
+          "title": "FACES TURNED TO THE FIRE",
+          "body": "Some apostles look up toward the fire; others look out toward you. The icon shows both at once. It is the moment the Spirit came down \u2014 and it is also the apostles, ever-since-then, looking out from the icon and waiting. Pentecost is both an event in time and a thing the Church still lives inside."
+        }
+      ],
+      "quoted_attribution": null
+    },
+    {
+      "slug": "justin-philosopher",
+      "display_name": "Saint Justin the Philosopher and Martyr",
+      "alternate_names": [
+        "Justin the Philosopher and Martyr and his Companions",
+        "Justin the Philosopher",
+        "Justin Martyr",
+        "St. Justin Martyr",
+        "Justin the Philosopher and Martyr",
+        "Saint Justin",
+        "Justin and his Companions"
+      ],
+      "commemoration_date": "06-01",
+      "card_type": "single",
+      "rank": "minor",
+      "honorific": "the Philosopher and Martyr",
+      "icon": {
+        "asset_path": "/Orthodox-Expedition-/assets/saints/justin-philosopher.png",
+        "source": "TBD \u2014 pending Kevin sourcing per D5 \u00a75.1",
+        "source_url": "TBD",
+        "license": "Public Domain",
+        "attribution": "Anonymous Byzantine iconographer; canonical icon to be sourced per D5 \u00a75.1",
+        "alt_text": "Orthodox icon of Saint Justin the Philosopher, bearded and haloed, wearing the heavy outer mantle of a Greek philosopher, holding an open scroll in one hand and gesturing with the other"
+      },
+      "life_story": "Justin grew up in a Roman city in Palestine, the son of pagan parents. He spent his youth studying philosophy \u2014 first the Stoics, then the Pythagoreans, then Aristotle, then Plato. He was looking for the truth.\n\nOne day, walking on the seashore, he met an old man. They talked. The old man pointed Justin to the Hebrew prophets, who he said had spoken of the truth long before any Greek philosopher had. Justin read them and became a Christian. But he did not stop being a philosopher \u2014 he kept wearing the philosopher's cloak, and he started writing in defense of the Christians.\n\nHe wrote two long letters to the Roman emperors, asking them to stop killing Christians. He explained that what Christians believed was reasonable, that the truth Plato had reached for was Christ all along. He called this the \"seeds of the Word\" \u2014 scattered through every culture and every wise person, waiting to be recognized.\n\nUnder the emperor Marcus Aurelius, Justin was arrested in Rome with six companions and brought before the prefect Rusticus. Asked if he believed that he would be rewarded in heaven for being a Christian, he answered that he did not just believe \u2014 he knew. He was beheaded that same day.",
+      "callouts": [
+        {
+          "lesson_ref": "held_objects",
+          "title": "THE PHILOSOPHER'S SCROLL",
+          "body": "Justin holds a scroll \u2014 the sign of a teacher who wrote things down. Saints who were theologians or philosophers almost always hold a scroll in their icon, not a Gospel book. The icon is saying he is named by what he wrote. His books defended the Christians at the cost of his life."
+        },
+        {
+          "lesson_ref": "robes_colors",
+          "title": "THE PHILOSOPHER'S MANTLE",
+          "body": "He wears a heavy outer mantle \u2014 the tribon, the cloak Greek philosophers wore. Justin kept wearing it after becoming a Christian. The icon shows him in it on purpose. He was a philosopher who became a Christian and stayed a philosopher. Whatever in philosophy was true, he said, was already from Christ."
+        },
+        {
+          "lesson_ref": "hands",
+          "title": "A HAND THAT POINTS",
+          "body": "One hand holds the scroll; the other is raised, palm open, fingers pointing slightly. In icons of teachers and writers, hands say something different from a bishop's blessing. This is the hand of someone explaining. The icon is showing him in the middle of making his argument."
+        }
+      ],
+      "quoted_attribution": {
+        "speaker": "St. Justin the Philosopher",
+        "text": "I do not suppose; I know and am fully persuaded.",
+        "source": "answering the prefect Rusticus at his trial in Rome, c. 165 AD"
+      }
+    },
+    {
+      "slug": "kevin-of-glendalough",
+      "display_name": "Saint Kevin of Glendalough",
+      "alternate_names": [
+        "Kevin, Abbot of Glendalough",
+        "Kevin of Glendalough",
+        "Saint Kevin",
+        "St. Kevin of Glendalough",
+        "Coemgen of Glendalough",
+        "Coemgen",
+        "Abbot Kevin of Glendalough"
+      ],
+      "commemoration_date": "06-03",
+      "card_type": "single",
+      "rank": "minor",
+      "honorific": "Abbot of Glendalough",
+      "icon": {
+        "asset_path": "/Orthodox-Expedition-/assets/saints/kevin-of-glendalough.png",
+        "source": "TBD \u2014 pending Kevin sourcing per D5 \u00a75.1",
+        "source_url": "TBD",
+        "license": "Public Domain",
+        "attribution": "Anonymous iconographer; canonical icon to be sourced per D5 \u00a75.1",
+        "alt_text": "Orthodox icon of Saint Kevin of Glendalough in a black monastic robe, haloed, one hand open at his side with a small blackbird resting in his palm, the other holding a crozier or a small model of his monastic church"
+      },
+      "life_story": "Kevin was born in Ireland around the year 498 and grew up at a time when the Christian faith had only recently come to his island. As a young man he went into the mountains of Wicklow, in the eastern part of Ireland, and made his home in a tiny stone cave in the cliff above a lake. He lived there alone, praying.\n\nOne of the most loved stories about him is the story of the blackbird. He was praying with his arm held out the way the monks of his land prayed, and a blackbird flew down and laid an egg in his open palm. He did not move. He held his arm still for as long as it took the bird to hatch the egg and fly away.\n\nOther Christians began to find him in his cave. Over the years, a monastery grew around the place. Glendalough \u2014 the glen of two lakes \u2014 became one of the great centers of learning in early Ireland. Monks copied books there, and young men were trained there to be sent out as missionaries.\n\nKevin lived a very long life and never left the glen. The Orthodox Church received him as one of her saints \u2014 Celtic and Eastern Christian alike \u2014 because he lived before the Church of the East and the Church of the West were divided.",
+      "callouts": [
+        {
+          "lesson_ref": "robes_colors",
+          "title": "THE MONK'S BLACK ROBE",
+          "body": "Kevin wears the long black robe of a monastic \u2014 the same kind of robe a monk wears today. In icons, black says the world is dead to him; he lives only for prayer. Kevin spent his whole adult life in one mountain glen, so the robe fits him. The icon is showing a man who chose stillness."
+        },
+        {
+          "lesson_ref": "hands",
+          "title": "THE OPEN HAND",
+          "body": "Often Kevin is shown with one hand open, palm up \u2014 the gesture of a monk in prayer in the Irish tradition. The same icon-makers who knew the blackbird story painted his hand wide and still. In icons, hands are never accidental. His says: he held it open long enough for something else to make a home there."
+        },
+        {
+          "lesson_ref": "held_objects",
+          "title": "A SMALL CHURCH IN HIS ARM",
+          "body": "In some icons Kevin cradles a small church building under one arm. That's how the iconographers say he founded a monastery \u2014 they hand him back the place he made. Other icons give him a crozier, the staff of an abbot. Either way, the icon is naming him by what he built."
+        }
+      ],
+      "quoted_attribution": null
+    },
+    {
+      "slug": "mary-and-martha",
+      "display_name": "Saints Mary and Martha, Sisters of Lazarus",
+      "alternate_names": [
+        "Mary & Martha, the sisters of Lazarus",
+        "Mary and Martha, the sisters of Lazarus",
+        "Mary and Martha, sisters of Lazarus",
+        "Sisters of Lazarus",
+        "Mary and Martha of Bethany",
+        "Saints Mary and Martha",
+        "Mary and Martha"
+      ],
+      "commemoration_date": "06-04",
+      "card_type": "paired",
+      "rank": "minor",
+      "honorific": "Sisters of Lazarus",
+      "icon": {
+        "asset_path": "/Orthodox-Expedition-/assets/saints/mary-and-martha.png",
+        "source": "TBD \u2014 pending Kevin sourcing per D5 \u00a75.1",
+        "source_url": "TBD",
+        "license": "Public Domain",
+        "attribution": "Anonymous Byzantine iconographer; canonical icon to be sourced per D5 \u00a75.1",
+        "alt_text": "Orthodox icon of Saints Mary and Martha of Bethany, two haloed women side by side, Mary in deep red and holding a small alabaster jar, Martha in olive-green and carrying a serving cloth or vessel"
+      },
+      "life_story": "Mary and Martha were sisters who lived in Bethany, a village just outside Jerusalem. Their brother was Lazarus. Christ came to their house often. They were among the few people who fed him and gave him a place to rest during the years he was traveling.\n\nThe Gospel of Luke tells the story of an evening when Christ came to visit. Martha was busy with the work of welcoming him \u2014 cooking, serving, making the house ready. Mary sat down at his feet and listened to him talk. Martha came in and asked Christ to send Mary to help her. Christ answered gently: \"Mary has chosen the better part, and it will not be taken from her.\"\n\nLater, when their brother Lazarus died, it was Martha who ran out to meet Christ on the road. \"If you had been here, my brother would not have died,\" she said. Christ raised Lazarus from the tomb four days later.\n\nA few days after that, at a dinner in their home, Mary took a jar of very costly perfume and poured it over Christ's feet, drying them with her hair. The smell of it filled the whole house. Some of the disciples objected. Christ defended her: she had done it, he said, for his burial.",
+      "callouts": [
+        {
+          "lesson_ref": "face_gaze",
+          "title": "TWO SISTERS LOOKING OUT",
+          "body": "Both sisters face forward, eyes open, side by side. Icons of paired women friends keep them close this way. They look out at you not as figures from a long-ago Gospel story but as women still in the room where Christ used to come. The icon does not move them into the past."
+        },
+        {
+          "lesson_ref": "held_objects",
+          "title": "WHAT EACH ONE HOLDS",
+          "body": "Look at what each sister holds. Mary almost always carries a small jar \u2014 the same alabaster jar Mary the Myrrhbearer carries, but a different Mary and a different jar. This one is the perfume she poured at Christ's feet. Martha sometimes holds a cloth or a small bowl \u2014 the things of welcome, of serving the guest."
+        },
+        {
+          "lesson_ref": "robes_colors",
+          "title": "THE COLORS OF SISTERS",
+          "body": "Their robes are dark and rich \u2014 Mary often in a deep red, Martha in a green-brown or olive. The icons show them as they were: women of a household, not nuns and not queens. They belonged to a quiet life that Christ chose to enter again and again."
+        }
+      ],
+      "quoted_attribution": null
+    },
+    {
+      "slug": "sunday-of-all-saints",
+      "display_name": "The Sunday of All Saints",
+      "alternate_names": [
+        "The Sunday of All Saints",
+        "Sunday of All Saints",
+        "All Saints Sunday",
+        "All Saints",
+        "The Feast of All Saints"
+      ],
+      "commemoration_date": "06-07",
+      "card_type": "feast-as-card",
+      "rank": "major",
+      "honorific": null,
+      "icon": {
+        "asset_path": "/Orthodox-Expedition-/assets/saints/sunday-of-all-saints.png",
+        "source": "TBD \u2014 pending Kevin sourcing per D5 \u00a75.1",
+        "source_url": "TBD",
+        "license": "Public Domain",
+        "attribution": "Anonymous Byzantine iconographer; canonical icon to be sourced per D5 \u00a75.1",
+        "alt_text": "Orthodox icon of the Sunday of All Saints: Christ enthroned at the top, the Mother of God and John the Forerunner near him, beneath them tiers of apostles, bishops, martyrs, monastics, kings, queens, holy children, and unnamed faithful, every figure haloed and turned toward Christ"
+      },
+      "life_story": "The Sunday after Pentecost the Church does not commemorate a single saint or a single feast. She commemorates all of them. Every saint, named and unnamed, known and unknown, who has ever lived and died in Christ. They are too many to list in a calendar of three hundred and sixty-five days. So one Sunday holds them all.\n\nThe icon of this feast is one of the most crowded in the Orthodox tradition. Christ is enthroned at the top. The Mother of God and John the Forerunner stand near him. Beneath them, the apostles in a row. Beneath them, the bishops and martyrs and monks and nuns. Beneath them, the holy kings and queens, the wonderworkers, the children, the missionaries. At the very bottom, ordinary Christians \u2014 the saints whose names no calendar has \u2014 turn their faces up toward Christ.\n\nThe Church places this feast right after Pentecost on purpose. The Holy Spirit came down at Pentecost and made the Church; now the Church shows what the Spirit has done with two thousand years. Every face in the icon is the Spirit's work. The feast is also the Church's confession that she does not yet know all her saints \u2014 some of them are alive now, walking around, and will be added to the icon long after this Sunday is forgotten.",
+      "callouts": [
+        {
+          "lesson_ref": "halo",
+          "title": "A CROWD OF HALOS",
+          "body": "Look at how many gold halos are in this one icon. Dozens of them, sometimes hundreds. Each circle is the Church saying: this one too is holy. The icon teaches by repetition. What a halo means is the same on every head. The communion of saints is not an idea \u2014 it is a crowd."
+        },
+        {
+          "lesson_ref": "robes_colors",
+          "title": "EVERY KIND OF ROBE",
+          "body": "In one icon you can see almost every kind of clothing the Church remembers. Bishops in omophorion. Monks in black. Martyrs in red. Kings and queens in royal purple. Holy children in white. The icon is showing that holiness has no single uniform. Every life given to Christ becomes itself an icon."
+        },
+        {
+          "lesson_ref": "face_gaze",
+          "title": "ALL FACES LOOK UP",
+          "body": "Notice that almost every face in the lower rows is turned up toward Christ. The saints are not facing the viewer here \u2014 they are facing him. The icon is teaching the direction holiness flows. They became saints because they spent their lives looking that way."
+        }
+      ],
+      "quoted_attribution": null
+    },
+    {
+      "slug": "cyril-of-alexandria",
+      "display_name": "Saint Cyril of Alexandria",
+      "alternate_names": [
+        "Cyril, Patriarch of Alexandria",
+        "Cyril of Alexandria",
+        "St. Cyril of Alexandria",
+        "Saint Cyril of Alexandria",
+        "Cyril the Great",
+        "Pillar of Faith"
+      ],
+      "commemoration_date": "06-09",
+      "card_type": "single",
+      "rank": "minor",
+      "honorific": "Patriarch of Alexandria",
+      "icon": {
+        "asset_path": "/Orthodox-Expedition-/assets/saints/cyril-of-alexandria.png",
+        "source": "TBD \u2014 pending Kevin sourcing per D5 \u00a75.1",
+        "source_url": "TBD",
+        "license": "Public Domain",
+        "attribution": "Anonymous Byzantine iconographer; canonical icon to be sourced per D5 \u00a75.1",
+        "alt_text": "Orthodox icon of Saint Cyril of Alexandria, haloed and bearded, in bishop's vestments with white omophorion bearing black crosses, holding a Gospel book in one hand and raising the other in blessing"
+      },
+      "life_story": "Cyril was the bishop of Alexandria in Egypt \u2014 patriarch of the great Christian city on the Nile delta \u2014 from the year 412 until he died in 444. Alexandria in those years was one of the four most important Christian cities in the world.\n\nThe crisis of Cyril's life was a fight over a title. A bishop in Constantinople named Nestorius had said that Mary should not be called the Mother of God, but only the mother of Christ \u2014 as if Christ-the-man and Christ-the-God were two different persons living in one body. Cyril answered him over many years and many letters: Christ is not two persons but one. The eternal Word of God was born of Mary as a baby. So the baby in her arms is true God. So she is rightly called the Mother of God.\n\nThe Church gathered for a great council at Ephesus in 431 to settle the question. Cyril's writing carried the day. The Council confirmed what most Christians had already always sung in their prayers: Mary is the Theotokos, the God-bearer.\n\nCyril is sometimes called the Pillar of Faith. Without him, the Church might have lost the language of who Christ is \u2014 one Person, fully God and fully man \u2014 and the Mother of God might have been called by a smaller name.",
+      "callouts": [
+        {
+          "lesson_ref": "robes_colors",
+          "title": "THE BISHOP'S LONG BAND",
+          "body": "Cyril wears the omophorion \u2014 the long white band running over his shoulders, marked with black crosses. Every Orthodox bishop, then and now, wears it. The crosses on it say: this is the man who carries the cross of Christ for the people in his care. The omophorion is the most recognizable sign of a bishop in any icon."
+        },
+        {
+          "lesson_ref": "held_objects",
+          "title": "THE GOSPEL HE GUARDED",
+          "body": "Cyril holds a Gospel book bound in gold. Bishops in icons almost always hold one. The Gospel is what they preached, what they defended, what they died for. Cyril's life was a long defense of what is on the very first page of that book: that the Word was made flesh."
+        },
+        {
+          "lesson_ref": "hands",
+          "title": "THE BLESSING HAND",
+          "body": "His other hand is raised in blessing \u2014 three fingers together, two fingers folded down. Three for the Holy Trinity, two for Christ's two natures. The same hand sign Christ makes in icons, and every Orthodox priest still makes when he blesses people. Cyril's blessing hand is also his theology: God is three, Christ is one."
+        }
+      ],
+      "quoted_attribution": {
+        "speaker": "St. Cyril of Alexandria",
+        "text": "The holy Virgin is rightly called the Mother of God.",
+        "source": "Third Letter to Nestorius, 430 AD \u2014 adopted by the Council of Ephesus, 431"
+      }
+    },
+    {
+      "slug": "bartholomew-and-barnabas",
+      "display_name": "Saints Bartholomew and Barnabas, Apostles",
+      "alternate_names": [
+        "Bartholomew the Holy Apostle",
+        "Barnabas the Holy Apostle",
+        "Bartholomew and Barnabas",
+        "Saints Bartholomew and Barnabas",
+        "Bartholomew the Apostle",
+        "Barnabas the Apostle",
+        "St. Bartholomew",
+        "St. Barnabas",
+        "Nathanael Bartholomew"
+      ],
+      "commemoration_date": "06-11",
+      "card_type": "paired",
+      "rank": "minor",
+      "honorific": "the Holy Apostles",
+      "icon": {
+        "asset_path": "/Orthodox-Expedition-/assets/saints/bartholomew-and-barnabas.png",
+        "source": "TBD \u2014 pending Kevin sourcing per D5 \u00a75.1",
+        "source_url": "TBD",
+        "license": "Public Domain",
+        "attribution": "Anonymous Byzantine iconographer; canonical icon to be sourced per D5 \u00a75.1",
+        "alt_text": "Orthodox icon of Saints Bartholomew and Barnabas, two haloed apostles standing side by side, each holding a Gospel book, one with the other hand raised in blessing"
+      },
+      "life_story": "The Church remembers two apostles on this day \u2014 one of the Twelve and one of the Seventy.\n\nBartholomew was one of the original twelve disciples Christ chose. The Gospel of John remembers him under another name: Nathanael, the man Christ first saw \"under the fig tree.\" After Pentecost he went out, like the rest of the Twelve, to preach the resurrection. Tradition says he carried the Gospel as far as India and Armenia, and that he was killed for it there.\n\nBarnabas was not one of the Twelve. He was an early Christian from the island of Cyprus, a Jew named Joseph whom the apostles renamed Barnabas \u2014 \"son of encouragement.\" He sold a field he owned and laid the money at the apostles' feet. He brought the newly converted Paul to the other apostles when they were still afraid of him. He traveled with Paul as a missionary, and later went back to Cyprus and founded the Church there. He was killed in his own homeland.\n\nThe Church remembers them together on June 11. Cyprus claims Barnabas as her own founder. The Armenians claim Bartholomew. Two apostles, two distant homelands, one day. The Church's reach has always been wider than any one place.",
+      "callouts": [
+        {
+          "lesson_ref": "hands",
+          "title": "APOSTOLIC HANDS",
+          "body": "Look at their hands. Often one apostle is shown raising a hand in blessing \u2014 three fingers together for the Trinity, two folded for Christ's two natures. The other often holds a scroll or a Gospel in one hand while the other gestures outward, as if speaking. Apostles' hands in icons are always doing the work of preaching."
+        },
+        {
+          "lesson_ref": "held_objects",
+          "title": "A GOSPEL EACH",
+          "body": "Each apostle holds a Gospel book bound in gold or red leather. Apostles almost always carry one \u2014 they are the ones who first preached the Good News. Tradition says Barnabas was buried with a copy of Matthew's Gospel; centuries later, when his tomb was found in Cyprus, the book was still there."
+        },
+        {
+          "lesson_ref": "face_gaze",
+          "title": "TWO MEN FROM DIFFERENT LANDS",
+          "body": "The two apostles stand side by side and look out from the icon together, but their faces are not the same. Bartholomew is often darker-bearded, in the style of the Holy Land. Barnabas is lighter, in the style of Cyprus. Icons let saints look like the people they came from. The Church does not erase where they were born."
+        }
+      ],
+      "quoted_attribution": null
+    },
+    {
+      "slug": "augustine-of-hippo",
+      "display_name": "Saint Augustine of Hippo",
+      "alternate_names": [
+        "Augustine the Blessed, Bishop of Hippo",
+        "Augustine of Hippo",
+        "St. Augustine of Hippo",
+        "Saint Augustine",
+        "Augustine the Blessed",
+        "Blessed Augustine",
+        "Augustine, Bishop of Hippo",
+        "Aurelius Augustinus"
+      ],
+      "commemoration_date": "06-15",
+      "card_type": "single",
+      "rank": "minor",
+      "honorific": "Bishop of Hippo",
+      "icon": {
+        "asset_path": "/Orthodox-Expedition-/assets/saints/augustine-of-hippo.png",
+        "source": "TBD \u2014 pending Kevin sourcing per D5 \u00a75.1",
+        "source_url": "TBD",
+        "license": "Public Domain",
+        "attribution": "Anonymous Byzantine iconographer; canonical icon to be sourced per D5 \u00a75.1",
+        "alt_text": "Orthodox icon of Saint Augustine of Hippo in bishop's vestments with white omophorion, haloed, bearded, holding a Gospel book in one hand, the other resting on a small flaming heart \u2014 the iconographic sign of his Confessions"
+      },
+      "life_story": "Augustine was born in 354 in a small town in what is now Algeria, on the southern coast of the Mediterranean. His mother was a Christian \u2014 St. Monica, whom the Church remembers separately. His father was a pagan. Augustine grew up restless. He was brilliant, ambitious, and unhappy. For years he chased every philosophy and every pleasure he could find. His mother prayed for him.\n\nWhen he was thirty-two, in the city of Milan, he heard Bishop Ambrose preaching. Something cracked in him. He sat in a garden weeping, and he heard a child somewhere singing a little song: \"Take and read, take and read.\" He opened a Bible to where it fell and read a single verse from Paul. He was baptized that Easter.\n\nHe went back to North Africa. He became a bishop of a small port city called Hippo. He stayed there for the rest of his life \u2014 preaching, writing, defending the Church through theological storms. He wrote a book called the Confessions, the long story of how he found God, addressed to God himself. It is still one of the most-read books in the Christian world.\n\nHe died in the year 430 as the Vandals were laying siege to Hippo. The Orthodox Church commemorates him as one of her own \u2014 a Father of the pre-schism Christian West.",
+      "callouts": [
+        {
+          "lesson_ref": "greek_inscriptions",
+          "title": "A WESTERN NAME IN GREEK",
+          "body": "The letters above his head are Greek: \u039f \u0391\u0393\u0399\u039f\u03a3 \u0391\u03a5\u0393\u039f\u03a5\u03a3\u03a4\u0399\u039d\u039f\u03a3. The Greek-speaking Orthodox Church writes Augustine's name in her own language \u2014 even though Augustine spent his whole life writing in Latin. The Church names her saints in the language of her first prayers, no matter where they were from."
+        },
+        {
+          "lesson_ref": "robes_colors",
+          "title": "THE BISHOP'S OMOPHORION",
+          "body": "He wears the long white band over his shoulders marked with crosses \u2014 the omophorion of an Orthodox bishop. In the West he is usually painted in different robes, but in the icons of the Eastern Church he wears what every bishop in her tradition wears. The Church receives him as her own bishop."
+        },
+        {
+          "lesson_ref": "held_objects",
+          "title": "THE BOOK OF HIS HEART",
+          "body": "In one hand he holds a Gospel book \u2014 the sign of a bishop. In some icons his other hand holds a small heart in flames, or rests on a small heart. That heart is his sign. The book he wrote about his own life \u2014 the Confessions \u2014 was the story of how his heart finally found its rest."
+        }
+      ],
+      "quoted_attribution": {
+        "speaker": "St. Augustine of Hippo",
+        "text": "Our heart is restless until it rests in You.",
+        "source": "Confessions, Book 1, addressed to God"
+      }
     }
   ]
 }

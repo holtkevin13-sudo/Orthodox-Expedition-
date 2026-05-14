@@ -1,0 +1,78 @@
+{
+  "version": "1.0.0",
+  "corpus_id": "field-journal-reception-day",
+  "title": "Reception-Day Companion Entries — Theo & Christopher",
+  "occasion_date": "2026-06-19",
+  "occasion": "baptism + chrismation joined",
+  "entries_count": 2,
+  "authored": "2026-05-14",
+  "schema_ref": "docs/design/COMIC_DESIGN_BRIEF.md §4 (Field Journal) + §5.4 (authoring template)",
+  "voice_anchor": "COMIC_DESIGN_BRIEF.md §4.6 (Field Journal journal-posture voice rules) + §5.4 (worked exemplars dated 2026-06-19) + §5.7 (Field Journal authoring craft)",
+  "architecture_locks_honored": [
+    "§1.4 witness-only — entries never address Nolan; first/third person about the authoring character and his own family only",
+    "§1.6 English-default, rare canonical Greek — the chrismation formula appears in Theo's entry as Greek-IS-speech-act (priest's prescribed liturgical text)",
+    "§1.7 Father Nicholas deferred — 'Father' appears as the priest's title with no character-authored dialogue; only the liturgically-prescribed chrismation formula",
+    "§1.8 Mom present-in-world, never authored as a speaker — Mom appears as figure in both entries, observed but never quoted",
+    "§11.7 Pascha-gold reservation — Greek line renders in body ink color, not gold; gold reserved for the resurrection exclamation only"
+  ],
+  "framing_note": "Per orchestrator OQ-7 ruling: the canonical D1 §5.4 framing wins. Theo writes about HIS OWN reception (baptism + chrismation joined) on 2026-06-19 in canon. Christopher writes about HIS SON's reception same day. Nolan reads these on his own real-world reception day (also 2026-06-19); the resonance is implicit and never stated. This honors witness-only (§1.4) without strain and avoids the parasocial-intimacy risk (§6.3) that would attend a 'Theo+Christopher witnessing Nolan' framing.",
+  "consumer_notes": "Static JSON corpus consumed by the Field Manual archive surface (Chat 23 engineering). Mirrors C1 (topic-00-marginalia-v1.json) and C3 (topic-00-saints-v1.json) pattern. Schema extension to public.field_journal table — adding `author`, `paired_entry`, `surface_on_day_of` columns and a new category value (e.g. 'companion_entry') — is Chat 23 scope, not C4 scope. The current schema's `explorer_id` column is single-journaler-shaped and these entries must NOT be inserted with explorer_id = Nolan's UUID (these are character-authored, not Nolan-authored).",
+  "entries": [
+    {
+      "entry_id": "2026-06-19-theo-chrismation",
+      "date": "2026-06-19",
+      "author": "theo",
+      "location_tag": "St. Demetrios. Friday.",
+      "paired_entry": "2026-06-19-christopher-chrismation",
+      "surface_on_day_of": true,
+      "body": "The oil was on a small brush, and Father drew a cross on my forehead, then on my eyes, my ears, my chest, my hands. He said the same words each time, in Greek — Σφραγὶς δωρεᾶς Πνεύματος Ἁγίου. The oil smelled like flowers I do not know the name of. I did not feel different. Mom was holding a candle and not blinking. Christopher said later that I would not always need to feel it.",
+      "word_count": 76,
+      "sentence_count": 6,
+      "word_count_method": "Python str.split() whitespace tokenization; em-dash counts as 1 token; each Greek word counts as 1 token. Reproducible: len(body.split()).",
+      "greek_segments": [
+        {
+          "text": "Σφραγὶς δωρεᾶς Πνεύματος Ἁγίου",
+          "greek": true,
+          "gold": false,
+          "english_caption": "the seal of the gift of the Holy Spirit",
+          "render_note": "Per D1 §11.6: Greek line in body text ink (Theo's ink color #3A2817 per §4.2). English caption rendered smaller and italic beneath the Greek line, never overshadowing it. Per D1 §11.7: gold treatment is RESERVED for the Pascha resurrection exclamation only; this chrismation formula gets body ink color."
+        }
+      ],
+      "voice_provenance": [
+        "Theo's chrismation-moment register anchored in marginalia 00.6.theo.1 ('It happened. / I don't know what to say.') — matter-of-fact, slightly stunned, no theology",
+        "Sensory specificity (small brush, smell of flowers, candle, not blinking) per D1 §4.6 + §5.7 'Theo's entries are concrete'",
+        "'I do not know the name of' — child-aged limit of vocabulary per §5.7 'Theo never uses theological vocabulary he wouldn't naturally have'",
+        "Mom-as-figure 'holding a candle and not blinking' — present, named, never quoted, per §1.8 and the §5.4 exemplar pattern",
+        "Closing Christopher line 'I would not always need to feel it' — pastoral naming rather than wisdom-quote per §5.7 anti-aphorism check; mirrors marginalia 00.6.christopher.1 ('You don't have to. / Not yet.')"
+      ]
+    },
+    {
+      "entry_id": "2026-06-19-christopher-chrismation",
+      "date": "2026-06-19",
+      "author": "christopher",
+      "location_tag": "St. Demetrios. The morning of the seal.",
+      "paired_entry": "2026-06-19-theo-chrismation",
+      "surface_on_day_of": false,
+      "body": "My son was baptized and chrismated this morning — the water first, then the oil. The chrism in the bishop's vessel was older than my son, oil added to oil added to oil for as long as anyone living remembers. Father drew the cross on his forehead, his eyes, his ears, his lips, his chest, his hands, his feet. I had thought I would weep at the water. I wept at the oil. His mother saw it before I did and did not look away.",
+      "word_count": 85,
+      "sentence_count": 6,
+      "word_count_method": "Python str.split() whitespace tokenization; em-dash counts as 1 token. Reproducible: len(body.split()).",
+      "greek_segments": [],
+      "voice_provenance": [
+        "Adult interior reflection per D1 §4.6 + §5.5 voice cheatsheet ('adult-aged reflection, loves without sentiment, names what he hopes')",
+        "Load-bearing swerve structure 'I had thought I would weep at the water. I wept at the oil.' — mirrors §5.4 Christopher exemplar's 'I had prepared what I thought I would feel and I felt none of it. I felt something better.' Both name a felt experience without performing meaning (§5.7)",
+        "Chrism-lineage gesture 'oil added to oil added to oil for as long as anyone living remembers' — Christopher's adult knowledge of Holy Tradition naming the consecration lineage without lecturing it. §5.7 'Christopher uses theological vocabulary naturally — but always with weight, never as flex.' The phrase describes; it does not interpret",
+        "Water-then-oil sequencing per orchestrator OQ-1 ruling and Phase 1 plan: Christopher's adult interior structurally registers the joined sacrament; brief water acknowledgment without dwelling, then chrismation as the entry's central anchor",
+        "Mom-as-figure 'His mother saw it before I did and did not look away' — present, observant, never quoted, per §1.8. Mirrors §5.4 exemplar's Mom-crying observation",
+        "Anti-aphorism check (§5.7): no closing 'wisdom-quote.' The final sentence names a specific behavior (Mom not looking away) rather than performing meaning"
+      ]
+    }
+  ],
+  "engineering_handoff_notes": {
+    "paired_diptych_rendering": "Both entries form a diptych for 2026-06-19. Per D1 §4.5, the Field Manual archive shows all entries (Nolan's + character) in unified date order, visually distinct by author treatment. On 2026-06-19, only the entry with surface_on_day_of=true (Theo's) triggers the gentle home-surfacing nudge ('Theo wrote in his journal today.') per §4.5 — single nudge, dismissible, never repeats. Opening the Field Manual or dismissing the nudge clears it. Christopher's entry is discovered in the archive, never pushed.",
+    "visual_register_per_author": "Theo entries: warm parchment (#F5ECD7), children's-style handwriting font (e.g. Caveat or Patrick Hand), ink-brown (#3A2817), 60px circular Theo portrait at top-left of page, location_tag rendered as page header next to date. Christopher entries: cooler parchment (#F0E4C8), adult cursive (e.g. Homemade Apple or Caveat Brush heavier weight), ink-deep (#2A1810), 60px circular Christopher portrait at top-left. Full visual spec at D1 §4.2.",
+    "greek_typography_for_theo_entry": "Theo's entry contains one Greek segment (the chrismation formula). Per D1 §11.6: render the Greek inline within the body at parent body-text size and ink color; render the English caption immediately beneath, smaller (typically -1 step) and italic, never overshadowing the Greek. Per D1 §11.7: gold reserved for Pascha; this segment is NOT gold. The greek_segments[].gold:false flag confirms.",
+    "schema_extension_needed": "Current public.field_journal table is Nolan-authored-shaped (single explorer_id, no author column, tool_type/tool_color UI fields meaningful only for Nolan's writing surface). Per D1 §7.1 engineering shape, Field Journal records 'look structurally identical to Nolan's own journal entries' with an 'Author field [that] distinguishes character entries from Nolan's entries.' Recommend Chat 23 extend the schema with `author`, `paired_entry_id`, and `surface_on_day_of` columns, plus a new category value for companion entries — OR keep companion entries in a sibling table — engineering's call.",
+    "sketch_assets_paired_entry_expectation": "Per D3 §2, each entry may carry 1–2 marginal line-art sketches in the author's hand. C4 does not specify which sketches accompany these entries; sketch assignment is part of D3's manual-track production by Kevin. Strong candidate sketches: for Theo's entry, the `candle-tall` sketch (matches 'Mom was holding a candle'); for Christopher's entry, the `chi-rho` or `cross-three-bar` sketch. Final assignment is Kevin's track."
+  }
+}

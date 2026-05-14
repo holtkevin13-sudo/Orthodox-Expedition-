@@ -701,7 +701,16 @@
 //        daily bonus on each fresh day_N stamp.
 //      No new STATIC_ASSETS entries — reflection-lane.js is already
 //      listed (cached since v37).
-const CACHE_NAME = 'orthodox-expedition-v47';
+//
+// v48 (May 13, 2026) — Chat 19 — Streak Heatmap calendar
+//      Adds the GitHub-style contribution heatmap to home.html
+//      between #home-dashboard (Today's Progress) and .next-rank-
+//      card. New module js/streak-heatmap.js. CACHE_NAME bump
+//      v47 → v48 forces install of the heatmap module + the
+//      home.html edit (script tag, mount target, mount call,
+//      visibility-refresh extension, .sh-* CSS block).
+//      STATIC_ASSETS additions: js/streak-heatmap.js.
+const CACHE_NAME = 'orthodox-expedition-v48';
 const STATIC_ASSETS = [
   '/Orthodox-Expedition-/',
   '/Orthodox-Expedition-/index.html',
@@ -789,6 +798,8 @@ const STATIC_ASSETS = [
   // v43 — Chat 18 additions (Marginalia v1 on reading lane):
   '/Orthodox-Expedition-/js/marginalia.js',
   '/Orthodox-Expedition-/docs/content/topic-00-marginalia-v1.json',
+  // v48 — Chat 19 addition (Streak Heatmap calendar):
+  '/Orthodox-Expedition-/js/streak-heatmap.js',
 ];
 
 // Install — cache static assets

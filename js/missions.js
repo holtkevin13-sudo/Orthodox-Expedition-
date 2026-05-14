@@ -1171,6 +1171,45 @@
   // Row is a plain <div> (not <a>): there's nowhere to navigate —
   // tapping focuses the textarea via _wireSessionJournalSubmit.
 
+  // ═════════════════════════════════════════════════════════════════
+  // SESSION JOURNAL DRAFT PERSISTENCE (DP-micro · May 13, 2026)
+  // ═════════════════════════════════════════════════════════════════
+  // Mirrors js/reading-reflect-panel.js's wireDraftPersistence.
+  // Survives navigation / app-kill until Nolan submits.
+  // localStorage key: oe_draft_session_journal_{explorerId}_{todayKey}
+  // Date portion lets the per-page sweep orphan-clean previous-day
+  // keys (see missions.html sibling IIFE).
+
+  function _sessionJournalDraftKey(explorerId, today) {
+    return 'oe_draft_session_journal_' + explorerId + '_' + today;
+  }
+
+  // Restore-on-mount + debounced save (200ms) on the Session
+  // Journal textarea. Only invoked when the pending block has
+  // placed #mh-session-journal-textarea in the DOM (NOT pilgrimage,
+  // NOT complete). Independent of the existing refreshEnabled
+  // listener wired in _wireSessionJournalSubmit.
+  function _wireSessionJournalDraftPersistence(innerSlot, ctx) {
+    const ta = innerSlot.querySelector('#mh-session-journal-textarea');
+    if (!ta) return;
+    const KEY = _sessionJournalDraftKey(ctx.explorerId, ctx.today);
+    try {
+      const saved = localStorage.getItem(KEY);
+      if (saved) ta.value = saved;
+    } catch (_e) { /* graceful — quota / private-mode */ }
+    let _saveT;
+    ta.addEventListener('input', () => {
+      clearTimeout(_saveT);
+      _saveT = setTimeout(() => {
+        try {
+          const v = String(ta.value || '').trim();
+          if (v.length === 0) localStorage.removeItem(KEY);
+          else                localStorage.setItem(KEY, v);
+        } catch (_e) { /* graceful */ }
+      }, 200);
+    });
+  }
+
   function _renderSessionJournalBlock(state, opts) {
     const promptRow    = (opts && opts.promptRow)    || null;
     const entryRow     = (opts && opts.entryRow)     || null;
@@ -1301,6 +1340,13 @@
           text:       text,
         });
         if (res && (res.ok || res.alreadySaved)) {
+          // DP-micro · clear draft on success FIRST so the
+          // post-refresh re-render of the lane (in any future
+          // path that re-creates the textarea before refresh
+          // completes) sees an empty key. Covers both res.ok
+          // (fresh write) and res.alreadySaved (cross-tab race).
+          try { localStorage.removeItem(_sessionJournalDraftKey(ctx.explorerId, ctx.today)); }
+          catch (_e) { /* graceful */ }
           // Activity-log breadcrumb for parent-admin visibility (OQ-12).
           // Non-fatal — failure here does not affect the lane state.
           // Skipped on alreadySaved (no fresh write happened).
@@ -1624,6 +1670,12 @@
         innerSlot.innerHTML = _renderSessionJournalPendingHTML({
           promptText,
         });
+        // DP-micro · restore draft + arm debounced save BEFORE
+        // the submit handler wires. Independent of the existing
+        // refreshEnabled input listener in _wireSessionJournalSubmit.
+        _wireSessionJournalDraftPersistence(innerSlot, {
+          explorerId, today,
+        });
         _wireSessionJournalSubmit(innerSlot, {
           sb, explorerId, familyId, today,
           sessionId:  state.activeSession ? state.activeSession.id : null,
@@ -1754,6 +1806,9 @@
       _renderSessionJournalBlock,
       _renderSessionJournalPendingHTML,
       _wireSessionJournalSubmit,
+      // DP-micro · Session Journal draft persistence
+      _sessionJournalDraftKey,
+      _wireSessionJournalDraftPersistence,
     },
   };
 

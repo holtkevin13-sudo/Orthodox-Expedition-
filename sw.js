@@ -710,7 +710,33 @@
 //      home.html edit (script tag, mount target, mount call,
 //      visibility-refresh extension, .sh-* CSS block).
 //      STATIC_ASSETS additions: js/streak-heatmap.js.
-const CACHE_NAME = 'orthodox-expedition-v48';
+//
+// v49 (May 13, 2026) — Chat 20 — Iconography + Saint Bio Micro-Cards
+//      Implements D5: tap a saint on the home Liturgical Calendar
+//      drawer → modal opens with the saint's icon, life story, and
+//      2-3 visual-literacy callouts. First six unique cards an
+//      explorer opens get an inline "How to read icons — Lesson N
+//      of 6" banner above callout #1. Field Manual gains a new
+//      "Saints I've Met" archive section below Past Entries.
+//      New module js/saint-cards.js (loader, slug-matcher, modal
+//      overlay, state read/merge/write on profiles.onboarding_state
+//      JSONB, archive render). New JSON corpus at /docs/content/
+//      saints/topic-00-saints-v1.json (stub ships with Constantine
+//      & Helen baked from D5 §11 verbatim — works end-to-end on
+//      May 21 Day-4 of Topic 00). Edits: js/liturgical-calendar-
+//      home.js (3 lockstep tap-wrap sites — saint <li>, feast_name,
+//      sunday_name), journal.html (✦ Saints I've Met ✦ divider +
+//      saints-archive section + loadSaintsArchive wiring), home.html
+//      (script tag + loadCorpus bootstrap + explorerId threaded
+//      into LC mount). CACHE_NAME bump v48 → v49 forces install of
+//      saint-cards.js module + the edits across the three HTML/JS
+//      files. STATIC_ASSETS additions: js/saint-cards.js +
+//      docs/content/saints/topic-00-saints-v1.json. Saint icon PNG
+//      assets at /assets/saints/<slug>.png are NOT precached in v49
+//      (lazy-cached via runtime fetch-and-cache path; saints lack
+//      authored icon assets at this deploy and the parchment SVG
+//      placeholder renders graceful-degrade inline).
+const CACHE_NAME = 'orthodox-expedition-v49';
 const STATIC_ASSETS = [
   '/Orthodox-Expedition-/',
   '/Orthodox-Expedition-/index.html',
@@ -800,6 +826,9 @@ const STATIC_ASSETS = [
   '/Orthodox-Expedition-/docs/content/topic-00-marginalia-v1.json',
   // v48 — Chat 19 addition (Streak Heatmap calendar):
   '/Orthodox-Expedition-/js/streak-heatmap.js',
+  // v49 — Chat 20 additions (Iconography + Saint Bio Micro-Cards):
+  '/Orthodox-Expedition-/js/saint-cards.js',
+  '/Orthodox-Expedition-/docs/content/saints/topic-00-saints-v1.json',
 ];
 
 // Install — cache static assets

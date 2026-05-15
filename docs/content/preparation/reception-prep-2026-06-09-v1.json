@@ -1,0 +1,733 @@
+{
+  "version": "1.0.0",
+  "corpus_id": "preparation-reception-2026",
+  "title": "Reception-Day Preparation Module — Catechumenate Final Ten Days",
+  "window_start_date": "2026-06-09",
+  "window_end_date": "2026-06-18",
+  "reception_date": "2026-06-19",
+  "reception_event_kind": "baptism_chrismation",
+  "days_count": 10,
+  "authored": "2026-05-16",
+  "authoring_chat": "C5",
+  "schema_ref": "docs/design/reception-day-preparation-module.md §7",
+  "voice_anchor": "COMIC_DESIGN_BRIEF.md §2.3 + §11.6 + §11.7; D8 §6 + §12 + §13",
+  "architecture_locks_honored": [
+    "§1.4 witness-only — marginalia speakers address each other only; reflection prompts surface-authored (door, not character speech), per D8 §13 precedent",
+    "§1.6 English-default — two structural Greek formulas (Day 8 baptismal, Day 9 chrismation transcribed) + one metalinguistic Greek word (Day 6 εὐθέως transcribed); no further Greek per OQ-2 Path A ruling",
+    "§1.7 Father Nicholas deferred — 'the priest' and 'Father' in third-person narration only; no character voice; no quoted dialogue beyond the rite's prescribed liturgical formulas",
+    "§1.8 Mom present-in-world — observed figure in Day 8 (newly authored) and Day 9 (transcribed) anchor paragraphs only; never quoted, never given a marginalia bubble, no voice anywhere",
+    "§11.7 Pascha-gold reserved — both Greek segments carry gold:false; body ink #3A2817; gold reserved for the resurrection exclamation only"
+  ],
+  "movements": [
+    {
+      "id": 1,
+      "title": "Catechumenate",
+      "days": [
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Renunciation + Profession",
+      "days": [
+        4,
+        5,
+        6,
+        7
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Initiation",
+      "days": [
+        8,
+        9,
+        10
+      ]
+    }
+  ],
+  "revision_history": [
+    {
+      "date": "2026-05-16",
+      "chat": "C5",
+      "summary": "Initial corpus authored. Days 6 and 9 transcribed verbatim from D8 §13.1 and §13.2 respectively. Days 1, 2, 3, 4, 5, 7, 8, 10 newly authored per D8 §4 anchor topic + marginalia shape specs and per Phase 1 rulings on OQ-1 through OQ-7 (+ sub-rulings SUB-1 Πατρὸς grave, SUB-2 Νόλαν indeclinable)."
+    }
+  ],
+  "source_summary": {
+    "gospel_text_source": "liturgical_calendar.daily_readings.gospel — RSV-family English translation per existing app reader convention; corpus carries gospel_ref only, surface reads full text from DB at render",
+    "prayer_translation_source": "GOA / Antiochian standard English per Hapgood-family service books; per-anchor source attribution in each day-entry's prayer_anchor.source field",
+    "greek_polytonic_source": "Mikron Euchologion (Greek Orthodox Archdiocese service book) and Hapgood's Service Book of the Holy Orthodox-Catholic Apostolic Church, per D7 §6.1 verification with Πατρὸς grave/varia per SUB-1 polytonic-convention ruling"
+  },
+  "days": [
+    {
+      "day": 1,
+      "calendar_date": "2026-06-09",
+      "day_name": "Tuesday",
+      "movement_id": 1,
+      "movement_role": "catechumenate_opening",
+      "gospel_ref": {
+        "reference": "Matthew 7:15-21",
+        "book_code": "MAT",
+        "chapter": 7,
+        "verse_start": 15,
+        "verse_end": 21
+      },
+      "gospel_premise": "Jesus teaches that a tree is known by what it bears — and that not everyone who calls him Lord knows him.",
+      "anchor_paragraph": {
+        "text": "The Church has been forming the catechumen for a year now. Prayers in the morning, prayers at night, the slow walk into Liturgy on Sundays, the questions asked aloud, the questions kept quiet. None of it was the rite, but all of it was preparing for the rite. Today's Gospel says a tree is known by what it bears. The fruits of catechesis are small and slow — a hand that crosses itself before the prayer is asked, an instinct to listen when the deacon begins, a name remembered from a saint card read in November. The Church has watched these. Friday she names what she has seen.",
+        "word_count": 108
+      },
+      "marginalia": {
+        "shape": "question_and_anchor",
+        "bubbles": [
+          {
+            "id": "prep.01.theo.1",
+            "speaker": "theo",
+            "placement_hint": "after_reading_start",
+            "lines": [
+              "What fruit can a kid have?"
+            ]
+          },
+          {
+            "id": "prep.01.christopher.1",
+            "speaker": "christopher",
+            "placement_hint": "middle_passage",
+            "lines": [
+              "Small ones. Slow ones.",
+              "The kind grown-ups stop noticing because they grew theirs the same way."
+            ]
+          },
+          {
+            "id": "prep.01.theo.2",
+            "speaker": "theo",
+            "placement_hint": "after_reading_end",
+            "lines": [
+              "I started saying the morning prayer without being asked.",
+              "I didn't even know I started."
+            ]
+          },
+          {
+            "id": "prep.01.christopher.2",
+            "speaker": "christopher",
+            "placement_hint": "after_prep.01.theo.2",
+            "lines": [
+              "The Church knew.",
+              "She saw it before you did."
+            ]
+          }
+        ]
+      },
+      "reflection_prompt": {
+        "shape": "question",
+        "text": "What is one small thing in your life that has grown because of the year you have been preparing?"
+      },
+      "prayer_anchor": {
+        "kind": "trisagion",
+        "label": "The Trisagion",
+        "body": "Holy God, Holy Mighty, Holy Immortal, have mercy on us.",
+        "source": "Standard Orthodox prayer rule opening; per Hapgood Service Book and GOA / Antiochian usage. The catechumen has been praying this for a year.",
+        "pointer": null
+      },
+      "greek_segments": []
+    },
+    {
+      "day": 2,
+      "calendar_date": "2026-06-10",
+      "day_name": "Wednesday",
+      "movement_id": 1,
+      "movement_role": "catechumenate",
+      "gospel_ref": {
+        "reference": "Matthew 7:21-23",
+        "book_code": "MAT",
+        "chapter": 7,
+        "verse_start": 21,
+        "verse_end": 23
+      },
+      "gospel_premise": "Jesus says the people he knows are the people who do the will of his Father.",
+      "anchor_paragraph": {
+        "text": "The catechumenate has never been only lessons. The Church has been teaching the catechumen a way of being known by God — through the morning Trisagion, through the standing at the Liturgy, through the asking of his father what a word meant. The doing is the fruit. Christ in today's Gospel warns of people who say his name without knowing him. It is a hard verse to read on the way to a font. But the Church's quiet answer beneath the verse is older than the verse: God has known each catechumen by name from before the world was made. Friday is the formal making-known.",
+        "word_count": 105
+      },
+      "marginalia": {
+        "shape": "two_noticings",
+        "bubbles": [
+          {
+            "id": "prep.02.theo.1",
+            "speaker": "theo",
+            "placement_hint": "after_reading_start",
+            "lines": [
+              "\"I never knew you.\"",
+              "That's the scariest verse I've read all year."
+            ]
+          },
+          {
+            "id": "prep.02.christopher.1",
+            "speaker": "christopher",
+            "placement_hint": "middle_passage",
+            "lines": [
+              "The Church reads it back the other way.",
+              "He has known you from before the world was made."
+            ]
+          },
+          {
+            "id": "prep.02.theo.2",
+            "speaker": "theo",
+            "placement_hint": "after_reading_end",
+            "lines": [
+              "Both of those are in the same Gospel somehow."
+            ]
+          }
+        ]
+      },
+      "reflection_prompt": {
+        "shape": "question",
+        "text": "What is one practice the Church has given you this year that you want to keep?"
+      },
+      "prayer_anchor": {
+        "kind": "jesus_prayer",
+        "label": "The Jesus Prayer",
+        "body": "Lord Jesus Christ, Son of God, have mercy on me.",
+        "source": "Monastic tradition; canonical short form per Hapgood and standard Orthodox prayer-rule practice.",
+        "pointer": null
+      },
+      "greek_segments": []
+    },
+    {
+      "day": 3,
+      "calendar_date": "2026-06-11",
+      "day_name": "Thursday",
+      "movement_id": 1,
+      "movement_role": "catechumenate_closing",
+      "gospel_ref": {
+        "reference": "Luke 10:16-21",
+        "book_code": "LUK",
+        "chapter": 10,
+        "verse_start": 16,
+        "verse_end": 21
+      },
+      "gospel_premise": "Jesus sends his disciples out and tells them that the one who hears them hears him; he rejoices in the Holy Spirit that their names are written in heaven.",
+      "anchor_paragraph": {
+        "text": "Today is the feast of the Holy Apostle Bartholomew. Today's Gospel is the sending of the seventy — Christ giving them authority, watching them return with joy, rejoicing in the Holy Spirit that their names are written in heaven. Bartholomew was sent. Cyril of Alexandria, commemorated Tuesday, was sent. Every disciple in this Gospel was sent. The catechumen who is about to be baptized is joining a 2000-year sending. The catechumenate has been the apprenticeship; Friday is the commissioning. The Gospel ends in joy — Christ's own joy, in the Spirit. The catechumen's name is not yet written in the parish book. By Friday afternoon it will be. The Church receives in joy.",
+        "word_count": 113
+      },
+      "marginalia": {
+        "shape": "recall_and_extend",
+        "bubbles": [
+          {
+            "id": "prep.03.theo.1",
+            "speaker": "theo",
+            "placement_hint": "after_reading_start",
+            "lines": [
+              "I read about Bartholomew in November.",
+              "They flayed him and he kept preaching."
+            ]
+          },
+          {
+            "id": "prep.03.christopher.1",
+            "speaker": "christopher",
+            "placement_hint": "middle_passage",
+            "lines": [
+              "He was a man. He had a name. He was sent.",
+              "The Church is made of men and women like him."
+            ]
+          },
+          {
+            "id": "prep.03.theo.2",
+            "speaker": "theo",
+            "placement_hint": "after_reading_end",
+            "lines": [
+              "My name isn't written in heaven yet."
+            ]
+          },
+          {
+            "id": "prep.03.christopher.2",
+            "speaker": "christopher",
+            "placement_hint": "after_prep.03.theo.2",
+            "lines": [
+              "The Gospel says it will be.",
+              "It's Christ rejoicing about that, in this very reading."
+            ]
+          }
+        ]
+      },
+      "reflection_prompt": {
+        "shape": "question",
+        "text": "What is one saint from this year you would want to ask to pray for you on Friday?"
+      },
+      "prayer_anchor": {
+        "kind": "intercession",
+        "label": "Petition to the Holy Apostle Bartholomew",
+        "body": "Holy Apostle Bartholomew, intercede for the catechumen Nolan.",
+        "source": "Short petitionary form per D8 §4.1; modeled on the standard Orthodox intercessory pattern (e.g. troparion-ending petitions in the Akathist tradition).",
+        "pointer": null
+      },
+      "greek_segments": []
+    },
+    {
+      "day": 4,
+      "calendar_date": "2026-06-12",
+      "day_name": "Friday",
+      "movement_id": 2,
+      "movement_role": "renunciation_opening",
+      "gospel_ref": {
+        "reference": "Matthew 9:14-17",
+        "book_code": "MAT",
+        "chapter": 9,
+        "verse_start": 14,
+        "verse_end": 17
+      },
+      "gospel_premise": "Jesus says you cannot put new wine into old wineskins — the new thing needs a new vessel.",
+      "anchor_paragraph": {
+        "text": "On the morning of the rite, before the catechumen turns east, he turns west — toward darkness in the Church's old vocabulary. The priest will ask him three times: Dost thou renounce Satan, and all his angels, and all his works, and all his service, and all his pride? The catechumen will answer three times: I do renounce him. Then the priest will ask a fourth time, in the perfect tense: Hast thou renounced Satan? And the catechumen will answer: I have renounced him. This is not a feeling. It is a saying. The Church teaches that the saying is what does the work. Today's Gospel names why — the new wine cannot live in the old skin.",
+        "word_count": 118
+      },
+      "marginalia": {
+        "shape": "question_and_anchor",
+        "bubbles": [
+          {
+            "id": "prep.04.theo.1",
+            "speaker": "theo",
+            "placement_hint": "after_reading_start",
+            "lines": [
+              "Do I have to feel it for it to count?"
+            ]
+          },
+          {
+            "id": "prep.04.christopher.1",
+            "speaker": "christopher",
+            "placement_hint": "middle_passage",
+            "lines": [
+              "No. You have to say it.",
+              "The feeling sometimes comes later. Sometimes it doesn't come at all."
+            ]
+          },
+          {
+            "id": "prep.04.theo.2",
+            "speaker": "theo",
+            "placement_hint": "after_reading_end",
+            "lines": [
+              "That's a relief, sort of.",
+              "It also makes me take the saying more seriously."
+            ]
+          },
+          {
+            "id": "prep.04.christopher.2",
+            "speaker": "christopher",
+            "placement_hint": "after_prep.04.theo.2",
+            "lines": [
+              "Both of those are right.",
+              "The new skin will hold what the old one couldn't."
+            ]
+          }
+        ]
+      },
+      "reflection_prompt": {
+        "shape": "question",
+        "text": "What is one thing in your life that does not belong in the new wineskin?"
+      },
+      "prayer_anchor": {
+        "kind": "psalm_verse",
+        "label": "Psalm 51:10 (LXX 50:10)",
+        "body": "Create in me a clean heart, O God, and renew a right spirit within me.",
+        "source": "Hebrew Psalm 51:10 / LXX Psalm 50:10. KJV-family English standard in Orthodox liturgical use (cited in the Third Hour and in personal prayer rules).",
+        "pointer": null
+      },
+      "greek_segments": []
+    },
+    {
+      "day": 5,
+      "calendar_date": "2026-06-13",
+      "day_name": "Saturday",
+      "movement_id": 2,
+      "movement_role": "renunciation_closing",
+      "gospel_ref": {
+        "reference": "Matthew 7:1-8",
+        "book_code": "MAT",
+        "chapter": 7,
+        "verse_start": 1,
+        "verse_end": 8
+      },
+      "gospel_premise": "Jesus teaches not to judge others and to keep asking, seeking, and knocking.",
+      "anchor_paragraph": {
+        "text": "The renunciation does not stop at the rite. The rite begins it; the life lives it. The Church teaches that every day after Friday will carry a small renunciation in it — the catechumen will keep saying no to what does not belong in the new wineskin, and yes to what does. Today's Gospel ends with three verbs: ask, seek, knock. They are the verbs of the new life, repeated. The catechumen will not stop asking. He will not stop being given. The rite Friday is the door; the asking is what the door opens onto.",
+        "word_count": 96
+      },
+      "marginalia": {
+        "shape": "held_silence",
+        "bubbles": [
+          {
+            "id": "prep.05.theo.1",
+            "speaker": "theo",
+            "placement_hint": "after_reading_end",
+            "lines": [
+              "So I have to keep doing it."
+            ]
+          }
+        ]
+      },
+      "reflection_prompt": {
+        "shape": "question",
+        "text": "What is one thing you want to ask for, that you have not asked for before?"
+      },
+      "prayer_anchor": {
+        "kind": "lords_prayer",
+        "label": "The Lord's Prayer (Orthodox form)",
+        "body": "Our Father, who art in heaven, hallowed be Thy name. Thy kingdom come, Thy will be done, on earth as it is in heaven. Give us this day our daily bread; and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from the evil one.",
+        "source": "Matthew 6:9-13 / Luke 11:2-4; GOA and Antiochian standard English translation per Hapgood-family service books. The Orthodox form ends at 'evil one'; the doxology ('For thine is the kingdom...') is added by the priest in the Divine Liturgy.",
+        "pointer": null
+      },
+      "greek_segments": []
+    },
+    {
+      "day": 6,
+      "calendar_date": "2026-06-14",
+      "day_name": "Sunday",
+      "movement_id": 2,
+      "movement_role": "profession_centerpiece",
+      "gospel_ref": {
+        "reference": "Matthew 4:18-23",
+        "book_code": "MAT",
+        "chapter": 4,
+        "verse_start": 18,
+        "verse_end": 23
+      },
+      "gospel_premise": "Jesus walks by the Sea of Galilee, sees four fishermen, calls them, and they leave their nets and follow him.",
+      "anchor_paragraph": {
+        "text": "On the morning of the rite, after the renunciation, the catechumen will turn to face east — toward the rising sun, toward the altar, toward the direction the Church has prayed in for two thousand years. The priest will ask him three times: Dost thou unite thyself unto Christ? And the catechumen will answer three times: I do unite myself unto Christ. And the priest will ask him a fourth time: Hast thou united thyself unto Christ? And the catechumen will answer: I have united myself unto Christ. And then he will say the Creed. This is the profession. It is not a feeling. It is the catechumen's first word as a disciple.",
+        "word_count": 113
+      },
+      "marginalia": {
+        "shape": "question_and_anchor_with_held_silence",
+        "bubbles": [
+          {
+            "id": "prep.06.theo.1",
+            "speaker": "theo",
+            "placement_hint": "after_reading_start",
+            "lines": [
+              "They left their nets right away."
+            ]
+          },
+          {
+            "id": "prep.06.christopher.1",
+            "speaker": "christopher",
+            "placement_hint": "middle_passage",
+            "lines": [
+              "The Greek word is εὐθέως. It means immediately.",
+              "Not after one more day. Not after one more cast."
+            ]
+          },
+          {
+            "id": "prep.06.theo.2",
+            "speaker": "theo",
+            "placement_hint": "after_reading_end",
+            "lines": [
+              "I don't think I would have left my nets that fast."
+            ]
+          },
+          {
+            "id": "prep.06.christopher.2",
+            "speaker": "christopher",
+            "placement_hint": "after_prep.06.theo.2",
+            "lines": [
+              "Neither did Peter, on the days that came after.",
+              "He kept being called. So will you."
+            ]
+          }
+        ]
+      },
+      "reflection_prompt": {
+        "shape": "question",
+        "text": "What does it look like to leave your nets?"
+      },
+      "prayer_anchor": {
+        "kind": "creed_article",
+        "label": "The Nicene Creed, first article",
+        "body": "I believe in one God, the Father Almighty, Maker of heaven and earth, and of all things visible and invisible.",
+        "source": "Symbol of Faith of the First and Second Ecumenical Councils (Nicaea 325 / Constantinople 381). GOA / Antiochian standard English form. The catechumen will confess this in full at the rite Friday.",
+        "pointer": null
+      },
+      "greek_segments": []
+    },
+    {
+      "day": 7,
+      "calendar_date": "2026-06-15",
+      "day_name": "Monday",
+      "movement_id": 2,
+      "movement_role": "profession_closing",
+      "gospel_ref": {
+        "reference": "Matthew 9:36-38; 10:1-8",
+        "book_code": "MAT",
+        "chapter": 9,
+        "verse_start": 36,
+        "verse_end": 8
+      },
+      "gospel_premise": "Jesus sees the people, has compassion, and gives the Twelve power to do what he has been doing.",
+      "anchor_paragraph": {
+        "text": "The catechumen will say the Creed Friday. He will say what he believes; he will be united to Christ. Today's Gospel is the model. Christ sees the crowds, has compassion, calls the Twelve, gives them authority, sends them. The same shape will happen by the font: the Church will see the catechumen; she will call him by name; she will give him the Spirit; she will send him into a life. The Twelve in today's Gospel are named — every one. Simon, James, John, Andrew, Philip, Bartholomew. The catechumen's own name will be said three times on Friday morning by the priest. The Church learns the names of her own.",
+        "word_count": 110
+      },
+      "marginalia": {
+        "shape": "two_noticings",
+        "bubbles": [
+          {
+            "id": "prep.07.theo.1",
+            "speaker": "theo",
+            "placement_hint": "after_reading_start",
+            "lines": [
+              "They're all named.",
+              "Even James the son of Alphaeus, who nobody talks about."
+            ]
+          },
+          {
+            "id": "prep.07.christopher.1",
+            "speaker": "christopher",
+            "placement_hint": "middle_passage",
+            "lines": [
+              "On Friday the priest says your name three times.",
+              "Once at the water. Once at the oil. Once before the cup."
+            ]
+          },
+          {
+            "id": "prep.07.theo.2",
+            "speaker": "theo",
+            "placement_hint": "after_reading_end",
+            "lines": [
+              "I've never heard the Church say my name before."
+            ]
+          },
+          {
+            "id": "prep.07.christopher.2",
+            "speaker": "christopher",
+            "placement_hint": "after_prep.07.theo.2",
+            "lines": [
+              "She's been saying it the whole time.",
+              "On Friday you'll hear it."
+            ]
+          }
+        ]
+      },
+      "reflection_prompt": {
+        "shape": "question",
+        "text": "What name does the Church know you by?"
+      },
+      "prayer_anchor": {
+        "kind": "creed_article",
+        "label": "The Nicene Creed, second article",
+        "body": "And in one Lord Jesus Christ, the only-begotten Son of God, begotten of the Father before all ages: Light of Light, true God of true God, begotten, not made, of one essence with the Father, through whom all things were made; who for us men and for our salvation came down from heaven, and was incarnate of the Holy Spirit and the Virgin Mary, and became man; and was crucified for us under Pontius Pilate, and suffered, and was buried; and rose again on the third day, according to the Scriptures; and ascended into heaven, and sits at the right hand of the Father; and shall come again with glory to judge the living and the dead, whose kingdom shall have no end.",
+        "source": "Symbol of Faith of the First and Second Ecumenical Councils (Nicaea 325 / Constantinople 381). GOA / Antiochian standard English form.",
+        "pointer": null
+      },
+      "greek_segments": []
+    },
+    {
+      "day": 8,
+      "calendar_date": "2026-06-16",
+      "day_name": "Tuesday",
+      "movement_id": 3,
+      "movement_role": "initiation_waters",
+      "gospel_ref": {
+        "reference": "Matthew 10:9-15",
+        "book_code": "MAT",
+        "chapter": 10,
+        "verse_start": 9,
+        "verse_end": 15
+      },
+      "gospel_premise": "Jesus sends the Twelve with very little — no gold, no extra sandals — because the Father provides.",
+      "anchor_paragraph": {
+        "text": "The catechumen will be brought to the font. The priest will pray over the water, calling the Spirit down. The catechumen will be immersed three times — once for the Father, once for the Son, once for the Holy Spirit. At each immersion the priest says: Βαπτίζεται ὁ δοῦλος τοῦ Θεοῦ Νόλαν εἰς τὸ ὄνομα τοῦ Πατρὸς, καὶ τοῦ Υἱοῦ, καὶ τοῦ Ἁγίου Πνεύματος. Ἀμήν. — The servant of God Nolan is baptized in the name of the Father, and of the Son, and of the Holy Spirit. Amen. Mom will be holding a candle and a towel. Today's Gospel says take nothing — no gold, no extra sandals. The catechumen comes to the font with only his name.",
+        "word_count": 119
+      },
+      "marginalia": {
+        "shape": "question_and_anchor",
+        "bubbles": [
+          {
+            "id": "prep.08.theo.1",
+            "speaker": "theo",
+            "placement_hint": "after_reading_start",
+            "lines": [
+              "What does it feel like to go under three times?"
+            ]
+          },
+          {
+            "id": "prep.08.christopher.1",
+            "speaker": "christopher",
+            "placement_hint": "middle_passage",
+            "lines": [
+              "The third time, when you come up, the light from the candles will be on the ceiling.",
+              "You will not be the same boy who went down."
+            ]
+          },
+          {
+            "id": "prep.08.theo.2",
+            "speaker": "theo",
+            "placement_hint": "after_reading_end",
+            "lines": [
+              "The Gospel today says I shouldn't bring anything.",
+              "Not even sandals."
+            ]
+          },
+          {
+            "id": "prep.08.christopher.2",
+            "speaker": "christopher",
+            "placement_hint": "after_prep.08.theo.2",
+            "lines": [
+              "Just your name.",
+              "The water already knows what to do with it."
+            ]
+          }
+        ]
+      },
+      "reflection_prompt": {
+        "shape": "question",
+        "text": "What is one thing you want to leave in the water?"
+      },
+      "prayer_anchor": {
+        "kind": "petition",
+        "label": "A petition from the Blessing of the Waters",
+        "body": "That this water may be sanctified with the power and operation and indwelling of the Holy Spirit, let us pray to the Lord.",
+        "source": "Akolouthia of Holy Baptism, Litany of the Blessing of the Waters (Mikron Euchologion / GOA service book). One petition only; the priest will pray the full litany Friday.",
+        "pointer": null
+      },
+      "greek_segments": [
+        {
+          "text": "Βαπτίζεται ὁ δοῦλος τοῦ Θεοῦ Νόλαν εἰς τὸ ὄνομα τοῦ Πατρὸς, καὶ τοῦ Υἱοῦ, καὶ τοῦ Ἁγίου Πνεύματος. Ἀμήν.",
+          "greek": true,
+          "gold": false,
+          "english_caption": "The servant of God Nolan is baptized in the name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+          "render_note": "Per D1 §11.6: render Greek line in GFS Neohellenic at 1.15× body size in body ink #3A2817; English caption beneath in Crimson Text Italic at 0.85× body size and 80% ink opacity. Per D1 §11.7: gold reserved for the Pascha resurrection exclamation only; this baptismal formula renders in body ink, gold:false. Polytonic form per D7 §6.1 (Mikron Euchologion + Hapgood), with Πατρὸς grave/varia per SUB-1 ruling (final-syllable acute becomes grave in connected speech before καί). Νόλαν indeclinable form per SUB-2 ruling (D8 §12.1 canonical for this dispatch)."
+        }
+      ]
+    },
+    {
+      "day": 9,
+      "calendar_date": "2026-06-17",
+      "day_name": "Wednesday",
+      "movement_id": 3,
+      "movement_role": "initiation_oil",
+      "gospel_ref": {
+        "reference": "Matthew 10:16-22",
+        "book_code": "MAT",
+        "chapter": 10,
+        "verse_start": 16,
+        "verse_end": 22
+      },
+      "gospel_premise": "Jesus sends the Twelve into a world that will not always welcome them, and promises the Spirit will speak in them.",
+      "anchor_paragraph": {
+        "text": "After the water, the priest takes the chrism — the Holy Myron, oil consecrated by the bishop, oil added to oil added to oil for as long as anyone living remembers — and anoints the newly-baptized with the sign of the cross on his forehead, his eyes, his nostrils, his lips, his ears, his chest, his hands, and his feet. At each anointing the priest says the same words in Greek: Σφραγὶς δωρεᾶς Πνεύματος Ἁγίου — the seal of the gift of the Holy Spirit. Mom will be holding a candle and not blinking. What is sealed is sealed. The Spirit does not always speak loudly; today's Gospel says he speaks when the wolves arrive.",
+        "word_count": 115
+      },
+      "marginalia": {
+        "shape": "question_and_anchor",
+        "bubbles": [
+          {
+            "id": "prep.09.theo.1",
+            "speaker": "theo",
+            "placement_hint": "after_reading_start",
+            "lines": [
+              "He's putting it on my eyes and my hands.",
+              "On the parts that go out into the world."
+            ]
+          },
+          {
+            "id": "prep.09.christopher.1",
+            "speaker": "christopher",
+            "placement_hint": "middle_passage",
+            "lines": [
+              "That's the point of the seal.",
+              "It goes with you."
+            ]
+          },
+          {
+            "id": "prep.09.theo.2",
+            "speaker": "theo",
+            "placement_hint": "after_reading_end",
+            "lines": [
+              "Even when I'm in the wolves part."
+            ]
+          },
+          {
+            "id": "prep.09.christopher.2",
+            "speaker": "christopher",
+            "placement_hint": "after_prep.09.theo.2",
+            "lines": [
+              "Especially then."
+            ]
+          }
+        ]
+      },
+      "reflection_prompt": {
+        "shape": "question",
+        "text": "Where in your life will you most need the Spirit to speak?"
+      },
+      "prayer_anchor": {
+        "kind": "holy_spirit_prayer",
+        "label": "O Heavenly King",
+        "body": "O Heavenly King, Comforter, Spirit of Truth, who art everywhere present and fillest all things, Treasury of good things and Giver of Life: come and abide in us, and cleanse us from every stain, and save our souls, O Good One.",
+        "source": "Prayer to the Holy Spirit that opens every Orthodox prayer rule; D8 §13.2 verbatim. The catechumen has prayed this for a year; after Friday he prays it as a baptized member.",
+        "pointer": null
+      },
+      "greek_segments": [
+        {
+          "text": "Σφραγὶς δωρεᾶς Πνεύματος Ἁγίου",
+          "greek": true,
+          "gold": false,
+          "english_caption": "the seal of the gift of the Holy Spirit",
+          "render_note": "Per D1 §11.6: render Greek line in GFS Neohellenic at 1.15× body size in body ink #3A2817; English caption beneath in Crimson Text Italic at 0.85× body size and 80% ink opacity. Per D1 §11.7: gold reserved for the Pascha resurrection exclamation only; this chrismation formula renders in body ink, gold:false. Mirrors C4 reception-day-entries-v1.json greek_segments[] shape and D8 §13.2 verbatim transcription."
+        }
+      ]
+    },
+    {
+      "day": 10,
+      "calendar_date": "2026-06-18",
+      "day_name": "Thursday",
+      "movement_id": 3,
+      "movement_role": "initiation_bread",
+      "gospel_ref": {
+        "reference": "Matthew 10:23-31",
+        "book_code": "MAT",
+        "chapter": 10,
+        "verse_start": 23,
+        "verse_end": 31
+      },
+      "gospel_premise": "Jesus tells the Twelve that the Father sees every sparrow and every hair — that nothing about them is unseen.",
+      "anchor_paragraph": {
+        "text": "After the waters, after the oil, the Church gives the newly-baptized the cup. The Body and the Blood. The completion of the rite: baptized into Christ, sealed with the Spirit, fed at his table. Today's Gospel says the hairs of his head are numbered — every one. The same Father who counts the hairs gives the Body. Tomorrow morning the catechumen will receive from the same cup as everyone else in the parish. There is nothing more for the app to say.",
+        "word_count": 82
+      },
+      "marginalia": {
+        "shape": "held_silence",
+        "bubbles": [
+          {
+            "id": "prep.10.christopher.1",
+            "speaker": "christopher",
+            "placement_hint": "after_reading_end",
+            "lines": [
+              "Tomorrow we will all eat from the same cup."
+            ]
+          }
+        ]
+      },
+      "reflection_prompt": {
+        "shape": "closing_line",
+        "text": "Glory to God for all things."
+      },
+      "prayer_anchor": {
+        "kind": "eucharist_pointer",
+        "label": "Pre-Communion Prayers",
+        "body": null,
+        "source": "Existing app surface; pre-communion prayers from the standard Orthodox Liturgical Service Book (Hapgood / GOA convention). The catechumen prays these tomorrow morning before the cup.",
+        "pointer": "/eucharist-prayers.html"
+      },
+      "greek_segments": []
+    }
+  ],
+  "closing_card": {
+    "title": "Tomorrow the Church receives you.",
+    "body": "Go to bed early. Glory to God for all things.",
+    "glyph": "☩",
+    "next_surface": "/eucharist-prayers.html",
+    "next_surface_label": "Pre-Communion Prayers"
+  }
+}

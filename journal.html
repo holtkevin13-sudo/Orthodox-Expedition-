@@ -11,13 +11,39 @@
 <meta name="theme-color" content="#c9922a">
 <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400;1,600&family=Caveat:wght@400;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/week-utils.js"></script>
 <script src="js/saint-cards.js"></script>
+<script src="js/field-journal-static.js"></script>
 <style>
+/* ──────────────────────────────────────────────────────────────────
+   Chat 23 — GFS Neohellenic polytonic Greek face (Field Journal v1).
+   Scoped LOCAL to journal.html per Chat 22 CATCH-3 pattern (no
+   --font-body global var in repo). unicode-range engages this face
+   ONLY for Greek + Greek Extended codepoints; Latin glyphs continue
+   to resolve to Crimson Text. Woff2 is in sw.js STATIC_ASSETS since
+   v50 (Chat 22), so precache cost is zero.
+   ────────────────────────────────────────────────────────────── */
+@font-face {
+  font-family: 'GFS Neohellenic';
+  src: url('/Orthodox-Expedition-/assets/fonts/GFSNeohellenic-Regular.woff2') format('woff2');
+  unicode-range: U+0370-03FF, U+1F00-1FFF;
+  font-display: swap;
+  font-weight: 400;
+  font-style: normal;
+}
+
 :root{
   --gold:#c9922a;--gold-light:#f0c96e;--gold-bright:#ffd700;
   --parchment:#f4e8c1;--parchment-dark:#e8d5a0;--ink:#1a0f00;
   --leather:#3d1f08;--leather-light:#5c3010;
   --bg:#0e0800;
+  /* Chat 23 — D1 §10.1 Byzantine tokens (scoped-local; used only by
+     .fj-entry--theo / .fj-entry--christopher / .fj-greek). */
+  --fj-ink-brown:#3A2817;     /* Theo's journal ink */
+  --fj-ink-deep:#2A1810;      /* Christopher's journal ink */
+  --fj-parchment-cream:#F5ECD7;
+  --fj-parchment-warm:#F0E4C8;
+  --fj-byzantine-gold:#C9A84C;
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 html,body{min-height:100%;overflow-x:hidden;}
@@ -242,6 +268,123 @@ body{
   color:rgba(61,31,8,0.78);text-transform:uppercase;
 }
 .empty-journal-icon{font-size:2.5rem;margin-bottom:0.75rem;opacity:0.3;}
+
+/* ══════════════════════════════════════════════════════════
+   FIELD JOURNAL — RECEPTION-DAY DIPTYCH (Chat 23)
+   Date-ordered adjacent rendering per D1 §4.5; per-author
+   visual register per D1 §4.2 + §10.2 + orchestrator OQ-4
+   ruling E. Both entries render as adjacent items in the
+   entries-list on 2026-06-19 ET; no primary/secondary, no
+   modal, no tap-to-reveal.
+   ══════════════════════════════════════════════════════════ */
+
+/* Shared diptych entry shell — sits alongside .journal-entry rows
+   in the entries-list. Uses warmer parchment surface than user
+   entries so the canon character entries read as distinct. */
+.fj-entry{
+  position:relative;
+  background:var(--fj-parchment-cream);
+  padding:1.5rem 1.25rem 1.25rem;
+  margin:1rem 0;
+  border-radius:6px;
+  border-left:3px solid var(--fj-byzantine-gold);
+  box-shadow:0 2px 6px rgba(27,42,74,0.08);
+}
+.fj-entry-header{
+  display:flex;align-items:center;gap:0.75rem;
+  margin-bottom:0.75rem;
+  font-family:'Cinzel',serif;font-size:0.62rem;
+  letter-spacing:0.18em;text-transform:uppercase;
+  color:rgba(58,40,23,0.78);
+}
+.fj-entry-author-label{flex:0 0 auto;font-weight:600;}
+.fj-entry-location{
+  flex:1 1 auto;
+  font-family:'Crimson Text',serif;font-style:italic;
+  font-size:0.78rem;letter-spacing:0.02em;text-transform:none;
+  color:rgba(58,40,23,0.62);
+}
+.fj-entry-body{
+  font-size:1.05rem;line-height:1.65;
+  white-space:pre-wrap;
+}
+
+/* Theo entry — child-handed register per D1 §4.2.
+   Caveat is already loaded in journal.html line 12.
+   Ink-brown #3A2817 per D1 §10.1. */
+.fj-entry--theo{
+  background:var(--fj-parchment-cream);
+}
+.fj-entry--theo .fj-entry-body{
+  font-family:'Caveat','Patrick Hand',cursive;
+  font-weight:400;
+  color:var(--fj-ink-brown);
+  font-size:1.35rem;       /* Caveat sits visually smaller; bump up */
+  line-height:1.55;
+}
+.fj-entry--theo .fj-entry-author-label{
+  color:var(--fj-ink-brown);
+}
+
+/* Christopher entry — measured adult register per D1 §4.2.
+   Homemade Apple not loaded; graceful degrade to Crimson Text
+   weight 600 + ink-deep #2A1810 per orchestrator OQ-4 ruling E. */
+.fj-entry--christopher{
+  background:var(--fj-parchment-warm);
+}
+.fj-entry--christopher .fj-entry-body{
+  font-family:'Crimson Text',serif;
+  font-weight:600;
+  color:var(--fj-ink-deep);
+}
+.fj-entry--christopher .fj-entry-author-label{
+  color:var(--fj-ink-deep);
+}
+
+/* Greek inline span inside Theo's body — chrismation formula.
+   GFS Neohellenic resolves automatically via unicode-range; the
+   explicit font-family stack reinforces the cascade and gives
+   browsers without unicode-range a clear hint. Color HARDCODED
+   to --fj-ink-brown — defense-in-depth color discipline per
+   orchestrator note: the renderer enforces ink-brown for the
+   chrismation formula regardless of the JSON's gold:flag.
+   Per D1 §11.7, gold is reserved for Pascha exclamations
+   ONLY; chrismation is body ink. */
+.fj-greek{
+  font-family:'GFS Neohellenic','Crimson Text',serif;
+  color:var(--fj-ink-brown) !important;
+  font-size:1.05em;
+  font-weight:400;
+}
+/* English caption beneath Greek line per D1 §11.6. Smaller,
+   italic, body-ink at 80% opacity. Centered beneath the Greek
+   line via flex column. */
+.fj-greek-caption{
+  display:block;
+  margin:0.25rem 0 0.5rem;
+  font-family:'Crimson Text',serif;
+  font-style:italic;font-weight:400;
+  font-size:0.82em;
+  color:rgba(58,40,23,0.80);
+  text-align:center;
+}
+.fj-greek-block{
+  display:flex;flex-direction:column;
+  align-items:center;
+  margin:0.5rem 0;
+}
+
+/* prefers-reduced-motion: nothing animates inside .fj-entry,
+   but if any inherited transitions exist on hover, gate them. */
+@media (prefers-reduced-motion: reduce){
+  .fj-entry{ transition: none !important; }
+}
+
+/* In admin view, the diptych remains visible (read-only) — admin
+   role sees the canon character entries on a child's reception
+   day the same way the child does. No delete affordance is ever
+   attached to .fj-entry rows; static-JSON entries have no DB row
+   and cannot be deleted. */
 
 /* ══════════════════════════════════════════════════════════
    LEATHER COVER — FIELD MANUAL OPENING ANIMATION
@@ -819,6 +962,7 @@ const STAMPS = ['☩','✦','⊕','◈','⚔','🗺','📜','🏺','🔍','⭐',
 
     buildUI();
     await loadEntries();
+    await renderReceptionDayDiptych();
     await loadSaintsArchive();
 
     document.getElementById('loading').style.display='none';
@@ -937,6 +1081,7 @@ async function onAdminExplorerChange(newId){
   if (entriesTitleEl) entriesTitleEl.textContent = `${viewingExplorerName}'s Field Manual`;
 
   await loadEntries();
+  await renderReceptionDayDiptych();
   await loadSaintsArchive();
 }
 
@@ -1289,6 +1434,205 @@ async function loadSaintsArchive(){
   }
 }
 
+// ── RECEPTION-DAY DIPTYCH (Chat 23) ───────────────────────────
+// Renders the Theo + Christopher chrismation-day paired diptych
+// from the static-JSON corpus (loaded via window.FieldJournalStatic)
+// when the current ET date matches the diptych's authored date
+// (2026-06-19 per /docs/content/field-journal/reception-day-
+// entries-v1.json). Both entries render as ADJACENT items
+// prepended to the entries-list (newest items at top, matching
+// existing order-by created_at DESC convention), per D1 §4.5
+// date-ordered adjacency and orchestrator OQ-2 ruling D.
+//
+// Per orchestrator OQ-1 ruling A: surfaces to ALL explorers on
+// 2026-06-19 ET. No per-explorer filter, no profile.reception_date
+// gate. The canon is witness-only (D1 §1.4); Theo writes about
+// HIS OWN reception, Christopher about HIS SON's — any explorer
+// reading on that date sees the same canon.
+//
+// Per orchestrator OQ-5 ruling: date check via WeekUtils.todayKey()
+// (ET-stable; America/New_York via Intl.DateTimeFormat).
+//
+// Architecture locks honored by the renderer:
+//   §1.4 witness-only — entries are first-person interior; renderer
+//        adds NO framing line addressed to the reader
+//   §1.6 English-default + rare Greek — Greek substring inside
+//        Theo's body wrapped in <span class="fj-greek">; English
+//        caption beneath in .fj-greek-caption
+//   §1.7 Father Nicholas deferred — "Father" is the priest's title
+//        only in the corpus; renderer passes through verbatim
+//   §1.8 Mom present, never speaker — corpus honors; renderer
+//        passes through verbatim
+//   §11.7 Pascha-gold reservation — .fj-greek hardcodes
+//         color:--fj-ink-brown !important; the JSON's gold:false
+//         flag is the authoritative signal AND the CSS enforces
+//         ink-brown regardless (defense-in-depth)
+//
+// Graceful: missing module / corpus / today-not-reception-day →
+// silent no-op. Never throws, never logs to error.
+async function renderReceptionDayDiptych(){
+  if (!window.FieldJournalStatic ||
+      typeof window.FieldJournalStatic.loadCorpus !== 'function') {
+    return;
+  }
+  if (!window.WeekUtils || typeof window.WeekUtils.todayKey !== 'function') {
+    return;
+  }
+  if (!viewingExplorerId) {
+    // Admin view with no children in family — no diptych. (Per OQ-1
+    // ruling A, the diptych is per-explorer-view; rendering with
+    // no explorer context would be meaningless.)
+    return;
+  }
+
+  const listEl = document.getElementById('entries-list');
+  if (!listEl) return;
+
+  let entries;
+  try {
+    await window.FieldJournalStatic.loadCorpus();
+    const todayKey = window.WeekUtils.todayKey();
+    entries = await window.FieldJournalStatic.getReceptionDayEntries(todayKey);
+  } catch(_e) {
+    try { console.debug('[journal] diptych load failed (graceful):', _e); } catch(_ee){}
+    return;
+  }
+
+  if (!entries || !entries.length) return;
+
+  // Defense: clear any prior diptych nodes so re-renders (admin
+  // explorer change) don't accumulate. Static-JSON entries carry
+  // a data-fj-static="1" marker on the wrapper for cheap selection.
+  Array.prototype.forEach.call(
+    listEl.querySelectorAll('[data-fj-static="1"]'),
+    function(node){ node.remove(); }
+  );
+
+  // Build a fragment with both entries (in corpus-ordered order,
+  // which loader already sorts: surface_on_day_of:true first).
+  const frag = document.createDocumentFragment();
+  entries.forEach(function(entry){
+    const wrap = _buildReceptionEntry(entry);
+    if (wrap) frag.appendChild(wrap);
+  });
+
+  // Prepend the diptych so it appears at the top of the entries
+  // list (matches existing order-by created_at DESC; 2026-06-19 is
+  // the newest "date" in the archive on reception day). If the list
+  // currently shows an empty-state, replace it with the diptych
+  // entries instead of prepending alongside the empty-state copy.
+  const emptyState = listEl.querySelector('.empty-journal');
+  if (emptyState) {
+    listEl.innerHTML = '';
+  }
+  if (listEl.firstChild) {
+    listEl.insertBefore(frag, listEl.firstChild);
+  } else {
+    listEl.appendChild(frag);
+  }
+}
+
+// Build a single .fj-entry DOM node for one corpus entry. Returns
+// the wrapper element, or null on bad data. Greek substrings in
+// the body are wrapped in <span class="fj-greek">; each greek
+// segment is followed by its English caption per D1 §11.6.
+function _buildReceptionEntry(entry){
+  if (!entry || !entry.body || !entry.author) return null;
+
+  const isTheo = entry.author === 'theo';
+  const isChristopher = entry.author === 'christopher';
+
+  const wrap = document.createElement('div');
+  wrap.className = 'fj-entry ' + (isTheo
+    ? 'fj-entry--theo'
+    : (isChristopher ? 'fj-entry--christopher' : ''));
+  wrap.setAttribute('data-fj-static', '1');
+  wrap.setAttribute('data-fj-author', entry.author);
+  wrap.setAttribute('data-fj-date', entry.date || '');
+
+  const header = document.createElement('div');
+  header.className = 'fj-entry-header';
+
+  const authorLabel = document.createElement('span');
+  authorLabel.className = 'fj-entry-author-label';
+  authorLabel.textContent = isTheo
+    ? 'Theo'
+    : (isChristopher ? 'Christopher' : (entry.author || ''));
+
+  const locTag = document.createElement('span');
+  locTag.className = 'fj-entry-location';
+  locTag.textContent = entry.location_tag || '';
+
+  header.appendChild(authorLabel);
+  header.appendChild(locTag);
+
+  const body = document.createElement('div');
+  body.className = 'fj-entry-body';
+
+  // Render body: split around any greek_segments substring and
+  // wrap each match. Greek segments are rare (~0–1 per entry in
+  // the current corpus); naïve substring split is sufficient.
+  const segments = Array.isArray(entry.greek_segments)
+    ? entry.greek_segments
+    : [];
+
+  if (segments.length === 0) {
+    body.textContent = entry.body;
+  } else {
+    _renderBodyWithGreek(body, entry.body, segments);
+  }
+
+  wrap.appendChild(header);
+  wrap.appendChild(body);
+  return wrap;
+}
+
+// Mutates `target` element: walks the body string, splitting
+// around each greek_segments[].text match. Greek text is wrapped
+// in <span class="fj-greek">; immediately following the Greek
+// span, the English caption renders in a <span class="fj-greek-
+// caption">. If the caption is short (typical), both Greek and
+// caption sit inside a centered .fj-greek-block flex column for
+// visual alignment per D1 §11.6.
+//
+// Defense-in-depth: the .fj-greek CSS hardcodes color to
+// --fj-ink-brown !important; the renderer never reads the
+// segment's gold:flag. Per orchestrator note: even if a future
+// segment misflags gold:true, this surface enforces ink-brown
+// (Pascha-only gold reservation per D1 §11.7).
+function _renderBodyWithGreek(target, body, segments){
+  // Find earliest match position for each segment text. Render
+  // sequentially: text before match → Greek block → continue.
+  let cursor = 0;
+  segments.forEach(function(seg){
+    if (!seg || !seg.text) return;
+    const idx = body.indexOf(seg.text, cursor);
+    if (idx < 0) return;
+    if (idx > cursor) {
+      target.appendChild(document.createTextNode(body.slice(cursor, idx)));
+    }
+    // Build the Greek block (Greek line + English caption).
+    const block = document.createElement('span');
+    block.className = 'fj-greek-block';
+    const grEl = document.createElement('span');
+    grEl.className = 'fj-greek';
+    grEl.textContent = seg.text;
+    grEl.setAttribute('lang', 'grc');
+    block.appendChild(grEl);
+    if (seg.english_caption) {
+      const cap = document.createElement('span');
+      cap.className = 'fj-greek-caption';
+      cap.textContent = seg.english_caption;
+      block.appendChild(cap);
+    }
+    target.appendChild(block);
+    cursor = idx + seg.text.length;
+  });
+  if (cursor < body.length) {
+    target.appendChild(document.createTextNode(body.slice(cursor)));
+  }
+}
+
 function filterEntries(cat, btn){
   currentFilter = cat;
   document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
@@ -1345,6 +1689,21 @@ function renderEntries(){
       <button class="entry-delete" onclick="deleteEntry('${entry.id}')" title="Delete entry">✕</button>`;
     el.appendChild(div);
   });
+
+  // Chat 23 — re-prepend the reception-day diptych when the All
+  // filter is active. renderEntries() wipes the list each call,
+  // so any DB re-load (saveEntry / deleteEntry / filterEntries-
+  // back-to-all) would otherwise drop the diptych. Static-JSON
+  // entries have no category and never appear under category
+  // filters — only under All. Fire-and-forget: render is async
+  // but appends to the DOM when complete, no caller awaits.
+  if (currentFilter === 'all') {
+    try {
+      renderReceptionDayDiptych();
+    } catch(_e) {
+      try { console.debug('[journal] diptych re-prepend failed (graceful):', _e); } catch(_ee){}
+    }
+  }
 }
 
 // ── DELETE ENTRY ──────────────────────────────────────────────

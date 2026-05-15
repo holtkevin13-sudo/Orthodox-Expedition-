@@ -2,7 +2,7 @@
   "version": "1.0.0",
   "topic_id": "00",
   "topic_title": "Coming Home",
-  "saints_count": 14,
+  "saints_count": 15,
   "authored": "2026-05-14",
   "voice_anchor": "D5 \u00a76.3 \u2014 Father Stephen Freeman at his best; narrator third-person; no character dialogue inside cards",
   "schema_ref": "docs/design/iconography-saint-bio-micro-cards.md \u00a77.2",
@@ -669,6 +669,58 @@
         "text": "Our heart is restless until it rests in You.",
         "source": "Confessions, Book 1, addressed to God"
       }
+    },
+    {
+      "slug": "jude-thaddeus",
+      "display_name": "Saint Jude the Apostle",
+      "alternate_names": [
+        "Thaddeus (Jude) the Apostle & Brother of Our Lord",
+        "Thaddeus (Jude) the Apostle and Brother of Our Lord",
+        "Jude (Thaddeus) the Apostle, Brother of Our Lord",
+        "Holy Apostle Jude (Thaddeus), Brother of Our Lord",
+        "Apostle Jude (Thaddeus)",
+        "Holy Apostle Jude",
+        "Apostle Jude",
+        "St. Jude the Apostle",
+        "Saint Jude the Apostle",
+        "Jude the Apostle",
+        "Jude Thaddeus",
+        "Jude, Brother of the Lord",
+        "Jude, Brother of Our Lord",
+        "St. Jude",
+        "Saint Jude"
+      ],
+      "commemoration_date": "06-19",
+      "card_type": "single",
+      "rank": "minor",
+      "honorific": "Brother of Our Lord",
+      "icon": {
+        "asset_path": "/Orthodox-Expedition-/assets/saints/jude-thaddeus.jpg",
+        "source": "TBD \u2014 pending Kevin sourcing per D5 \u00a75.1",
+        "source_url": "TBD",
+        "license": "Public Domain",
+        "attribution": "Anonymous Byzantine iconographer; canonical icon to be sourced per D5 \u00a75.1",
+        "alt_text": "Orthodox icon of Saint Jude the Apostle, haloed and bearded, in apostolic robes, holding a small scroll in one hand and gesturing outward with the other, his name written in Greek above his head"
+      },
+      "life_story": "Jude, also called Thaddeus, was one of the twelve apostles Christ chose. He is not Judas Iscariot \u2014 the betrayer. He is a different man with a similar name, and the Church takes care to name him otherwise. Orthodox Christians often call him by his second name, Thaddeus, or by an older honor she gives him: Brother of the Lord. By tradition he was a son of Joseph the Betrothed from before Joseph was given charge of the Mother of God, and so he grew up in the household where Christ himself lived as a child.\n\nAfter Pentecost, Jude went out to preach the resurrection. Tradition sends him into Mesopotamia, Armenia, and Persia \u2014 places the Church was first planted by foot and voice. There, sometime around the year sixty-five, he was killed for what he taught.\n\nHe wrote one short letter that the New Testament still keeps. In it he begs the Christians of his time to \"contend for the faith once for all delivered to the saints.\" The line still names what Orthodox Christians mean by Holy Tradition \u2014 the faith handed down once, and handed on still.\n\nThe Gospels remember his voice in one place. At the Last Supper he asked Christ a question \u2014 how God would reveal himself to those who loved him and not to the world. Christ's answer is part of the Gospel the Church reads on Jude's feast day.",
+      "callouts": [
+        {
+          "lesson_ref": "held_objects",
+          "title": "THE SCROLL HE WROTE",
+          "body": "Jude almost always holds a small scroll in his icon. The scroll is his epistle \u2014 the one letter he left the Church, only a single chapter long, but kept in the Bible for two thousand years. Saints often hold the thing that names them. Jude holds what he wrote."
+        },
+        {
+          "lesson_ref": "greek_inscriptions",
+          "title": "HIS NAME IN GREEK",
+          "body": "Above his head, in Greek: \u039f \u0391\u0393\u0399\u039f\u03a3 \u0399\u039f\u03a5\u0394\u0391\u03a3 \u039f \u0398\u0391\u0394\u0394\u0391\u0399\u039f\u03a3 \u2014 \"the holy Jude the Thaddeus.\" Icon-writers spell out both names on purpose. The Church writes saints' names the way she speaks them in her prayers, and for this Jude she takes care to say which Jude she means."
+        },
+        {
+          "lesson_ref": "hands",
+          "title": "A PREACHER'S HAND",
+          "body": "In his icon Jude often holds the scroll in one hand and gestures with the other \u2014 a hand open, palm slightly out, fingers reaching toward whoever is reading. Apostles in icons almost always do this. Their hands are the hands of preachers, caught in the middle of saying something. Jude's hand is still saying his one letter."
+        }
+      ],
+      "quoted_attribution": null
     }
   ]
 }

@@ -1264,6 +1264,63 @@ th{font-size:0.78rem !important;letter-spacing:0.06em !important;font-weight:600
       </div>
     </div>
 
+    <!-- Certificate Generation — v50 (Chat 22) -->
+    <div class="section">
+      <div class="section-title">Certificate Generation</div>
+      <div class="card">
+        <p style="font-size:0.82rem;color:rgba(244,232,193,0.55);margin-bottom:0.875rem;line-height:1.5;font-style:italic;">Generate a printable Byzantine Orthodox certificate. Opens the rendered certificate in a new tab; use the browser's "Print → Save as PDF" to produce the artifact.</p>
+
+        <div class="form-group">
+          <label class="form-label" for="cg-type">Type</label>
+          <select class="form-select" id="cg-type">
+            <option value="chrismation">Chrismation</option>
+            <option value="baptism" disabled>Baptism (available after Chat 24)</option>
+            <option value="both" disabled>Both / joined rite (available after Chat 24)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="cg-recipient">Recipient Name</label>
+          <input type="text" class="form-input" id="cg-recipient" placeholder="Nolan Holt" value="Nolan Holt">
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="cg-date">Date</label>
+            <input type="date" class="form-input" id="cg-date" value="2026-06-19">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="cg-parish">Parish</label>
+            <input type="text" class="form-input" id="cg-parish" placeholder="Parish name">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="cg-priest">Officiating Priest</label>
+            <input type="text" class="form-input" id="cg-priest" placeholder="Father [Name]">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="cg-sponsor" id="cg-sponsor-label">Sponsor</label>
+            <input type="text" class="form-input" id="cg-sponsor" placeholder="Sponsor name">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="cg-father">Father</label>
+            <input type="text" class="form-input" id="cg-father" value="Kevin Holt">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="cg-mother">Mother</label>
+            <input type="text" class="form-input" id="cg-mother" value="Danyelle Holt">
+          </div>
+        </div>
+
+        <button class="btn btn-gold" onclick="generateCertificate()">Generate Certificate</button>
+      </div>
+    </div>
+
     <!-- Data export -->
     <div class="section">
       <div class="section-title">Data Export</div>
@@ -2399,6 +2456,34 @@ async function saveTopicStatus(){
     .select('topic_id').eq('explorer_id',explorerProfile.id).eq('status','complete');
   await sb.from('profiles').update({topics_mastered:(completed||[]).length}).eq('id',explorerProfile.id);
   toast('Topic status updated.');
+}
+
+async function generateCertificate(){
+  // Read form fields
+  const type      = document.getElementById('cg-type').value || 'chrismation';
+  const recipient = document.getElementById('cg-recipient').value.trim();
+  const date      = document.getElementById('cg-date').value.trim();
+  const parish    = document.getElementById('cg-parish').value.trim();
+  const priest    = document.getElementById('cg-priest').value.trim();
+  const sponsor   = document.getElementById('cg-sponsor').value.trim();
+  const father    = document.getElementById('cg-father').value.trim() || 'Kevin Holt';
+  const mother    = document.getElementById('cg-mother').value.trim() || 'Danyelle Holt';
+
+  if (!recipient || !date) {
+    toast('Recipient and date are required.', true);
+    return;
+  }
+  if (type !== 'chrismation') {
+    toast('Only chrismation is functional in v22. Baptism + both arrive in Chat 24.', true);
+    return;
+  }
+
+  // Build URL per D6 §12.3 + D7 §12.3 canonical short names
+  const params = new URLSearchParams({
+    type, recipient, date, parish, priest, sponsor, father, mother
+  });
+  const url = 'certificate.html?' + params.toString();
+  window.open(url, '_blank', 'noopener');
 }
 
 async function exportData(){

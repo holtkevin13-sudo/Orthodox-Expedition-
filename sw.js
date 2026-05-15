@@ -1,3 +1,39 @@
+// Orthodox Expedition — Service Worker v50
+// v50: Chat 22 — Chrismation Certificate render pipeline.
+//      🟢 NEW: certificate.html — self-contained Byzantine
+//          Orthodox certificate render page. US Letter portrait;
+//          HTML + CSS + browser print-to-PDF (no JS-PDF library
+//          dependency); reads URL params (type/recipient/date/
+//          parish/priest/sponsor/father/mother) and renders the
+//          chrismation cert per D6 §4-§14 worked example.
+//          Forward-compat scaffold for Chat 24's baptism template
+//          fragment per D7 §12.4. Polytonic Greek formula +
+//          doxology in body ink (#3A2817, NEVER gold per D1
+//          §11.7 Pascha reservation). Four-corner three-bar
+//          crosses use canonical footrest orientation
+//          (rotate(+18) — viewer's-right end LOWER, viewer's-left
+//          RAISED per Orthodox iconography); deliberate divergence
+//          from favicon.svg's rotate(-18) per Chat 22 CATCH-1
+//          ruling B-1. Favicon orientation correction logged for
+//          post-launch repo-audit.
+//      🟢 NEW: assets/fonts/GFSNeohellenic-Regular.woff2 —
+//          first production polytonic Greek face landing per
+//          D1 §11.5 spec + D6 §15.2. Self-hosted woff2 (74.9 KB
+//          compressed from 432 KB TTF source via fonttools).
+//          @font-face declaration scoped LOCAL to certificate.html
+//          per CATCH-3 (no --font-body global variable in repo).
+//          unicode-range U+0370-03FF + U+1F00-1FFF; Greek
+//          codepoints resolve to GFS Neohellenic; Latin glyphs
+//          continue to use Crimson Text.
+//      🟢 STATIC_ASSETS additions:
+//          '/Orthodox-Expedition-/certificate.html',
+//          '/Orthodox-Expedition-/assets/fonts/GFSNeohellenic-Regular.woff2',
+//      🟢 admin.html — new "Certificate Generation" section
+//          (between Topic Mastery Control and Data Export); admin+
+//          superuser gated (existing role-based pattern); type
+//          selector with Chrismation enabled + Baptism/Both
+//          disabled until Chat 24 lands the baptism fragment.
+//
 // Orthodox Expedition — Service Worker v47
 // v47: Chat 20-IMPL-B — Reading Reflect Panel migration.
 //      🟢 NEW: js/reading-reflect-panel.js — vanilla
@@ -736,7 +772,7 @@
 //      (lazy-cached via runtime fetch-and-cache path; saints lack
 //      authored icon assets at this deploy and the parchment SVG
 //      placeholder renders graceful-degrade inline).
-const CACHE_NAME = 'orthodox-expedition-v49';
+const CACHE_NAME = 'orthodox-expedition-v50';
 const STATIC_ASSETS = [
   '/Orthodox-Expedition-/',
   '/Orthodox-Expedition-/index.html',
@@ -764,6 +800,8 @@ const STATIC_ASSETS = [
   '/Orthodox-Expedition-/icon-maskable-192.png',
   '/Orthodox-Expedition-/icon-maskable-512.png',
   '/Orthodox-Expedition-/manifest.json',
+  // v50 — Chat 22 — chrismation certificate render page:
+  '/Orthodox-Expedition-/certificate.html',
   '/Orthodox-Expedition-/css/viewport.css',
   '/Orthodox-Expedition-/css/contrast.css',
   '/Orthodox-Expedition-/css/nav-polish.css',
@@ -796,6 +834,9 @@ const STATIC_ASSETS = [
   '/Orthodox-Expedition-/assets/characters/christopher-portrait.png',
   '/Orthodox-Expedition-/assets/characters/theo-christopher-companion.png',
   '/Orthodox-Expedition-/assets/characters/theo-christopher-hero.png',
+  // v50 — Chat 22 — GFS Neohellenic polytonic Greek face (first
+  // production font asset; consumed by /certificate.html):
+  '/Orthodox-Expedition-/assets/fonts/GFSNeohellenic-Regular.woff2',
   // v38 — Chat 12 additions (previously loaded but uncached):
   '/Orthodox-Expedition-/js/session-loader.js',
   '/Orthodox-Expedition-/js/calendar-loader.js',

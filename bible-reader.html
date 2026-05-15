@@ -3014,8 +3014,8 @@ function nextChapter(){
 
 function initSupabase(){
   if (typeof supabase === 'undefined') return;
-  const SUPA_URL = 'https://hhatdkrcqnhixemjavgb.supabase.co';
-  const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhoYXRka3JjcW5oaXhlbWphdmdiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ5MTA0NDksImV4cCI6MjA5MDQ4NjQ0OX0.9KSdbZ2RiPbAepj0XvwvUfrdu9yOMq5VcHKgunNEwQ4';
+  const SUPA_URL = 'https://ksfnsryfmkafwirzgjoe.supabase.co';
+  const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtzZm5zcnlmbWthZndpcnpnam9lIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2ODM4MTcsImV4cCI6MjA5MTI1OTgxN30.mHQty44WBnjQY8BJ8KbPk_pp-yTcOaifGxCZPUO4xpY';
   try {
     sb = supabase.createClient(SUPA_URL, SUPA_KEY, { auth:{ persistSession:true, storage:localStorage } });
     sb.auth.getSession().then(({ data }) => {
@@ -3103,20 +3103,33 @@ async function applyRouteFromUrl(replace){
   // expedition AND both vs+ve are present and parseable as positive
   // integers AND vs <= ve. Otherwise null (bible-reader falls back
   // to existing chapter-level open with no verse-range styling).
+  //
+  // BUG-2 REPAIR (May 15, 2026) — accept cross-chapter Gospel
+  // readings. GoArch lectionary stores e.g. "John 9:39-10:9" as
+  // chapter=9, vs=39, ve=9 (ve drawn from the END chapter, not the
+  // start). The prior strict `vs <= ve` validator rejected these
+  // legitimately-spanning readings as malformed (15 of 116 launch-
+  // window days). Now: when vs is valid and ve is absent or
+  // ve < vs, treat the range as "vs to end of this chapter" via a
+  // HUGE_VERSE_END sentinel — applyTodaysReadingMode highlights
+  // vs..(end-of-rendered-chapter) and fades the rest. Cross-chapter
+  // follow-into-next-chapter remains a v1.1 polish (would require
+  // a richer URL contract; out of scope for this repair).
+  const HUGE_VERSE_END = 9999;
   const vsRaw = params.get('vs');
   const veRaw = params.get('ve');
   const vsInt = vsRaw ? parseInt(vsRaw, 10) : NaN;
   const veInt = veRaw ? parseInt(veRaw, 10) : NaN;
   if (source === 'expedition'
       && bookId && chNum
-      && Number.isFinite(vsInt) && vsInt > 0
-      && Number.isFinite(veInt) && veInt > 0
-      && vsInt <= veInt) {
+      && Number.isFinite(vsInt) && vsInt > 0) {
+    const inChapter = (Number.isFinite(veInt) && veInt > 0 && veInt >= vsInt);
     todaysReadingRange = {
-      book:    bookId,
-      chapter: String(chNum),
-      start:   vsInt,
-      end:     veInt,
+      book:         bookId,
+      chapter:      String(chNum),
+      start:        vsInt,
+      end:          inChapter ? veInt : HUGE_VERSE_END,
+      crossChapter: !inChapter,
     };
   } else {
     todaysReadingRange = null;
@@ -3130,10 +3143,18 @@ async function applyRouteFromUrl(replace){
     if (refEl) {
       // Show verse range when set (Dispatch 3c) — falls back to
       // chapter-level ref when vs/ve absent. Preserves 3a behavior
-      // for non-gospel expedition links.
+      // for non-gospel expedition links. BUG-2 REPAIR: when the
+      // range is cross-chapter (e.g. John 9:39-10:9 served as
+      // {chapter:9,start:39,end:9999,crossChapter:true}), render
+      // open-ended form "John 9:39+" rather than the broken
+      // "John 9:39-9999" the prior literal join would have produced.
       let refLabel = `${getBookName(bookId)} ${chNum}`;
       if (todaysReadingRange) {
-        refLabel += `:${todaysReadingRange.start}-${todaysReadingRange.end}`;
+        if (todaysReadingRange.crossChapter) {
+          refLabel += `:${todaysReadingRange.start}+`;
+        } else {
+          refLabel += `:${todaysReadingRange.start}-${todaysReadingRange.end}`;
+        }
       } else if (verseNum) {
         refLabel += `:${verseNum}`;
       }

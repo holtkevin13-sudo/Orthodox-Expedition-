@@ -153,6 +153,16 @@ body {
   color: var(--ink-brown);
   text-transform: uppercase;
 }
+/* Baptism title visual-width parity (D7 SC-3 / Chat 24 OQ-4).
+   "Certificate of Holy Baptism" is 3 words at 25 characters
+   (with spaces); "Certificate of Chrismation" is 2 words at 26
+   characters. At identical letter-spacing 0.18em the 3-word title
+   reads slightly wider because of the inter-word space contribution.
+   Reducing to 0.15em produces approximate apparent-width parity
+   for the two certs hanging side-by-side on Nolan's wall. */
+[data-template="baptism"] .cert-title-text {
+  letter-spacing: 0.15em;
+}
 
 /* ─── Section separator: · · · ─── ☩ ─── · · · ─────────────────── */
 .cert-separator {
@@ -231,9 +241,25 @@ body {
   margin-top: 6pt;
   line-height: 1.4;
 }
+/* Three-line breakout for baptism formula (D7 §6.1 / Chat 24 OQ-2).
+   The three grammatical chunks echo the three immersions; line-height
+   is opened up to 1.4 (vs chrismation's 1.2 single-line) for visual
+   breathing room. */
+.cert-formula-line {
+  display: block;
+}
+[data-template="baptism"] .cert-formula-greek {
+  line-height: 1.4;
+}
 
 /* ──────────────────────────────────────────────────────────────────
-   ZONE 5 — Date + commemoration
+   ZONE 5 — Date + commemoration (chrismation)
+                | Body framing paragraph (baptism, per D7 §14 / PB-1)
+   On the chrismation cert this zone holds the bare date + the
+   commemorated feast. On the baptism cert it is REPLACED by the
+   113-word body framing paragraph that weaves the date prose into
+   the narration of what the Church has done. Template-fragmented
+   per Chat 24 PB-1 ruling.
    ────────────────────────────────────────────────────────────── */
 .zone-date {
   text-align: center;
@@ -254,6 +280,24 @@ body {
   margin-top: 0.10in;
   line-height: 1.5;
   white-space: pre-line;  /* honor newlines from data */
+}
+/* Baptism body framing paragraph (113 words per D7 §14 / OQ-4).
+   Crimson Text body, --ink-brown for liturgical weight. Line-height
+   1.5 by default; if zone-fit measurement in Phase 2 requires it,
+   compress to 1.45 (per OQ-3 ruling). max-width keeps the paragraph
+   from sprawling and preserves the centered-frame rhythm of the
+   surrounding chrome. */
+.cert-body-framing {
+  font-family: var(--font-body);
+  font-style: normal;
+  font-weight: 400;
+  font-size: 13pt;
+  color: var(--ink-brown);
+  line-height: 1.5;
+  text-align: center;
+  max-width: 5.0in;
+  margin: 0 auto;
+  padding: 0 0.1in;
 }
 
 /* ──────────────────────────────────────────────────────────────────
@@ -582,7 +626,7 @@ body {
           <span class="cert-title-text">Certificate of Chrismation</span>
         </div>
         <div data-template="baptism" hidden>
-          <!-- Chat 24 fills: Certificate of Holy Baptism -->
+          <span class="cert-title-text">Certificate of Holy Baptism</span>
         </div>
       </div>
 
@@ -613,7 +657,9 @@ body {
           </div>
         </div>
         <div data-template="baptism" hidden>
-          <!-- Chat 24 fills: has put on Christ in the waters of holy baptism -->
+          <div class="cert-recipient-clause">
+            has put on Christ in the waters of holy baptism
+          </div>
         </div>
       </div>
 
@@ -624,11 +670,15 @@ body {
           <div class="cert-formula-english">The Seal of the Gift of the Holy Spirit</div>
         </div>
         <div data-template="baptism" hidden>
-          <!-- Chat 24 fills: three-line baptismal formula
-               Βαπτίζεται ὁ δοῦλος τοῦ Θεοῦ {recipient}
-               εἰς τὸ ὄνομα τοῦ Πατρὸς καὶ τοῦ Υἱοῦ
-               καὶ τοῦ Ἁγίου Πνεύματος
-               + English gloss -->
+          <div class="cert-formula-greek" lang="grc">
+            <span class="cert-formula-line">Βαπτίζεται ὁ δοῦλος τοῦ Θεοῦ <span id="cert-formula-recipient-greek"></span></span>
+            <span class="cert-formula-line">εἰς τὸ ὄνομα τοῦ Πατρὸς, καὶ τοῦ Υἱοῦ,</span>
+            <span class="cert-formula-line">καὶ τοῦ Ἁγίου Πνεύματος. Ἀμήν.</span>
+          </div>
+          <div class="cert-formula-english">
+            The servant of God <span id="cert-formula-recipient-english"></span> is baptized in the name of
+            the Father, and of the Son, and of the Holy Spirit. Amen.
+          </div>
         </div>
       </div>
 
@@ -650,10 +700,24 @@ body {
         <span class="cert-sep-dots">·&nbsp;·&nbsp;·</span>
       </div>
 
-      <!-- ZONE 5 — Date + commemoration -->
+      <!-- ZONE 5 — Date + commemoration (chrismation)
+                  | Body framing paragraph (baptism, per D7 §14 / PB-1)
+           Template-fragmented per Chat 24 PB-1 ruling: the bare-date
+           zone is REPLACED by the 113-word body framing paragraph on
+           the baptism cert (date prose woven into the framing). The
+           chrismation markup is wrapped verbatim in its template
+           fragment so its rendered output is byte-identical to
+           Chat 22's ship state (GATE 3). -->
       <div class="zone-date">
-        <div class="cert-date-text" id="cert-date">&nbsp;</div>
-        <div class="cert-commemoration" id="cert-commemoration">&nbsp;</div>
+        <div data-template="chrismation">
+          <div class="cert-date-text" id="cert-date">&nbsp;</div>
+          <div class="cert-commemoration" id="cert-commemoration">&nbsp;</div>
+        </div>
+        <div data-template="baptism" hidden>
+          <div class="cert-body-framing">
+            On this <span id="bf-date"></span>, <span id="bf-commemoration"></span>, <span id="bf-recipient"></span> was buried with Christ in the waters of holy baptism and raised with him to newness of life. Three times the priest immersed <span id="bf-pronoun-obj"></span> in the name of the Father, and of the Son, and of the Holy Spirit. <span id="bf-pronoun-subj-cap"></span> went down a child of the household of <span id="bf-family-name"></span>; <span id="bf-pronoun-subj-low"></span> came up clothed in Christ. This is what the Church has done from the beginning. This morning she has done it again.
+          </div>
+        </div>
       </div>
 
       <!-- ZONE 6 — Scripture verse -->
@@ -667,7 +731,11 @@ body {
           <div class="cert-verse-cite">— John 14:23</div>
         </div>
         <div data-template="baptism" hidden>
-          <!-- Chat 24 fills: Galatians 3:27 -->
+          <div class="cert-verse">
+            &ldquo;For as many of you as were baptized into Christ<br>
+            have put on Christ.&rdquo;
+          </div>
+          <div class="cert-verse-cite">— Galatians 3:27</div>
         </div>
       </div>
 
@@ -769,13 +837,17 @@ body {
   const father    = safe(params.get('father')) || 'Kevin Holt';
   const mother    = safe(params.get('mother')) || 'Danyelle Holt';
 
-  // Chat 24 will additionally consume: family_name, pronoun_subj,
-  // pronoun_obj, recipient_name_greek. Chat 22 parses-and-ignores
-  // for forward-compat (no-op if Chat 24's links land prematurely).
-  void params.get('family_name');
-  void params.get('pronoun_subj');
-  void params.get('pronoun_obj');
-  void params.get('recipient_name_greek');
+  // Chat 24 baptism-specific params (Chat 22 forward-compat stubs
+  // replaced with real bindings):
+  //  - family_name → "household of {family_name}" in body framing
+  //  - pronoun_subj / pronoun_obj → body framing pronoun substitution
+  //  - recipient_name_greek → Greek-form recipient inside baptismal
+  //    formula; falls through to recipient (English) per D7 §5.3 SC-4
+  const familyName     = safe(params.get('family_name')) || 'Holt';
+  const pronounObj     = (safe(params.get('pronoun_obj')) || 'him').toLowerCase();
+  const pronounSubjLow = (safe(params.get('pronoun_subj')) || 'he').toLowerCase();
+  const pronounSubjCap = pronounSubjLow.charAt(0).toUpperCase() + pronounSubjLow.slice(1);
+  const recipientGreek = safe(params.get('recipient_name_greek')) || recipient;
 
   // ── Required-field guard (D6 §5.2) ──
   if (!recipient || !date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
@@ -878,6 +950,56 @@ body {
   document.getElementById('cert-sponsor').textContent      = sponsor;
   document.getElementById('cert-father').textContent       = father;
   document.getElementById('cert-mother').textContent       = mother;
+
+  // ── Baptism-only substitutions (Chat 24) ──
+  // The baptism cert needs:
+  //   1) Recipient name inside the polytonic Greek formula (and the
+  //      English gloss beneath) — D7 §5.3: recipient_name_greek falls
+  //      through to recipient (English form) if not supplied.
+  //   2) The 113-word body framing paragraph at zone 5 (D7 §14),
+  //      with pronoun + family name + date prose + commemoration
+  //      substituted via textContent into named span placeholders.
+  //
+  // PB-5 ruling: reuse Chat 22's dateLong pipeline. Construct a
+  // body-framing-style prose date by reusing the same components
+  // (dayOrdinal, monthName, yearWords) without the leading "on this"
+  // prefix and without the post-month comma — these belong to the
+  // HTML template prose around the span, not the date string itself.
+  if (activeType === 'baptism') {
+    const dateLongProse = dayOrdinal + ' day of ' + monthName +
+                          ' in the year of our Lord ' + yearWords;
+    // Commemoration table stores feast text with embedded "\n" for
+    // chrismation's pre-line rendering. For prose body framing,
+    // collapse newlines to spaces.
+    const commemorationProse = commemoration.replace(/\n/g, ' ');
+
+    // Body framing + English gloss use first name only ("Nolan was
+    // buried..."), per D7 §14.2. The cert recipient block above uses
+    // the full name. For multi-word recipient strings, split on the
+    // first space; single-word strings pass through unchanged.
+    const recipientFirst = (recipient.split(/\s+/)[0] || recipient);
+
+    // Formula recipient (Greek + English)
+    const gFEL = document.getElementById('cert-formula-recipient-greek');
+    const eFEL = document.getElementById('cert-formula-recipient-english');
+    if (gFEL) gFEL.textContent = recipientGreek;
+    if (eFEL) eFEL.textContent = recipientFirst;
+
+    // Body framing paragraph — textContent fills (no innerHTML to
+    // keep polytonic + user-supplied strings encoding-safe and free
+    // of any injection surface)
+    const setBF = (id, value) => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = value;
+    };
+    setBF('bf-date',             dateLongProse);
+    setBF('bf-commemoration',    commemorationProse);
+    setBF('bf-recipient',        recipientFirst);
+    setBF('bf-pronoun-obj',      pronounObj);
+    setBF('bf-pronoun-subj-cap', pronounSubjCap);  // sentence-start
+    setBF('bf-pronoun-subj-low', pronounSubjLow);  // post-semicolon
+    setBF('bf-family-name',      familyName);
+  }
 
   // ── Page title → print-to-PDF default filename (D6 §12.5) ──
   const slug = recipient.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');

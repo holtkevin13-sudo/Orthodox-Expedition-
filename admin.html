@@ -1272,10 +1272,10 @@ th{font-size:0.78rem !important;letter-spacing:0.06em !important;font-weight:600
 
         <div class="form-group">
           <label class="form-label" for="cg-type">Type</label>
-          <select class="form-select" id="cg-type">
+          <select class="form-select" id="cg-type" onchange="onCertTypeChange()">
             <option value="chrismation">Chrismation</option>
-            <option value="baptism" disabled>Baptism (available after Chat 24)</option>
-            <option value="both" disabled>Both / joined rite (available after Chat 24)</option>
+            <option value="baptism">Baptism</option>
+            <option value="both">Both / joined rite</option>
           </select>
         </div>
 
@@ -1314,6 +1314,45 @@ th{font-size:0.78rem !important;letter-spacing:0.06em !important;font-weight:600
           <div class="form-group">
             <label class="form-label" for="cg-mother">Mother</label>
             <input type="text" class="form-input" id="cg-mother" value="Danyelle Holt">
+          </div>
+        </div>
+
+        <!-- Baptism-specific fields (shown when type === baptism or both)
+             Chat 24 D7 §15.3: family_name, pronouns, recipient_name_greek.
+             Pronoun fields are NOT hard-coded — per D7 §5.2 / orchestrator
+             OQ-4 ruling, admin tooling exposes the field so the spec is
+             not assumed male. -->
+        <div id="cg-baptism-fields" hidden style="border-top:1px solid rgba(244,232,193,0.10);margin-top:0.875rem;padding-top:0.875rem;">
+          <p style="font-size:0.78rem;color:rgba(244,232,193,0.50);margin-bottom:0.75rem;font-style:italic;">Baptism-specific fields (body framing + Greek formula recipient).</p>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="cg-family-name">Family Name</label>
+              <input type="text" class="form-input" id="cg-family-name" value="Holt">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="cg-recipient-greek">Recipient Name (Greek, optional)</label>
+              <input type="text" class="form-input" id="cg-recipient-greek" placeholder="Νολάνος — falls through to English if blank">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="cg-pronoun-subj">Subject Pronoun</label>
+              <select class="form-select" id="cg-pronoun-subj" onchange="onCertPronounSubjChange()">
+                <option value="he">he</option>
+                <option value="she">she</option>
+                <option value="they">they</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="cg-pronoun-obj">Object Pronoun</label>
+              <select class="form-select" id="cg-pronoun-obj">
+                <option value="him">him</option>
+                <option value="her">her</option>
+                <option value="them">them</option>
+              </select>
+            </div>
           </div>
         </div>
 
@@ -2459,7 +2498,7 @@ async function saveTopicStatus(){
 }
 
 async function generateCertificate(){
-  // Read form fields
+  // Read shared form fields
   const type      = document.getElementById('cg-type').value || 'chrismation';
   const recipient = document.getElementById('cg-recipient').value.trim();
   const date      = document.getElementById('cg-date').value.trim();
@@ -2473,17 +2512,75 @@ async function generateCertificate(){
     toast('Recipient and date are required.', true);
     return;
   }
-  if (type !== 'chrismation') {
-    toast('Only chrismation is functional in v22. Baptism + both arrive in Chat 24.', true);
-    return;
-  }
 
-  // Build URL per D6 §12.3 + D7 §12.3 canonical short names
-  const params = new URLSearchParams({
-    type, recipient, date, parish, priest, sponsor, father, mother
-  });
-  const url = 'certificate.html?' + params.toString();
-  window.open(url, '_blank', 'noopener');
+  // Build base param object — shared across chrismation + baptism
+  const baseParams = { recipient, date, parish, priest, sponsor, father, mother };
+
+  // For baptism-side renders, layer in the Chat 24 baptism-specific
+  // params. These are read regardless of selected type so the form
+  // values are preserved across type-switches inside the admin form.
+  const familyName     = document.getElementById('cg-family-name').value.trim() || 'Holt';
+  const recipientGreek = document.getElementById('cg-recipient-greek').value.trim();
+  const pronounSubj    = document.getElementById('cg-pronoun-subj').value || 'he';
+  const pronounObj     = document.getElementById('cg-pronoun-obj').value || 'him';
+  const baptismExtras  = {
+    family_name: familyName,
+    pronoun_subj: pronounSubj,
+    pronoun_obj: pronounObj
+  };
+  if (recipientGreek) baptismExtras.recipient_name_greek = recipientGreek;
+
+  // Three-way dispatch per D7 §15.3 + Chat 24 OQ-2 (single user-gesture
+  // for the 'both' two-tab open; modern browsers permit two synchronous
+  // window.open calls from one click).
+  const buildUrl = (t, extras = {}) => {
+    const params = new URLSearchParams({ type: t, ...baseParams, ...extras });
+    return 'certificate.html?' + params.toString();
+  };
+
+  if (type === 'chrismation') {
+    window.open(buildUrl('chrismation'), '_blank', 'noopener');
+  } else if (type === 'baptism') {
+    window.open(buildUrl('baptism', baptismExtras), '_blank', 'noopener');
+  } else if (type === 'both') {
+    // Open baptism first (chronologically first in the joined-rite
+    // morning) then chrismation. Both opens are synchronous inside
+    // the same click handler to satisfy popup-blocker single-gesture
+    // policy per OQ-2 PATH A.
+    const w1 = window.open(buildUrl('baptism', baptismExtras), '_blank', 'noopener');
+    const w2 = window.open(buildUrl('chrismation'),            '_blank', 'noopener');
+    if (!w1 || !w2) {
+      toast('Popup blocked — allow popups for this page, then retry.', true);
+    }
+  } else {
+    toast('Unknown certificate type: ' + type, true);
+  }
+}
+
+// Type-selector change → show/hide baptism-specific fields + swap
+// the sponsor label to "Godparent" (and placeholder to match) when
+// type is baptism or both. Per D7 §15.3.
+function onCertTypeChange(){
+  const type = document.getElementById('cg-type').value;
+  const baptismFields = document.getElementById('cg-baptism-fields');
+  const sponsorLabel  = document.getElementById('cg-sponsor-label');
+  const sponsorInput  = document.getElementById('cg-sponsor');
+  const isBaptismish  = (type === 'baptism' || type === 'both');
+  if (baptismFields) baptismFields.hidden = !isBaptismish;
+  if (sponsorLabel)  sponsorLabel.textContent = isBaptismish ? 'Godparent' : 'Sponsor';
+  if (sponsorInput)  sponsorInput.placeholder = isBaptismish ? 'Godparent name' : 'Sponsor name';
+}
+
+// Subject pronoun change → auto-suggest matching object pronoun.
+// Admin can override (the object field is independently editable),
+// but the common cases (he→him, she→her, they→them) update by
+// default so the form is sane without extra clicks.
+function onCertPronounSubjChange(){
+  const subj = document.getElementById('cg-pronoun-subj').value;
+  const objEl = document.getElementById('cg-pronoun-obj');
+  if (!objEl) return;
+  const objMap = { he: 'him', she: 'her', they: 'them' };
+  if (objMap[subj]) objEl.value = objMap[subj];
 }
 
 async function exportData(){

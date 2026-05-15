@@ -1,3 +1,66 @@
+// Orthodox Expedition — Service Worker v51
+// v51: Chat 23 — Field Journal v1 engineering (paired-diptych
+//      static-JSON corpus + per-author visual register on
+//      journal.html). May 14, 2026.
+//      🟢 NEW: js/field-journal-static.js — IIFE-wrapped
+//          window.FieldJournalStatic module mirroring Chat 20's
+//          js/saint-cards.js single-module pattern. Public API:
+//          loadCorpus(), getReceptionDayEntries(dateKey),
+//          hasReceptionDayDiptych(dateKey). Loads
+//          /docs/content/field-journal/reception-day-entries-v1.json
+//          (C4 corpus; 78 lines, 9,768 bytes). Fail-soft on every
+//          error mode; one console.debug breadcrumb on 404.
+//      🟢 NEW: docs/content/field-journal/reception-day-entries-v1.json
+//          C4-authored paired diptych for Nolan's 2026-06-19
+//          reception day (baptism + chrismation joined rite).
+//          Theo + Christopher entries; honors D1 §§1.4, 1.6, 1.7,
+//          1.8, 11.7 architecture locks; consumer-only (Chat 23
+//          never modifies this file — byte-identical pre/post).
+//      🟢 journal.html — diptych render on 2026-06-19 ET.
+//          • Scoped-LOCAL @font-face for GFS Neohellenic per
+//            Chat 22 CATCH-3 pattern (no global --font-body var).
+//            Woff2 already precached since v50; only the
+//            @font-face declaration is added in journal.html.
+//          • <script src="js/week-utils.js"> tag added — module
+//            was already in STATIC_ASSETS but not loaded by
+//            journal.html. Used for ET-stable todayKey() gate.
+//          • <script src="js/field-journal-static.js"> tag.
+//          • Per-author CSS: .fj-entry--theo (Caveat 400,
+//            #3A2817 ink-brown) + .fj-entry--christopher
+//            (Crimson Text 600, #2A1810 ink-deep) per D1 §10.2
+//            spec where loadable + orchestrator OQ-4 ruling E.
+//          • .fj-greek inline span CSS hardcodes
+//            color:--fj-ink-brown !important — defense-in-depth
+//            Pascha-gold reservation per D1 §11.7. Chrismation
+//            formula renders in body ink REGARDLESS of any
+//            JSON gold:flag drift.
+//          • renderReceptionDayDiptych() function: ET-date
+//            gate via WeekUtils.todayKey()==='2026-06-19';
+//            renders both entries as adjacent prepended items
+//            in entries-list per D1 §4.5 date-ordered adjacency
+//            + orchestrator OQ-2 ruling D.
+//          • renderEntries() end-of-fn hook re-prepends diptych
+//            when currentFilter==='all' so filter taps don't
+//            wipe the diptych.
+//      🟢 Supabase migration:
+//          chat_23_field_journal_paired_diptych_extension_20260514
+//          ADD COLUMNS author text, surface_on_day_of boolean,
+//          source_artifact text — all nullable, no CHECK
+//          constraints (per Op Learning #17, validate at
+//          application layer for forward-compat). RLS policy
+//          explorer_own_journal unchanged. paired_entry_id
+//          column INTENTIONALLY omitted per PB-3 ruling A
+//          (entries live in JSON; UUID FK would be dead schema).
+//      🟢 STATIC_ASSETS additions:
+//          '/Orthodox-Expedition-/docs/content/field-journal/'
+//            'reception-day-entries-v1.json',
+//          '/Orthodox-Expedition-/js/field-journal-static.js',
+//      Per orchestrator OQ-1 ruling A: diptych surfaces to ALL
+//      explorers on 2026-06-19 ET (canon is witness-only; the
+//      canon belongs to every explorer reading on that date).
+//      home.html "Theo wrote in his journal today" nudge per
+//      D1 §4.5 deferred to future polish dispatch.
+//
 // Orthodox Expedition — Service Worker v50
 // v50: Chat 22 — Chrismation Certificate render pipeline.
 //      🟢 NEW: certificate.html — self-contained Byzantine
@@ -772,7 +835,7 @@
 //      (lazy-cached via runtime fetch-and-cache path; saints lack
 //      authored icon assets at this deploy and the parchment SVG
 //      placeholder renders graceful-degrade inline).
-const CACHE_NAME = 'orthodox-expedition-v50';
+const CACHE_NAME = 'orthodox-expedition-v51';
 const STATIC_ASSETS = [
   '/Orthodox-Expedition-/',
   '/Orthodox-Expedition-/index.html',
@@ -870,6 +933,9 @@ const STATIC_ASSETS = [
   // v49 — Chat 20 additions (Iconography + Saint Bio Micro-Cards):
   '/Orthodox-Expedition-/js/saint-cards.js',
   '/Orthodox-Expedition-/docs/content/saints/topic-00-saints-v1.json',
+  // v51 — Chat 23 additions (Field Journal v1 paired-diptych):
+  '/Orthodox-Expedition-/js/field-journal-static.js',
+  '/Orthodox-Expedition-/docs/content/field-journal/reception-day-entries-v1.json',
 ];
 
 // Install — cache static assets

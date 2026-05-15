@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Certificate — The Orthodox Expedition</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+
+<!-- Cinzel display + Crimson Text body (already in use across the app) -->
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+
+<style>
+/* ──────────────────────────────────────────────────────────────────
+   GFS NEOHELLENIC — polytonic Greek face, scoped local landing.
+   First production consumer of the font (per D1 §11.5 + D6 §15.2).
+   unicode-range engages the face ONLY for Greek + Greek Extended
+   codepoints; Latin glyphs continue to resolve to Crimson Text.
+   ────────────────────────────────────────────────────────────── */
+@font-face {
+  font-family: 'GFS Neohellenic';
+  src: url('/Orthodox-Expedition-/assets/fonts/GFSNeohellenic-Regular.woff2') format('woff2');
+  unicode-range: U+0370-03FF, U+1F00-1FFF;
+  font-display: swap;
+  font-weight: 400;
+  font-style: normal;
+}
+
+/* ──────────────────────────────────────────────────────────────────
+   PALETTE (D6 §4.4 + §6.3 + §10.3 — Byzantine register).
+   Gold reserved for ornament; body ink for ALL Greek per §11.7.
+   ────────────────────────────────────────────────────────────── */
+:root {
+  --parchment-cream: #F5ECD7;
+  --byzantine-gold: #C9A84C;
+  --ink-brown: #3A2817;
+  --gold-soft: rgba(201, 168, 76, 0.70);
+  --ink-soft:  rgba(58, 40, 23, 0.80);
+  --ink-faint: rgba(58, 40, 23, 0.70);
+
+  /* Local font stack: Greek codepoints resolve to GFS Neohellenic
+     via unicode-range; everything else stays on Crimson Text. */
+  --font-body: 'Crimson Text', 'GFS Neohellenic', Georgia, serif;
+  --font-display: 'Cinzel', 'Times New Roman', serif;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+html, body {
+  background: #2a1a08;
+  font-family: var(--font-body);
+  color: var(--ink-brown);
+  min-height: 100vh;
+}
+
+body {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 1.5rem 1rem 4rem;
+}
+
+/* ──────────────────────────────────────────────────────────────────
+   CERTIFICATE — 8.5in × 11in, US Letter portrait, locked.
+   D6 §4.1-§4.3. On screen this renders as a preview at scale.
+   In print, the @page rule strips body padding and the
+   certificate fills the printed page exactly.
+   ────────────────────────────────────────────────────────────── */
+.certificate {
+  position: relative;
+  width: 8.5in;
+  height: 11in;
+  background: var(--parchment-cream);
+  color: var(--ink-brown);
+  font-family: var(--font-body);
+  box-shadow: 0 12px 48px rgba(0,0,0,0.55), 0 4px 12px rgba(0,0,0,0.35);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+/* Outer gold hairline frame ~5mm inside page edge (D6 §4.5) */
+.cert-frame {
+  position: absolute;
+  top: 0.20in; right: 0.20in; bottom: 0.20in; left: 0.20in;
+  border: 1px solid var(--byzantine-gold);
+  pointer-events: none;
+}
+
+/* Inner content padding inside the frame (D6 §4.2) */
+.cert-content {
+  position: absolute;
+  top: 0.70in; right: 0.95in; bottom: 0.70in; left: 0.95in;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+/* ─── Corner ornaments — fleur quartrefoils at frame inner corners ─ */
+.cert-fleur {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  pointer-events: none;
+}
+.cert-fleur.tl { top: calc(0.20in - 7px);    left: calc(0.20in - 7px); }
+.cert-fleur.tr { top: calc(0.20in - 7px);    right: calc(0.20in - 7px); }
+.cert-fleur.bl { bottom: calc(0.20in - 7px); left: calc(0.20in - 7px); }
+.cert-fleur.br { bottom: calc(0.20in - 7px); right: calc(0.20in - 7px); }
+
+/* ─── Corner three-bar crosses — inside content area, all four ─── */
+.cert-corner-cross {
+  position: absolute;
+  width: 26px;
+  height: 32px;
+  pointer-events: none;
+}
+.cert-corner-cross.tl { top: 0.45in;    left: 0.45in; }
+.cert-corner-cross.tr { top: 0.45in;    right: 0.45in; }
+.cert-corner-cross.bl { bottom: 0.45in; left: 0.45in; }
+.cert-corner-cross.br { bottom: 0.45in; right: 0.45in; }
+
+/* ──────────────────────────────────────────────────────────────────
+   ZONE 1 — Chi-rho monogram (top center)
+   ────────────────────────────────────────────────────────────── */
+.zone-chirho {
+  text-align: center;
+  margin-top: 0.10in;
+}
+.zone-chirho svg {
+  width: 56px;
+  height: 70px;
+  display: inline-block;
+}
+
+/* ──────────────────────────────────────────────────────────────────
+   ZONE 2 — Document title
+   ────────────────────────────────────────────────────────────── */
+.zone-title {
+  text-align: center;
+  margin-top: 0.10in;
+}
+.cert-title-text {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 16pt;
+  letter-spacing: 0.18em;
+  color: var(--ink-brown);
+  text-transform: uppercase;
+}
+
+/* ─── Section separator: · · · ─── ☩ ─── · · · ─────────────────── */
+.cert-separator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5em;
+  width: 3.5in;
+  margin: 0.18in auto;
+  color: var(--gold-soft);
+  pointer-events: none;
+}
+.cert-sep-dots {
+  font-family: var(--font-body);
+  font-size: 12pt;
+  letter-spacing: 0.30em;
+  color: var(--gold-soft);
+}
+.cert-sep-rule {
+  flex: 0 0 0.9in;
+  height: 1px;
+  background: var(--gold-soft);
+}
+.cert-sep-cross {
+  display: inline-block;
+  width: 16px;
+  height: 20px;
+}
+
+/* ──────────────────────────────────────────────────────────────────
+   ZONE 3 — Recipient name + sealing clause
+   ────────────────────────────────────────────────────────────── */
+.zone-recipient {
+  text-align: center;
+  margin-top: 0.05in;
+}
+.cert-recipient-name {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 36pt;
+  letter-spacing: 0.12em;
+  line-height: 1.0;
+  color: var(--ink-brown);
+  text-transform: uppercase;
+}
+.cert-recipient-clause {
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: 14pt;
+  color: var(--ink-brown);
+  margin-top: 0.18in;
+  line-height: 1.3;
+}
+
+/* ──────────────────────────────────────────────────────────────────
+   ZONE 4 — Chrismation formula (Greek + English gloss)
+   COLOR DISCIPLINE: Greek in --ink-brown, NEVER gold (D1 §11.7,
+   D6 §2.5, §6.3).
+   ────────────────────────────────────────────────────────────── */
+.zone-formula {
+  text-align: center;
+  margin-top: 0.05in;
+}
+.cert-formula-greek {
+  font-family: 'GFS Neohellenic', 'Crimson Text', Georgia, serif;
+  font-weight: 400;
+  font-size: 22pt;
+  line-height: 1.2;
+  color: var(--ink-brown);  /* NOT gold — Pascha reservation §11.7 */
+}
+.cert-formula-english {
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: 16pt;
+  color: var(--ink-soft);
+  margin-top: 6pt;
+  line-height: 1.4;
+}
+
+/* ──────────────────────────────────────────────────────────────────
+   ZONE 5 — Date + commemoration
+   ────────────────────────────────────────────────────────────── */
+.zone-date {
+  text-align: center;
+  margin-top: 0.05in;
+  color: var(--ink-brown);
+}
+.cert-date-text {
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: 14pt;
+  line-height: 1.5;
+}
+.cert-commemoration {
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: 13pt;
+  color: var(--ink-faint);
+  margin-top: 0.10in;
+  line-height: 1.5;
+  white-space: pre-line;  /* honor newlines from data */
+}
+
+/* ──────────────────────────────────────────────────────────────────
+   ZONE 6 — Scripture verse (John 14:23)
+   ────────────────────────────────────────────────────────────── */
+.zone-scripture {
+  text-align: center;
+  margin-top: 0.05in;
+  padding: 0 0.4in;
+}
+.cert-verse {
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: 14pt;
+  line-height: 1.5;
+  color: var(--ink-brown);
+}
+.cert-verse-cite {
+  font-family: var(--font-body);
+  font-style: normal;
+  font-weight: 400;
+  font-size: 12pt;
+  color: var(--ink-soft);
+  margin-top: 6pt;
+  letter-spacing: 0.02em;
+}
+
+/* ──────────────────────────────────────────────────────────────────
+   ZONE 7 — Personalization (parish / priest / sponsor)
+   ────────────────────────────────────────────────────────────── */
+.zone-personalization {
+  margin-top: 0.05in;
+  padding: 0 0.6in;
+}
+.cert-fields {
+  display: grid;
+  grid-template-columns: 1.4in 1fr;
+  row-gap: 0.18in;
+  column-gap: 0.25in;
+  align-items: baseline;
+}
+.cert-field-label {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 9pt;
+  letter-spacing: 0.10em;
+  color: var(--ink-faint);
+  text-transform: uppercase;
+  text-align: right;
+}
+.cert-field-value {
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: 13pt;
+  color: var(--ink-brown);
+  min-height: 1em;
+  border-bottom: 1px solid rgba(58, 40, 23, 0.18);
+  padding-bottom: 2pt;
+}
+/* If value is empty (admin didn't supply), show longer underline */
+.cert-field-value:empty::after {
+  content: "\00a0";
+  display: inline-block;
+  min-width: 2in;
+}
+
+/* ──────────────────────────────────────────────────────────────────
+   ZONE 8 — Parent signatures + closing doxology
+   ────────────────────────────────────────────────────────────── */
+.zone-signatures {
+  text-align: center;
+  margin-top: 0.10in;
+}
+.cert-signature-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.4in;
+  font-family: var(--font-body);
+  font-size: 13pt;
+  color: var(--ink-brown);
+}
+.cert-signature-name {
+  font-weight: 400;
+  white-space: nowrap;
+}
+.cert-signature-star {
+  color: var(--gold-soft);
+  font-size: 16pt;
+  line-height: 1;
+}
+.cert-signature-labels {
+  display: flex;
+  justify-content: center;
+  gap: 0.4in;
+  margin-top: 4pt;
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: 11pt;
+  color: var(--ink-soft);
+}
+.cert-signature-label {
+  white-space: nowrap;
+}
+
+.zone-doxology {
+  text-align: center;
+  margin-top: 0.18in;
+}
+.cert-doxology-cross {
+  display: inline-block;
+  width: 14px;
+  height: 18px;
+  margin-bottom: 4pt;
+}
+.cert-doxology-greek {
+  font-family: 'GFS Neohellenic', 'Crimson Text', Georgia, serif;
+  font-weight: 400;
+  font-size: 14pt;
+  color: var(--ink-brown);  /* NOT gold per §11.7 */
+  line-height: 1.0;
+}
+.cert-doxology-english {
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: 11pt;
+  color: var(--ink-soft);
+  margin-top: 4pt;
+  line-height: 1.0;
+}
+
+/* ──────────────────────────────────────────────────────────────────
+   ERROR STATE — rendered inside the frame when required params
+   are missing (D6 §5.2).
+   ────────────────────────────────────────────────────────────── */
+.cert-error {
+  margin: auto;
+  max-width: 4.5in;
+  text-align: center;
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: 13pt;
+  color: var(--ink-faint);
+  line-height: 1.6;
+}
+.cert-error-glyph {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 22pt;
+  color: var(--gold-soft);
+  margin-bottom: 0.2in;
+}
+
+/* ──────────────────────────────────────────────────────────────────
+   HIDDEN OVERRIDE — the HTML `hidden` attribute's default UA style
+   (display: none) is overridden by .cert-content's display: flex
+   and by some template fragment containers' display: block, so
+   we re-assert it universally with !important. Without this, the
+   error-state container bleeds through onto the live cert, and
+   the inactive template fragment renders on top of the active one.
+   ────────────────────────────────────────────────────────────── */
+[hidden] {
+  display: none !important;
+}
+
+/* ──────────────────────────────────────────────────────────────────
+   PRINT STYLESHEET — the canonical output target.
+   Browser "Print → Save as PDF" produces the artifact.
+   ────────────────────────────────────────────────────────────── */
+@page {
+  size: letter portrait;
+  margin: 0;
+}
+@media print {
+  html, body {
+    background: white;
+    margin: 0;
+    padding: 0;
+    height: auto;
+    min-height: 0;
+  }
+  body {
+    display: block;
+  }
+  .certificate {
+    width: 8.5in;
+    height: 11in;
+    box-shadow: none;
+    margin: 0;
+    page-break-inside: avoid;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<!-- ───────────────────────────────────────────────────────────────
+     CERTIFICATE ROOT
+     Shared chrome (chi-rho, hairline frame, four corner crosses,
+     fleurs, doxology, signatures) lives outside the template
+     fragments and renders once for both types.
+     Per D7 §12.4 — Chat 24 enables the baptism fragment.
+     ─────────────────────────────────────────────────────────── -->
+<div class="certificate" id="certificate">
+
+  <!-- Gold hairline frame ~5mm inside page edge -->
+  <div class="cert-frame"></div>
+
+  <!-- Corner fleur quartrefoils at frame inner corners -->
+  <svg class="cert-fleur tl" viewBox="-7 -7 14 14" aria-hidden="true">
+    <g fill="#C9A84C">
+      <circle cx="0" cy="-4" r="2.2"/>
+      <circle cx="4" cy="0"  r="2.2"/>
+      <circle cx="0" cy="4"  r="2.2"/>
+      <circle cx="-4" cy="0" r="2.2"/>
+      <circle cx="0" cy="0"  r="1.4"/>
+    </g>
+  </svg>
+  <svg class="cert-fleur tr" viewBox="-7 -7 14 14" aria-hidden="true">
+    <g fill="#C9A84C">
+      <circle cx="0" cy="-4" r="2.2"/>
+      <circle cx="4" cy="0"  r="2.2"/>
+      <circle cx="0" cy="4"  r="2.2"/>
+      <circle cx="-4" cy="0" r="2.2"/>
+      <circle cx="0" cy="0"  r="1.4"/>
+    </g>
+  </svg>
+  <svg class="cert-fleur bl" viewBox="-7 -7 14 14" aria-hidden="true">
+    <g fill="#C9A84C">
+      <circle cx="0" cy="-4" r="2.2"/>
+      <circle cx="4" cy="0"  r="2.2"/>
+      <circle cx="0" cy="4"  r="2.2"/>
+      <circle cx="-4" cy="0" r="2.2"/>
+      <circle cx="0" cy="0"  r="1.4"/>
+    </g>
+  </svg>
+  <svg class="cert-fleur br" viewBox="-7 -7 14 14" aria-hidden="true">
+    <g fill="#C9A84C">
+      <circle cx="0" cy="-4" r="2.2"/>
+      <circle cx="4" cy="0"  r="2.2"/>
+      <circle cx="0" cy="4"  r="2.2"/>
+      <circle cx="-4" cy="0" r="2.2"/>
+      <circle cx="0" cy="0"  r="1.4"/>
+    </g>
+  </svg>
+
+  <!-- ───────── Four corner three-bar Orthodox crosses ─────────
+       CANONICAL ICONOGRAPHY: footrest rotation is rotate(18) —
+       POSITIVE rotation per Chat 22 empirical verification +
+       orchestrator CATCH-1 ruling B-1. This produces:
+         viewer's-LEFT end of footrest  RAISED (toward St. Dismas)
+         viewer's-RIGHT end of footrest LOWERED (toward Gestas)
+       Deliberate divergence from favicon.svg's rotate(-18) which
+       renders non-canonical orientation; favicon errata logged
+       for post-launch repo audit (D7 §16.2 expanded).
+       ─────────────────────────────────────────────────────── -->
+  <svg class="cert-corner-cross tl" viewBox="0 0 30 36" aria-hidden="true">
+    <g fill="#C9A84C">
+      <!-- Vertical staff -->
+      <rect x="14" y="2" width="2" height="32" rx="0.5"/>
+      <!-- Top short bar (titulus) -->
+      <rect x="10" y="6.5" width="10" height="1.6" rx="0.4"/>
+      <!-- Main horizontal bar -->
+      <rect x="5" y="15.2" width="20" height="2" rx="0.5"/>
+      <!-- Slanted footrest — rotate(+18) for canonical viewer's-right LOWER -->
+      <g transform="translate(15 26) rotate(18)">
+        <rect x="-8" y="-0.8" width="16" height="1.6" rx="0.4"/>
+      </g>
+    </g>
+  </svg>
+  <svg class="cert-corner-cross tr" viewBox="0 0 30 36" aria-hidden="true">
+    <g fill="#C9A84C">
+      <rect x="14" y="2" width="2" height="32" rx="0.5"/>
+      <rect x="10" y="6.5" width="10" height="1.6" rx="0.4"/>
+      <rect x="5" y="15.2" width="20" height="2" rx="0.5"/>
+      <g transform="translate(15 26) rotate(18)">
+        <rect x="-8" y="-0.8" width="16" height="1.6" rx="0.4"/>
+      </g>
+    </g>
+  </svg>
+  <svg class="cert-corner-cross bl" viewBox="0 0 30 36" aria-hidden="true">
+    <g fill="#C9A84C">
+      <rect x="14" y="2" width="2" height="32" rx="0.5"/>
+      <rect x="10" y="6.5" width="10" height="1.6" rx="0.4"/>
+      <rect x="5" y="15.2" width="20" height="2" rx="0.5"/>
+      <g transform="translate(15 26) rotate(18)">
+        <rect x="-8" y="-0.8" width="16" height="1.6" rx="0.4"/>
+      </g>
+    </g>
+  </svg>
+  <svg class="cert-corner-cross br" viewBox="0 0 30 36" aria-hidden="true">
+    <g fill="#C9A84C">
+      <rect x="14" y="2" width="2" height="32" rx="0.5"/>
+      <rect x="10" y="6.5" width="10" height="1.6" rx="0.4"/>
+      <rect x="5" y="15.2" width="20" height="2" rx="0.5"/>
+      <g transform="translate(15 26) rotate(18)">
+        <rect x="-8" y="-0.8" width="16" height="1.6" rx="0.4"/>
+      </g>
+    </g>
+  </svg>
+
+  <!-- Content area inside the frame -->
+  <div class="cert-content" id="cert-content">
+
+    <!-- Top: chi-rho + title + first separator -->
+    <div>
+      <!-- ZONE 1 — Chi-rho monogram -->
+      <div class="zone-chirho">
+        <svg viewBox="0 0 64 80" aria-hidden="true">
+          <g fill="none" stroke="#C9A84C" stroke-width="4.2" stroke-linecap="round">
+            <!-- Chi (X): two diagonals crossing through upper Rho stem -->
+            <line x1="12" y1="14" x2="50" y2="56"/>
+            <line x1="50" y1="14" x2="12" y2="56"/>
+            <!-- Rho stem (vertical) -->
+            <line x1="32" y1="6"  x2="32" y2="74"/>
+            <!-- Rho bowl (the "P" loop atop the stem) -->
+            <path d="M 32 6 C 48 6, 50 26, 32 26"/>
+          </g>
+        </svg>
+      </div>
+
+      <!-- ZONE 2 — Document title (swaps text by template) -->
+      <div class="zone-title">
+        <div data-template="chrismation">
+          <span class="cert-title-text">Certificate of Chrismation</span>
+        </div>
+        <div data-template="baptism" hidden>
+          <!-- Chat 24 fills: Certificate of Holy Baptism -->
+        </div>
+      </div>
+
+      <!-- Separator -->
+      <div class="cert-separator">
+        <span class="cert-sep-dots">·&nbsp;·&nbsp;·</span>
+        <span class="cert-sep-rule"></span>
+        <svg class="cert-sep-cross" viewBox="0 0 30 36" aria-hidden="true">
+          <g fill="#C9A84C" opacity="0.70">
+            <rect x="14" y="2" width="2" height="32" rx="0.5"/>
+            <rect x="10" y="6.5" width="10" height="1.6" rx="0.4"/>
+            <rect x="5" y="15.2" width="20" height="2" rx="0.5"/>
+            <g transform="translate(15 26) rotate(18)">
+              <rect x="-8" y="-0.8" width="16" height="1.6" rx="0.4"/>
+            </g>
+          </g>
+        </svg>
+        <span class="cert-sep-rule"></span>
+        <span class="cert-sep-dots">·&nbsp;·&nbsp;·</span>
+      </div>
+
+      <!-- ZONE 3 — Recipient name + clause -->
+      <div class="zone-recipient">
+        <div class="cert-recipient-name" id="cert-recipient">&nbsp;</div>
+        <div data-template="chrismation">
+          <div class="cert-recipient-clause">
+            is sealed with the Gift of the Holy Spirit
+          </div>
+        </div>
+        <div data-template="baptism" hidden>
+          <!-- Chat 24 fills: has put on Christ in the waters of holy baptism -->
+        </div>
+      </div>
+
+      <!-- ZONE 4 — Formula (Greek + English gloss) -->
+      <div class="zone-formula">
+        <div data-template="chrismation">
+          <div class="cert-formula-greek" lang="grc">Σφραγὶς δωρεᾶς Πνεύματος Ἁγίου</div>
+          <div class="cert-formula-english">The Seal of the Gift of the Holy Spirit</div>
+        </div>
+        <div data-template="baptism" hidden>
+          <!-- Chat 24 fills: three-line baptismal formula
+               Βαπτίζεται ὁ δοῦλος τοῦ Θεοῦ {recipient}
+               εἰς τὸ ὄνομα τοῦ Πατρὸς καὶ τοῦ Υἱοῦ
+               καὶ τοῦ Ἁγίου Πνεύματος
+               + English gloss -->
+        </div>
+      </div>
+
+      <!-- Separator -->
+      <div class="cert-separator">
+        <span class="cert-sep-dots">·&nbsp;·&nbsp;·</span>
+        <span class="cert-sep-rule"></span>
+        <svg class="cert-sep-cross" viewBox="0 0 30 36" aria-hidden="true">
+          <g fill="#C9A84C" opacity="0.70">
+            <rect x="14" y="2" width="2" height="32" rx="0.5"/>
+            <rect x="10" y="6.5" width="10" height="1.6" rx="0.4"/>
+            <rect x="5" y="15.2" width="20" height="2" rx="0.5"/>
+            <g transform="translate(15 26) rotate(18)">
+              <rect x="-8" y="-0.8" width="16" height="1.6" rx="0.4"/>
+            </g>
+          </g>
+        </svg>
+        <span class="cert-sep-rule"></span>
+        <span class="cert-sep-dots">·&nbsp;·&nbsp;·</span>
+      </div>
+
+      <!-- ZONE 5 — Date + commemoration -->
+      <div class="zone-date">
+        <div class="cert-date-text" id="cert-date">&nbsp;</div>
+        <div class="cert-commemoration" id="cert-commemoration">&nbsp;</div>
+      </div>
+
+      <!-- ZONE 6 — Scripture verse -->
+      <div class="zone-scripture">
+        <div data-template="chrismation">
+          <div class="cert-verse">
+            &ldquo;If a man loves me, he will keep my word,<br>
+            and my Father will love him, and we will come to him<br>
+            and make our home with him.&rdquo;
+          </div>
+          <div class="cert-verse-cite">— John 14:23</div>
+        </div>
+        <div data-template="baptism" hidden>
+          <!-- Chat 24 fills: Galatians 3:27 -->
+        </div>
+      </div>
+
+      <!-- Separator -->
+      <div class="cert-separator">
+        <span class="cert-sep-dots">·&nbsp;·&nbsp;·</span>
+        <span class="cert-sep-rule"></span>
+        <svg class="cert-sep-cross" viewBox="0 0 30 36" aria-hidden="true">
+          <g fill="#C9A84C" opacity="0.70">
+            <rect x="14" y="2" width="2" height="32" rx="0.5"/>
+            <rect x="10" y="6.5" width="10" height="1.6" rx="0.4"/>
+            <rect x="5" y="15.2" width="20" height="2" rx="0.5"/>
+            <g transform="translate(15 26) rotate(18)">
+              <rect x="-8" y="-0.8" width="16" height="1.6" rx="0.4"/>
+            </g>
+          </g>
+        </svg>
+        <span class="cert-sep-rule"></span>
+        <span class="cert-sep-dots">·&nbsp;·&nbsp;·</span>
+      </div>
+
+      <!-- ZONE 7 — Personalization fields -->
+      <div class="zone-personalization">
+        <div class="cert-fields">
+          <div class="cert-field-label" id="cert-label-where">Chrismated at</div>
+          <div class="cert-field-value" id="cert-parish"></div>
+
+          <div class="cert-field-label">By</div>
+          <div class="cert-field-value" id="cert-priest"></div>
+
+          <div class="cert-field-label" id="cert-label-sponsor">Sponsored by</div>
+          <div class="cert-field-value" id="cert-sponsor"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom: signatures + doxology -->
+    <div>
+      <!-- ZONE 8 — Parent signatures -->
+      <div class="zone-signatures">
+        <div class="cert-signature-row">
+          <span class="cert-signature-star">&#x2726;</span>
+          <span class="cert-signature-name" id="cert-father">&nbsp;</span>
+          <span class="cert-signature-name" id="cert-mother">&nbsp;</span>
+          <span class="cert-signature-star">&#x2726;</span>
+        </div>
+        <div class="cert-signature-labels">
+          <span class="cert-signature-label">— Father —</span>
+          <span class="cert-signature-label">— Mother —</span>
+        </div>
+      </div>
+
+      <!-- Closing doxology -->
+      <div class="zone-doxology">
+        <svg class="cert-doxology-cross" viewBox="0 0 30 36" aria-hidden="true">
+          <g fill="#C9A84C">
+            <rect x="14" y="2" width="2" height="32" rx="0.5"/>
+            <rect x="10" y="6.5" width="10" height="1.6" rx="0.4"/>
+            <rect x="5" y="15.2" width="20" height="2" rx="0.5"/>
+            <g transform="translate(15 26) rotate(18)">
+              <rect x="-8" y="-0.8" width="16" height="1.6" rx="0.4"/>
+            </g>
+          </g>
+        </svg>
+        <div class="cert-doxology-greek" lang="grc">Δόξα τῷ Θεῷ</div>
+        <div class="cert-doxology-english">Glory to God for all things</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Error state container — replaces cert-content if params missing -->
+  <div class="cert-content" id="cert-error-state" hidden>
+    <div class="cert-error">
+      <span class="cert-error-glyph">☩</span>
+      Missing required parameter.<br>
+      Open this certificate from the admin tooling.
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function() {
+  'use strict';
+
+  // ── URL parameter parsing (D6 §12.3 + D7 §12.3 canonical short names) ──
+  const params = new URLSearchParams(window.location.search);
+  const safe = (v) => (typeof v === 'string') ? v.trim() : '';
+
+  const type      = safe(params.get('type')) || 'chrismation';
+  const recipient = safe(params.get('recipient'));
+  const date      = safe(params.get('date'));
+  const parish    = safe(params.get('parish'));
+  const priest    = safe(params.get('priest'));
+  // sponsor doubles as godparent alias for baptism (D7 §12.3) — Chat 24
+  // enables, Chat 22 reads either name and uses the chrismation label
+  const sponsor   = safe(params.get('sponsor')) || safe(params.get('godparent'));
+  const father    = safe(params.get('father')) || 'Kevin Holt';
+  const mother    = safe(params.get('mother')) || 'Danyelle Holt';
+
+  // Chat 24 will additionally consume: family_name, pronoun_subj,
+  // pronoun_obj, recipient_name_greek. Chat 22 parses-and-ignores
+  // for forward-compat (no-op if Chat 24's links land prematurely).
+  void params.get('family_name');
+  void params.get('pronoun_subj');
+  void params.get('pronoun_obj');
+  void params.get('recipient_name_greek');
+
+  // ── Required-field guard (D6 §5.2) ──
+  if (!recipient || !date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    document.getElementById('cert-content').hidden = true;
+    document.getElementById('cert-error-state').hidden = false;
+    document.title = 'Certificate — missing parameters';
+    return;
+  }
+
+  // ── Template fragment switch (D7 §12.4) ──
+  // Chat 22 functional only for chrismation; baptism stub renders blank.
+  const validTypes = ['chrismation', 'baptism'];
+  const activeType = validTypes.includes(type) ? type : 'chrismation';
+  document.querySelectorAll('[data-template]').forEach(el => {
+    if (el.getAttribute('data-template') === activeType) {
+      el.hidden = false;
+    } else {
+      el.hidden = true;
+    }
+  });
+
+  // Personalization label switch (sponsor ↔ godparent) — Chat 22 stays
+  // on "Sponsored by" for chrismation; Chat 24 swaps to "Godparent" on
+  // baptism + adjusts "Chrismated at" → "Baptized at" via the labels.
+  if (activeType === 'baptism') {
+    const lblWhere   = document.getElementById('cert-label-where');
+    const lblSponsor = document.getElementById('cert-label-sponsor');
+    if (lblWhere)   lblWhere.textContent   = 'Baptized at';
+    if (lblSponsor) lblSponsor.textContent = 'Godparent';
+  }
+
+  // ── Date long-form expansion (D6 §5.1: {{date_long}}) ──
+  function ordinalWord(n) {
+    const ords = ['', 'first','second','third','fourth','fifth','sixth','seventh',
+      'eighth','ninth','tenth','eleventh','twelfth','thirteenth','fourteenth',
+      'fifteenth','sixteenth','seventeenth','eighteenth','nineteenth','twentieth',
+      'twenty-first','twenty-second','twenty-third','twenty-fourth','twenty-fifth',
+      'twenty-sixth','twenty-seventh','twenty-eighth','twenty-ninth','thirtieth',
+      'thirty-first'];
+    return ords[n] || ('' + n + 'th');
+  }
+  function yearToWords(y) {
+    const ones = ['','one','two','three','four','five','six','seven','eight','nine',
+      'ten','eleven','twelve','thirteen','fourteen','fifteen','sixteen','seventeen',
+      'eighteen','nineteen'];
+    const tens = ['','','twenty','thirty','forty','fifty','sixty','seventy','eighty','ninety'];
+    function below100(n) {
+      if (n < 20) return ones[n];
+      const t = Math.floor(n/10), o = n%10;
+      return o ? tens[t] + '-' + ones[o] : tens[t];
+    }
+    function below1000(n) {
+      const h = Math.floor(n/100), r = n%100;
+      const parts = [];
+      if (h) parts.push(ones[h] + ' hundred');
+      if (r) parts.push((parts.length ? 'and ' : '') + below100(r));
+      return parts.join(' ');
+    }
+    const th = Math.floor(y / 1000);
+    const rem = y % 1000;
+    let s = '';
+    if (th) s += (th === 1 ? 'one thousand' : ones[th] + ' thousand');
+    if (rem) {
+      // For 2026: "two thousand and twenty-six"
+      // For 1995: "one thousand nine hundred and ninety-five"
+      const remWords = below1000(rem);
+      s += (remWords.startsWith('and ') || /^\D*hundred/.test(remWords))
+        ? ' ' + remWords
+        : ' and ' + remWords;
+    }
+    return s.trim();
+  }
+  const months = ['January','February','March','April','May','June',
+                  'July','August','September','October','November','December'];
+  const [y, m, d] = date.split('-').map(Number);
+  const monthName  = (m >= 1 && m <= 12) ? months[m-1] : '';
+  const dayOrdinal = ordinalWord(d);
+  const yearWords  = yearToWords(y);
+  const dateLong = 'on this ' + dayOrdinal + ' day of ' + monthName +
+                   ', in the year of our Lord ' + yearWords;
+
+  // ── Commemoration lookup (D6 §3.4 + §15.5 — pre-baked client-side
+  //    table per worker resolution; Supabase live query would add
+  //    complexity for a one-shot print artifact, and the cert is
+  //    not a live app surface. Unknown dates render blank, which
+  //    is acceptable degraded state — date block still renders.
+  // ──
+  const COMMEMORATIONS = {
+    '2026-06-19': 'the feast of the Holy Apostle Jude (Thaddeus),\nBrother of Our Lord'
+    // Extend as additional cert dates arise.
+  };
+  const commemoration = COMMEMORATIONS[date] || '';
+
+  // ── Personalization substitution ──
+  document.getElementById('cert-recipient').textContent    = recipient;
+  document.getElementById('cert-date').textContent         = dateLong;
+  document.getElementById('cert-commemoration').textContent = commemoration;
+  document.getElementById('cert-parish').textContent       = parish;
+  document.getElementById('cert-priest').textContent       = priest;
+  document.getElementById('cert-sponsor').textContent      = sponsor;
+  document.getElementById('cert-father').textContent       = father;
+  document.getElementById('cert-mother').textContent       = mother;
+
+  // ── Page title → print-to-PDF default filename (D6 §12.5) ──
+  const slug = recipient.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  document.title = activeType + '-' + slug + '-' + date;
+})();
+</script>
+</body>
+</html>

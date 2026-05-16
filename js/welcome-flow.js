@@ -276,57 +276,12 @@
     return { root: root, dismiss: dismiss };
   }
 
-  // ── Hero frame (Chat 4) ────────────────────────────────────────────
-  // The first frame of the welcome flow. Theo + Christopher walking
-  // toward the monastery at sunset, personalized greeting with the
-  // explorer's first name, a single "Begin →" CTA. On tap, chains to
-  // the existing video panel (which then chains to the instruction
-  // cards). The welcome flow is now: hero → video → 4 cards.
-  //
-  // opts: { modalRoot, name, onBegin }
-  //   modalRoot: container element to fill
-  //   name:      explorer's first name (already extracted, e.g. "Nolan")
-  //   onBegin:   callback invoked when Begin is tapped
-  function _renderHeroFrame(opts) {
-    var modalRoot = opts.modalRoot;
-    var name = opts.name || 'Nolan';
-    var onBegin = opts.onBegin;
-
-    modalRoot.innerHTML = '';
-
-    var panel = global.document.createElement('div');
-    panel.className = 'oe-welcome-panel oe-hero-panel';
-
-    // Portrait wrap (16:9 frame; image is JPEG-as-PNG, browser
-    // handles it correctly via magic-byte detection).
-    var portraitWrap = global.document.createElement('div');
-    portraitWrap.className = 'oe-hero-portrait-wrap';
-
-    var portrait = global.document.createElement('img');
-    portrait.className = 'oe-hero-portrait';
-    portrait.src = '/Orthodox-Expedition-/assets/characters/theo-christopher-hero.png';
-    portrait.alt = 'Theo and Christopher walking toward a monastery at sunset';
-    portraitWrap.appendChild(portrait);
-    panel.appendChild(portraitWrap);
-
-    // Personalized greeting
-    var greeting = global.document.createElement('h2');
-    greeting.className = 'oe-hero-greeting';
-    greeting.textContent = 'Welcome to The Orthodox Expedition, ' + name + '.';
-    panel.appendChild(greeting);
-
-    // Begin CTA (reuses existing primary CTA styling)
-    var cta = global.document.createElement('button');
-    cta.type = 'button';
-    cta.className = 'oe-cta oe-cta-primary';
-    cta.textContent = 'Begin \u2192';
-    cta.addEventListener('click', function () {
-      onBegin();
-    });
-    panel.appendChild(cta);
-
-    modalRoot.appendChild(panel);
-  }
+  // ── (Chat 4 _renderHeroFrame retired in Phase C — replaced by
+  //    the Vita Strip render component in js/vita-strip.js. The
+  //    placeholder hero PNG asset (theo-christopher-hero.png) stays
+  //    in /assets/characters/ for other use cases per ASSETS_README
+  //    — home seasonal hero, endgame celebration. Per orchestrator
+  //    PB-5 ruling: clean removal, no archival comment carried.)
 
   // ── Video panel ────────────────────────────────────────────────────
   // opts: { url, modalRoot, ctaLabel, onContinue, onDismiss }
@@ -654,7 +609,7 @@
           });
         };
 
-        var onHeroBegin = function () {
+        var onStripComplete = function () {
           _renderVideoPanel({
             url: VIDEOS.welcome,
             modalRoot: root,
@@ -664,13 +619,35 @@
           });
         };
 
-        // Chat 4 — hero frame is now the first scene; on Begin →
+        // Phase C — Vita Strip is now the first scene; on Continue →
         // video → cards. Preserves entire existing flow downstream.
-        _renderHeroFrame({
-          modalRoot: root,
-          name: resolvedName,
-          onBegin: onHeroBegin
-        });
+        // Per OQ-2 ruling: VitaStrip replaces the Chat 4 placeholder
+        // hero frame. Per OQ-3 ruling: no per-panel state — the
+        // strip is a step inside the atomic welcome flow, which
+        // completes when _markWelcomeSeen fires at the end of the
+        // instruction cards. Per OQ-4 ruling: no skip during strip;
+        // skip is on the downstream instruction cards. The strip is
+        // intentionally un-personalized (resolvedName is not passed
+        // through; Card 4's "Καλώς όρισες, {NAME}" carries the
+        // name greeting downstream).
+        //
+        // Graceful degradation: VitaStrip.render fail-softs to its
+        // onComplete callback if the corpus is unreachable, so the
+        // welcome flow never stalls on a missing/broken Vita Strip.
+        if (global.VitaStrip && typeof global.VitaStrip.render === 'function') {
+          global.VitaStrip.render({
+            modalRoot: root,
+            onComplete: onStripComplete
+          });
+        } else {
+          // Defense-in-depth: if vita-strip.js never loaded (cache
+          // miss + offline + race), skip straight to the video so
+          // the flow still completes.
+          try {
+            console.debug('[welcome-flow] VitaStrip module not present; skipping to video');
+          } catch (_e) {}
+          onStripComplete();
+        }
       };
 
       if (global.document.readyState === 'loading') {
@@ -761,7 +738,6 @@
     _getCurrentWeekNumber: _getCurrentWeekNumber,
     _todayKeyET: _todayKeyET,
     _renderModal: _renderModal,
-    _renderHeroFrame: _renderHeroFrame,
     _renderVideoPanel: _renderVideoPanel,
     _renderInstructionCards: _renderInstructionCards,
     _videos: VIDEOS,

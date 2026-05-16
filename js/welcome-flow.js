@@ -20,7 +20,7 @@
 //     reinstall, device replacement, and is forward-compatible with
 //     multi-family v1.1.
 //   • Explicit America/New_York launch-date gate. Pre-launch (today <
-//     2026-05-16 ET): zero modal renders, zero Supabase calls.
+//     2026-05-18 ET): zero modal renders, zero Supabase calls (applies to maybeShowWeekIntro only; maybeShowWelcome no longer date-gated).
 //   • _getCurrentWeekNumber() returns null pre-launch (was: 1).
 //   • Public API now async: maybeShowWelcome({sb, profileId, name}) and
 //     maybeShowWeekIntro({sb, profileId, weekNum?}).
@@ -54,7 +54,7 @@
 
   // Topic 00 launch anchor. Mirrors config/program-spine.json launch_date.
   // All comparisons are in America/New_York (see _todayKeyET below).
-  var LAUNCH_DATE_ISO = '2026-05-16';  // Lowered 2026-05-16 for pre-launch smoke validation. Canonical launch remains Mon May 18 (config/program-spine.json launch_date). This gate only affects welcome flow + week-intro firing — curriculum gating, streak heatmap, day-state still anchor to canonical May 18.
+  var LAUNCH_DATE_ISO = '2026-05-18';  // Canonical Topic 00 launch date (mirrors config/program-spine.json launch_date). Used by maybeShowWeekIntro to gate the 4 week-intro modals so they don't fire pre-launch. NOT used by maybeShowWelcome — the welcome flow fires for any explorer with empty onboarding_state regardless of date (catechetical 'first impression' is per-account, not date-gated).
 
   // ── Instruction card content (verbatim from Repair S dispatch) ─────
   // Card 4's body uses U+2626 ORTHODOX CROSS followed by U+FE0E TEXT
@@ -566,9 +566,11 @@
     }
     if (typeof global.document === 'undefined') return;
 
-    // Gate 1: launch date (America/New_York). Pre-launch = silent no-op,
-    // ZERO Supabase calls.
-    if (!_isLaunchDateOrLater()) return;
+    // [Repair S v3 May 16 2026 — Gate 1 removed from maybeShowWelcome.]
+    // The welcome flow + Vita Strip are NOT date-gated. They fire for any
+    // explorer with empty onboarding_state.welcome_completed_at regardless
+    // of calendar date. (Week-intro modals retain their launch-date gate
+    // via maybeShowWeekIntro — see line ~678.)
 
     // Gate 2: state lookup. Read failure (returns null) = silent no-show
     // (showing without write capability would create a re-show loop).

@@ -835,7 +835,7 @@
 //      (lazy-cached via runtime fetch-and-cache path; saints lack
 //      authored icon assets at this deploy and the parchment SVG
 //      placeholder renders graceful-degrade inline).
-const CACHE_NAME = 'orthodox-expedition-v51';
+const CACHE_NAME = 'orthodox-expedition-v52';
 const STATIC_ASSETS = [
   '/Orthodox-Expedition-/',
   '/Orthodox-Expedition-/index.html',
@@ -936,6 +936,14 @@ const STATIC_ASSETS = [
   // v51 — Chat 23 additions (Field Journal v1 paired-diptych):
   '/Orthodox-Expedition-/js/field-journal-static.js',
   '/Orthodox-Expedition-/docs/content/field-journal/reception-day-entries-v1.json',
+  // v52 — Phase C additions (Welcome Flow Vita Strip):
+  '/Orthodox-Expedition-/js/vita-strip.js',
+  '/Orthodox-Expedition-/docs/content/scenes/welcome-flow-v1.json',
+  '/Orthodox-Expedition-/assets/comic/scenes/welcome-flow/panel-1-preparation.png',
+  '/Orthodox-Expedition-/assets/comic/scenes/welcome-flow/panel-2-setting-out.png',
+  '/Orthodox-Expedition-/assets/comic/scenes/welcome-flow/panel-3-the-answer.png',
+  '/Orthodox-Expedition-/assets/comic/scenes/welcome-flow/panel-4-silent-beat.png',
+  '/Orthodox-Expedition-/assets/comic/scenes/welcome-flow/panel-5-threshold.png',
 ];
 
 // Install — cache static assets

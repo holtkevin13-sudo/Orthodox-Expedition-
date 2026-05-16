@@ -191,7 +191,7 @@ async function routeByRole(userId){
   if(profile.role==='superuser') { window.location.href='admin.html'; return; }
   if(profile.role==='admin')     { window.location.href='admin.html'; return; }
   if(profile.role==='parent')    { window.location.href='parent.html'; return; }
-  window.location.href='week.html'; // explorer — new weekly dashboard (Pass 6)
+  window.location.href='home.html'; // explorer — landing on home so Vita Strip welcome flow fires first (May 16, 2026)
 }
 
 async function checkSession(){

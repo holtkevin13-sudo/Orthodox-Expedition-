@@ -1,0 +1,102 @@
+{
+  "version": "1.0.0",
+  "corpus_id": "scenes-welcome-flow",
+  "scene_id": "welcome_flow_intro",
+  "title": "Coming Home",
+  "occasion": "welcome_flow",
+  "target_surface": "welcome_flow_first_open",
+  "panel_count": 5,
+  "authored": "2026-05-16",
+  "authoring_chat": "Phase C engineering dispatch",
+  "schema_ref": "docs/design/welcome-flow-vita-strip.md \u00a71 (canonical scene YAML)",
+  "voice_anchor": "COMIC_DESIGN_BRIEF.md \u00a71.3 (character voice typography) + \u00a73.3 (Vita Strip bubbles) + \u00a73.6 (Vita Strip narrative voice)",
+  "architecture_locks_honored": [
+    "\u00a71.4 witness-only \u2014 bubbles overlay character-to-character dialogue only; UI chrome (Continue button, scroll indicators, tap hints) is structurally separate from speech; no second-person reader-address in character dialogue",
+    "\u00a71.6 English-default, rare canonical Greek \u2014 zero Greek codepoints in this scene; welcome flow is journey-initiating, not Pascha",
+    "\u00a71.7 Father Nicholas deferred \u2014 not present in this scene",
+    "\u00a71.8 Mom present-in-world, never authored as speaker \u2014 not present in this scene as speaker",
+    "\u00a711.7 Pascha-gold reservation \u2014 gold appears only as structural ornament (bubble borders, closing flourish \u2629); no dialogue text rendered in gold"
+  ],
+  "framing_note": "Per D2 \u00a70: welcome flow runs BEFORE the home dashboard renders. Replaces the placeholder hero frame in js/welcome-flow.js (Chat 4 _renderHeroFrame, retired Phase C). Does not orient Nolan to features; introduces Theo and Christopher and establishes the register the whole app inhabits. The Vita Strip is intentionally un-personalized (no name greeting) \u2014 the icon-distance posture (\u00a71.4) is preserved when the strip is about Theo and Christopher, not about Nolan as protagonist. Card 4 of the downstream instruction cards continues to carry the personalized Greek welcome that lands the name greeting in the canonical place (rendered there in GFS Neohellenic, not in this scene).",
+  "revision_history": [
+    {
+      "date": "2026-05-11",
+      "by": "D2",
+      "action": "Scene YAML authored in /docs/design/welcome-flow-vita-strip.md \u00a71"
+    },
+    {
+      "date": "2026-05-16",
+      "by": "Phase C",
+      "action": "JSON corpus authored from D2 \u00a71 canonical YAML; engineering layer materialized in js/vita-strip.js"
+    }
+  ],
+  "panels": [
+    {
+      "id": 1,
+      "slug": "panel-1-preparation",
+      "image_url": "/Orthodox-Expedition-/assets/comic/scenes/welcome-flow/panel-1-preparation.png",
+      "alt_text": "Christopher kneels beside a small lantern at a dawn camp, closing a leather satchel. Theo sits nearby, a blanket around his shoulders.",
+      "speaker": "christopher",
+      "dialogue_text": "Up, son. The light is good.",
+      "bubble_position": "upper-right",
+      "lighting_mode": "DAWN_PARCHMENT",
+      "beat": "Preparation",
+      "silent": false
+    },
+    {
+      "id": 2,
+      "slug": "panel-2-setting-out",
+      "image_url": "/Orthodox-Expedition-/assets/comic/scenes/welcome-flow/panel-2-setting-out.png",
+      "alt_text": "Theo and Christopher walking together on a stone path, three-quarter back view, the monastery dome faintly visible in the distance.",
+      "speaker": "theo",
+      "dialogue_text": "Is it far, Father?",
+      "bubble_position": "upper-left",
+      "lighting_mode": "MORNING_GOLD",
+      "beat": "Setting out",
+      "silent": false
+    },
+    {
+      "id": 3,
+      "slug": "panel-3-the-answer",
+      "image_url": "/Orthodox-Expedition-/assets/comic/scenes/welcome-flow/panel-3-the-answer.png",
+      "alt_text": "Christopher half-turned toward Theo with his hand on Theo's shoulder; the monastery closer now in the mid-distance.",
+      "speaker": "christopher",
+      "dialogue_text": "Home, son. We have been a long time away.",
+      "bubble_position": "upper-third",
+      "lighting_mode": "MORNING_GOLD",
+      "beat": "The answer",
+      "silent": false
+    },
+    {
+      "id": 4,
+      "slug": "panel-4-silent-beat",
+      "image_url": "/Orthodox-Expedition-/assets/comic/scenes/welcome-flow/panel-4-silent-beat.png",
+      "alt_text": "Theo and Christopher from three-quarter back, both looking up at the monastery dome rising above the cypress trees.",
+      "speaker": null,
+      "dialogue_text": null,
+      "bubble_position": null,
+      "lighting_mode": "AFTERNOON_AMBER",
+      "beat": "The silent beat",
+      "silent": true
+    },
+    {
+      "id": 5,
+      "slug": "panel-5-threshold",
+      "image_url": "/Orthodox-Expedition-/assets/comic/scenes/welcome-flow/panel-5-threshold.png",
+      "alt_text": "Theo and Christopher at the threshold of the monastery, Theo's head tilted slightly as he listens toward the doorway.",
+      "speaker": "theo",
+      "dialogue_text": "Listen, Father.",
+      "bubble_position": "upper-left",
+      "lighting_mode": "AFTERNOON_AMBER",
+      "beat": "The threshold",
+      "silent": false
+    }
+  ],
+  "closing_flourish": {
+    "caption_en": "Glory to God for all things.",
+    "caption_greek": null,
+    "ornament": "\u2629",
+    "rendering_note": "Per D2 \u00a71 closing_flourish + D1 \u00a73.7: DOM overlay BELOW the strip, NOT baked into Panel 5. Crimson Text Italic, 0.95em, ink #3A2817 at 80% opacity, centered. Ornament \u2629 in Byzantine Gold #C9A84C, ~4-6px vertical gap above the caption. Under prefers-reduced-motion: appears immediately rather than fading."
+  },
+  "consumer_notes": "Static JSON corpus consumed by js/vita-strip.js. Mirrors C4 (reception-day-entries-v1.json) and C3 (saints/topic-00-saints-v1.json) shape conventions. Per-panel speaker/dialogue_text/bubble_position drives bubble rendering; silent:true on Panel 4 suppresses bubble entirely. closing_flourish drives DOM overlay below the strip. Image URLs use the /Orthodox-Expedition-/ GitHub Pages prefix; loader fetches the JSON itself from the same prefixed path so sw.js v52+ STATIC_ASSETS serves it from cache when offline."
+}

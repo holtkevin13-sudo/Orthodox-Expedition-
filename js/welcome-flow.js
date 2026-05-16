@@ -20,7 +20,7 @@
 //     reinstall, device replacement, and is forward-compatible with
 //     multi-family v1.1.
 //   • Explicit America/New_York launch-date gate. Pre-launch (today <
-//     2026-05-18 ET): zero modal renders, zero Supabase calls.
+//     2026-05-16 ET): zero modal renders, zero Supabase calls.
 //   • _getCurrentWeekNumber() returns null pre-launch (was: 1).
 //   • Public API now async: maybeShowWelcome({sb, profileId, name}) and
 //     maybeShowWeekIntro({sb, profileId, weekNum?}).
@@ -54,7 +54,7 @@
 
   // Topic 00 launch anchor. Mirrors config/program-spine.json launch_date.
   // All comparisons are in America/New_York (see _todayKeyET below).
-  var LAUNCH_DATE_ISO = '2026-05-18';
+  var LAUNCH_DATE_ISO = '2026-05-16';  // Lowered 2026-05-16 for pre-launch smoke validation. Canonical launch remains Mon May 18 (config/program-spine.json launch_date). This gate only affects welcome flow + week-intro firing — curriculum gating, streak heatmap, day-state still anchor to canonical May 18.
 
   // ── Instruction card content (verbatim from Repair S dispatch) ─────
   // Card 4's body uses U+2626 ORTHODOX CROSS followed by U+FE0E TEXT
